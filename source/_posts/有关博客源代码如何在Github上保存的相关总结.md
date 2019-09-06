@@ -21,7 +21,7 @@ description: 教你如何在Github中保存源代码.
 
 ​		但其实, github本身不就是代码仓库吗? 为何不直接把源代码也保存在github呢? 答案是肯定的! 所以其实网上有以下几个比较常见的方法:
 
-1.  通过U盘拷贝, 每次换电脑之前, 都重新拷贝到U盘.
+**1. 通过U盘拷贝, 每次换电脑之前, 都重新拷贝到U盘.**
 
 **评价:**
 
@@ -29,9 +29,7 @@ description: 教你如何在Github中保存源代码.
 
 ​		但是文件一多, 真的就会很麻烦. 复制 -> 删除 -> 复制. 而且这个方法是真的很不Geek!
 
-
-
-2.  通过再创建一个github仓库叫什么: xxxblog_backup
+**2. 通过再创建一个github仓库叫什么: xxxblog_backup**
 
 **评价:**
 
@@ -67,39 +65,39 @@ git push origin save
 
 ​		本文针对的是<font color="#FF0000">已经在github搭建了仓库</font>的同学, 如果你还没有搭建仓库, 可以先试着搭建一个自己的博客哦!
 
-1.  在username.github.io仓库创建一个分支: **save** [名字可以随意];
+*1. 在username.github.io仓库创建一个分支: **save** [名字可以随意];*
 
 ![在github上直接创建分支的方法](https://upload-images.jianshu.io/upload_images/4904768-028896088d24cd6a.png?imageMogr2/auto-orient/strip|imageView2/2/w/594)
 
-2.  设置save为你的默认分支:
+*2. 设置save为你的默认分支:*
 
-    这里是为了让你提交的时候, 如果没有写明分支, 则默认提交到这个分支.
+这里是为了让你提交的时候, 如果没有写明分支, 则默认提交到这个分支.
 
-    设置默认分支可参考: [Github官方](https://help.github.com/en/articles/setting-the-default-branch)
+设置默认分支可参考: [Github官方](https://help.github.com/en/articles/setting-the-default-branch)
 
 ![设置save为你的默认分支](https://help.github.com/assets/images/help/repository/repository-options-branch.png)
 
-3.  将你的博客仓库clone到本地
+*3. 将你的博客仓库clone到本地*
 
-    **注意: ** <font color="#FF0000">由于之前修改了分支, 所以clone的应该是save分支!</font>
+**注意: ** <font color="#FF0000">由于之前修改了分支, 所以clone的应该是save分支!</font>
 
- 4.    删除所有文件, <font color="#FF0000">仅保留.git文件夹</font>
+*4. 删除所有文件, <font color="#FF0000">仅保留.git文件夹</font>*
 
-       这里可能要显示隐藏文件, 也删除就好.
+​		这里可能要显示隐藏文件, 也删除就好.
 
-	5. 将之前包括源代码的博客文件夹中的内容全部复制进来.
+*5. 将之前包括源代码的博客文件夹中的内容全部复制进来.*
 
-	6. 将`themes/yilia/`(**这个和你用的博客主题有关**)下的`.git/`删除:
+*6. 将`themes/yilia/`(**这个和你用的博客主题有关**)下的`.git/`删除:*
 
-这里是因为, 在一个git中, 不可以包括另外一个.git!
+*7. 这里是因为, 在一个git中, 不可以包括另外一个.git!*
 
-7.  这时即配置完成!
+这时即配置完成!
 
 
 
 ### 2. 修改
 
-1.  对于提交Github源码:
+*1. 对于提交Github源码:*
 
 通过你的老三步:
 
@@ -111,7 +109,7 @@ git push origin save
 
 <font color="#FF0000">注意这里是save分支!</font>
 
-2.  对于发布博客:
+*2. 对于发布博客:*
 
 和你之前一点变化都没有!
 
@@ -150,9 +148,7 @@ cnpm install hexo-deployer-git
 
 ​		但是就是这么几个步骤, 就免去了你复制, 甚至动用U盘的功夫!
 
-​		其实以上步骤和我参考的那个博客差不多, 但是在他的第三步中, 只是复制了几个文件. 对于我来说, 出现了部分资源缺失的问题:
-
-**使用hexo s之后, 部分图片找不到了! **
+​		其实以上步骤和我参考的那个博客差不多, 但是在他的第三步中, 只是复制了几个文件. 对于我来说, 出现了部分资源缺失的问题:**使用hexo s之后, 部分图片找不到了!**
 
 原因其实很简单:
 
