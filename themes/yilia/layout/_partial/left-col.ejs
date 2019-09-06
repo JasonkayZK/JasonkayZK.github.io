@@ -1,0 +1,91 @@
+<% var defaultBg = '#4d4d4d'; %>
+<div class="overlay" style="background: <%= theme.style && theme.style.header ? theme.style.header : defaultBg %>"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="<%=theme.root%>" class="profilepic">
+			<img src="<%=theme.avatar%>" class="js-avatar">
+		</a>
+		<hgroup>
+		  <h1 class="header-author"><a href="<%=theme.root%>"><%=theme.author%></a></h1>
+		</hgroup>
+
+		<!-- <% if (theme.subtitle){ %>
+		<p class="header-subtitle"><%=theme.subtitle%></p>
+		<%}%> -->
+
+		<!-- 动态打字的subtitle -->
+		<p class="header-subtitle"><span id="box"></span></p>
+		
+
+		<nav class="header-menu">
+			<ul>
+			<% for (var i in theme.menu){ %>
+				<li><a href="<%- url_for(theme.menu[i]) %>"><%= i %></a></li>
+	        <%}%>
+			</ul>
+		</nav>
+		<nav class="header-smart-menu">
+    		<% for (var i in theme.smart_menu){ %>
+    			<% if(theme.smart_menu[i]){ %>
+    			<a q-on="click: openSlider(e, '<%-i%>')" href="javascript:void(0)"><%= theme.smart_menu[i] %></a>
+    			<% } %>
+            <%}%>
+		</nav>
+		<nav class="header-nav">
+			<div class="social">
+				<% for (var i in theme.subnav){ %>
+					<a class="<%= i %>" target="_blank" href="<%- url_for(theme.subnav[i]) %>" title="<%= i %>"><i class="icon-<%= i %>"></i></a>
+		        <%}%>
+			</div>
+		</nav>
+	</header>		
+</div>
+
+<style type="text/css">
+	/* 如果光标没出现，而是出现在下一行，那么就是盒子是块级标签，必须得转换成行内标签 */
+	h2 {
+	  display: inline;
+	}
+	/* 想让的光标闪动的话，复制下面的代码 */
+	.typed-cursor {
+	  opacity: 1;
+	  color: White;
+	  animation: typedjsBlink 0.7s infinite;
+	  -webkit-animation: typedjsBlink 0.7s infinite;
+	  animation: typedjsBlink 0.7s infinite;
+	}
+	@keyframes typedjsBlink{
+	  50% { opacity: 0.0; }
+	}
+	@-webkit-keyframes typedjsBlink{
+	  0% { opacity: 1; }
+	  50% { opacity: 0.0; }
+	  100% { opacity: 1; }
+	}
+	.typed-fade-out{
+	  opacity: 0;
+	  transition: opacity .25s;
+	  -webkit-animation: 0;
+	  animation: 0;
+	}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+	var boxObj = document.getElementById('box');
+	new Typed(boxObj,{
+	   // 注意：输出的可以是标签，将标签当节点运行。比如下面的h2
+	   strings: [
+					 '謙虚は人を進歩させ、ごうまんは人を落後させる。', 
+					 '社会の初心者から、よろしくお願いします！',
+					 'Jasonkayの部屋です、よろしくね！'],
+	   typeSpeed: 80, // 速度
+	   backDelay: 1500,
+	   loop: true,
+	   contentType: 'html', // or text
+	   // defaults to null for infinite loop
+	   loopCount: 2,
+	   cursorChar: '❤'
+	});
+});
+</script>
