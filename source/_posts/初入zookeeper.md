@@ -50,7 +50,7 @@ export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH:$ZK_HOME/bin
 ​		初次使用Zookeeper时, 还需要配置文件,将%ZK_HOME/conf/zoo_sample.cfg重命名:
 
 ``` bash
-sudo vi %ZK_HOME/conf/zoo_sample.cfg %ZK_HOME/conf/zoo.cfg
+sudo vi %ZK_HOME/conf/zoo_samplee.cfg %ZK_HOME/conf/zoo.cfg
 ```
 
 ​		并修改内容:
