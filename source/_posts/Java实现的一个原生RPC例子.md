@@ -7,7 +7,7 @@ tags: [RPC, JDK动态代理, 反射, 序列化, Socket, Lambda表达式]
 description: 一个通过Java原生API实现的RPC的例子
 ---
 
-![RPC框架一般时序图](https://img-blog.csdn.net/20180614234025729?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTMwMzQzNzg=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+![RPC框架结构图](http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180616/3f10534bc3e042c3836a043b3244ab24.jpeg)
 
 <br/>
 

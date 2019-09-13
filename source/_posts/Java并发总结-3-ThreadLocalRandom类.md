@@ -1,6 +1,6 @@
 ---
 title: Java并发总结-3-ThreadLocalRandom类
-toc: true
+toc: true 
 date: 2019-09-12 19:52:14
 categories: 并发编程
 tags: [并发编程, 多线程]
