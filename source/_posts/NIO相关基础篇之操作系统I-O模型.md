@@ -34,7 +34,7 @@ description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈�
 
 空间分配如下图所示：
 
-![kernel_space](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/kernel_space.webp)
+![kernel_space](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/kernel_space.png)
 
 <br/>
 
@@ -42,7 +42,7 @@ description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈�
 
 如下图所示：
 
-![linux_structure](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/linux_structure.webp)
+![linux_structure](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/linux_structure.png)
 
 <br/>
 
@@ -65,7 +65,7 @@ description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈�
 
 如下图所示：
 
-![io_buffer](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/io_buffer.webp)
+![io_buffer](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/io_buffer.png)
 
 <font color="#ff0000">整个请求过程为： 用户进程发起请求，内核接受到请求后，从I/O设备中获取数据到buffer中，再将buffer中的数据copy到用户进程的地址空间，该用户进程获取到数据后再响应客户端</font>
 
@@ -94,7 +94,7 @@ description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈�
 
 <font color="#ff0000">在linux中，默认情况下所有的socket都是blocking，</font>一个典型的读操作流程大概是这样：
 
-![blockingIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/blockingIO.webp)
+![blockingIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/blockingIO.png)
 
 当用户进程调用了`recvfrom`这个系统调用，内核就开始了IO的第一个阶段：等待数据准备.
 
@@ -110,7 +110,7 @@ description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈�
 
 当对一个non-blocking socket执行读操作时，流程是这个样子：
 
-![nonblockingIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/nonblockingIO.webp)
+![nonblockingIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/nonblockingIO.png)
 
 <font color="#0000ff">当用户进程调用recvfrom时，系统不会阻塞用户进程，而是立刻返回一个ewouldblock错误，从用户进程角度讲，并不需要等待，而是马上就得到了一个结果.</font>
 
@@ -128,7 +128,7 @@ IO multiplexing这个词可能有点陌生，但是如果我说select，epoll，
 
 它的流程如图：
 
-![io_multiplexing](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/io_multiplexing.webp)
+![io_multiplexing](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/io_multiplexing.png)
 
 当用户进程调用了select，那么整个进程会被block，而同时，内核会“监视”所有select负责的socket，当任何一个socket中的数据准备好了，select就会返回。这个时候用户进程再调用read操作，将数据从内核拷贝到用户进程. 
 
@@ -219,7 +219,7 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本. <fo
 
 由于signal driven IO在实际中并不常用，所以简单提下。
 
-![signalDriverIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/signalDriverIO.webp)
+![signalDriverIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/signalDriverIO.png)
 
 很明显可以看出用户进程不是阻塞的!
 
@@ -231,7 +231,7 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本. <fo
 
 一般来说，这些函数通过告诉内核启动操作并在整个操作（包括内核的数据到缓冲区的副本）完成时通知我们。这个模型和前面的信号驱动I/O模型的主要区别是，在信号驱动的I/O中，内核告诉我们何时可以启动I/O操作，但是异步I/O时，内核告诉我们何时I/O操作完成。
 
-![AIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/AIO.webp)
+![AIO](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/AIO.png)
 
 <font color="#0000ff">当用户进程向内核发起某个操作后，会立刻得到返回，并把所有的任务都交给内核去完成（包括将数据从内核拷贝到用户自己的缓冲区），内核完成之后，只需返回一个信号告诉用户进程已经完成就可以了.</font>
 
@@ -245,13 +245,13 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本. <fo
 
 ### 三. 五种I/O模型的对比
 
-![fiveIO_conpare](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/fiveIO_conpare.webp)
+![fiveIO_conpare](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/fiveIO_conpare.png)
 
 >   **结果表明：**前四个模型之间的主要区别是第一阶段，四个模型的第二阶段是一样的：过程受阻在调用recvfrom当数据从内核拷贝到用户缓冲区。然而，异步I/O处理两个阶段，与前四个不同。
 
 **从同步、异步，以及阻塞、非阻塞两个维度来划分来看：**
 
-![fiveIO_conpare2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/fiveIO_conpare2.webp)
+![fiveIO_conpare2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/fiveIO_conpare2.png)
 
 
 
@@ -274,7 +274,7 @@ write(socket, tmp_buf, len);
 
 首先调用read将静态内容，这里假设为文件A，读取到tmp_buf, 然后调用write将tmp_buf写入到socket中，如图：
 
-![zerocopy_timesequence](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence.webp)
+![zerocopy_timesequence](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence.png)
 
 <br/>
 
@@ -316,11 +316,11 @@ ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 
 下图展示了在transferTo()之后的数据流向：
 
-![zerocopy1](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy1.webp)
+![zerocopy1](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy1.png)
 
 下图展示了在使用transferTo()之后的上下文切换：
 
-![zerocopy2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy2.webp)
+![zerocopy2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy2.png)
 
 使用了Zero-Copy技术之后，整个过程如下：
 
@@ -346,7 +346,7 @@ sendfile(socket, file, len);
 
 该函数通过一次系统调用完成了文件的传送，减少了原来read/write方式的模式切换。此外更是减少了数据的copy, sendfile的详细过程如图：
 
-![zerocopy_timesequence2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence2.webp)
+![zerocopy_timesequence2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence2.png)
 
 通过sendfile传送文件只需要一次系统调用，当调用sendfile时：
 
@@ -360,7 +360,7 @@ sendfile与read/write模式相比，少了一次copy。但是从上述过程中�
 
 Linux2.4 内核对sendfile做了改进，如图：
 
-![zerocopy_timesequence3](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence3.webp)
+![zerocopy_timesequence3](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy_timesequence3.png)
 
 改进后的处理过程如下：
 
@@ -372,7 +372,7 @@ Linux2.4 内核对sendfile做了改进，如图：
 
 正是Linux2.4的内核做了改进，<font color="#ff0000">Java中的TransferTo()实现了Zero-Copy,</font>如下图：
 
-![zerocopy3](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy3.webp)
+![zerocopy3](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/zerocopy3.png)
 
 Zero-Copy技术的使用场景有很多，比如Kafka, 又或者是Netty等，可以大大提升程序的性能。使用的一般场景为:
 
