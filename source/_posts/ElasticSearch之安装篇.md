@@ -3,6 +3,7 @@ title: ElasticSearch之安装篇
 toc: true
 date: 2019-10-02 15:26:42
 categories: [ElasticSearch]
+tags: [ElasticSearch]
 description: 本篇作为ElasticSearch学习的入门篇, 主要讲解了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.
 ---
 

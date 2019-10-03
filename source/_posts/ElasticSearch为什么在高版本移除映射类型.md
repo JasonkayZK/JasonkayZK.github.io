@@ -3,6 +3,7 @@ title: ElasticSearch为什么在高版本移除映射类型
 toc: true
 date: 2019-10-03 09:52:15
 categories: ElasticSearch
+tags: [ElasticSearch]
 description: 由于ElasticSearch官方文档使用的还是2.x版本, 而在使用其中的某些API时, 会出现deprecated提示. 本篇主要总结ElasticSearch中那些由于版本更新而不再推荐使用的API, 同时也作为正式学习ElasticSearch前的又一次预热.
 ---
 

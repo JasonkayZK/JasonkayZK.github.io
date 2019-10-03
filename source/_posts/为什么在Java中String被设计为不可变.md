@@ -3,7 +3,7 @@ title: 为什么在Java中String被设计为不可变
 toc: true
 date: 2019-10-01 23:43:55
 categories: Java源码
-tags: [字符串]
+tags: [Java源码, 字符串]
 description: 众所周知, 在Java中String被声明为不可变. 本篇带你探寻在Java中String被声明为不可变背后的秘密!
 ---
 
