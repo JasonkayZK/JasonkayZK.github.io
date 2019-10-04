@@ -58,7 +58,7 @@ Elasticsearch 是一个开源的搜索引擎，建立在一个全文搜索引擎
 
 但是 Lucene 仅仅只是一个库。为了充分发挥其功能，你需要使用 Java 并将 Lucene 直接集成到应用程序中。更糟糕的是，您可能需要获得信息检索学位才能了解其工作原理。Lucene *非常* 复杂。
 
-<blue>Elasticsearch 也是使用 Java 编写的，它的内部使用 Lucene 做索引与搜索，但是它的目的是使全文检索变得简单，通过隐藏 Lucene 的复杂性，取而代之的提供一套简单一致的 RESTful API。</font>
+<font color="#0000ff">Elasticsearch 也是使用 Java 编写的，它的内部使用 Lucene 做索引与搜索，但是它的目的是使全文检索变得简单，通过隐藏 Lucene 的复杂性，取而代之的提供一套简单一致的 RESTful API。</font>
 
 然而，**Elasticsearch 不仅仅是 Lucene，并且也不仅仅只是一个全文搜索引擎**。  它可以被下面这样准确的形容：
 
@@ -80,13 +80,13 @@ Elasticsearch 将所有的功能打包成一个单独的服务，这样你可以
 
 -   节点客户端（Node client） 
 
-    <blue>节点客户端作为一个`非数据节点加入到本地集群`中。换句话说，它本身不保存任何数据，但是它知道数据在集群中的哪个节点中，并且可以把请求转发到正确的节点。 </font>
+    <font color="#0000ff">节点客户端作为一个`非数据节点加入到本地集群`中。换句话说，它本身不保存任何数据，但是它知道数据在集群中的哪个节点中，并且可以把请求转发到正确的节点。 </font>
 
 -   传输客户端（Transport client） 
 
-    <blue>轻量级的传输客户端可以将请求发送到远程集群。它`本身不加入集群`，但是它可以将请求转发到集群中的一个节点上。 </font>
+    <font color="#0000ff">轻量级的传输客户端可以将请求发送到远程集群。它`本身不加入集群`，但是它可以将请求转发到集群中的一个节点上。 </font>
 
-<red>两个 Java 客户端都是通过 `9300 端口`并使用 Elasticsearch 的原生 *传输* 协议和集群交互。</font>集群中的节点通过端口 9300 彼此通信。如果这个端口没有打开，节点将无法形成一个集群。
+<font color="#ff0000">两个 Java 客户端都是通过 `9300 端口`并使用 Elasticsearch 的原生 *传输* 协议和集群交互。</font>集群中的节点通过端口 9300 彼此通信。如果这个端口没有打开，节点将无法形成一个集群。
 
 >   Java 客户端作为节点必须和 Elasticsearch 有相同的 *主要* 版本；否则，它们之间将无法互相理解。
 
@@ -96,7 +96,7 @@ Elasticsearch 将所有的功能打包成一个单独的服务，这样你可以
 
 ##### RESTful API with JSON over HTTP
 
-<red>所有其他语言可以使用 RESTful API 通过端口 *9200* 和 lasticsearch 进行通信，你可以用你最喜爱的 web 客户端访问 Elasticsearch ，你甚至可以使用 `curl` 命令来和 Elasticsearch 交互:</font> 
+<font color="#ff0000">所有其他语言可以使用 RESTful API 通过端口 *9200* 和 lasticsearch 进行通信，你可以用你最喜爱的 web 客户端访问 Elasticsearch ，你甚至可以使用 `curl` 命令来和 Elasticsearch 交互:</font> 
 
 一个 Elasticsearch 请求和任何 HTTP 请求一样由若干相同的部件组成：
 
@@ -196,9 +196,9 @@ Elasticsearch 是 *面向文档* 的，意味着它存储整个对象或 *文档
 
 #### 1. 增加员工数据
 
-第一个业务需求是存储员工数据. 这将会<blue>以*员工文档* 的形式存储：一个文档代表一个员工。</font><red>存储数据到 Elasticsearch 的行为叫做 *索引* ，但在索引一个文档之前，需要确定将文档存储在哪里。</font>
+第一个业务需求是存储员工数据. 这将会<font color="#0000ff">以*员工文档* 的形式存储：一个文档代表一个员工。</font><font color="#ff0000">存储数据到 Elasticsearch 的行为叫做 *索引* ，但在索引一个文档之前，需要确定将文档存储在哪里。</font>
 
-<blue>一个 Elasticsearch 集群可以  包含多个 *索引* ，相应的每个索引可以包含多个 *类型* 。 这些不同的类型存储着多个 *文档* ，每个文档又有  多个 *属性* 。</font>
+<font color="#0000ff">一个 Elasticsearch 集群可以  包含多个 *索引* ，相应的每个索引可以包含多个 *类型* 。 这些不同的类型存储着多个 *文档* ，每个文档又有  多个 *属性* 。</font>
 
 >   (1 * Index  = n * types)
 >
@@ -206,13 +206,13 @@ Elasticsearch 是 *面向文档* 的，意味着它存储整个对象或 *文档
 >
 >   1 * _doc = n * attr
 >
->   <red>需要注意的是, 在高版本中已经删去了types特性</font>具体原因可查看我的另一篇文章: [ElasticSearch为什么在高版本移除映射类型](https://jasonkayzk.github.io/2019/10/03/ElasticSearch%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E9%AB%98%E7%89%88%E6%9C%AC%E7%A7%BB%E9%99%A4%E6%98%A0%E5%B0%84%E7%B1%BB%E5%9E%8B/)
+>   <font color="#ff0000">需要注意的是, 在高版本中已经删去了types特性</font>具体原因可查看我的另一篇文章: [ElasticSearch为什么在高版本移除映射类型](https://jasonkayzk.github.io/2019/10/03/ElasticSearch%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E9%AB%98%E7%89%88%E6%9C%AC%E7%A7%BB%E9%99%A4%E6%98%A0%E5%B0%84%E7%B1%BB%E5%9E%8B/)
 
 **倒排索引：**
 
-<blue>关系型数据库通过增加一个 *索引* 比如一个 B树（B-tree）索引到指定的列上，以便提升数据检索速度。Elasticsearch 和 Lucene 使用了一个叫做  *倒排索引* 的结构来达到相同的目的。</font>
+<font color="#0000ff">关系型数据库通过增加一个 *索引* 比如一个 B树（B-tree）索引到指定的列上，以便提升数据检索速度。Elasticsearch 和 Lucene 使用了一个叫做  *倒排索引* 的结构来达到相同的目的。</font>
 
-<red>默认的，一个文档中的*每一个属性都是被索引* 的（有一个倒排索引）和可搜索的。一个没有倒排索引的属性是不能被搜索到的!</font>
+<font color="#ff0000">默认的，一个文档中的*每一个属性都是被索引* 的（有一个倒排索引）和可搜索的。一个没有倒排索引的属性是不能被搜索到的!</font>
 
 <br/>
 
@@ -249,7 +249,7 @@ PUT /employee/_doc/1
     -   1: 特定雇员的ID
 -   请求体(JSON 文档): 包含了这位员工的所有详细信息，他的名字叫 John Smith ，今年 25 岁，喜欢攀岩
 
-很简单！<red>无需进行执行管理任务，如创建一个索引或指定每个属性的数据类型之类的，可以直接只索引一个文档! </font>Elasticsearch 默认地完成其他一切，因此所有必需的管理任务都在后台使用默认设置完成。
+很简单！<font color="#ff0000">无需进行执行管理任务，如创建一个索引或指定每个属性的数据类型之类的，可以直接只索引一个文档! </font>Elasticsearch 默认地完成其他一切，因此所有必需的管理任务都在后台使用默认设置完成。
 
 执行之后返回一条结果:
 
@@ -304,7 +304,7 @@ PUT /employee/_doc/3
 
 目前我们已经在 Elasticsearch 中存储了一些数据，  接下来就能专注于实现应用的业务需求了。第一个需求是可以检索到单个雇员的数据。 这在 Elasticsearch 中很简单:
 
-<blue>简单地执行  一个 HTTP `GET` 请求并指定文档的地址: 索引库、类型和ID. 使用这三个信息可以返回原始的 JSON 文档:</font>
+<font color="#0000ff">简单地执行  一个 HTTP `GET` 请求并指定文档的地址: 索引库、类型和ID. 使用这三个信息可以返回原始的 JSON 文档:</font>
 
 ```json
 // 按照id获取信息
@@ -358,7 +358,7 @@ GET /employee/_doc/1
 GET /employee/_search
 ```
 
-可以看到，我们仍然使用索引库 `employee`，但与指定一个文档 ID 不同，这次使用 `_search` 。返回结果包括了所有三个文档，放在数组`hits` 中。<blue>一个搜索默认返回十条结果.</font>
+可以看到，我们仍然使用索引库 `employee`，但与指定一个文档 ID 不同，这次使用 `_search` 。返回结果包括了所有三个文档，放在数组`hits` 中。<font color="#0000ff">一个搜索默认返回十条结果.</font>
 
 ```json
 {
@@ -444,7 +444,7 @@ GET /employee/_search
 GET /employee/_search?q=last_name:Smith
 ```
 
-我们仍然<red>在请求路径中使用 `_search` 端点，并将查询本身赋值给参数 `q=`.</font>返回结果给出了所有的 Smith：
+我们仍然<font color="#ff0000">在请求路径中使用 `_search` 端点，并将查询本身赋值给参数 `q=`.</font>返回结果给出了所有的 Smith：
 
 ```json
 {
@@ -496,7 +496,7 @@ GET /employee/_search?q=last_name:Smith
 
 #### 4. 使用查询表达式搜索
 
-`Query-string `搜索通过命令非常方便地进行**临时性的即席搜索**  ，但它有自身的局限性: <blue>查询字符串搜索允许任何用户在索引的任意字段上执行可能较慢且重量级的查询，这可能会暴露隐私信息，甚至将集群拖垮 !</font>
+`Query-string `搜索通过命令非常方便地进行**临时性的即席搜索**  ，但它有自身的局限性: <font color="#0000ff">查询字符串搜索允许任何用户在索引的任意字段上执行可能较慢且重量级的查询，这可能会暴露隐私信息，甚至将集群拖垮 !</font>
 
 Elasticsearch 提供一个丰富灵活的查询语言叫做 *查询表达式* ， 它支持构建更加复杂和健壮的查询。
 
@@ -519,7 +519,7 @@ GET /employee/_search
 }
 ```
 
-返回结果与之前的查询一样，但还是可以看到有一些变化。其中之一是，<red>不再使用 *query-string* 参数，而是一个请求体替代!</font> 这个请求使用 JSON 构造，并使用了一个 `match` 查询!
+返回结果与之前的查询一样，但还是可以看到有一些变化。其中之一是，<font color="#ff0000">不再使用 *query-string* 参数，而是一个请求体替代!</font> 这个请求使用 JSON 构造，并使用了一个 `match` 查询!
 
 <br/>
 
@@ -602,7 +602,7 @@ GET /employee/_search
 }
 ```
 
-显然我们依旧使用之前的 `match` 查询在`about` 属性上搜索 “rock climbing” 。<blue>得到两个匹配的文档</font>：
+显然我们依旧使用之前的 `match` 查询在`about` 属性上搜索 “rock climbing” 。<font color="#0000ff">得到两个匹配的文档</font>：
 
 ```json
 {
@@ -652,9 +652,9 @@ GET /employee/_search
 
 Elasticsearch  默认按照相关性得分`_score`排序，即**每个文档跟查询的匹配程度**。第一个最高得分的结果很明显：John Smith 的 `about` 属性清楚地写着 "rock climbing" .
 
-<green>但为什么 Jane Smith 也作为结果返回了呢？原因是她的 `about` 属性里提到了 “rock” 。因为只有 “rock” 而没有 “climbing” ，所以她的相关性得分低于 John 的。</font>
+<font color="#00ff00">但为什么 Jane Smith 也作为结果返回了呢？原因是她的 `about` 属性里提到了 “rock” 。因为只有 “rock” 而没有 “climbing” ，所以她的相关性得分低于 John 的。</font>
 
-这是一个很好的案例，阐明了 Elasticsearch 如何在`全文属性上搜索并返回相关性最强的结果`。<red>Elasticsearch中的 *相关性*   概念非常重要，也是完全区别于传统关系型数据库的一个概念，`数据库中的一条记录要么匹配要么不匹配`</font>
+这是一个很好的案例，阐明了 Elasticsearch 如何在`全文属性上搜索并返回相关性最强的结果`。<font color="#ff0000">Elasticsearch中的 *相关性*   概念非常重要，也是完全区别于传统关系型数据库的一个概念，`数据库中的一条记录要么匹配要么不匹配`</font>
 
 <br/>
 
@@ -741,7 +741,7 @@ GET /megacorp/_search
 
 ```
 
-当执行该查询时，<blue>返回结果与之前一样，与此同时结果中还多了一个叫做 `highlight` 的部分.</font> 这个部分包含了 `about` 属性匹配的文本片段，并以 HTML 标签 `<em></em>` 封装：
+当执行该查询时，<font color="#0000ff">返回结果与之前一样，与此同时结果中还多了一个叫做 `highlight` 的部分.</font> 这个部分包含了 `about` 属性匹配的文本片段，并以 HTML 标签 `<em></em>` 封装：
 
 ```json
 {
@@ -781,7 +781,7 @@ GET /megacorp/_search
 
 终于到了最后一个业务需求: 支持管理者对员工目录做分析
 
-<blue>Elasticsearch 有一个功能叫聚合（aggregations），允许我们基于数据生成一些精细的分析结果。聚合与 SQL 中的 `GROUP BY` 类似但更强大</font>
+<font color="#0000ff">Elasticsearch 有一个功能叫聚合（aggregations），允许我们基于数据生成一些精细的分析结果。聚合与 SQL 中的 `GROUP BY` 类似但更强大</font>
 
 举个例子，挖掘出员工中最受欢迎的兴趣爱好:
 
@@ -806,7 +806,7 @@ GET /employee/_search
 
 ##### 开启聚合模式
 
-对于高版本来说, 在执行聚合操作时, 可能会报: `typeillegal_argument_exception`异常, 这是由于: <red>Elastic Search在进行聚合操作时, 都是在内存中进行计算的, 可能会造成OOM错误, 所以默认情况下是关闭的, 可以通过修改`fielddata`字段启用</font>
+对于高版本来说, 在执行聚合操作时, 可能会报: `typeillegal_argument_exception`异常, 这是由于: <font color="#ff0000">Elastic Search在进行聚合操作时, 都是在内存中进行计算的, 可能会造成OOM错误, 所以默认情况下是关闭的, 可以通过修改`fielddata`字段启用</font>
 
 ```json
 // ES进行如下聚合操作时，会报如题所示错误:
@@ -851,7 +851,7 @@ PUT employee/_mapping
 }
 ```
 
-可以看到，两位员工对音乐感兴趣，一位对林业感兴趣，一位对运动感兴趣。<red>这些聚合的结果数据并非预先统计，而是根据匹配当前查询的文档`即时生成`的。</font>
+可以看到，两位员工对音乐感兴趣，一位对林业感兴趣，一位对运动感兴趣。<font color="#ff0000">这些聚合的结果数据并非预先统计，而是根据匹配当前查询的文档`即时生成`的。</font>
 
 如果想知道叫 Smith 的员工中最受欢迎的兴趣爱好，可以直接构造一个组合查询：
 
@@ -977,7 +977,7 @@ GET /employee/_search
 
 ### 三. 分布式特性
 
-Elasticsearch 可以横向扩展至数百（甚至数千）的服务器节点，同时可以处理PB级数据。这是由于<green>Elasticsearch 天生就是分布式的，并且在设计时屏蔽了分布式的复杂性。Elasticsearch 在分布式方面几乎是透明的!</font>
+Elasticsearch 可以横向扩展至数百（甚至数千）的服务器节点，同时可以处理PB级数据。这是由于<font color="#00ff00">Elasticsearch 天生就是分布式的，并且在设计时屏蔽了分布式的复杂性。Elasticsearch 在分布式方面几乎是透明的!</font>
 
 #### 0. 分布式集群综述
 
@@ -993,13 +993,13 @@ ElasticSearch 的主旨是**随时可用和按需扩容**。 而扩容可以通�
 
 虽然 Elasticsearch 可以获益于更强大的硬件设备，但是垂直扩容是有极限的。 真正的扩容能力是来自于水平扩容--为集群添加更多的节点，并且将负载压力和稳定性分散到这些节点中
 
-对于大多数的数据库而言，通常需要对应用程序进行非常大的改动，才能利用上横向扩容的新增资源。 与之相反的是，<blue>ElastiSearch天生就是 *分布式的* ，它知道如何通过管理多节点来提高扩容性和可用性, 这也意味着你的应用无需关注这个问题。</font>
+对于大多数的数据库而言，通常需要对应用程序进行非常大的改动，才能利用上横向扩容的新增资源。 与之相反的是，<font color="#0000ff">ElastiSearch天生就是 *分布式的* ，它知道如何通过管理多节点来提高扩容性和可用性, 这也意味着你的应用无需关注这个问题。</font>
 
 <br/>
 
 #### 1. 空集群
 
-
+未完待续
 
 
 
