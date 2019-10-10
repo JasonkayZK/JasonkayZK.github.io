@@ -1,7 +1,7 @@
 ---
 title: ElasticSearch之学习篇-1
 toc: true
-date: 2019-10-03 12:40:24
+date: 2019-10-10 20:40:24
 categories: [ElasticSearch]
 tags: [ElasticSearch]
 description: 经过前两篇对于ES的热身, 从本篇开始, 将正式总结ES相关知识.
@@ -15,10 +15,14 @@ description: 经过前两篇对于ES的热身, 从本篇开始, 将正式总结E
 
 本篇文章主要内容:
 
--   
+-   什么是ES? 为什么要使用ES?
+-   和ES交换的方式: Java API, RESTful API with JSON over HTTP
+-   从一个员工例子开始介绍增删改查
+-   简单介绍ES特性: match, filter, 全文检索, 短语搜索, 高亮搜索等
+-   ES的分布式特性: 创建集群, 集群健康, 向集群中添加索引, 添加故障转移, 水平扩容等
 -   ......
 
-
+<br/>
 
 <!--more-->
 
@@ -652,7 +656,7 @@ GET /employee/_search
 
 Elasticsearch  默认按照相关性得分`_score`排序，即**每个文档跟查询的匹配程度**。第一个最高得分的结果很明显：John Smith 的 `about` 属性清楚地写着 "rock climbing" .
 
-<font color="#00ff00">但为什么 Jane Smith 也作为结果返回了呢？原因是她的 `about` 属性里提到了 “rock” 。因为只有 “rock” 而没有 “climbing” ，所以她的相关性得分低于 John 的。</font>
+<font color="#0000ff">但为什么 Jane Smith 也作为结果返回了呢？原因是她的 `about` 属性里提到了 “rock” 。因为只有 “rock” 而没有 “climbing” ，所以她的相关性得分低于 John 的。</font>
 
 这是一个很好的案例，阐明了 Elasticsearch 如何在`全文属性上搜索并返回相关性最强的结果`。<font color="#ff0000">Elasticsearch中的 *相关性*   概念非常重要，也是完全区别于传统关系型数据库的一个概念，`数据库中的一条记录要么匹配要么不匹配`</font>
 
@@ -977,7 +981,7 @@ GET /employee/_search
 
 ### 三. 分布式特性
 
-Elasticsearch 可以横向扩展至数百（甚至数千）的服务器节点，同时可以处理PB级数据。这是由于<font color="#00ff00">Elasticsearch 天生就是分布式的，并且在设计时屏蔽了分布式的复杂性。Elasticsearch 在分布式方面几乎是透明的!</font>
+Elasticsearch 可以横向扩展至数百（甚至数千）的服务器节点，同时可以处理PB级数据。这是由于<font color="#0000ff">Elasticsearch 天生就是分布式的，并且在设计时屏蔽了分布式的复杂性。Elasticsearch 在分布式方面几乎是透明的!</font>
 
 #### 0. 分布式集群综述
 
@@ -999,15 +1003,244 @@ ElasticSearch 的主旨是**随时可用和按需扩容**。 而扩容可以通�
 
 #### 1. 空集群
 
-未完待续
+如果我们启动了一个单独的节点，里面不包含任何的数据和
+索引，那我们的集群看起来就是一个**包含空内容节点的集群**
+
+![包含空内容节点的集群](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/包含空内容节点的集群.png)
+
+<font color="#ff0000">一个运行中的 Elasticsearch 实例称为一个`节点`，而集群是由一个或者多个拥有相同 `cluster.name` 配置的节点组成， 它们共同承担数据和负载的压力。当有节点加入集群中或者从集群中移除节点时，集群将会*重新平均分布所有的数据*。</font>
+
+<font color="#0000ff">当一个节点被选举成为 *主* 节点时， 它将负责管理集群范围内的所有变更，例如`增加、删除索引，或者增加、删除节点`等。</font> <font color="#ff0000">而主节点并不需要涉及到文档级别的变更和搜索等操作，所以当集群只拥有一个主节点的情况下，即使流量的增加它也不会成为瓶颈!</font> 任何节点都可以成为主节点。我们的示例集群就只有一个节点，所以它同时也成为了主节点。
+
+作为用户，我们<font color="#0000ff">可以将请求发送到 *集群中的任何节点* ，包括主节点。 每个节点都知道任意文档所处的位置，并且能够将我们的请求直接转发到存储我们所需文档的节点。 无论我们将请求发送到哪个节点，它都能负责从各个包含我们所需文档的节点收集回数据，并将最终结果返回給客户端。</font> **Elasticsearch 对这一切的管理都是透明的。**
+
+<br/>
+
+#### 2. 集群健康
+
+Elasticsearch 的集群监控信息中包含了许多的统计数据，其中最为重要的一项就是 *集群健康* ，它在 `status` 字段中展示为 `green` 、 `yellow` 或者 `red` 
+
+```json
+// 集群健康
+// Elasticsearch 的集群监控信息中包含了许多的统计数据，其中最为重要的一项就是 集群健康 ， 它在 status 字段中展示为 green 、 yellow 或者 red
+// status 字段是我们最关心的
+// status 字段指示着当前集群在总体上是否工作正常
+GET /_cluster/health
+```
+
+在一个不包含任何索引的空集群中，它将会有一个类似于如下所示的返回内容：
+
+```json
+{
+    "cluster_name": "elasticsearch",
+    "status": "yellow",
+    "timed_out": false,
+    "number_of_nodes": 1,
+    "number_of_data_nodes": 1,
+    "active_primary_shards": 6,
+    "active_shards": 6,
+    "relocating_shards": 0,
+    "initializing_shards": 0,
+    "unassigned_shards": 4,
+    "delayed_unassigned_shards": 0,
+    "number_of_pending_tasks": 0,
+    "number_of_in_flight_fetch": 0,
+    "task_max_waiting_in_queue_millis": 0,
+    "active_shards_percent_as_number": 60
+}
+```
+
+>   `status` 字段是我们最关心的。
+
+`status` 字段指示着当前集群在总体上是否工作正常。它的三种颜色含义如下：
+
+-    `green` 
+
+    ​    所有的主分片和副本分片都正常运行。 
+
+-    `yellow` 
+
+       <font color="#ff0000">所有的主分片都正常运行，但不是所有的副本分片都正常运行</font> 
+
+-    `red` 
+
+    ​    有主分片没能正常运行。 
+
+<br/>
+
+#### 3. 添加索引
+
+<font color="#0000ff">索引实际上是指向一个或者多个物理 *分片* 的 *逻辑命名空间* . 一个 *分片* 是一个底层的 *工作单元* ，它仅保存了 全部数据中的一部分, 一个分片是一个 Lucene 的实例，它本身就是一个完整的搜索引擎.</font> <font color="#ff0000">我们的文档被存储和索引到分片内，但是应用程序是直接与索引而不是与分片进行交互!</font>
+
+<font color="#0000ff">Elasticsearch 是利用分片将数据分发到集群内各处的。分片是数据的容器，文档保存在分片内，分片又被分配到集群内的各个节点里。</font> <font color="#ff0000">当你的集群规模扩大或者缩小时， Elasticsearch 会自动的在各节点中迁移分片，使得数据仍然均匀分布在集群里。</font>
+
+<font color="#ff0000">一个分片可以是 *主* 分片或者 *副本* 分片。  索引内任意一个文档都归属于一个主分片，所以主分片的数目决定着索引能够保存的最大数据量。</font>
+
+>   技术上来说，一个主分片最大能够存储 Integer.MAX_VALUE - 128 个文档，但是实际最大值还需要参考你的使用场景：包括你使用的硬件，
+>   文档的大小和复杂程度，索引和查询文档的方式以及你期望的响应时长。
+
+<font color="#ff0000">一个副本分片只是一个主分片的拷贝。 副本分片作为硬件故障时保护数据不丢失的冗余备份，并为搜索和返回文档等*读操作*提供服务。</font>
+
+<font color="#ff0000">在索引建立的时候就已经确定了主分片数，但是副本分片数可以随时修改。</font>
+
+让我们在包含一个空节点的集群内创建名为 `blogs` 的索引。  <font color="#ff0000">索引在默认情况下会被分配5个主分片，</font>   但是为了演示目的，我们将分配3个主分片和一份副本（每个主分片拥有一个副本分片）：
+
+```json
+// 添加索引
+// 在包含一个空节点的集群内创建名为 blogs 的索引
+// 索引在默认情况下会被分配5个主分片， 但是为了演示目的，我们将分配3个主分片和一份副本（每个主分片拥有一个副本分片）
+PUT /blogs
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1
+  }
+}
+
+```
+
+我们的集群现在是`拥有一个索引的单节点集群`. 所有3个主分片都被分配在 `Node 1` 。
+
+![拥有一个索引的单节点集群](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/拥有一个索引的单节点集群.png)
+
+<br/>
+
+如果我们现在查看`集群健康`，我们将看到如下内容：
+
+```json
+GET /_cluster/health
+
+
+{
+    "cluster_name": "elasticsearch",
+    "status": "yellow",
+    "timed_out": false,
+    "number_of_nodes": 1,
+    "number_of_data_nodes": 1,
+    "active_primary_shards": 6,
+    "active_shards": 6,
+    "relocating_shards": 0,
+    "initializing_shards": 0,
+    "unassigned_shards": 4,
+    "delayed_unassigned_shards": 0,
+    "number_of_pending_tasks": 0,
+    "number_of_in_flight_fetch": 0,
+    "task_max_waiting_in_queue_millis": 0,
+    "active_shards_percent_as_number": 60
+}
+```
+
+>   集群 `status` 值为 `yellow` 。
+>
+>   没有被分配到任何节点的副本数。
+
+集群的健康状况为 `yellow` 则表示全部 *主* 分片都正常运行（集群可以正常服务所有请求），<font color="#0000ff">但是 *副本* 分片没有全部处在正常状态。</font> 
+
+实际上，所有3个副本分片都是 `unassigned` —— 它们都没有被分配到任何节点。 <font color="#0000ff">在同一个节点上既保存原始数据又保存副本是没有意义的，因为一旦失去了那个节点，我们也将丢失该节点上的所有副本数据。</font>
+
+<font color="#0000ff">当前我们的集群是正常运行的，但是在硬件故障时有丢失数据的风险。</font>
+
+<br/>
 
 
 
+#### 4. 添加故障转移
 
+当集群中只有一个节点在运行时，意味着会有一个单点故障问题——没有冗余。幸运的是，我们只需再启动一个节点即可防止数据丢失!
 
+**启动第二个节点**
 
+为了测试第二个节点启动后的情况，你可以参考我的另一篇文章, 里面很详细的讲述了如何在单机部署两个ES: [在单台服务器部署多个ElasticSearch节点](https://jasonkayzk.github.io/2019/10/04/%E5%9C%A8%E5%8D%95%E5%8F%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2%E5%A4%9A%E4%B8%AAElasticSearch%E8%8A%82%E7%82%B9/)
 
+如果启动了第二个节点，我们的集群将会如图:
 
+![拥有两个节点的集群](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/拥有两个节点的集群.png)
+
+<br/>
+
+<font color="#ff0000">当第二个节点加入到集群后，3个 *副本分片* 将会分配到这个节点上——每个主分片对应一个副本分片。</font> 这意味着当集群内任何一个节点出现问题时，我们的数据都完好无损。
+
+<font color="#ff0000">所有新近被索引的文档都将会保存在主分片上，然后被并行的复制到对应的副本分片上。这就保证了我们既可以从主分片又可以从副本分片上获得文档!</font>
+
+`cluster-health` 现在展示的状态为 `green` ，这表示所有6个分片（包括3个主分片和3个副本分片）都在正常运行!
+
+```json
+{
+  "cluster_name": "elasticsearch",
+  "status": "green", 
+  "timed_out": false,
+  "number_of_nodes": 2,
+  "number_of_data_nodes": 2,
+  "active_primary_shards": 3,
+  "active_shards": 6,
+  "relocating_shards": 0,
+  "initializing_shards": 0,
+  "unassigned_shards": 0,
+  "delayed_unassigned_shards": 0,
+  "number_of_pending_tasks": 0,
+  "number_of_in_flight_fetch": 0,
+  "task_max_waiting_in_queue_millis": 0,
+  "active_shards_percent_as_number": 100
+}
+```
+
+<br/>
+
+#### 5. 水平扩容
+
+当启动了第三个节点，我们的集群将会看起来如图:
+
+![拥有三个节点的集群](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/拥有三个节点的集群.png)
+
+`Node 1` 和 `Node 2` 上各有一个分片被迁移到了新的 `Node 3` 节点，现在每个节点上都拥有2个分片，而不是之前的3个。 这表示<font color="#ff0000">每个节点的硬件资源（CPU, RAM, I/O）将被更少的分片所共享，每个分片的性能将会得到提升。</font>
+
+<font color="#ff0000">分片是一个功能完整的搜索引擎，它拥有使用一个节点上的所有资源的能力。</font> <font color="#0000ff">我们这个拥有6个分片（3个主分片和3个副本分片）的索引可以最大扩容到6个节点，每个节点上存在一个分片，并且每个分片拥有所在节点的全部资源。</font>
+
+**更多的扩容!**
+
+但是如果我们想要扩容超过6个节点怎么办呢？
+
+<font color="#ff0000">主分片的数目在索引创建时就已经确定了下来。实际上，这个数目定义了这个索引能够 *存储* 的最大数据量!</font>（实际大小取决于你的数据、硬件和使用场景。） 但是，<font color="#ff0000">读操作——搜索和返回数据——可以同时被主分片 *或* 副本分片所处理，所以当你拥有越多的副本分片时，也将拥有越高的吞吐量。</font>
+
+<font color="#ff0000">在运行中的集群上是可以*动态调整副本分片数目*的 ，我们可以按需伸缩集群。</font>让我们把副本数从默认的 `1` 增加到 `2` :
+
+```json
+PUT /blogs/_settings
+{
+   "number_of_replicas" : 2
+}
+
+```
+
+将参数 `number_of_replicas` 调大到 2 `blogs` 索引现在拥有9个分片：3个主分片和6个副本分片。这意味着我们可以将集群扩容到9个节点，每个节点上一个分片。相比原来3个节点时，集群搜索性能可以提升 *3* 倍:
+
+![将参数number_of_replicas调大到2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/将参数number_of_replicas调大到2.png)
+
+<br/>
+
+>   **注:** 如果<font color="#ff0000">只是在相同节点数目的集群上增加更多的副本分片并不能提高性能，因为每个分片从节点上获得的资源会变少。 你需要增加更多的硬件资源来提升吞吐量!</font>
+>
+>   但是更多的副本分片数提高了数据冗余量：按照上面的节点配置，我们可以在失去2个节点的情况下不丢失任何数据。
+
+<br/>
+
+#### 6. 应对故障
+
+Elasticsearch 可以应对节点故障，如果我们关闭第一个节点，这时集群的状态为下图所示:
+
+![关闭了一个节点后的集群](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/关闭了一个节点后的集群.png)
+
+<br/>
+
+我们关闭的节点是一个主节点。<font color="#0000ff">而集群必须拥有一个主节点来保证正常工作，所以发生的第一件事情就是选举一个新的主节点： `Node 2` 。</font>
+
+<font color="#ff0000">在我们关闭 `Node 1` 的同时也失去了主分片 `1` 和 `2` ，并且在缺失主分片的时候索引也不能正常工作。   如果此时来检查集群的状况，我们看到的状态将会为 `red` ：不是所有主分片都在正常工作。</font>
+
+幸运的是，<font color="#ff0000">在其它节点上存在着这两个主分片的完整副本， 所以新的主节点立即将这些分片在 `Node 2` 和 `Node 3` 上对应的副本分片提升为主分片， 此时集群的状态将会为 `yellow` 。 这个提升主分片的过程是瞬间发生的，如同按下一个开关一般。</font>
+
+为什么我们集群状态是 `yellow` 而不是 `green` 呢？ <font color="#0000ff">虽然我们拥有所有的三个主分片，但是同时设置了每个主分片需要对应2份副本分片，而此时只存在一份副本分片。</font> 所以集群不能为 `green` 的状态，不过我们不必过于担心：<font color="#ff0000">如果我们同样关闭了 `Node 2` ，我们的程序 *依然* 可以保持在不丢任何数据的情况下运行，因为 `Node 3` 为每一个分片都保留着一份副本!</font>
+
+<font color="#0000ff">如果我们重新启动 `Node 1` ，集群可以将缺失的副本分片再次进行分配，那么如果 `Node 1` 依然拥有着之前的分片，它将尝试去重用它们，同时仅从主分片复制发生了修改的数据文件。</font>
 
 
 
@@ -1017,53 +1250,14 @@ ElasticSearch 的主旨是**随时可用和按需扩容**。 而扩容可以通�
 
 
 
-### 四. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-<br/>
-
--------
-
-
-
-### 五. 
-
-
-
-
-
-
-
-
-
-<br/>
-
-----------------
-
-
-
 ### 附录
 
 文章参考:
 
 -   [ES官方文档](https://www.elastic.co/guide/cn/elasticsearch/guide/current/intro.html)
 
+<br/>
 
-
-示例代码: 
-
-
-
+示例代码: https://github.com/JasonkayZK/ElasticSearch_Learn/tree/master/chapter1_basic
 
 
