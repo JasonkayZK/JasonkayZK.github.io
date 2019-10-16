@@ -13,7 +13,7 @@ description: 教你如何在Github中保存源代码.
 
 <!--more-->
 
-### 0. 前言
+### 零. 前言
 
 ​		由于最近要回学校, 在学校期间也想写一下博客记录. 而Hexo在部署的时候, 是仅仅部署了编译过的静态资源的, 所以上传到github上面的*.github.io仓库的master分支时只会有静态资源.(废话!) 这样, <font color="#FF0000">你换一台电脑, 在进行git clone的时候, clone的其实只是你发布的静态资源. </font>
 
@@ -61,15 +61,15 @@ git push origin save
 
 -------------------
 
-### 1. 正文
+### 一. 正文
 
 ​		本文针对的是<font color="#FF0000">已经在github搭建了仓库</font>的同学, 如果你还没有搭建仓库, 可以先试着搭建一个自己的博客哦!
 
-*1. 在username.github.io仓库创建一个分支: **save** [名字可以随意];*
+#### 1. 在username.github.io仓库创建一个分支: **save** [名字可以随意];
 
 ![在github上直接创建分支的方法](https://upload-images.jianshu.io/upload_images/4904768-028896088d24cd6a.png?imageMogr2/auto-orient/strip|imageView2/2/w/594)
 
-*2. 设置save为你的默认分支:*
+#### 2. 设置save为你的默认分支:
 
 这里是为了让你提交的时候, 如果没有写明分支, 则默认提交到这个分支.
 
@@ -77,29 +77,29 @@ git push origin save
 
 ![设置save为你的默认分支](https://help.github.com/assets/images/help/repository/repository-options-branch.png)
 
-*3. 将你的博客仓库clone到本地*
+#### 3. 将你的博客仓库clone到本地
 
 **注意: ** <font color="#FF0000">由于之前修改了分支, 所以clone的应该是save分支!</font>
 
-*4. 删除所有文件, <font color="#FF0000">仅保留.git文件夹</font>*
+#### 4. 删除所有文件, <font color="#FF0000">仅保留.git文件夹</font>
 
 ​		这里可能要显示隐藏文件, 也删除就好.
 
-*5. 将之前包括源代码的博客文件夹中的内容全部复制进来.*
+#### 5. 将之前包括源代码的博客文件夹中的内容全部复制进来.
 
-*6. 修改.gitignore.*
+#### 6. 修改.gitignore.
 
-*7. 将`themes/yilia/`(**这个和你用的博客主题有关**)下的`.git/`删除:*
+#### 7. 将`themes/yilia/`(**这个和你用的博客主题有关**)下的`.git/`删除:这里是因为, 在一个git中, 不可以包括另外一个.git!*
 
-*8. 这里是因为, 在一个git中, 不可以包括另外一个.git!*
+这里是因为: <font color="#FF0000">在一个git中, 不可以包括另外一个.git!</font>
 
 这时即配置完成!
 
+<br/>
 
+### 二. 修改
 
-### 2. 修改
-
-*1. 对于提交Github源码:*
+#### 1. 对于提交Github源码:
 
 通过你的老三步:
 
@@ -111,7 +111,7 @@ git push origin save
 
 <font color="#FF0000">注意这里是save分支!</font>
 
-*2. 对于发布博客:*
+#### 2. 对于发布博客:
 
 和你之前一点变化都没有!
 
@@ -124,7 +124,9 @@ hexo d --message '发布新文章 ' # 发布
 
 它们之间没有严格的顺序!
 
-### 3. 远程clone
+<br/>
+
+### 三. 远程clone
 
 ​		使用git clone时, <font color="#FF0000">指定克隆的分支也可以:</font>
 
@@ -144,7 +146,9 @@ cnpm install hexo-deployer-git
 
 ​		完成!
 
-### 4. 总结
+<br/>
+
+### 四. 总结
 
 ​		其实老司机都看得出, 这其实就是在github上重新建了一个save分支, 在本地换了一个git而已. 就是这么简单!
 
@@ -158,7 +162,7 @@ cnpm install hexo-deployer-git
 
 ​		所以clone之后, **直接把文件删除(只剩下.git)**, 之后把原来的整个文件夹的内容复制过来即可. 虽然暴力了一点, 但是很省事, 也很方便!
 
-### 5. 附录
+### 附录
 
 Hexo的源文件说明：
 1、`_config.yml`站点的配置文件，需要拷贝；

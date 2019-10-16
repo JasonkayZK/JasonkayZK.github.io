@@ -37,31 +37,31 @@ sudo apt-get update
 sudo apt-get install typora
 ```
 
+<br/>
+
 ### 2. 注意事项:
 
 ​		需要注意的是, 这里有一个小坑:
 
-​		在加入源时, 即你在执行: add-apt-repository 'deb https://typora.io/linux ./' 之后可能会出现类似:
+​		在加入源时, 即你在执行: `add-apt-repository deb https://typora.io/linux ./` 之后可能会出现类似的错误:
 
-​		W: Duplicate sources.list entry http://archive.ubuntukylin.com:10006/ubuntukylin/ trusty/main i386 Packages (/var/lib/apt/lists
+```
+W: Duplicate sources.list entry http://archive.ubuntukylin.com:10006/ubuntukylin/ trusty/main i386 Packages (/var/lib/apt/lists
+```
 
-的错误. 
-
-​		此后, 只要使用apt update就会提示, 冲突. 这可能是因为加入了多个源.
+​		此后, 只要使用apt update就会提示冲突: <font color="#ff0000">这可能是因为加入了多个源.</font>
 
 ​		只需要打开软件与更新, 选择其他软件在里面选择冲突的源, 并删除然后关闭即可!
 
+<br/>
+
 ### 3. 配置:
 
-​		主要设置有:
+主要设置有:
 
-1.  文字大小设置: 
+-   文字大小设置: 我是用的是20px;
+-   默认缩进: 四个空格
+-   即时渲染等;
 
-    我是用的是20px;
 
-2.  默认缩进: 
-
-    四个空格
-
-3.  即时渲染等;
 

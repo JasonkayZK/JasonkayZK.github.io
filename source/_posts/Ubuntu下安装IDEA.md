@@ -12,15 +12,15 @@ description: 在Ubuntu下IDEA的安装与配置
 
 <!--more-->
 
-## IDEA
+## Ubuntu下安装IDEA
 
-### 1. 下载与解压
+### 一. 下载与解压
 
 #### 1): 下载文件
 
 ​		在jetbrains官网, 选择Ultimate版本的tar.gz包下载: [IDEA官方网站](https://www.jetbrains.com/idea/download/#section=linux)
 
-#### 2): 解压缩到指定文件夹				
+#### 2): 解压缩到指定文件夹
 
 ​		这里安装在/opt/下:
 
@@ -36,7 +36,9 @@ sudo chown zk:zk -R /opt/ideaIU-2019.x.x
 
 ​		这里是改变了文件所属, **因为如果是Ubuntu, 如果属于root的话, 更新IDEA有点麻烦!**
 
-### 2. 安装
+<br/>
+
+### 二. 安装
 
 ```bash
 cd /opt/ideaIU-2019.x.x/bin/
@@ -47,7 +49,9 @@ cd /opt/ideaIU-2019.x.x/bin/
 
 ​		此处也可以选择建立快捷方式, 在win中是创建桌面快捷方式, 在Ubuntu中是添加了一个*.desktop的文件, 可以加入到Dock中去, 很方便.
 
-### 3. 激活
+<br/>
+
+### 三. 激活
 
 ​		我也是在网上找的别人的激活码, 而没有选择破解, 有效期到2020年1月.
 
@@ -57,20 +61,20 @@ cd /opt/ideaIU-2019.x.x/bin/
 9MWZD5CC4E-eyJsaWNlbnNlSWQiOiI5TVdaRDVDQzRFIiwibGljZW5zZWVOYW1lIjoiMjAxNzY1MDYxQGNxdS5lZHUuY24gLiIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiJGb3IgZWR1Y2F0aW9uYWwgdXNlIG9ubHkiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IklJIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In0seyJjb2RlIjoiQUMiLCJwYWlkVXBUbyI6IjIwMjAtMDEtMjQifSx7ImNvZGUiOiJEUE4iLCJwYWlkVXBUbyI6IjIwMjAtMDEtMjQifSx7ImNvZGUiOiJQUyIsInBhaWRVcFRvIjoiMjAyMC0wMS0yNCJ9LHsiY29kZSI6IkdPIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In0seyJjb2RlIjoiRE0iLCJwYWlkVXBUbyI6IjIwMjAtMDEtMjQifSx7ImNvZGUiOiJDTCIsInBhaWRVcFRvIjoiMjAyMC0wMS0yNCJ9LHsiY29kZSI6IlJTMCIsInBhaWRVcFRvIjoiMjAyMC0wMS0yNCJ9LHsiY29kZSI6IlJDIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In0seyJjb2RlIjoiUkQiLCJwYWlkVXBUbyI6IjIwMjAtMDEtMjQifSx7ImNvZGUiOiJQQyIsInBhaWRVcFRvIjoiMjAyMC0wMS0yNCJ9LHsiY29kZSI6IlJNIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In0seyJjb2RlIjoiV1MiLCJwYWlkVXBUbyI6IjIwMjAtMDEtMjQifSx7ImNvZGUiOiJEQiIsInBhaWRVcFRvIjoiMjAyMC0wMS0yNCJ9LHsiY29kZSI6IkRDIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In0seyJjb2RlIjoiUlNVIiwicGFpZFVwVG8iOiIyMDIwLTAxLTI0In1dLCJoYXNoIjoiMTE3Mzk0NjcvMCIsImdyYWNlUGVyaW9kRGF5cyI6MCwiYXV0b1Byb2xvbmdhdGVkIjpmYWxzZSwiaXNBdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlfQ==-ocfH5r7aj6756M8f6f+7MXdp2K0RxPCG2Yp9/iIydFQxHCSjqjUopo2yAxH8+EtTGm+w4dKPe+6tLqa/HOExPt9g3yOf29PU7oIwmqnIcnvZYGNCgNsCK7fyfxc2CX1whLZTByQ0LKylRshlsYz+HXg002E7q7bY0y3vbwxWLyNR5qY4EPa4WzfWjdnopCZfijgsU0bTRB51jiqVlLHONKjFFUmzPopUDwEHwDTnmNMEUAsluTaiirWIJwkmuFbsgmir+KUAxHvStOUgo68Vyaas7BicAWI1QiCqd1EvFIN/sGaZkRE9hK6FwkDN/hscDX1DCPY62ttgP/k1GvFOVA==-MIIElTCCAn2gAwIBAgIBCTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTE4MTEwMTEyMjk0NloXDTIwMTEwMjEyMjk0NlowaDELMAkGA1UEBhMCQ1oxDjAMBgNVBAgMBU51c2xlMQ8wDQYDVQQHDAZQcmFndWUxGTAXBgNVBAoMEEpldEJyYWlucyBzLnIuby4xHTAbBgNVBAMMFHByb2QzeS1mcm9tLTIwMTgxMTAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxcQkq+zdxlR2mmRYBPzGbUNdMN6OaXiXzxIWtMEkrJMO/5oUfQJbLLuMSMK0QHFmaI37WShyxZcfRCidwXjot4zmNBKnlyHodDij/78TmVqFl8nOeD5+07B8VEaIu7c3E1N+e1doC6wht4I4+IEmtsPAdoaj5WCQVQbrI8KeT8M9VcBIWX7fD0fhexfg3ZRt0xqwMcXGNp3DdJHiO0rCdU+Itv7EmtnSVq9jBG1usMSFvMowR25mju2JcPFp1+I4ZI+FqgR8gyG8oiNDyNEoAbsR3lOpI7grUYSvkB/xVy/VoklPCK2h0f0GJxFjnye8NT1PAywoyl7RmiAVRE/EKwIDAQABo4GZMIGWMAkGA1UdEwQCMAAwHQYDVR0OBBYEFGEpG9oZGcfLMGNBkY7SgHiMGgTcMEgGA1UdIwRBMD+AFKOetkhnQhI2Qb1t4Lm0oFKLl/GzoRykGjAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBggkA0myxg7KDeeEwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCwYDVR0PBAQDAgWgMA0GCSqGSIb3DQEBCwUAA4ICAQAF8uc+YJOHHwOFcPzmbjcxNDuGoOUIP+2h1R75Lecswb7ru2LWWSUMtXVKQzChLNPn/72W0k+oI056tgiwuG7M49LXp4zQVlQnFmWU1wwGvVhq5R63Rpjx1zjGUhcXgayu7+9zMUW596Lbomsg8qVve6euqsrFicYkIIuUu4zYPndJwfe0YkS5nY72SHnNdbPhEnN8wcB2Kz+OIG0lih3yz5EqFhld03bGp222ZQCIghCTVL6QBNadGsiN/lWLl4JdR3lJkZzlpFdiHijoVRdWeSWqM4y0t23c92HXKrgppoSV18XMxrWVdoSM3nuMHwxGhFyde05OdDtLpCv+jlWf5REAHHA201pAU6bJSZINyHDUTB+Beo28rRXSwSh3OUIvYwKNVeoBY+KwOJ7WnuTCUq1meE6GkKc4D/cXmgpOyW/1SmBz3XjVIi/zprZ0zf3qH5mkphtg6ksjKgKjmx1cXfZAAX6wcDBNaCL+Ortep1Dh8xDUbqbBVNBL4jbiL3i3xsfNiyJgaZ5sX7i8tmStEpLbPwvHcByuf59qJhV/bZOl8KqJBETCDJcY6O2aqhTUy+9x93ThKs1GKrRPePrWPluud7ttlgtRveit/pcBrnQcXOl1rHq7ByB8CFAxNotRUYL9IF5n3wJOgkPojMy6jetQA5Ogc8Sm7RG6vg1yow==
 ```
 
+<br/>
 
-
-### 4. 配置:
+### 四. 配置:
 
 #### 1): 下载插件
 
 ​		主要的Java开发会用到的插件有:
 
-1.  .ignore: 生成你要的.gitignore, 很方便
-2.  Lombok: 自动生成Java Bean的Getter, Setter等
-3.  Alibaba Java Coding Guidelines: 阿里爸爸的p3c规范
-4.  VisualVM Launcher: 运行java程序的时候启动visualvm，方便查看jvm的情况 比如堆内存大小的分配
-5.  MyBatisCodeHelperPro: mybatis代码自动生成插件，大部分单表操作的代码可自动生成 减少重复劳动 大幅提升效率;
-6.  Translation: 最好用的翻译插件，功能很强大，界面很漂亮;
+-   .ignore: 生成你要的.gitignore, 很方便
+-   Lombok: 自动生成Java Bean的Getter, Setter等
+-   Alibaba Java Coding Guidelines: 阿里爸爸的p3c规范
+-   VisualVM Launcher: 运行java程序的时候启动visualvm，方便查看jvm的情况 比如堆内存大小的分配
+-   MyBatisCodeHelperPro: mybatis代码自动生成插件，大部分单表操作的代码可自动生成 减少重复劳动 大幅提升效率;
+-   Translation: 最好用的翻译插件，功能很强大，界面很漂亮;
 
 #### 2): 配置Maven:
 
@@ -80,7 +84,7 @@ Maven镜像源配置:
 
 ​		在你安装的Maven目录conf文件夹下, 编辑settings.xml, 在mirrors标签添加:
 
-```
+```xml
 <mirror> 
     <id>aliyun-maven</id> 
     <mirrorOf>*</mirrorOf> 
