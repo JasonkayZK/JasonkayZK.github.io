@@ -7,7 +7,7 @@ tags: Spring
 description: 最近在学习一个项目的时候, 发现IDEA在我的@Autowired标注的变量上面提醒警告Field injection is not recommended. 不推荐使用字段注射方式! 这是为什么呢? 本篇文章给与解答!
 ---
 
-![Autowired](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571218947791&di=3199bc1b25b35d2de345ec17665d847e&imgtype=0&src=http%3A%2F%2Fimgsa.baidu.com%2Fexp%2Fw%3D500%2Fsign%3Ddba2d2079d13b07ebdbd50083cd79113%2F77c6a7efce1b9d16ddaacf47fddeb48f8c5464a2.jpg)
+![Autowired](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571676678621&di=cb9b198a4edbc3a228760be11e427c13&imgtype=0&src=http%3A%2F%2Fimg.mukewang.com%2F57aebe45000109ad05000205.jpg)
 
 最近在学习一个项目的时候, 发现IDEA在我的@Autowired标注的变量上面提醒警告: `Field injection is not recommended`. 不推荐使用字段注射方式! 这是为什么呢? 本篇文章给与解答!
 
@@ -31,7 +31,7 @@ description: 最近在学习一个项目的时候, 发现IDEA在我的@Autowired
 
 最近在做项目时, 在使用字段注入时(如下图所示), 会提示: `Field injection is not recommended`, 在一番搜索之后找到了答案!
 
-![Autowired](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571218947791&di=3199bc1b25b35d2de345ec17665d847e&imgtype=0&src=http%3A%2F%2Fimgsa.baidu.com%2Fexp%2Fw%3D500%2Fsign%3Ddba2d2079d13b07ebdbd50083cd79113%2F77c6a7efce1b9d16ddaacf47fddeb48f8c5464a2.jpg)
+![Autowired](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571676678621&di=cb9b198a4edbc3a228760be11e427c13&imgtype=0&src=http%3A%2F%2Fimg.mukewang.com%2F57aebe45000109ad05000205.jpg)
 
 
 
