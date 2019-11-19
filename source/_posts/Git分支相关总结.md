@@ -4,12 +4,9 @@ toc: true
 date: 2019-10-22 14:19:04
 categories: Git
 tags: [Git, 版本控制]
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571735512974&di=d4e0fc7ba73f5352d01b2547bd0df89c&imgtype=0&src=http%3A%2F%2Fimages.cnblogs.com%2Fcnblogs_com%2Froverliang%2F915085%2Fo_flow.png
 description: 之前在写一些demo例子的时候, 每个不同的案例都是在同一个工程的不同目录下. 但是由于有些案例其实是不需要相关依赖的, 但是由于添加到了同一个工程中, 会导致依赖不清晰的问题. 解决方法就是, 以master为基本创建不同的分支, 每个分支为不同的案例, 各个分支不需要合并即可!
 ---
-
-![Git分支](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571735512974&di=d4e0fc7ba73f5352d01b2547bd0df89c&imgtype=0&src=http%3A%2F%2Fimages.cnblogs.com%2Fcnblogs_com%2Froverliang%2F915085%2Fo_flow.png)
-
-<br/>
 
 之前在写一些demo例子的时候, 每个不同的案例都是在同一个工程的不同目录下. 但是由于有些案例其实是不需要相关依赖的, 但是由于添加到了同一个工程中, 会导致依赖不清晰的问题. 解决方法就是, 以master为基本创建不同的分支, 每个分支为不同的案例, 各个分支不需要合并即可!
 
