@@ -3,13 +3,12 @@ title: Java实现的一个原生RPC例子
 toc: true
 date: 2019-09-13 10:13:28
 categories: 学习案例
+cover: http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180616/3f10534bc3e042c3836a043b3244ab24.jpeg
 tags: [RPC, JDK动态代理, 反射, 序列化, Socket, Lambda表达式]
 description: 一个通过Java原生API实现的RPC的例子
 ---
 
-![RPC框架结构图](http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180616/3f10534bc3e042c3836a043b3244ab24.jpeg)
 
-<br/>
 
 这是一个简单的原生RPC例子，用了JDK动态代理,反射,JDK自带的序列化和反序列化以及JAVA原生Socket通信。
 

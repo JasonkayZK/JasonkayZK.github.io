@@ -4,10 +4,11 @@ toc: false
 date: 2019-10-16 14:48:40
 categories: [Spring]
 tags: Spring
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571676678621&di=cb9b198a4edbc3a228760be11e427c13&imgtype=0&src=http%3A%2F%2Fimg.mukewang.com%2F57aebe45000109ad05000205.jpg
 description: 最近在学习一个项目的时候, 发现IDEA在我的@Autowired标注的变量上面提醒警告Field injection is not recommended. 不推荐使用字段注射方式! 这是为什么呢? 本篇文章给与解答!
 ---
 
-![Autowired](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571676678621&di=cb9b198a4edbc3a228760be11e427c13&imgtype=0&src=http%3A%2F%2Fimg.mukewang.com%2F57aebe45000109ad05000205.jpg)
+
 
 最近在学习一个项目的时候, 发现IDEA在我的@Autowired标注的变量上面提醒警告: `Field injection is not recommended`. 不推荐使用字段注射方式! 这是为什么呢? 本篇文章给与解答!
 

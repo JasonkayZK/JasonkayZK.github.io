@@ -2,13 +2,14 @@
 title: Ubuntu下安装Typora
 date: 2019-09-04 21:30:28
 categories: 软件安装与配置
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567613971175&di=9f01d2812b4643e8d73d0bd91e16cefc&imgtype=0&src=http%3A%2F%2Fimg1.doubanio.com%2Flpic%2Fs28969587.jpg
 tags: [软件安装与配置, 软件推荐]
 description: 在Ubuntu下的Markdown编辑器Typora的安装与配置
 ---
 
-![avatar](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567613971175&di=9f01d2812b4643e8d73d0bd91e16cefc&imgtype=0&src=http%3A%2F%2Fimg1.doubanio.com%2Flpic%2Fs28969587.jpg)
 
-​		在Ubuntu下的Markdown编辑器Typora的安装与配置
+
+在Ubuntu下的Markdown编辑器Typora的安装与配置
 
 <!--more-->
 

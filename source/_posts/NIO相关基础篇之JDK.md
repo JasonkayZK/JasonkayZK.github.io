@@ -2,14 +2,13 @@
 title: NIO相关基础篇之JDK
 toc: true
 date: 2019-09-25 15:52:54
+cover: http://ckimg.baidu.com/course/2017-02/04/fe7122fba4ca2e6071d7e2571373d419.jpg
 categories: IO基础
 tags: [NIO]
 description: 本篇讲述了Java NIO的相关知识.
 ---
 
-![Java NIO](http://ckimg.baidu.com/course/2017-02/04/fe7122fba4ca2e6071d7e2571373d419.jpg)
 
-<br/>
 
 最近在看《Netty In Action》, 发现里面好多东西看不懂, 实际上是Java IO相关的知识太少了! 尤其是Java 1.4之后推出的NIO. 所以在网上搜集了资料, 在这里整理一下关于Java NIO的相关知识.
 

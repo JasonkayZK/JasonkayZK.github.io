@@ -2,12 +2,13 @@
 title: ElasticSearch之安装篇
 toc: true
 date: 2019-10-02 15:26:42
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg
 categories: [ElasticSearch]
 tags: [ElasticSearch]
 description: 本篇作为ElasticSearch学习的入门篇, 主要讲解了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.
 ---
 
-![ElasticSearch](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg)
+
 
 本篇主要讲述了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.
 

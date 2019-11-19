@@ -2,14 +2,13 @@
 title: 在单台服务器部署多个ElasticSearch节点
 toc: true
 date: 2019-10-04 19:14:55
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg
 categories: [ElasticSearch]
 tags: [ElasticSearch]
 description: 本篇作为Elastic Search的伴随篇, 主要解决如何在单机上部署多个Elastic Search实例, 模拟并学习集群.
 ---
 
-![ElasticSearch](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg)
 
-<br/>
 
 对于想要学习ES的人来说, 集群是一个不得不谈的话题, 而且就目前的形式来说, 越来越要求开发人员会用分布式. 对于ES来说, 由于其本身对分布式集群已经支持的相当完善, 已经屏蔽了大多数的服务发现, fallover等. 但是学习集群首先要有一个集群, 对于大多数人来说, 还是希望在本地运行一个集群. 所以本篇是在笔者查阅了大量资料之后, 经过尝试总结的在ES 7.x版本下如何在单节点下运行ES集群.
 

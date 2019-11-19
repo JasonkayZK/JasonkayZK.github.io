@@ -3,13 +3,12 @@ title: '关于使用Git时push/pull超时, 以及Github访问慢的解决办法'
 toc: true
 date: 2019-10-10 21:32:56
 categories: Git
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570726027679&di=9399d91e4f2812b1188d4c409f69caad&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F00%2F86%2F44%2F4056eb5f135855d.jpg
 tags: [Git, Github]
 description: 最近在使用Git向github提交代码的时候总是卡顿, 出现SSH连接超时的情况, 一开始以为是因为网络缘故, 后来发现是ssh本身配置的问题!
 ---
 
-![github](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570726027679&di=9399d91e4f2812b1188d4c409f69caad&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F00%2F86%2F44%2F4056eb5f135855d.jpg)
 
-<br/>
 
 最近在使用Git向github提交代码的时候总是卡顿, 出现SSH连接超时的情况, 一开始以为是因为网络缘故, 后来发现是ssh本身配置的问题! 
 

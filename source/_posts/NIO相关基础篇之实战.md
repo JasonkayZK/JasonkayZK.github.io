@@ -2,12 +2,13 @@
 title: NIO相关基础篇之实战
 toc: true
 date: 2019-09-26 16:29:59
+cover: https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1660559555,3010069585&fm=26&gp=0.jpg
 categories: IO基础
 tags: [NIO, 学习案例]
 description: 继前两篇介绍NIO的文章之后, 本篇主要是对之前NIO相关知识的实战
 ---
 
-![Java NIO](https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1660559555,3010069585&fm=26&gp=0.jpg)
+
 
 继前两篇介绍NIO的文章之后, 本篇主要是对之前NIO相关知识的实战. 实战内容包括:
 

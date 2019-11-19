@@ -2,14 +2,13 @@
 title: Java中的代理模式-静态代理与动态代理
 toc: true
 date: 2019-09-18 09:36:24
+cover: https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTM4NzM2
 categories: 学习案例
 tags: [代理模式, JDK动态代理, CGLib动态代理, 静态代理]
 description: 反射技术中常见的一个概念就是动态代理, 本篇文章主要讲述了代理模式, 动态代理与静态代理等.
 ---
 
-![avatar](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTM4NzM2)
 
-<br/>
 
 在Spring的体系下, 大多数的实现都在使用动态代理, 如: Spring的AOP, 事务注解等. 而Mybatis的mapper, 分页插件也都离不开代理模式. 
 

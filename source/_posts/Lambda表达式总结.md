@@ -2,14 +2,13 @@
 title: Lambda表达式总结
 toc: true
 date: 2019-09-16 14:28:00
+cover: http://aliyunzixunbucket.oss-cn-beijing.aliyuncs.com/png/20180111002536155989.png
 categories: 学习案例
 tags: [Lambda表达式, 函数式接口]
 description: Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了. 这篇文章总结了Lambda表达式的基本使用.  
 ---
 
-![Lambda表达式](http://aliyunzixunbucket.oss-cn-beijing.aliyuncs.com/png/20180111002536155989.png)
 
-<br/>
 
 Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了! 虽然平时用的不是很多, 但是看别人写出的代码刷刷刷, 几下子几个箭头就搞定了, 感觉就很爽! 尤其是最近做了一个项目, 项目中对于Jedis各种操作的封装出神入化!
 

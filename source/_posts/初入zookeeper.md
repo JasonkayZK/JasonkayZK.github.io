@@ -3,13 +3,12 @@ title: 初入zookeeper之安装与配置
 date: 2019-09-01 22:48:44
 categories: 分布式
 toc: true
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567359455658&di=34285376f655743af81698efb0b8ecca&imgtype=0&src=http%3A%2F%2Fweb3.xin%2Fuploads%2Fimage%2F2017%2F02%2F11%2F20170211145103_33505.jpg
 tags: [Zookeeper, 分布式, 软件安装与配置]
 description: Zookeeper的部署总结.
 ---
 
-![avatar](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567359455658&di=34285376f655743af81698efb0b8ecca&imgtype=0&src=http%3A%2F%2Fweb3.xin%2Fuploads%2Fimage%2F2017%2F02%2F11%2F20170211145103_33505.jpg)
 
- <br/>
 
 对于Zookeeper的安装与部署相关总结.
 

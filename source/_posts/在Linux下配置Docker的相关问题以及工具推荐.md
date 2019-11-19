@@ -3,13 +3,12 @@ title: 在Linux下配置Docker的相关问题以及工具推荐
 toc: true
 date: 2019-09-24 20:38:21
 categories: 软件安装与配置
+cover: https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2761450135,1392686256&fm=26&gp=0.jpg
 tags: [Docker, 分布式, 软件推荐]
 description: 今天在VSCode中添加与Docker相关的插件时, 一直报错, 果然是Linux用户权限的问题. 本篇文章带你解决Docker在Linux操作系统中权限问题的同时, 教你简单配置Docker, 并推荐Docker管理的相关软件!
 ---
 
-![Docker](https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2761450135,1392686256&fm=26&gp=0.jpg)
 
-<br/>
 
 今天在VSCode中添加与Docker相关的插件时, 一直报错, 果然是Linux用户权限的问题. 本篇文章带你解决Docker在Linux操作系统中权限问题的同时, 教你简单配置Docker, 并推荐Docker管理的相关软件!
 

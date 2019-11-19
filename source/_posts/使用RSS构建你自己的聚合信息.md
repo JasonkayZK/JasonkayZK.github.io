@@ -2,14 +2,13 @@
 title: 使用RSS构建你自己的聚合信息
 toc: true
 date: 2019-09-23 14:45:34
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569231114834&di=f78c3f4220e3ff7acea77dcc8648e56e&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F00%2F85%2F90%2F4656ea289c7c11f.jpg
 categories: 工具分享
 tags: [RSS, 信息聚合]
 description: 之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.
 ---
 
-![RSS](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569231114834&di=f78c3f4220e3ff7acea77dcc8648e56e&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F00%2F85%2F90%2F4656ea289c7c11f.jpg)
 
-<br/>
 
 之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.
 

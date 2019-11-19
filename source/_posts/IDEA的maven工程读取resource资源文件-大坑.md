@@ -2,14 +2,13 @@
 title: IDEA的maven工程读取resource资源文件
 toc: true
 date: 2019-09-14 00:40:52
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568403519047&di=16c7d622b37f6e05c091295037190479&imgtype=0&src=http%3A%2F%2Fimg.52jbj.com%2Fd%2Ffile%2F170408%2F201704080048591464.png
 categories: 软件配置
 tags: [IDEA配置, Maven, 类加载器]
 description: 在IDEA下面使用FileInputStream读取配置文件报错找不到路径的解决方案 
 ---
 
-![IDEA](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568403519047&di=16c7d622b37f6e05c091295037190479&imgtype=0&src=http%3A%2F%2Fimg.52jbj.com%2Fd%2Ffile%2F170408%2F201704080048591464.png)
 
-<br/>
 
 今天在IDEA下面创建了一个工程使用FileInputStream读取一直报错: 提示找不到路径! 无奈之下换了getClassLoader().getResourceAsStream()居然好了!
 

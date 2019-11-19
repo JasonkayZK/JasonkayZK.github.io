@@ -4,10 +4,11 @@ toc: true
 date: 2019-10-16 19:30:51
 categories: Docker
 tags: Docker
+cover: https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1543062383,125194319&fm=26&gp=0.jpg
 description: 最近一直在使用Docker部署项目, 但是还没有很系统的学习dockerfile的相关知识, 本篇主要总结的关于dockerfile的制作, 使用等;
 ---
 
-![Dockerfile](https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1543062383,125194319&fm=26&gp=0.jpg)
+
 
 最近一直在使用Docker部署项目, 但是还没有很系统的学习Dockerfile的相关知识, 本篇主要总结的关于Dockerfile的制作, 使用等;
 

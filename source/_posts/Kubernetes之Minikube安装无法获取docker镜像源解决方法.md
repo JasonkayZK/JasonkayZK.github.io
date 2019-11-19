@@ -2,14 +2,13 @@
 title: Kubernetes之Minikube安装与无法获取docker镜像源的解决方法
 toc: true
 date: 2019-09-24 17:50:25
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569332601351&di=32771b48b62b361d39cd5958587d9fa0&imgtype=0&src=http%3A%2F%2Fimg2018.cnblogs.com%2Fblog%2F720430%2F201812%2F720430-20181226134529220-885595947.png
 categories: 软件安装与配置
 tags: [Kubernates, Docker, 分布式]
 description: 本篇解决了在国内安装Minikube时, 键入minikube start时, 无法通过谷歌官方k8s仓库获取镜像源的问题.
 ---
 
-![Kubernetes](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569332601351&di=32771b48b62b361d39cd5958587d9fa0&imgtype=0&src=http%3A%2F%2Fimg2018.cnblogs.com%2Fblog%2F720430%2F201812%2F720430-20181226134529220-885595947.png)
 
-<br/>
 
 今天在安装部署Minikube的时候, 使用minikube start的时候, 由于k8s镜像源被墙无法拉取所需要的镜像，所以通过在阿里云下载镜像通过docker tag 改标签的方式来进行.
 

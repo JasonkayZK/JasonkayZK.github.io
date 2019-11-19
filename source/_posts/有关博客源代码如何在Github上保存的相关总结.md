@@ -4,12 +4,13 @@ toc: true
 date: 2019-09-06 14:05:15
 categories: 博客管理
 tags: [博客管理, 博客美化, Git学习]
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567761824699&di=633c2ef16967472223b534b6eee9e1fb&imgtype=0&src=http%3A%2F%2Fwx1.sinaimg.cn%2Flarge%2F007z5ekzgy1fz8hzbldi3j30rs0fmjvj.jpg
 description: 教你如何在Github中保存源代码.
 ---
 
-![avatar](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567761824699&di=633c2ef16967472223b534b6eee9e1fb&imgtype=0&src=http%3A%2F%2Fwx1.sinaimg.cn%2Flarge%2F007z5ekzgy1fz8hzbldi3j30rs0fmjvj.jpg)
 
-​		由于最近几天要从公司回学校, 而Hexo在github上面是只发布编译完成的代码的! 即github上面的master分支是只会保存你编译完成的html静态网页, 而对于你的配置源代码是都不会保存的! 所以本篇总结了如何通过Git分支来实现: 既保存了源代码, 又不影响静态网页的发布. 
+
+由于最近几天要从公司回学校, 而Hexo在github上面是只发布编译完成的代码的! 即github上面的master分支是只会保存你编译完成的html静态网页, 而对于你的配置源代码是都不会保存的! 所以本篇总结了如何通过Git分支来实现: 既保存了源代码, 又不影响静态网页的发布. 
 
 <!--more-->
 

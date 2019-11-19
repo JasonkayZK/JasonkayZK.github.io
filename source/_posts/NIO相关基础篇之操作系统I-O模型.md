@@ -2,12 +2,13 @@
 title: NIO相关基础篇之操作系统I/O模型
 toc: true
 date: 2019-09-26 10:56:22
+cover: https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1660559555,3010069585&fm=26&gp=0.jpg
 categories: IO基础
 tags: [NIO, 操作系统, IO模型]
 description: 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型、零拷贝等一些内容.
 ---
 
-![Java NIO](https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1660559555,3010069585&fm=26&gp=0.jpg)
+
 
 本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型下与NIO相关的知识, 主要包括:
 

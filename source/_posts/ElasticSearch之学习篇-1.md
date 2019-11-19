@@ -2,14 +2,13 @@
 title: ElasticSearch之学习篇-1
 toc: true
 date: 2019-10-10 20:40:24
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg
 categories: [ElasticSearch]
 tags: [ElasticSearch]
 description: 经过前两篇对于ES的热身, 从本篇开始, 将正式总结ES相关知识.
 ---
 
-![ElasticSearch](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg)
 
-<br/>
 
 经过前两篇对于ES的热身, 从本篇开始, 将正式总结ES相关知识.
 

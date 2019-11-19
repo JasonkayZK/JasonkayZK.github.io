@@ -3,13 +3,12 @@ title: 为什么在Java中String被设计为不可变
 toc: true
 date: 2019-10-01 23:43:55
 categories: Java源码
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570543836&di=06bc1d53a84d958d2bc77ec5d2e0c3d3&imgtype=jpg&er=1&src=http%3A%2F%2Fnews.ggo.net%2Fuploadfile%2F2019%2F0302%2F20190302045436487.jpeg
 tags: [Java源码, 字符串]
 description: 众所周知, 在Java中String被声明为不可变. 本篇带你探寻在Java中String被声明为不可变背后的秘密!
 ---
 
-![Java_String](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570543836&di=06bc1d53a84d958d2bc77ec5d2e0c3d3&imgtype=jpg&er=1&src=http%3A%2F%2Fnews.ggo.net%2Fuploadfile%2F2019%2F0302%2F20190302045436487.jpeg)
 
-<br/>
 
 最近在学习新的编程语言Scala了, 在Scala中变量分为val(不可变类型), 和var(可变类型). 突发奇想想到了在Java中的String都被声明为final, 也就相当于是Scala中都被声明为val了吧! 但是具体是为什么呢? 本篇文章带你探寻在Java中String被声明为不可变背后的秘密!
 

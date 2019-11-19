@@ -3,13 +3,12 @@ title: Maven标签总结
 toc: true
 date: 2019-10-22 14:17:19
 categories: Maven
+cover: https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=3320916012,4232332240&fm=26&gp=0.jpg
 tags: [Maven, 项目构建]
 description: 在使用Maven构建Java项目的时候, 可以通过build等标签指定编译版本等信息. 本文主要总结了Maven常用的一些标签!
 ---
 
-![Maven](https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=3320916012,4232332240&fm=26&gp=0.jpg)
 
-<br/>
 
 在使用Maven构建Java项目的时候, 可以通过build等标签指定编译版本等信息. 本文主要总结了Maven常用的一些标签!
 

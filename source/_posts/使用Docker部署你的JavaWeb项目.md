@@ -3,11 +3,12 @@ title: 使用Docker部署你的JavaWeb项目
 toc: true
 date: 2019-10-16 15:22:23
 categories: Docker
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571817260&di=8ff40e0ea67111dac6e9fae4f25666bd&imgtype=jpg&er=1&src=http%3A%2F%2Fwww.xdowns.com%2Fattachment%2Fsyapp%2Flogo%2F201808251535168806.jpg
 tags: [Docker, 项目部署]
 description: 由于最新的项目采用的是JDK11编写的, 而服务器上的还是JRE8, 所以想以后就使用Docker进行部署, 方便而且干净. 当然部署过程中还是遇到了很多小坑, 所以本篇文章记录了使用Docker部署JavaWeb项目的方法.
 ---
 
-![JAR](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1571817260&di=8ff40e0ea67111dac6e9fae4f25666bd&imgtype=jpg&er=1&src=http%3A%2F%2Fwww.xdowns.com%2Fattachment%2Fsyapp%2Flogo%2F201808251535168806.jpg)
+
 
 由于最新的项目采用的是JDK11编写的, 而服务器上的还是JRE8, 所以想以后就使用Docker进行部署, 方便而且干净. 当然部署过程中还是遇到了很多小坑, 所以本篇文章记录了使用Docker部署JavaWeb项目的方法.
 

@@ -2,14 +2,13 @@
 title: Java反射基础总结
 toc: true
 date: 2019-09-14 15:31:24
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568457978094&di=90a3d25913f9e02d4b7637fa398040af&imgtype=0&src=http%3A%2F%2Fimg0.ph.126.net%2Fwa7MCE5KpwNALpiy-QwXtw%3D%3D%2F6619114974793209336.jpg
 categories: 学习案例
 tags: [反射, 学习案例]
 description: 有关Java中反射的相关总结知识!
 ---
 
-![Java反射](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568457978094&di=90a3d25913f9e02d4b7637fa398040af&imgtype=0&src=http%3A%2F%2Fimg0.ph.126.net%2Fwa7MCE5KpwNALpiy-QwXtw%3D%3D%2F6619114974793209336.jpg)
 
-<br/>
 
 最近用到了动态代理, 在Spring框架中也大量使用了反射来完成Ioc和AOP. 对于反射一直也都是使用, 也没怎么系统的学习. 这篇文章就系统的总结一下在Java中反射的相关机制!
 

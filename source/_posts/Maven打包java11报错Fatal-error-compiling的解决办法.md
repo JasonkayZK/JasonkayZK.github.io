@@ -3,13 +3,12 @@ title: Maven打包java11报错Fatal error compiling的解决办法
 toc: false
 date: 2019-10-16 13:43:19
 categories: Maven
+cover: https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2652402318,679790988&fm=26&gp=0.jpg
 tags: [Maven, 项目构建]
 description: 最近一段时间一直都在忙导师公司的事情, 然后一边在写一个文件分享的项目, 实在没什么时间写博客, 今天终于忙完导师公司的事情, 然后打包构建项目的时候发现无法构建. 在网上一番查证之后, 终于发现问题所在.
 ---
 
-![avatar](https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2652402318,679790988&fm=26&gp=0.jpg)
 
-<br/>
 
 最近一段时间一直都在忙导师公司的事情, 然后一边在写一个文件分享的项目, 实在没什么时间写博客, 今天终于忙完导师公司的事情, 然后打包构建项目的时候发现无法构建: `Fatal error compiling`的错误
 

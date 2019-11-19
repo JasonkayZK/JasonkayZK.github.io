@@ -2,14 +2,13 @@
 title: ElasticSearch为什么在高版本移除映射类型
 toc: true
 date: 2019-10-03 09:52:15
+cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg
 categories: ElasticSearch
 tags: [ElasticSearch]
 description: 由于ElasticSearch官方文档使用的还是2.x版本, 而在使用其中的某些API时, 会出现deprecated提示. 本篇主要总结ElasticSearch中那些由于版本更新而不再推荐使用的API, 同时也作为正式学习ElasticSearch前的又一次预热.
 ---
 
-![ElasticSearch](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg)
 
-<br/>
 
 由于ElasticSearch官方文档使用的还是2.x版本, 而在使用其中的某些API时, 会出现deprecated提示. 本篇主要总结ElasticSearch中那些由于版本更新而不再推荐使用的API, 例如: 移除了映射类型(mapping types). 同时也作为正式学习ElasticSearch前的又一次预热.
 
