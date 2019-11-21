@@ -8,8 +8,6 @@ description:
 toc: false
 ---
 
-![avatar]()
-
 摘要内容
 
 <!--more-->
