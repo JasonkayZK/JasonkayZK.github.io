@@ -2,7 +2,7 @@
 title: Java基础总结之一
 toc: false
 date: 2019-11-21 10:39:14
-cover:
+cover: http://api.mtyqx.cn/api/random.php?12
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第一篇

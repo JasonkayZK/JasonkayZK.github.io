@@ -2,7 +2,7 @@
 title: Java基础总结之四
 toc: false
 date: 2019-11-22 10:40:32
-cover: 
+cover: http://api.mtyqx.cn/api/random.php?33
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第四篇

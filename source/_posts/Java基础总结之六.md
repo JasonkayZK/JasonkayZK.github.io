@@ -2,7 +2,7 @@
 title: Java基础总结之六
 toc: false
 date: 2019-11-22 14:12:59
-cover:
+cover: http://api.mtyqx.cn/api/random.php?3
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第六篇
@@ -71,7 +71,7 @@ Java集合主要可以划分为4个部分：
 
 Java集合工具包框架图(如下)：
 
-![Collection框架结构.jpg]()
+![Collection框架结构.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/Collection框架结构.jpg)
 
  看上面的框架图，先抓住它的主干，即Collection和Map。
 
