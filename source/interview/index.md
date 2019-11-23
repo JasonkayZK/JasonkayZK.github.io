@@ -47,6 +47,15 @@ date: 2019-11-21 10:12:50
 
 
 
+## JDK源码分析
+
+|                           文章索引                           | 文章发布日期 | 文章主要内容                                                 |
+| :----------------------------------------------------------: | :----------: | :----------------------------------------------------------- |
+| [为什么在Java中String被设计为不可变](https://jasonkayzk.github.io/2019/10/01/%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8Java%E4%B8%ADString%E8%A2%AB%E8%AE%BE%E8%AE%A1%E4%B8%BA%E4%B8%8D%E5%8F%AF%E5%8F%98/) |  2019-10-01  | **String源码简单分析<br /><br />JVM内存模型<br /><br />String在JVM中的常量池的解析: 字面量, new, +连接, intern()<br /><br />String中的==和equals<br /><br />什么是Java中的不可变? 不可变的好处与坏处?<br /><br />证明回答String被设计成不可变和不能被继承的原因** |
+| [Java集合一-Collection架构](https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/) |  2019-11-23  | **集合总体框架概述<br /><br />Iterator源码分析<br /><br />ListIterator源码分析<br /><br />Collection源码分析<br /><br />List源码分析<br /><br />Set源码分析<br /><br />AbstractCollection源码分析<br /><br />AbstractList源码分析<br /><br />AbstractSet源码分析** |
+
+
+
 ## 请我喝Java
 
 如果觉得博主面试内容对你有帮助, 可以对本博主打赏哦!
