@@ -1154,6 +1154,10 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandWrite 
 
 ```
 
+><br/>
+>
+>**更多关于fail-fast机制见:** [Java集合三-Iterator的Fail-Fast机制总结](https://jasonkayzk.github.io/2019/11/24/Java集合三-Iterator的Fail-Fast机制总结/)
+
 <br/>
 
 ## 四. ArrayList遍历方式(完整遍历, 子列表遍历, 并发遍历)
