@@ -45,16 +45,21 @@ date: 2019-11-21 10:12:50
 | [Java基础总结之五](https://jasonkayzk.github.io/2019/11/22/Java基础总结之五/) | 2019-11-22   | **1. 在try块中可以抛出异常吗？<br /><br />2. java中有几种方法可以实现一个线程？<br /><br />3. 用什么关键字修饰同步方法? stop()和suspend()方法为何不推荐使用？<br /><br />4. sleep()和 wait()有什么区别?<br /><br />5. 同步和异步有何异同，在什么情况下分别使用他们？举例说明。<br /><br />6. 同步有几种实现方法?<br /><br />7. 启动一个线程是用run()还是start()?<br /><br />8. 当一个线程synchronized方法后，其它线程是否可进入此对象的其它方法? 静态方法和非静态方法都声明为synchronized是否会发生锁竞争?<br /><br />9. 线程的基本概念、线程的基本状态以及状态之间的关系<br /><br />10. 简述synchronized和java.util.concurrent.locks.Lock的异同？** |
 | [Java基础总结之六](https://jasonkayzk.github.io/2019/11/22/Java基础总结之六/) | 2019-11-22   | **1. 设计4个线程，其中两个线程每次对j增加1，另外两个线程对j每次减少1<br /><br />2. 介绍Collection框架的结构<br /><br />3. ArrayList和Vector的区别<br /><br />4. HashMap和Hashtable的区别<br /><br />5. 说出ArrayList,Vector, LinkedList的存储性能和特性<br /><br />6. 两个对象值相同(x.equals(y) == true)，但却可有不同的hash code，这句话对不对?<br /><br />7. java中有几种类型的流?JDK为每种类型的流提供了一些抽象类以供继承，请说出他们分别是哪些类?<br /><br />8. 字节流与字符流的区别<br /><br />9. 什么是java序列化，如何实现java序列化？请解释Serializable接口的作用<br /><br />10. 什么是assert?什么时候用assert?** |
 
-
+<br/>
 
 ## JDK源码分析
+
+><br/>
+>
+>**注: 文章中的源码解析均基于JDK11.0.4**
 
 |                           文章索引                           | 文章发布日期 | 文章主要内容                                                 |
 | :----------------------------------------------------------: | :----------: | :----------------------------------------------------------- |
 | [为什么在Java中String被设计为不可变](https://jasonkayzk.github.io/2019/10/01/%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8Java%E4%B8%ADString%E8%A2%AB%E8%AE%BE%E8%AE%A1%E4%B8%BA%E4%B8%8D%E5%8F%AF%E5%8F%98/) |  2019-10-01  | **String源码简单分析<br /><br />JVM内存模型<br /><br />String在JVM中的常量池的解析: 字面量, new, +连接, intern()<br /><br />String中的==和equals<br /><br />什么是Java中的不可变? 不可变的好处与坏处?<br /><br />证明回答String被设计成不可变和不能被继承的原因** |
 | [Java集合一-Collection架构](https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/) |  2019-11-23  | **集合总体框架概述<br /><br />Iterator源码分析<br /><br />ListIterator源码分析<br /><br />Collection源码分析<br /><br />List源码分析<br /><br />Set源码分析<br /><br />AbstractCollection源码分析<br /><br />AbstractList源码分析<br /><br />AbstractSet源码分析** |
+| [Java集合二-ArrayList](https://jasonkayzk.github.io/2019/11/24/Java集合二-ArrayList/) |  2019-11-24  | **ArrayList数据结构<br /><br />ArrayList源码解析<br /><br />ArrayList遍历方式(完整遍历, 子列表遍历, 并发遍历)<br /><br />toArray()异常** |
 
-
+<br/>
 
 ## 请我喝Java
 
@@ -68,7 +73,7 @@ date: 2019-11-21 10:12:50
 
 ![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
 
-
+<br/>
 
 ## 赞助单
 

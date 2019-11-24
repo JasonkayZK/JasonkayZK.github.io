@@ -129,7 +129,7 @@ public interface Iterable<T> {
 >
 >而Test仅仅实现DefaultInterface 接口一个方法, 却不用实现addition方法.
 >
-><red>如果我们对一个接口进行修改,而又不想修改已经有的实现类的时候就变得非常有用!</font>
+><font color="#ff0000">如果我们对一个接口进行修改,而又不想修改已经有的实现类的时候就变得非常有用!</font>
 
 **1.** **Iterator**
 
@@ -164,11 +164,11 @@ public interface Iterator<E> {
 >
 >**注意:**
 >
->**① Iterator遍历Collection时，是 fail-fast 机制的**: <blue>当某一个线程A通过iterator去遍历某集合的过程中，若该集合的内容被其他线程所改变了；那么线程A访问集合时，就会抛出ConcurrentModificationException异常，产生fail-fast事件;</font>
+>**① Iterator遍历Collection时，是 fail-fast 机制的**: <font color="#0000ff">当某一个线程A通过iterator去遍历某集合的过程中，若该集合的内容被其他线程所改变了；那么线程A访问集合时，就会抛出ConcurrentModificationException异常，产生fail-fast事件;</font>
 >
 >**② JDK 8中加入了forEachRemaining()默认方法.**
 >
->1.  **与forEach()方法的区别在于:** <blue>可以多次调用forEach，并将元素进行多次传递。而forEachRemaining()使用迭代器Iterator的所有元素之后，第二次调用它将不会做任何事情，因为不再有下一个元素!</font>
+>1.  **与forEach()方法的区别在于:** <font color="#0000ff">可以多次调用forEach，并将元素进行多次传递。而forEachRemaining()使用迭代器Iterator的所有元素之后，第二次调用它将不会做任何事情，因为不再有下一个元素!</font>
 >
 >2.  **forEachRemaining可使用Lambda表达式来遍历集合元素**, 例如:
 >
@@ -225,7 +225,7 @@ public interface ListIterator<E> extends Iterator<E> {
 
 Collection 是一个接口，是高度抽象出来的集合，它包含了集合的基本操作：添加、删除、清空、遍历(读取)、是否为空、获取大小、是否保护某元素等等；
 
-<blue>Collection 接口的所有子类(直接子类和间接子类)都必须实现2种构造函数：不带参数的构造函数 和 参数为Collection的构造函数。带参数的构造函数，可以用来转换Collection的类型;</font>
+<font color="#0000ff">Collection 接口的所有子类(直接子类和间接子类)都必须实现2种构造函数：不带参数的构造函数 和 参数为Collection的构造函数。带参数的构造函数，可以用来转换Collection的类型;</font>
 
 ```java
 public interface Collection<E> extends Iterable<E> { 
@@ -293,7 +293,7 @@ public interface Collection<E> extends Iterable<E> {
 
 List是一个继承于Collection的接口，即List是集合中的一种。List是**有序**的队列，List中的每一个元素都有一个索引；第一个元素的索引值是0，往后的元素的索引值依次+1。和Set不同，List中允许有重复的元素。
 
-<blue>关于API方面。既然List是继承于Collection接口，它自然就包含了Collection中的全部函数接口；由于List是有序队列，它也额外的有自己的API接口。主要有“添加、删除、获取、修改指定位置的元素”、“获取List中的子队列”等</font>
+<font color="#0000ff">关于API方面。既然List是继承于Collection接口，它自然就包含了Collection中的全部函数接口；由于List是有序队列，它也额外的有自己的API接口。主要有“添加、删除、获取、修改指定位置的元素”、“获取List中的子队列”等</font>
 
 ```java
 public interface List<E> extends Collection<E> {
@@ -496,7 +496,7 @@ public interface Set<E> extends Collection<E> {
 
 **6. AbstractCollection**
 
-AbstractCollection是一个**抽象类**，它<red>实现了Collection中除iterator()和size()之外的方法</font>, 从而**方便其它类实现Collection**. 
+AbstractCollection是一个**抽象类**，它<font color="#ff0000">实现了Collection中除iterator()和size()之外的方法</font>, 从而**方便其它类实现Collection**. 
 
 比如ArrayList、LinkedList等，它们这些类想要实现Collection接口，而通过继承AbstractCollection就已经实现了大部分的接口了。
 
@@ -539,7 +539,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
 >
 >**备注:**
 >
->**①** **AbstractCollection抽象类**中实现了Collection接口**除iterator()和size()的方法**, 并且请注意, <red>对于那些没有重写但是被声明为default的方法, 类中也是可以使用的!</font>
+>**①** **AbstractCollection抽象类**中实现了Collection接口**除iterator()和size()的方法**, 并且请注意, <font color="#ff0000">对于那些没有重写但是被声明为default的方法, 类中也是可以使用的!</font>
 >
 >**②** AbstractCollection中已经重写了toString()方法;
 >
@@ -560,7 +560,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
 
 AbstractList 是一个**继承于AbstractCollection，并且实现List接口的抽象类**。
 
-<blue>它实现了List中除size()、get(int location)之外的函数, 从而方便其它类继承List。  另外，和AbstractCollection相比，AbstractList抽象类中，**实现了iterator()接口**。</font>
+<font color="#0000ff">它实现了List中除size()、get(int location)之外的函数, 从而方便其它类继承List。  另外，和AbstractCollection相比，AbstractList抽象类中，**实现了iterator()接口**。</font>
 
 ```java
 public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E> {
@@ -736,7 +736,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 >
 >1.  AbstractList自身继承自AbstractCollection(显而易见, 为了方便才创立的AbstractCollection, **要注意AbstractCollection未实现iterator()和size()方法**);
 >
->2.  同时AbstractList实现了List的部分接口<red>(除了get()方法, 因为数组实现和链表实现的get显然是不同的!)</font>
+>2.  同时AbstractList实现了List的部分接口<font color="#ff0000">(除了get()方法, 因为数组实现和链表实现的get显然是不同的!)</font>
 >
 >3.  **AbstractList重写了equals()和hashcode()方法!**
 >
@@ -751,7 +751,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 >-   **Itr**: AbstractList中的一个Iterator实现类, 为ListItr服务的父类;
 >-   **ListItr**: AbstractList中Iterator真正的元素, 继承了Itr, 并实现了ListIterator接口**(ListIterator是一个继承了Iterator的接口, 为List遍历而创建)**;
 >-   **RandomAccessSpliterator**: 实现了Spliterator接口. JDK 8之后, 为了并行遍历元素而设计的一个可分割迭代器(splitable iterator);
->-   **SubList**: AbstractList的内部类SubList, 继承了AbstractList本身, 作为List的一个视图, 为RandomAccessSubList服务;<red>这个内部类的牛逼之处在于, 他继承了包含他的类!</font>
+>-   **SubList**: AbstractList的内部类SubList, 继承了AbstractList本身, 作为List的一个视图, 为RandomAccessSubList服务;<font color="#ff0000">这个内部类的牛逼之处在于, 他继承了包含他的类!</font>
 >-   **RandomAccessSubList**: 继承自SubList(那个很牛逼的内部类), 并实现了RandomAccess接口;
 >
 >**③ AbstractList中的内部类关系整理:**
@@ -766,7 +766,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 
 **8. AbstractSet**
 
-AbstractSet 是一个继承于AbstractCollection，并且实现Set接口的抽象类。<red>由于Set接口和Collection接口中的API完全一样，Set也就没有自己单独的API。</font>
+AbstractSet 是一个继承于AbstractCollection，并且实现Set接口的抽象类。<font color="#ff0000">由于Set接口和Collection接口中的API完全一样，Set也就没有自己单独的API。</font>
 
 **和AbstractCollection一样，它实现了List中除iterator()和size()之外的方法, 从而方便其它类实现Set接口。**
 
