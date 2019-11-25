@@ -106,7 +106,7 @@ public class FastFailTest {
 
 ><br/>
 >
->**运行结果**: <red>运行该代码，抛出异常java.util.ConcurrentModificationException, 即，产生fail-fast事件</font>
+>**运行结果**: <font color="#ff0000"运行该代码，抛出异常java.util.ConcurrentModificationException, 即，产生fail-fast事件</font>
 >
 >**结果说明**：
 >

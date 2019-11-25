@@ -137,7 +137,7 @@ public class ArrayList<E> extends AbstractList<E>
 
 **ArrayList与Collection关系如下图**：
 
-![ArrayList与Collection关系.jpg]()
+![ArrayList与Collection关系.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/ArrayList与Collection关系.jpg)
 
 **ArrayList包含了两个重要的对象：elementData 和 size, 如下:**
 
