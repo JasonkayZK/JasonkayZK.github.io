@@ -1,5 +1,5 @@
 ---
-title: 张小凯の面试轨迹
+title: 张小凯のJava面试笔记
 cover:  https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/interview.jpg
 date: 2019-11-21 10:12:50
 ---
@@ -12,7 +12,7 @@ date: 2019-11-21 10:12:50
 
 **本页面创立于: 2019年11月21日**
 
-**页面成立原因:** 总结博主准备面试的一路心酸史
+**页面成立原因:** 总结博主准备Java面试的一路心酸史
 
 **面试内容来源:** 
 
@@ -45,6 +45,66 @@ date: 2019-11-21 10:12:50
 | [Java基础总结之五](https://jasonkayzk.github.io/2019/11/22/Java基础总结之五/) | 2019-11-22   | **1. 在try块中可以抛出异常吗？<br /><br />2. java中有几种方法可以实现一个线程？<br /><br />3. 用什么关键字修饰同步方法? stop()和suspend()方法为何不推荐使用？<br /><br />4. sleep()和 wait()有什么区别?<br /><br />5. 同步和异步有何异同，在什么情况下分别使用他们？举例说明。<br /><br />6. 同步有几种实现方法?<br /><br />7. 启动一个线程是用run()还是start()?<br /><br />8. 当一个线程synchronized方法后，其它线程是否可进入此对象的其它方法? 静态方法和非静态方法都声明为synchronized是否会发生锁竞争?<br /><br />9. 线程的基本概念、线程的基本状态以及状态之间的关系<br /><br />10. 简述synchronized和java.util.concurrent.locks.Lock的异同？** |
 | [Java基础总结之六](https://jasonkayzk.github.io/2019/11/22/Java基础总结之六/) | 2019-11-22   | **1. 设计4个线程，其中两个线程每次对j增加1，另外两个线程对j每次减少1<br /><br />2. 介绍Collection框架的结构<br /><br />3. ArrayList和Vector的区别<br /><br />4. HashMap和Hashtable的区别<br /><br />5. 说出ArrayList,Vector, LinkedList的存储性能和特性<br /><br />6. 两个对象值相同(x.equals(y) == true)，但却可有不同的hash code，这句话对不对?<br /><br />7. java中有几种类型的流?JDK为每种类型的流提供了一些抽象类以供继承，请说出他们分别是哪些类?<br /><br />8. 字节流与字符流的区别<br /><br />9. 什么是java序列化，如何实现java序列化？请解释Serializable接口的作用<br /><br />10. 什么是assert?什么时候用assert?** |
 | [Java基础总结之七](https://jasonkayzk.github.io/2019/11/25/Java基础总结之七/) | 2019-11-25   | **1. 描述一下JVM加载class文件的原理机制? 类的加载过程?<br /><br />2. 类什么时候才被初始化?类的初始化步骤?<br /><br />3. 什么是双亲委派模型(PDM-Parents Delegate Model)? 为什么使用双亲委派模型?<br /><br />4. 能不能自己写个类，也叫java.lang.String？<br /><br />5. heap和stack有什么区别?<br /><br />6. GC是什么?为什么要有GC?<br /><br />7. 垃圾回收的优点和原理, 并考虑2种回收机制<br /><br />8. 垃圾回收器的基本原理是什么？垃圾回收器可以马上回收内存吗？有什么办法主动通知虚拟机进行垃圾回收？<br /><br />9. 谈谈Java中的垃圾分代?为什么要垃圾分代?如何分代?<br /><br />10. java中会存在内存泄漏吗，请简单描述** |
+
+<br/>
+
+## 算法部分
+
+待更新, 敬请期待…
+
+| 文章索引 | 文章发布日期 | 文章主要内容 |
+| :------: | :----------: | ------------ |
+|          |              |              |
+
+<br/>
+
+## 数据库部分
+
+待更新, 敬请期待…
+
+| 文章索引 | 文章发布日期 | 文章主要内容 |
+| :------: | :----------: | ------------ |
+|          |              |              |
+
+<br/>
+
+## Java Web部分
+
+Java Web包括的知识主要有:
+
+-   HTML + CSS + DIV
+-   JavaScript
+-   Ajax
+-   JSP + Servlet + Tomcat
+-   Strut2 + Hibernate(or JPA)Spring
+-   Web Service
+
+这里包括一些~~不经常使用~~(已经淘汰)的框架, 主流框架见框架部分
+
+|                           文章索引                           | 文章发布日期 | 文章主要内容                                                 |
+| :----------------------------------------------------------: | :----------: | :----------------------------------------------------------- |
+| [JavaWeb总结之一](https://jasonkayzk.github.io/2019/11/25/JavaWeb总结之一/) |  2019-11-25  | **1. Tomcat的优化<br /><br />2. HTTP请求的GET与POST方式的区别<br /><br />3. 什么是Servlet?Servlet的生命周期?<br /><br />4. Servlet的基本架构<br /><br />5. 两种跳转方式分别是什么?Servlet API中forward()与redirect()的区别？<br /><br />6. Request对象的主要方法<br /><br />7. request.getAttribute()和 request.getParameter()有何区别?<br /><br />8. jsp有哪些内置对象?作用分别是什么?分别有什么方法？<br /><br />9. JSP中动态INCLUDE与静态INCLUDE的区别？** |
+|                                                              |              |                                                              |
+
+<br/>
+
+## 框架部分
+
+待更新, 敬请期待…
+
+| 文章索引 | 文章发布日期 | 文章主要内容 |
+| :------: | :----------: | ------------ |
+|          |              |              |
+
+<br/>
+
+## JVM调优
+
+待更新, 敬请期待…
+
+| 文章索引 | 文章发布日期 | 文章主要内容 |
+| :------: | :----------: | ------------ |
+|          |              |              |
 
 <br/>
 

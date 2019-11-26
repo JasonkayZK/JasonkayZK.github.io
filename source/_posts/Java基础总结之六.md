@@ -311,6 +311,8 @@ public class Test {
 >
 >**备注:** 可以看出一个是在Byte量级上进行操作的, 而高级流是在Char量级上进行操作的(并没有使用getBytes())
 
+更多关于IO流的内容见: [Java中的IO流](https://jasonkayzk.github.io/2019/11/25/Java中的IO流/)
+
 <br/>
 
 ### 9. 什么是java序列化，如何实现java序列化？请解释Serializable接口的作用
