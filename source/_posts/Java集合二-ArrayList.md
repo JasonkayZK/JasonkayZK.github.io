@@ -710,7 +710,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandWrite 
         return batchRemove(c, true, 0, size);
     }
 
-    // 
+    // 删除fromIndex到toIndex(不包括)的元素
     boolean batchRemove(Collection<?> c, boolean complement,
                         final int from, final int end) {
         Objects.requireNonNull(c);

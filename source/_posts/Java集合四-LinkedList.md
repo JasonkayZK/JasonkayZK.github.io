@@ -15,14 +15,9 @@ description: 本篇总结了Java中LinkedList
 内容包括：
 
 -   LinkedList介绍
-
 -   LinkedList数据结构
-
 -   LinkedList源码解析(基于JDK11.0.4)
-
--   LinkedList遍历方式
-
--   LinkedList示例
+-   LinkedList遍历方式(整表遍历, 字表遍历, 并发遍历)
 
 <br/>
 
