@@ -122,6 +122,7 @@ Java Web包括的知识主要有:
 | [Java集合四-LinkedList](https://jasonkayzk.github.io/2019/11/26/Java集合四-LinkedList/) |  2019-11-26  | **LinkedList介绍(构造函数, API等)<br /><br />LinkedList数据结构(继承关系等)<br /><br />LinkedList源码解析<br /><br />LinkedList遍历方式(整表遍历, 子列表遍历, 并发遍历)<br /><br />LLSpliterator与ArrayListSpliterator的区别(为什么不推荐使用LLSpliterator)** |
 | [Java集合五-Vector](https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/) |  2019-11-26  | **Vector介绍(构造函数, API等)<br /><br />Vector数据结构(继承关系等)<br /><br />Vector源码解析<br /><br />Vector遍历方式(整表遍历, 子列表遍历, 并发遍历)<br /><br />Vector示例** |
 | [Java集合六-Stack](https://jasonkayzk.github.io/2019/11/27/Java集合六-Stack/) |  2019-11-27  | **Stack介绍(构造函数, API等)<br /><br />Stack源码解析(基于JDK11.0.4)<br /><br />Stack示例** |
+| [Java集合八-Map架构](https://jasonkayzk.github.io/2019/11/27/Java集合八-Map架构/) |  2019-11-27  | **Map的整体架构<br /><br />Map源码<br /><br />Map.Entry源码<br /><br />AbstractMap源码<br /><br />SortedMap源码<br /><br />NavigableMap源码<br /><br />Dictionary源码** |
 
 <br/>
 
