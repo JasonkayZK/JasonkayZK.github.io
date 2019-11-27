@@ -50,7 +50,7 @@ public class Stack<E> extends Vector<E> {}
 
 **Stack和Collection的关系如下图:**
 
-![Stack和Collection的关系.jpg]()
+![Stack和Collection的关系.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/Stack和Collection的关系.jpg)
 
 <br/>
 
