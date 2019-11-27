@@ -20,16 +20,6 @@ toc: false
 
 
 
-## 请我喝Java
-
-**Alipay:**
-
-![alipay](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/alipay.jpg)
-
-**WechatPay:**
-
-![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
-
 ## Blog更新历史
 
 *   2019-11-23 增加了back-to-top按钮
@@ -136,6 +126,18 @@ toc: false
 -   未达成
     -   [ ] 一个满意的工作
     -   [ ] 狂拽酷炫吊炸天的电脑
+
+
+
+## 请我喝Java
+
+**Alipay:**
+
+![alipay](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/alipay.jpg)
+
+**WechatPay:**
+
+![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
 
 
 
