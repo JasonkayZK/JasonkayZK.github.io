@@ -17,6 +17,7 @@ date: 2019-11-21 10:12:50
 **面试内容来源:** 
 
 -   [Java初级面试题](https://www.jianshu.com/p/08153f5678de?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation)
+-   [Java 集合系列](http://www.cnblogs.com/skywang12345/p/3323085.html)
 
 再次感谢以上作者提供的面试相关资料!<font color="#ff0000">❤</font>
 
@@ -123,6 +124,8 @@ Java Web包括的知识主要有:
 | [Java集合五-Vector](https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/) |  2019-11-26  | **Vector介绍(构造函数, API等)<br /><br />Vector数据结构(继承关系等)<br /><br />Vector源码解析<br /><br />Vector遍历方式(整表遍历, 子列表遍历, 并发遍历)<br /><br />Vector示例** |
 | [Java集合六-Stack](https://jasonkayzk.github.io/2019/11/27/Java集合六-Stack/) |  2019-11-27  | **Stack介绍(构造函数, API等)<br /><br />Stack源码解析(基于JDK11.0.4)<br /><br />Stack示例** |
 | [Java集合八-Map架构](https://jasonkayzk.github.io/2019/11/27/Java集合八-Map架构/) |  2019-11-27  | **Map的整体架构<br /><br />Map源码<br /><br />Map.Entry源码<br /><br />AbstractMap源码<br /><br />SortedMap源码<br /><br />NavigableMap源码<br /><br />Dictionary源码** |
+| [Java集合九-HashMap](https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/) |  2019-11-28  | **HashMap数据结构<br /><br />HashMap源码深度解析<br /><br />HashMap内部转换等总结** |
+| [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/11/29/Java集合十-TreeNode与HashMap/) |  2019-11-29  | **TreeNode在HashMap中的源码分析<br /><br />HashMap中hash冲突的解决<br /><br />HashMap中的Rehash操作<br /><br />HashMap遍历方式(整表遍历, 子列表遍历, 并发遍历)<br /><br />HashMap示例** |
 
 <br/>
 
