@@ -1335,56 +1335,105 @@ public class HashMapIteratorTest {
 
 在JDK 8之后加入了Spliterator接口帮助进行并发遍历, map中有KeySpliterator, ValueSpliterator和EntrySpliterator都继承自内部抽象类HashMapSpliterator并实现了Spliterator接口, 因此可以通过这三个内部类获取相应的Spliterator来完成并发遍历HashMap
 
-例:
+例: **创建一个长度为100的list，如果下标能被10整除，则该位置数值跟下标相同，否则值为aaaa。然后多线程遍历list，取出list中的数值(字符串aaaa不要)进行累加求和**
 
 ```java
-/**
- * @author zk
- */
-public class MyThread implements Runnable {
+public class Test {
 
-    Spliterator<Integer> spliterator;
+    static HashMap<Integer, String> map;
 
-    String threadName;
+    static AtomicInteger count;
 
-    public static void main(String[] args) {
-        HashMap<Integer, Integer> map = new HashMap<>(64);
-        for (int i = 0; i < 100; i++) {
-            map.put(i, i);
+    public static void main(String[] args) throws InterruptedException {
+        // 初始化List, 并获得spliterator
+        map = new HashMap<>();
+        for (int i = 1; i <= 109; i++) {
+            if (i % 10 == 0) {
+                map.put(i, Integer.toString(i));
+            } else {
+                map.put(i, "aaaa");
+            }
         }
-        Spliterator<Integer> s0 = map.keySet().spliterator();
+        Spliterator<String> spliterator = map.values().spliterator();
 
-        Spliterator<Integer> s1 = s0.trySplit();
-        Spliterator<Integer> s2 = s1.trySplit();
-        Spliterator<Integer> s3 = s2.trySplit();
-        Spliterator<Integer> s4 = s3.trySplit();
+        // 求和结果
+        count = new AtomicInteger(0);
 
-        Thread t1 = new Thread(new MyThread(s1, "线程1"));
-        Thread t2 = new Thread(new MyThread(s2, "线程2"));
-        Thread t3 = new Thread(new MyThread(s3, "线程3"));
-        Thread t4 = new Thread(new MyThread(s4, "线程4"));
+        Spliterator<String> s1 = spliterator.trySplit();
+        Spliterator<String> s2 = s1.trySplit();
+
+        Thread main = new Thread(new Task(spliterator));
+        Thread t1 = new Thread(new Task(s1));
+        Thread t2 = new Thread(new Task(s2));
+
+        main.start();
         t1.start();
         t2.start();
-        t3.start();
-        t4.start();
+
+        t1.join();
+        t2.join();
+        main.join();
+
+        System.out.println(count);
     }
 
-    MyThread(Spliterator<Integer> spliterator, String threadName) {
-        this.spliterator = spliterator;
-        this.threadName = threadName;
+    // 判断字符串是数字
+    public static boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile("^[-+]?[\\d]*$");
+        return pattern.matcher(str).matches();
     }
 
-    @Override
-    public void run() {
-        spliterator.forEachRemaining(s -> {
-            System.out.println(threadName + "=" + s);
-        });
+    static class Task implements Runnable {
+
+        private Spliterator<String> spliterator;
+
+        public Task(Spliterator<String> spliterator) {
+            this.spliterator = spliterator;
+        }
+
+        @Override
+        public void run() {
+            String threadName = Thread.currentThread().getName();
+            System.out.println("线程" + threadName + "开始运行-----");
+            spliterator.forEachRemaining(x -> {
+                if (isInteger(x)) {
+                    count.addAndGet(Integer.parseInt(x));
+                    System.out.println("数值：" + x + "------" + threadName);
+                }
+            });
+            System.out.println("线程" + threadName + "运行结束-----");
+        }
     }
 }
+
+------- Output -------
+线程Thread-1开始运行-----
+线程Thread-2开始运行-----
+线程Thread-0开始运行-----
+线程Thread-0运行结束-----
+数值：10------Thread-2
+数值：20------Thread-2
+数值：30------Thread-2
+数值：40------Thread-2
+数值：50------Thread-2
+数值：60------Thread-2
+线程Thread-2运行结束-----
+数值：70------Thread-1
+数值：80------Thread-1
+数值：90------Thread-1
+数值：100------Thread-1
+线程Thread-1运行结束-----
+550
 ```
 
 ><br/>
 >
->**注: Map使用Spliterator遍历与ArrayList有很大不同, 使用trySplit()方法分配时有很多奇怪的现象[此问题待解决]**
+>**注: HashMap的遍历和ArrayList有很大的不同!**
+>
+><font color="#ff0000">由于HashMap中的遍历涉及到桶(存储分区数目)以及树(或者链表)结构, 且和具体数据的hash值也有很大的关系</font>
+>
+>**所以可能会出现像上例中Thread-0类似: 做了切分但实际上没有分配任何数据!**
+>
+>**HashMap由于结构十分复杂, 以后有机会再研究内部的并发实现**
 
 <br/>

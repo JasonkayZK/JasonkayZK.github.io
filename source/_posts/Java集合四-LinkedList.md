@@ -1568,14 +1568,25 @@ while (subList.hasNext()) {
 例如: **创建一个长度为100的list，如果下标能被10整除，则该位置数值跟下标相同，否则值为aaaa。然后多线程遍历list，取出list中的数值(字符串aaaa不要)进行累加求和**
 
 ```java
-public class LLSpliteratorDemo {
+package top.jasonkayzk;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+
+public class Test {
+
+    static List<String> list;
+
+    static AtomicInteger count;
 
     public static void main(String[] args) throws InterruptedException {
         // 初始化List, 并获得spliterator
-        final List<String> list = new LinkedList<>();
-        for (int i = 0; i < 100; i++) {
+        list = new LinkedList<>();
+        for (int i = 1; i <= 100; i++) {
             if (i % 10 == 0) {
-                list.add(i + "");
+                list.add(Integer.toString(i));
             } else {
                 list.add("aaaa");
             }
@@ -1583,41 +1594,22 @@ public class LLSpliteratorDemo {
         Spliterator<String> spliterator = list.spliterator();
 
         // 求和结果
-        final AtomicInteger count = new AtomicInteger(0);
+        count = new AtomicInteger(0);
 
-        // 开启线程数
-        final int threadNum = 4;
+        Spliterator<String> s1 = spliterator.trySplit();
+        Spliterator<String> s2 = spliterator.trySplit();
 
-        // 计数器锁, 多个线程都处理完毕后才输出结果, 也可以使用join()方法
-        final CountDownLatch latch = new CountDownLatch(threadNum);
+        Thread main = new Thread(new Task(spliterator));
+        Thread t1 = new Thread(new Task(s1));
+        Thread t2 = new Thread(new Task(s2));
 
-        // 定义处理线程任务
-        Runnable task = () -> {
-            try {
-                String threadName = Thread.currentThread().getName();
-                System.out.println("线程" + threadName + "开始运行-----");
-                spliterator.trySplit().forEachRemaining((ele) -> {
-                    if (isInteger(ele)) {
-                        int num = Integer.parseInt(ele);
-                        count.addAndGet(num);
-                        System.out.println("数值：" + num + "------" + threadName);
-                    }
-                });
-                System.out.println("线程" + threadName + "运行结束-----");
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                latch.countDown();
-            }
+        main.start();
+        t1.start();
+        t2.start();
 
-        };
-
-        for (int i = 0; i < threadNum; i++) {
-            new Thread(task).start();
-        }
-
-        // 等待全部运行完毕
-        latch.await();
+        t1.join();
+        t2.join();
+        main.join();
 
         System.out.println(count);
     }
@@ -1627,6 +1619,29 @@ public class LLSpliteratorDemo {
         Pattern pattern = Pattern.compile("^[-+]?[\\d]*$");
         return pattern.matcher(str).matches();
     }
+
+    static class Task implements Runnable {
+
+        private Spliterator<String> spliterator;
+
+        public Task(Spliterator<String> spliterator) {
+            this.spliterator = spliterator;
+        }
+
+        @Override
+        public void run() {
+            String threadName = Thread.currentThread().getName();
+            System.out.println("线程" + threadName + "开始运行-----");
+            spliterator.forEachRemaining(x -> {
+                if (isInteger(x)) {
+                    count.addAndGet(Integer.parseInt(x));
+                    System.out.println("数值：" + x + "------" + threadName);
+                }
+            });
+            System.out.println("线程" + threadName + "运行结束-----");
+        }
+    }
+
 }
 ```
 
@@ -1637,18 +1652,11 @@ public class LLSpliteratorDemo {
 ```
 线程Thread-1开始运行-----
 线程Thread-2开始运行-----
-线程Thread-3开始运行-----
-java.lang.NullPointerException
 线程Thread-0开始运行-----
-	at top.jasonkayzk.LLSpliteratorDemo.lambda$main$1(LLSpliteratorDemo.java:42)
+线程Thread-0运行结束-----
+Exception in thread "Thread-2" java.lang.NullPointerException
+	at top.jasonkayzk.Test$Task.run(Test.java:65)
 	at java.base/java.lang.Thread.run(Thread.java:834)
-java.lang.NullPointerException
-	at top.jasonkayzk.LLSpliteratorDemo.lambda$main$1(LLSpliteratorDemo.java:42)
-	at java.base/java.lang.Thread.run(Thread.java:834)
-java.lang.NullPointerException
-	at top.jasonkayzk.LLSpliteratorDemo.lambda$main$1(LLSpliteratorDemo.java:42)
-	at java.base/java.lang.Thread.run(Thread.java:834)
-数值：0------Thread-1
 数值：10------Thread-1
 数值：20------Thread-1
 数值：30------Thread-1
@@ -1658,8 +1666,9 @@ java.lang.NullPointerException
 数值：70------Thread-1
 数值：80------Thread-1
 数值：90------Thread-1
+数值：100------Thread-1
 线程Thread-1运行结束-----
-450
+550
 ```
 
 <font color="#ff0000">结果是正确的, 但是爆出了NPE的错误!</font>
