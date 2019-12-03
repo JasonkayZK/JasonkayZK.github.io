@@ -125,7 +125,8 @@ Java Web包括的知识主要有:
 | [Java集合六-Stack](https://jasonkayzk.github.io/2019/11/27/Java集合六-Stack/) |  2019-11-27  | **Stack介绍(构造函数, API等)<br /><br />Stack源码解析(基于JDK11.0.4)<br /><br />Stack示例** |
 | [Java集合八-Map架构](https://jasonkayzk.github.io/2019/11/27/Java集合八-Map架构/) |  2019-11-27  | **Map的整体架构<br /><br />Map源码<br /><br />Map.Entry源码<br /><br />AbstractMap源码<br /><br />SortedMap源码<br /><br />NavigableMap源码<br /><br />Dictionary源码** |
 | [Java集合九-HashMap](https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/) |  2019-11-28  | **HashMap数据结构<br /><br />HashMap源码深度解析<br /><br />HashMap内部转换等总结** |
-| [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/) |  2019-12-03  | **数据结构Tree的发展史<br /><br />HashMap中TreeNode的源码分析 <br /><br />HashMap中的hash冲突 <br /><br />HashMap中的Rehash操作 <br /><br />HashMap遍历方式(整表遍历, 并发遍历)** |
+| [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/) |  2019-12-02  | **数据结构Tree的发展史<br /><br />HashMap中TreeNode的源码分析 <br /><br />HashMap中的hash冲突 <br /><br />HashMap中的Rehash操作 <br /><br />HashMap遍历方式(整表遍历, 并发遍历)** |
+| [关于JDK8添加的Spliterator的一些理解](https://jasonkayzk.github.io/2019/12/03/关于JDK8添加的Spliterator的一些理解) |  2019-12-03  | **Spliterator源码解读<br/><br />ArrayList中Spliterator的实现<br/><br />LinkedList中Spliterator的实现<br/><br />HashMap(Set)中Spliterator的实现** |
 
 <br/>
 
