@@ -1981,7 +1981,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneabl
 
   ><br/>
   >
-  >**备注: TreeNode的源码分析见文章:** [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/11/29/Java集合十-TreeNode与HashMap/)
+  >**备注: TreeNode的源码分析见文章:** [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/)
 
 ><br/>
 >
@@ -2103,7 +2103,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneabl
 
 ><br/>
 >
->更多与HashMap相关内容查看: [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/11/29/Java集合十-TreeNode与HashMap/)
+>更多与HashMap相关内容查看: [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/)
 
 
 
