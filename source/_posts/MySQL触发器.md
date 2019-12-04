@@ -4,6 +4,7 @@ toc: false
 date: 2019-12-04 10:02:18
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: 数据库
+tags: [MySQL]
 description: 上一篇讲解了MySQL中的自定义函数, 本篇讲解MySQL中的触发器
 ---
 
