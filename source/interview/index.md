@@ -61,11 +61,10 @@ date: 2019-11-21 10:12:50
 
 ## 数据库部分
 
-待更新, 敬请期待…
-
-| 文章索引 | 文章发布日期 | 文章主要内容 |
-| :------: | :----------: | ------------ |
-|          |              |              |
+|                           文章索引                           | 文章发布日期 | 文章主要内容                                                 |
+| :----------------------------------------------------------: | :----------: | :----------------------------------------------------------- |
+| [数据库总结之一](https://jasonkayzk.github.io/2019/12/03/数据库总结之一/) |  2019-12-04  | **一. 触发器与存储过程<br /><br />二. 数据库三范式是什么?<br /><br />三. 说出一些数据库优化方面的经验?<br /><br />四. union和union all有什么不同?<br /><br />五. 分页语句<br /><br />六. 注册Jdbc驱动程序的三种方式<br /><br />七. 用JDBC如何调用存储过程<br /><br />八. JDBC中的PreparedStatement相比Statement的好处<br /><br />九. 说出数据连接池的工作机制是什么?<br /><br />十. 为什么要用 ORM? 和 JDBC有何不一样?** |
+|                                                              |              |                                                              |
 
 <br/>
 
@@ -124,7 +123,7 @@ Java Web包括的知识主要有:
 | [Java集合五-Vector](https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/) |  2019-11-26  | **Vector介绍(构造函数, API等)<br /><br />Vector数据结构(继承关系等)<br /><br />Vector源码解析<br /><br />Vector遍历方式(整表遍历, 子列表遍历, 并发遍历)<br /><br />Vector示例** |
 | [Java集合六-Stack](https://jasonkayzk.github.io/2019/11/27/Java集合六-Stack/) |  2019-11-27  | **Stack介绍(构造函数, API等)<br /><br />Stack源码解析(基于JDK11.0.4)<br /><br />Stack示例** |
 | [Java集合八-Map架构](https://jasonkayzk.github.io/2019/11/27/Java集合八-Map架构/) |  2019-11-27  | **Map的整体架构<br /><br />Map源码<br /><br />Map.Entry源码<br /><br />AbstractMap源码<br /><br />SortedMap源码<br /><br />NavigableMap源码<br /><br />Dictionary源码** |
-| [Java集合九-HashMap](https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/) |  2019-11-28  | **HashMap数据结构<br /><br />HashMap源码深度解析<br /><br />HashMap内部转换等总结** |
+| [Java集合九-HashMap存储过程.png](https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/) |  2019-11-28  | **HashMap数据结构<br /><br />HashMap源码深度解析<br /><br />HashMap内部转换等总结** |
 | [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/) |  2019-12-02  | **数据结构Tree的发展史<br /><br />HashMap中TreeNode的源码分析 <br /><br />HashMap中的hash冲突 <br /><br />HashMap中的Rehash操作 <br /><br />HashMap遍历方式(整表遍历, 并发遍历)** |
 | [关于JDK8添加的Spliterator的一些理解](https://jasonkayzk.github.io/2019/12/03/关于JDK8添加的Spliterator的一些理解) |  2019-12-03  | **Spliterator源码解读<br/><br />ArrayList中Spliterator的实现<br/><br />LinkedList中Spliterator的实现<br/><br />HashMap(Set)中Spliterator的实现** |
 
