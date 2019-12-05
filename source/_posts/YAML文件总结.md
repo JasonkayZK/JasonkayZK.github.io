@@ -3,7 +3,7 @@ title: YAML文件总结
 toc: true
 date: 2019-09-28 10:52:18
 cover: https://static.oschina.net/uploads/img/201411/21072845_NR49.png
-categories: YAML
+categories: 技术杂谈
 tags: [YAML]
 description: YAML 语言（发音 /ˈjæməl/ ）的设计目标，就是方便人类读写。它实质上是一种通用的数据串行化格式
 ---

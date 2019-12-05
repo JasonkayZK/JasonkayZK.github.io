@@ -4,7 +4,7 @@ toc: false
 date: 2019-12-05 14:07:35
 cover: http://api.mtyqx.cn/api/random.php?22
 categories: 面试总结
-tags: Java基础
+tags: [Java基础, XML]
 description: 本文是Java面试总结中Java基础篇的第八篇
 ---
 

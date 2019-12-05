@@ -2,7 +2,7 @@
 title: 软件工程UML图总结
 toc: true
 date: 2019-10-21 11:12:18
-categories: UML
+categories: 技术杂谈
 cover: http://img2018.cnblogs.com/blog/1051030/201811/1051030-20181105205357467-1040762398.png
 description: 最近在看Mybatis技术原理与实战的时候, 书中出现了大量的UML类图, 看得我很是难受, 决定要抽出一点时间, 系统的学习一下UML的相关知识!
 ---
