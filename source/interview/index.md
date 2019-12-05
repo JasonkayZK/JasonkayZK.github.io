@@ -68,7 +68,7 @@ date: 2019-11-21 10:12:50
 | [MySQL存储过程](https://jasonkayzk.github.io/2019/12/04/MySQL存储过程/) |  2019-12-04  | **存储过程的创建<br /><br />存储过程的参数<br /><br />存储过程中的变量<br /><br />存储过程的调用<br /><br />存储过程的查询<br /><br />存储过程的修改<br /><br />存储过程的删除<br /><br />存储过程的控制语句** |
 | [MySQL触发器](https://jasonkayzk.github.io/2019/12/04/MySQL触发器/) |  2019-12-04  | **触发器简介<br /><br />创建触发器<br /><br />修改和删除触发器** |
 | [MySQL变量](https://jasonkayzk.github.io/2019/12/04/MySQL变量/) |  2019-12-04  | **系统变量<br /><br />会话变量<br /><br />局部变量<br /><br />变量作用域** |
-|                                                              |              |                                                              |
+| [MySQL索引](https://jasonkayzk.github.io/2019/12/05/MySQL索引/) |  2019-12-05  | **索引的管理<br /><br />B+ 树索引的使用<br /><br />索引的特点、优点、缺点及适用场景** |
 
 <br/>
 
