@@ -7,7 +7,9 @@ tags: [软件安装与配置, 软件推荐]
 description: 在Ubuntu下IDEA的安装与配置
 ---
 
+在Ubuntu下IDEA的安装与配置
 
+<br/>
 
 <!--more-->
 

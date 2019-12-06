@@ -59,7 +59,8 @@ toc: false
     -   [x] RabbitMQ
     -   [x] Docker
     -   [x] Docker-compose
-
+-   [x] Dubbo
+    
 -   未完成
     -   [ ] 设计模式
     -   [ ] JDK源码
@@ -72,7 +73,6 @@ toc: false
     -   [ ] Yarn
     -   [ ] Scala
     -   [ ] Kafka
-    -   [ ] Dubbo
     -   [ ] Nginx
     -   [ ] Netty
     -   [ ] K8S
