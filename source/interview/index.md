@@ -131,6 +131,7 @@ Java Web包括的知识主要有:
 | [Java集合九-HashMap存储过程.png](https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/) |  2019-11-28  | **HashMap数据结构<br /><br />HashMap源码深度解析<br /><br />HashMap内部转换等总结** |
 | [Java集合十-TreeNode与HashMap](https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/) |  2019-12-02  | **数据结构Tree的发展史<br /><br />HashMap中TreeNode的源码分析 <br /><br />HashMap中的hash冲突 <br /><br />HashMap中的Rehash操作 <br /><br />HashMap遍历方式(整表遍历, 并发遍历)** |
 | [关于JDK8添加的Spliterator的一些理解](https://jasonkayzk.github.io/2019/12/03/关于JDK8添加的Spliterator的一些理解) |  2019-12-03  | **Spliterator源码解读<br/><br />ArrayList中Spliterator的实现<br/><br />LinkedList中Spliterator的实现<br/><br />HashMap(Set)中Spliterator的实现** |
+| [Java中自动拆装箱的陷阱](https://jasonkayzk.github.io/2019/12/12/Java%E4%B8%AD%E8%87%AA%E5%8A%A8%E6%8B%86%E8%A3%85%E7%AE%B1%E7%9A%84%E9%99%B7%E9%98%B1/) |  2019-12-12  | **为什么Integer(3) == Integer(3)就是true, 而Integer(321) == Integer(321)就是false?<br /><br />为什么Integer(3) == Integer(1) + Integer(2)与Integer(3).equals(Integer(1) + Integer(2))都是true?<br /><br />为什么Long(3) == Integer(3)是true, 而Long(3).equals(Integer(3))就是false?<br /><br />拆装箱总结** |
 
 <br/>
 
