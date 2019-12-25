@@ -59,8 +59,7 @@ toc: false
     -   [x] RabbitMQ
     -   [x] Docker
     -   [x] Docker-compose
--   [x] Dubbo
-    
+    -   [x] Dubbo
 -   未完成
     -   [ ] 设计模式
     -   [ ] JDK源码
