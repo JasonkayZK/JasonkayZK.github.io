@@ -1426,6 +1426,8 @@ Entry[]容量扩容2倍=64时，元素完美散列:
 
 ### **ThreadLocal源码中为了防止内存泄露做出的努力**
 
+以下文字转自: [一篇文章，从源码深入详解ThreadLocal内存泄漏问题](https://www.jianshu.com/p/dde92ec37bd1)
+
 再看threadLocal,threadLocalMap,entry之间的关系图:
 
 ![threadLocal引用示意图.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/threadLocal引用示意图.png)
