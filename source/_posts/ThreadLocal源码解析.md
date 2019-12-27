@@ -42,28 +42,28 @@ ThreadLocal望文生义，简单解释就是线程的本地变量
 
 ```java
 /**
-     * 创建一个ThreadLocal变量
-     * Creates a thread local variable.
-     * @see #withInitial(java.util.function.Supplier)
-     */
+* 创建一个ThreadLocal变量
+* Creates a thread local variable.
+* @see #withInitial(java.util.function.Supplier)
+*/
 public ThreadLocal() {}
 
 /**
-     * JDK 1.8 新加入内容, 通过Supplier创建一个ThreadLocal
-     * (实际上是一个内部类SuppliedThreadLocal, 继承自ThreadLocal)
-     * 获取时采用Supplier的get()方法
-     *
-     * Creates a thread local variable. The initial value of the variable is
-     * determined by invoking the {@code get} method on the {@code Supplier}.
-     *
-     * @param <S> the type of the thread local's value
-     * @param supplier the supplier to be used to determine the initial value
-     * @return a new thread local variable
-     * @throws NullPointerException if the specified supplier is null
-     * @since 1.8
-     */	
+* JDK 1.8 新加入内容, 通过Supplier创建一个ThreadLocal
+* (实际上是一个内部类SuppliedThreadLocal, 继承自ThreadLocal)
+* 获取时采用Supplier的get()方法
+*
+* Creates a thread local variable. The initial value of the variable is
+* determined by invoking the {@code get} method on the {@code Supplier}.
+*
+* @param <S> the type of the thread local's value
+* @param supplier the supplier to be used to determine the initial value
+* @return a new thread local variable
+* @throws NullPointerException if the specified supplier is null
+* @since 1.8
+*/	
 public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
-    return new SuppliedThreadLocal<font color="#ff0000">(supplier);
+    return new SuppliedThreadLocal<>(supplier);
 }
 ```
 
@@ -200,8 +200,9 @@ ThreadLocal向外暴露出基本的增删改查方法，几个方法都是很简
 
 通过get和set方法是访问和修改的入口，再通过remove方法移除值
 
-| **T get()**           | 返回此线程局部变量的当前线程副本中的值           |
+| 方法                  | 说明                                             |
 | :-------------------- | :----------------------------------------------- |
+| **T get()**           | 返回此线程局部变量的当前线程副本中的值           |
 | **void set(T value)** | 将此线程局部变量的当前线程副本中的值设置为指定值 |
 | **void remove()**     | 移除此线程局部变量当前线程的值                   |
 
