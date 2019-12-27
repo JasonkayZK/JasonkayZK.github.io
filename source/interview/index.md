@@ -151,6 +151,7 @@ Java Web包括的知识主要有:
 | [关于JDK8添加的Spliterator的一些理解](https://jasonkayzk.github.io/2019/12/03/关于JDK8添加的Spliterator的一些理解) |  2019-12-03  | **Spliterator源码解读<br/><br />ArrayList中Spliterator的实现<br/><br />LinkedList中Spliterator的实现<br/><br />HashMap(Set)中Spliterator的实现** |
 | [Java中自动拆装箱的陷阱](https://jasonkayzk.github.io/2019/12/12/Java%E4%B8%AD%E8%87%AA%E5%8A%A8%E6%8B%86%E8%A3%85%E7%AE%B1%E7%9A%84%E9%99%B7%E9%98%B1/) |  2019-12-12  | **为什么Integer(3) == Integer(3)就是true, 而Integer(321) == Integer(321)就是false?<br /><br />为什么Integer(3) == Integer(1) + Integer(2)与Integer(3).equals(Integer(1) + Integer(2))都是true?<br /><br />为什么Long(3) == Integer(3)是true, 而Long(3).equals(Integer(3))就是false?<br /><br />拆装箱总结** |
 | [深入剖析Java中的void和java.lang.Void](https://jasonkayzk.github.io/2019/12/12/深入剖析Java中的void和java-lang-Void/) |  2019-12-12  | **void和java.lang.Void的比较<br /><br />Void类的使用场景**   |
+| [ThreadLocal源码解析](https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/) |  2019-12-26  | **ThreadLocal介绍(构造函数, API等)<br /><br />线性探测法(Hash表)解读<br /><br />ThreadLocal源码解读<br /><br />ThreadLocalMap到底存放在哪里<br /><br />为什么使用0x61c88647进行Rehash操作<br /><br />ThreadLocal源码中为了防止内存泄露做出的努力<br /><br />在使用ThreadLocal时防止内存泄漏你应该做出的努力<br /><br />ThreadLocal实例** |
 
 <br/>
 

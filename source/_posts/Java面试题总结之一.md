@@ -215,6 +215,8 @@ public class ThreadLocalAndPool {
 >
 >Thread Id: 13 before 0, after 1
 
+更多关于ThreadLocal见源码分析: [ThreadLocal源码解析](https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/)
+
 <br/>
 
 ### 2. 类的加载机制，为什么要用双亲委托？如何打破双亲委托加载机制?
