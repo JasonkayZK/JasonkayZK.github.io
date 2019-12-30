@@ -44,6 +44,12 @@ cmder的Github页面: https://github.com/cmderdev/cmder
 
 <br/>
 
+**3. 设置Cmder的启动快捷键**
+
+在Windows下添加桌面快捷方式, 然后右键桌面的快捷方式图标即可设置快捷键(我设置的是Ctrl + Alt + T, 当然这个也是Ubuntu默认的终端快捷键)
+
+<br/>
+
 ## 快捷键
 
     Ctrl + ` : 任务栏全局召唤
