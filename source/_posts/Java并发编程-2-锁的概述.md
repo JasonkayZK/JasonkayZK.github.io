@@ -4,7 +4,7 @@ toc: true
 date: 2019-09-12 10:33:27
 cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568266912531&di=c235b28ef40d7975bb63957baea6ad9c&imgtype=0&src=http%3A%2F%2Fimage.codes51.com%2FArticle%2Fimage%2F20160507%2F20160507104152_6100.jpg
 categories: 并发编程
-tags: [并发编程, 多线程]
+tags: [并发编程]
 description: Java并发编程之美-2-锁的概述
 ---
 
