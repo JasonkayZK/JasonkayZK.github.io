@@ -255,7 +255,7 @@ public class SwaggerConfig {
 >
 > `springfox-swagger2:2.7.0`已经支持泛型返回对象
 >
-><red>**注意：千万不要在@ApiOperation注解里限定response()，让框架推断类型就行了**</font>
+><font color="#ff0000">**注意：千万不要在@ApiOperation注解里限定response()，让框架推断类型就行了**</font>
 
 <br/>
 
