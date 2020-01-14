@@ -4,7 +4,7 @@ toc: true
 date: 2019-09-23 19:54:14
 cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569249898351&di=c288d93bf2b6515d5641347c3db125c7&imgtype=jpg&src=http%3A%2F%2Fwww.grabsun.com%2Fuploads%2Fimages%2F201207-1%2F1201261417449212.png
 categories: Spring
-tags: [Spring基础]
+tags: [Spring]
 description: xml、注解和JavaConfig作为Spring中常用的三种配置方式有何区别, 三种方法分别适用于什么场合, 本篇文章为您一一解答.
 ---
 
