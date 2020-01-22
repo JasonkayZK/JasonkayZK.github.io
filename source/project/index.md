@@ -43,11 +43,11 @@ cover: https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/pr
 
 **项目总结:**
 
-|                         项目总结文章                         |    日期    |                           主要内容                           |                       主要问题                        |
-| :----------------------------------------------------------: | :--------: | :----------------------------------------------------------: | :---------------------------------------------------: |
-| [EZShare项目总结-1](https://jasonkayzk.github.io/2020/01/22/EZShare项目总结-1/) | 2020-01-22 | **后台管理权限控制思路<br />文件权限控制思路<br />定时任务Quartz<br/>总结** | RBAC模型<br />文件权限控制方法和后台 管理权限控制思路 |
-|                                                              |            |                                                              |                                                       |
-|                                                              |            |                                                              |                                                       |
+|                         项目总结文章                         |    日期    | 主要内容                                                     | 主要问题                                                     |
+| :----------------------------------------------------------: | :--------: | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| [EZShare项目总结-1](https://jasonkayzk.github.io/2020/01/22/EZShare项目总结-1/) | 2020-01-22 | **后台管理权限控制思路<br />文件权限控制思路<br />定时任务Quartz<br/>总结** | **RBAC模型<br />文件权限控制方法和后台 管理权限控制思路**    |
+| [EZShare项目总结-2](https://jasonkayzk.github.io/2020/01/22/EZShare项目总结-2/) | 2020-01-22 | **项目技术选型<br />项目总体配置<br />日志记录Logback配置<br />参数校验提示信息配置<br />p6spy数据库<br />AutoGenerator代码生成<br />ip转地区<br />启动类配置** | **Spring Boot数据库连接池Hikari配置<br />Spring Boot集成多数据源<br />Spring Boot集成Redis<br />Spring Boot配置servlet<br />Spring Boot配置Logback<br />Spring Boot集成p6spy<br />Spring Actuator配置<br />Spring Boot集成Swagger<br />Mybatis-Plus配置<br />Shiro & JWT配置<br />AutoGenerator代码生成<br />……** |
+|                                                              |            |                                                              |                                                              |
 
 
 
