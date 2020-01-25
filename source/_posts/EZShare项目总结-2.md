@@ -474,6 +474,17 @@ public class P6spySqlFormatConfig implements MessageFormattingStrategy {
 Mybatis-Plus官方也是提供了这个生成器类的, 我的生成器内容如下:
 
 ```java
+package top.jasonkayzk.ezshare.common.generator;
+
+import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
+import com.baomidou.mybatisplus.generator.AutoGenerator;
+import com.baomidou.mybatisplus.generator.config.*;
+import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
+import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Scanner;
+
 /**
  * Mybatis-Plus提供的代码生成器
  *
@@ -519,6 +530,11 @@ public class CodeGenerator {
      * 模板路径
      */
     private static final String XML_MAPPER_TEMPLATE_PATH = "generator/templates/mapper.xml";
+
+    /**
+     * 表前缀(去掉)
+     */
+    private static final String TABLE_PREFIX = "t_";
 
     /**
      * mapper文件模板
@@ -588,18 +604,21 @@ public class CodeGenerator {
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(true);
         strategy.setInclude(scanner());
-        strategy.setSuperEntityColumns("id");
+        // 加入则不生成id列
+        // strategy.setSuperEntityColumns("id");
         strategy.setControllerMappingHyphenStyle(true);
-        strategy.setTablePrefix(packageConfig.getModuleName() + "_");
+        // 去掉表中前缀
+        strategy.setTablePrefix(TABLE_PREFIX);
         generator.setStrategy(strategy);
         generator.setTemplateEngine(new FreemarkerTemplateEngine());
         generator.execute();
     }
 
+
     private static String[] scanner() {
         Scanner scanner = new Scanner(System.in);
         System.out.println(("请输入表名(多个表使用空格分开)" + "："));
-        // t_dict t_file t_file_category t_file_download_log t_job t_job_log t_log t_login_log t_menu t_role t_role_menu t_user t_user_config t_user_role
+        // t_dict t_file t_file_category t_file_download_log t_job t_job_log t_log t_login_log t_menu t_role t_role_menu t_user t_user_config t_user_role t_file_auth
         if (scanner.hasNextLine()) {
             String ipt = scanner.nextLine();
             if (StringUtils.isNotBlank(ipt)) {
@@ -610,6 +629,7 @@ public class CodeGenerator {
     }
 
 }
+
 ```
 
 输入表名, 即可根据模板生成代码
@@ -617,6 +637,23 @@ public class CodeGenerator {
 ><br/>
 >
 >**补充:**
+>
+>**① 去掉表前缀:**
+>
+>在我的数据表中有类似`t_tablename`的前缀, 可以通过策略配置去掉:
+>
+>```java
+>// 去掉表中前缀
+>strategy.setTablePrefix("t_");
+>```
+>
+><br/>
+>
+>**② 生成实体entity没有id**
+>
+>删去: `strategy.setSuperEntityColumns("id");`即可
+>
+><br/>
 >
 >源代码见: https://github.com/JasonkayZK/EZShare/tree/master/backend/src/main/java/top/jasonkayzk/ezshare/common/generator/
 >
