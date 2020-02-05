@@ -37,7 +37,9 @@ cover: http://api.mtyqx.cn/api/random.php?0
 
 ## 日記
 
-To be continue…
+-   [最近いろいろの感想](https://jasonkayzk.github.io/2020/02/05/最近いろいろの感想/)
+
+    
 
 <br/>
 
