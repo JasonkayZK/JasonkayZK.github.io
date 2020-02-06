@@ -2065,7 +2065,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneabl
 >
 >    -   **① 数组扩容: table属性(Node<K,V>[] table)的扩容**
 >
->        <red>**发生在当插入下一个元素(如put()等方法[或treeifyBin()方法])使得元素个数大于threshold时调用resize()方法扩容;**</font>
+>        <font color="#f00">**发生在当插入下一个元素(如put()等方法[或treeifyBin()方法])使得元素个数大于threshold时调用resize()方法扩容;**</font>
 >
 >        <font color="#ff0000">**注意: 数组扩容都为两倍扩容, 并且要求了初始化时的容量必须为2的次方(即使你构造方法传参不是2的幂, 也会使用tableSizeFor()方法帮你转化)**</font>
 >

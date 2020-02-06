@@ -83,7 +83,7 @@ for (int i = 0; i < arr.length; i++) {
 
 注意，对于精度比int大的类型，比如long、float，doulble，不会自动转换为int，如果想使用，就必须强转为int，如(int)float;
 
-<red>jdk1.7后，整形，枚举类型，boolean，字符串都可以: 通过调用switch中string.hashCode,将string转换为int从而进行判断.</font>
+<font color="#f00">jdk1.7后，整形，枚举类型，boolean，字符串都可以: 通过调用switch中string.hashCode,将string转换为int从而进行判断.</font>
 
 <br/>
 
