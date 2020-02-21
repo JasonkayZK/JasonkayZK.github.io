@@ -18,10 +18,13 @@ toc: false
 
 主题：https://nexmoe.com/hexo-theme-nexmoe.html
 
+个人公众号: **Coder张小凯**(内容同步更新)
+
 
 
 ## Blog更新历史
 
+*   2020-02-21 关于页增加个人公众号相关说明
 *   2020-02-09 分别增加了网易云外链与APlayer播放器(未添加pjax暂时闲置)
 *   2020-02-09 增加NProgress加载进度条
 *   2020-01-20 增加了日语学习专栏
