@@ -266,7 +266,7 @@ redis设计了一种简单动态字符串(SDS[Simple Dynamic String])作为底�
 >
 >**空间分配原则:** 
 >
-><red>**当len小于1MB（1024*1024）时增加字符串分配空间大小为原来的2倍，当len大于等于1M时每次分配 额外多分配1M的空间**</font>
+><font color="#f00">**当len小于1MB（1024*1024）时增加字符串分配空间大小为原来的2倍，当len大于等于1M时每次分配 额外多分配1M的空间**</font>
 
 由此可以得出以下特性：
 
@@ -279,7 +279,7 @@ redis设计了一种简单动态字符串(SDS[Simple Dynamic String])作为底�
 >
 >**补充: 二进制安全**
 >
-><red>**一个二进制安全函数，其本质上将操作输入作为原始的、无任何特殊格式意义的数据流。对于每个字符都公平对待，不特殊处理某一个字符**</font>
+><font color="#f00">**一个二进制安全函数，其本质上将操作输入作为原始的、无任何特殊格式意义的数据流。对于每个字符都公平对待，不特殊处理某一个字符**</font>
 >
 >大多数的函数当其使用任何特别的或标记字符，如转义码，那些期望 null 结尾的字符串（如C语言中的字符串），不是二进制安全的。一个可能的例外是该函数的明确的目的是在某二进制字符串搜索某特定字符
 >
@@ -433,7 +433,7 @@ redis对普通的跳跃表进行了修改，包括添加span\tail\backward指针
 
 **① BitMaps**
 
-<red>**bitmaps不是一个真实的数据结构, 而是String类型上的一组面向bit操作的集合**</font>
+<font color="#f00">**bitmaps不是一个真实的数据结构, 而是String类型上的一组面向bit操作的集合**</font>
 
 由于string是二进制安全的blob，并且它们的最大长度是512Mb，所以bitmaps能最大设置2^32个不同的bit
 
@@ -793,7 +793,7 @@ hot key found with counter: 64    keyname: myset
 
 ### Redis事务
 
-<red>**Redis 事务的本质是一组命令的集合**</font>
+<font color="#f00">**Redis 事务的本质是一组命令的集合**</font>
 
 事务支持一次执行多个命令，一个事务中所有命令都会被序列化, 在事务执行过程，会按照顺序串行化执行队列中的命令，其他客户端提交的命令请求不会插入到事务执行命令序列中
 
@@ -880,7 +880,7 @@ null
 
 **③ 事务队列中存在命令性错误**
 
-<red>**若在事务队列中存在命令性错误（类似于编译性错误），则执行EXEC命令时，所有命令都不会执行**</font>
+<font color="#f00">**若在事务队列中存在命令性错误（类似于编译性错误），则执行EXEC命令时，所有命令都不会执行**</font>
 
 ```mysql
 localhost:0>multi # 开启事务
@@ -905,7 +905,7 @@ null
 
 **④ 事务队列中存在语法性错误**
 
-<red>**若在事务队列中存在语法性错误（类似于运行时异常），则执行EXEC命令时，其他正确命令会被执行，错误命令抛出异常**</font>
+<font color="#f00">**若在事务队列中存在语法性错误（类似于运行时异常），则执行EXEC命令时，其他正确命令会被执行，错误命令抛出异常**</font>
 
 ```mysql
 localhost:0>set k1 v1 # 事务前设置k1 - v1
@@ -981,7 +981,7 @@ localhost:0>exec # 执行事务
 >
 >**watch总结:**
 >
->watch指令类似于乐观锁，在事务提交时，<red>**如果watch监控的多个KEY中任何KEY的值已经被其他客户端更改，则使用EXEC执行事务时，事务队列将不会被执行，同时返回Null, multi-bulk应答以通知调用者事务执行失败**</font>
+>watch指令类似于乐观锁，在事务提交时，<font color="#f00">**如果watch监控的多个KEY中任何KEY的值已经被其他客户端更改，则使用EXEC执行事务时，事务队列将不会被执行，同时返回Null, multi-bulk应答以通知调用者事务执行失败**</font>
 
 <br/>
 
@@ -1300,7 +1300,7 @@ receive redis published message, channel news.blog, message 新闻博客
 >
 >RedisPub通过Jedis客户端注册并发布消息到指定的channel, 之后RedisSub通过Listener类中的subscribe()方法注册订阅;
 >
-><red>**Listener收到发布事件之后, 通过OnMessage等回调函数完成逻辑处理(即RedisSub仅仅完成订阅, 真正执行逻辑的是Listener)**</font>
+><font color="#f00">**Listener收到发布事件之后, 通过OnMessage等回调函数完成逻辑处理(即RedisSub仅仅完成订阅, 真正执行逻辑的是Listener)**</font>
 >
 >源码见: https://github.com/JasonkayZK/Java_Samples/tree/redis-pub/sub
 
@@ -1332,7 +1332,7 @@ receive redis published message, channel news.blog, message 新闻博客
 
 -   **加锁**
 
-<red>**加锁实际上就是在redis中，给Key键设置一个值，为避免死锁，并给定一个过期时间:**</font>
+<font color="#f00">**加锁实际上就是在redis中，给Key键设置一个值，为避免死锁，并给定一个过期时间:**</font>
 
 `SET lock_key lock_value NX PX 5000`
 
@@ -1473,11 +1473,11 @@ public class SinglePointRedisLock {
 >
 >**① 加锁过程lock()**
 >
-><red>**加锁的过程很简单，就是通过SET指令来设置值，成功则返回；否则就循环等待，在timeout时间内仍未获取到锁，则获取失败**</font>
+><font color="#f00">**加锁的过程很简单，就是通过SET指令来设置值，成功则返回；否则就循环等待，在timeout时间内仍未获取到锁，则获取失败**</font>
 >
 >**② 解锁过程unlock()**
 >
-><red>**解锁通过`jedis.eval`来执行一段Lua脚本, 保证了解锁过程的原子性; 将锁的Key键和生成的字符串当做参数传进来**</font>
+><font color="#f00">**解锁通过`jedis.eval`来执行一段Lua脚本, 保证了解锁过程的原子性; 将锁的Key键和生成的字符串当做参数传进来**</font>
 
 -   **测试**
 
@@ -1729,8 +1729,8 @@ public class RedissonReentrantLockTest {
 >
 >如上代码，就是加锁的全过程:
 >
->-   <red>**先调用`tryAcquire`来获取锁，如果返回值ttl为空，则证明加锁成功，返回；**</font>
->-   <red>**如果不为空，则证明加锁失败; 这时候，它会订阅这个锁的Channel，等待锁释放的消息，然后重新尝试获取锁**</font>
+>-   <font color="#f00">**先调用`tryAcquire`来获取锁，如果返回值ttl为空，则证明加锁成功，返回；**</font>
+>-   <font color="#f00">**如果不为空，则证明加锁失败; 这时候，它会订阅这个锁的Channel，等待锁释放的消息，然后重新尝试获取锁**</font>
 >
 >Redisson可重入锁流程图:
 >
