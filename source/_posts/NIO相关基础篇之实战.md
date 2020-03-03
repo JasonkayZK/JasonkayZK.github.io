@@ -21,9 +21,9 @@ description: 继前两篇介绍NIO的文章之后, 本篇主要是对之前NIO�
 -   DatagramChannel
 -   ......
 
-
-
 本文转自: [Java NIO？看这一篇就够了！](https://blog.csdn.net/u011381576/article/details/79876754)
+
+代码实例: https://github.com/JasonkayZK/Java_Samples/tree/java-nio
 
 <!--more-->
 
@@ -1289,9 +1289,4 @@ public class DatagramChannelDemo {
 
 <br/>
 
-实例代码: https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/nio
-
-
-
-
-
+代码实例: https://github.com/JasonkayZK/Java_Samples/tree/java-nio

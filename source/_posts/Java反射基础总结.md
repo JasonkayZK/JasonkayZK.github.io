@@ -8,9 +8,11 @@ tags: [反射, 学习案例]
 description: 有关Java中反射的相关总结知识!
 ---
 
-
-
 最近用到了动态代理, 在Spring框架中也大量使用了反射来完成Ioc和AOP. 对于反射一直也都是使用, 也没怎么系统的学习. 这篇文章就系统的总结一下在Java中反射的相关机制!
+
+Github源码: https://github.com/JasonkayZK/Java_Samples/tree/java-reflection
+
+<br/>
 
 <!--more-->
 
@@ -826,15 +828,9 @@ is
 
 <br/>
 
------------------
-
-
-
 ### 附录
 
-<font color="#ff0000">Github源码:</font> https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/reflection
-
-
+Github源码: https://github.com/JasonkayZK/Java_Samples/tree/java-reflection
 
 --------------------
 
@@ -844,3 +840,4 @@ is
 2.  [反射有什么用](http://how2j.cn/k/reflection/reflection-usage/1111.html#nowhere) [↩︎](https://blog.csdn.net/lililuni/article/details/83449088#fnref2)
 3.  [深入分析Java方法反射的实现原理](https://www.jianshu.com/p/3ea4a6b57f87)
 
+<br/>

@@ -8,9 +8,11 @@ tags: [RPC, JDK动态代理, 反射, 序列化, Socket, Lambda表达式]
 description: 一个通过Java原生API实现的RPC的例子
 ---
 
+这是一个简单的原生RPC例子，用了JDK动态代理,反射,JDK自带的序列化和反序列化以及JAVA原生Socket通信
 
+本项目Github地址: https://github.com/JasonkayZK/Java_Samples/tree/java-rpc
 
-这是一个简单的原生RPC例子，用了JDK动态代理,反射,JDK自带的序列化和反序列化以及JAVA原生Socket通信。
+<br/>
 
 <!--more-->
 
@@ -708,7 +710,5 @@ Service on!
 
 ### 附录
 
-本项目Github地址: https://github.com/JasonkayZK/Java_Samples
-
-
+本项目Github地址: https://github.com/JasonkayZK/Java_Samples/tree/java-rpc
 

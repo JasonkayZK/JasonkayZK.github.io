@@ -8,8 +8,6 @@ tags: [NIO]
 description: 本篇讲述了Java NIO的相关知识.
 ---
 
-
-
 最近在看《Netty In Action》, 发现里面好多东西看不懂, 实际上是Java IO相关的知识太少了! 尤其是Java 1.4之后推出的NIO. 所以在网上搜集了资料, 在这里整理一下关于Java NIO的相关知识.
 
 -   Java IO体系以及IO相关主题
@@ -20,6 +18,10 @@ description: 本篇讲述了Java NIO的相关知识.
 -   Selector(选择器): 选择器的种类与方法, SelectionKey的四个重要常量
 -   简单介绍AIO
 -   .......
+
+代码实例: https://github.com/JasonkayZK/Java_Samples/tree/java-nio
+
+<br/>
 
 <!--more-->
 
@@ -968,7 +970,7 @@ AIO是异步IO的缩写，相对与NIO来说又进了一步，它不是在IO准�
 
 
 
-代码实例: https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/nio
+代码实例: https://github.com/JasonkayZK/Java_Samples/tree/java-nio
 
 
 

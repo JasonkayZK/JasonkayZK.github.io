@@ -456,15 +456,5 @@ Scanner套接字节流或字符流：
 >
 >读取数据用Scanner其次是BufferReader
 
-
-
-
-
-
-
-
-
-
-
 <br/>
 

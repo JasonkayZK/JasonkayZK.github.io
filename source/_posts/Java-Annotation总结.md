@@ -8,9 +8,11 @@ tags: [Java注解]
 description: 本篇学习一下Java Annotation相关的知识
 ---
 
+在Java各流行框架中, 大量使用第三方注解, 帮助我们简化配置, 如声明Spring配置类的: *@Configuration*. 为何注解如此神奇? 
 
+本篇文章帮助大家揭晓注解背后的故事, 帮助大家理解 Hibernate，Spring, Struts等等第三方注解是如何工作的!
 
-在Java各流行框架中, 大量使用第三方注解, 帮助我们简化配置, 如声明Spring配置类的: *@Configuration*. 为何注解如此神奇? 本篇文章帮助大家揭晓注解背后的故事, 帮助大家理解 Hibernate，Spring, Struts等等第三方注解是如何工作的!
+示例代码: https://github.com/JasonkayZK/Java_Samples/tree/java-annotation
 
 <br/>
 
@@ -1086,7 +1088,7 @@ GitHubService service = retrofit.create(GitHubService.class);
 
 最后要注意的是: <font color="#ff0000">注解的提取需要借助于 Java 的反射技术，*反射比较慢*，所以注解使用时也需要谨慎计较时间成本!</font>
 
-
+<br/>
 
 ### 附录
 
@@ -1098,7 +1100,4 @@ GitHubService service = retrofit.create(GitHubService.class);
 
 <br/>
 
-示例代码: https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/annotation
-
-
-
+示例代码: https://github.com/JasonkayZK/Java_Samples/tree/java-annotation

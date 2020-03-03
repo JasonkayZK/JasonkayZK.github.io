@@ -8,9 +8,9 @@ tags: [代理模式, JDK动态代理, CGLib动态代理, 静态代理]
 description: 反射技术中常见的一个概念就是动态代理, 本篇文章主要讲述了代理模式, 动态代理与静态代理等.
 ---
 
+在Spring的体系下, 大多数的实现都在使用动态代理, 如: Spring的AOP, 事务注解, Mybatis的mapper, 分页插件也都离不开代理模式. 
 
-
-在Spring的体系下, 大多数的实现都在使用动态代理, 如: Spring的AOP, 事务注解等. 而Mybatis的mapper, 分页插件也都离不开代理模式. 
+示例源码: https://github.com/JasonkayZK/Java_Samples/tree/java-proxy
 
 <br/>
 
@@ -1126,13 +1126,7 @@ private  TestService  testServiceImpl;
 -   JDK动态代理需要有顶层接口才能使用，在只有顶层接口的时候也可以使用.使用反射完成;
 -   CGLib代理可以直接代理类，使用字节码技术, 但不能对 final类进行继承;
 
-
-
 <br/>
-
----------------------------------
-
-
 
 ### 附录
 
@@ -1144,7 +1138,7 @@ private  TestService  testServiceImpl;
 
 <br/>
 
-示例源码: https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/proxy
+示例源码: https://github.com/JasonkayZK/Java_Samples/tree/java-proxy
 
 
 

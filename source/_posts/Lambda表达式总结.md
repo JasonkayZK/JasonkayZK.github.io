@@ -8,11 +8,13 @@ tags: [Lambda表达式, 函数式接口]
 description: Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了. 这篇文章总结了Lambda表达式的基本使用.  
 ---
 
-
-
 Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了! 虽然平时用的不是很多, 但是看别人写出的代码刷刷刷, 几下子几个箭头就搞定了, 感觉就很爽! 尤其是最近做了一个项目, 项目中对于Jedis各种操作的封装出神入化!
 
-<br/>所以就趁着中秋节花时间学习了一下Lambda表达式的基本用法!
+所以就趁着中秋节花时间学习了一下Lambda表达式的基本用法!
+
+本文章中所有例程代码: https://github.com/JasonkayZK/Java_Samples/tree/java-lambda
+
+<br/>
 
 <!--more-->
 
@@ -1678,13 +1680,7 @@ primes.forEach(element -> { System.out.println(factor*element); });
 
 因此，**它看起来更像不可变闭包**，类似于Python。
 
-
-
 <br/>
-
-----------------------------
-
-
 
 ### 附录
 
@@ -1694,7 +1690,6 @@ primes.forEach(element -> { System.out.println(factor*element); });
 -   http://how2j.cn/k/lambda/lambda-stream/700.html
 -   [Java8 lambda表达式10个示例](https://www.cnblogs.com/coprince/p/8692972.html)
 
+本文章中所有例程代码: https://github.com/JasonkayZK/Java_Samples/tree/java-lambda
 
-
-本文章中所有例程代码: https://github.com/JasonkayZK/Java_Samples/tree/master/src/main/java/lambda
-
+<br/>
