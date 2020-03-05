@@ -21,6 +21,14 @@ description: 本篇通过手写一个简单的线程池, 展现了Java线程池�
 
 <!--more-->
 
+系列文章入口:
+
+-   [Java线程池ThreadPoolExecutor分析与实战](https://jasonkayzk.github.io/2020/02/06/Java线程池ThreadPoolExecutor分析与实战/)
+-   [Java线程池ThreadPoolExecutor分析与实战续](https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/)
+-   [Java线程池ThreadPoolExecutor分析与实战终](https://jasonkayzk.github.io/2020/03/05/Java线程池ThreadPoolExecutor分析与实战终/)
+
+<br/>
+
 ## 前言
 
 其实这篇文章一个月之前就想写了, 但是说实话JUC包里面的内容实在是太多了, 不知道从何讲起, 一直拖到现在hhh~
