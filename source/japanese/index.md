@@ -38,8 +38,9 @@ cover: http://api.mtyqx.cn/api/random.php?0
 ## 日記
 
 -   [最近いろいろの感想](https://jasonkayzk.github.io/2020/02/05/最近いろいろの感想/)
+-   [人生とかホントはいきなり事じゃない](https://jasonkayzk.github.io/2020/03/21/人生とかホントはいきなり事じゃない/)
 
-    
+
 
 <br/>
 
