@@ -3,7 +3,6 @@ title: 张小凯と彼のBlog
 layout: about
 date: 2019-11-20 09:51:10
 cover: https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/about.jpg
-toc: false
 ---
 
 *Get busy living or get busy dying*  ————电影肖申克的救赎。
@@ -24,6 +23,8 @@ toc: false
 
 ## Blog更新历史
 
+*   **2020-04-05 文章数突破200!**
+*   2020-04-05 文章模板增加目录内容
 *   2020-03-31 增加算法页面模板algo
 *   2020-03-22 增加文章目录功能(待优化)
 *   2020-03-22 增加算法总结专栏
@@ -71,19 +72,19 @@ toc: false
     -   [x] Docker
     -   [x] Docker-compose
     -   [x] Dubbo
+    -   [x] JDK源码
+    -   [x] JVM
+    -   [x] Zookeeper
+    -   [x] Nginx
+    -   [x] 并发编程
 -   未完成
     -   [ ] 设计模式
-    -   [ ] JDK源码
-    -   [ ] JVM
     -   [ ] Spring源码
-    -   [ ] 并发编程
-    -   [ ] Zookeeper
     -   [ ] Hadoop
     -   [ ] HBase
     -   [ ] Yarn
     -   [ ] Scala
     -   [ ] Kafka
-    -   [ ] Nginx
     -   [ ] Netty
     -   [ ] K8S
     -   [ ] Spark

@@ -48,7 +48,7 @@ Java中主要是通过Scanner来完成从标准输入流中完成读入数据;
 
 需要特别注意的就是:
 
-<red>**应当避免nextLine方法与其他nextxxx混用**</font>
+<font color="#f00">**应当避免nextLine方法与其他nextxxx混用**</font>
 
 例如:
 
@@ -284,7 +284,7 @@ Case #2: unhappy
 >
 >通过输入数据构建dict, 表示可以转换的;
 >
-><red>**这里需要注意的是:不能使用一维数组`dict[c2]=c1`, 而是使用二维数组`dict[c2][c1]=true`**</font>
+><font color="#f00">**这里需要注意的是:不能使用一维数组`dict[c2]=c1`, 而是使用二维数组`dict[c2][c1]=true`**</font>
 >
 >**因为数据中有可能出现a -> b, a -> c**
 >
