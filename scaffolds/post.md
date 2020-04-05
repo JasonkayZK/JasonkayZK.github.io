@@ -5,7 +5,6 @@ cover: http://api.mtyqx.cn/api/random.php?x
 categories: 
 tags: 
 description: 
-toc: false
 ---
 
 摘要内容
@@ -20,12 +19,25 @@ toc: false
 
 - 
 
+<br/>
+
+<!--more-->
+
+**目录:**
+
+<!-- toc -->
+
+<br/>
+
+## 标题
+
+正文
+
+
+## 附录
+
 如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯
 
 内容和博客同步更新~
 
 <br/>
-
-<!--more-->
-
-正文
