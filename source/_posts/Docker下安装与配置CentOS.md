@@ -227,6 +227,21 @@ vi /etc/selinux/config
 
 ****
 
+### 修改hoshname
+
+修改`/etc/sysconfig/network`文件
+
+```bash
+vi /etc/sysconfig/network
+
+# 将HOSTNAME修改为你集群中的hostname
+NETWORKING=yes
+#HOSTNAME=localhost.localdomain
+HOSTNAME=node1
+```
+
+****
+
 ### 修改hosts
 
 修改`/etc/hosts`, 加入集群的信息, 如加入:
