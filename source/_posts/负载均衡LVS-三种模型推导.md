@@ -143,7 +143,7 @@ LVS中有一些常见的术语，如下表所示：
 
 对应如下图所示:
 
-![lvs四层.png](../../../../Pictures/lvs%E5%9B%9B%E5%B1%82.png)
+![lvs四层.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/lvs四层.png)
 
 ><br/>
 >
@@ -159,7 +159,7 @@ LVS中有一些常见的术语，如下表所示：
 
 SNAT指的是**在使用NAT做地址转换时, 转换的是源地址(Source)**
 
-![SNAT.png](../../../../Pictures/SNAT.png)
+![SNAT.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/SNAT.png)
 
 如上图所示:
 
@@ -195,7 +195,7 @@ SNAT指的是**在使用NAT做地址转换时, 转换的是源地址(Source)**
 
 NAT模型图如下所示:
 
-![lvs_nat.png](../../../../Pictures/lvs2.png)
+![lvs_nat.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/lvs_nat.png)
 
 首先, 客户端会从CIP向VIP发送请求, 此时请求到达负载均衡服务器. 但是负载均衡服务器不能直接将当前的请求包转发(**因为数据包的源/目的地址为CIP->VIP**)
 
@@ -223,7 +223,7 @@ DR模型即直接路由模型(Direct Routing). 就是在服务器返回响应时
 
 DR模型如下图所示:
 
-![lvs_dr.png](../../../../Pictures/lvs_dr.png)
+![lvs_dr.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/lvs_dr.png)
 
 ><br/>
 >
@@ -326,7 +326,7 @@ DR模型如下图所示:
 
 此时就不可再使用DR模型, 而使用的是TUN模型, 即隧道模型;
 
-![lvs_tun.png](../../../../Pictures/lvs_tun.png)
+![lvs_tun.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/lvs_tun.png)
 
 TUN模型类似于VPN技术, 即通过LVS进行代理;
 
