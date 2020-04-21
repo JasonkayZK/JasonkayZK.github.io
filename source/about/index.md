@@ -23,6 +23,7 @@ cover: https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/ab
 
 ## Blog更新历史
 
+*   2020-04-21 增加站内搜索功能(生成的xml占用带宽)
 *   **2020-04-05 文章数突破200!**
 *   2020-04-05 文章模板增加目录内容
 *   2020-03-31 增加算法页面模板algo
