@@ -31,7 +31,7 @@ description: 最近在使用Git向github提交代码的时候总是卡顿, 出�
 
 如下图, 命令一直停留, 直到超时:
 
-![pull卡死](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/pull卡死.png)
+![pull卡死](https://jasonkay_image.imfast.io/images/pull卡死.png)
 
 <br/>
 
@@ -49,7 +49,7 @@ Hi JasonkayZK! You've successfully authenticated, but GitHub does not provide sh
 
 之后又通过`mtr命令`查看了一下路由和丢包情况, 如图:
 
-   ![mtrGithub](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/mtrGithub.png)
+   ![mtrGithub](https://jasonkay_image.imfast.io/images/mtrGithub.png)
 
 结果显示, 虽然延迟在265ms左右, 但是并没有很严重的丢包! 应该大概率也不会是网络的原因.
 
@@ -152,7 +152,7 @@ assets-cdn.github.com
 github.global.ssl.fastly.net
 ```
 
-![DNS解析地址](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/DNS解析地址.png)
+![DNS解析地址](https://jasonkay_image.imfast.io/images/DNS解析地址.png)
 
 记录下查询到的IP地址!
 
@@ -200,7 +200,7 @@ Windows+X 打开系统命令行(管理员身份)或powershell
 
 运行 `ipconfig /flushdns` 手动刷新系统DNS缓存: 
 
-![win刷新系统DNS缓存](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/win刷新系统DNS缓存.png)
+![win刷新系统DNS缓存](https://jasonkay_image.imfast.io/images/win刷新系统DNS缓存.png)
 
 <br/>
 

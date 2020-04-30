@@ -22,7 +22,7 @@ description: 本篇总结了EZShare项目的数据库表设计等方面的问题
 
 首先对项目的数据库层进行了初步构建, 整体结构图如下所示:
 
-![EZShare-schema.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/EZShare-schema.png)
+![EZShare-schema.png](https://jasonkay_image.imfast.io/images/EZShare-schema.png)
 
 >   <br/>
 >
@@ -34,7 +34,7 @@ description: 本篇总结了EZShare项目的数据库表设计等方面的问题
 
 即一个用户拥有若干角色，每一个角色拥有若干权限。这样，就构造成“用户-角色-权限”的授权模型。 在这种模型中，用户与角色之间，角色与权限之间，一般者是多对多的关系。如下图所示：
 
-![RBAC.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/RBAC.png)
+![RBAC.png](https://jasonkay_image.imfast.io/images/RBAC.png)
 
 比如获取用户名为Jasonkay的用户权限过程为:
 

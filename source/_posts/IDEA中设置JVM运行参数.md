@@ -33,9 +33,9 @@ java程序运行时指定 `-Dproperty=value`
 
 在idea开发环境中修改，JVM参数，修改方式如下图：
 
-![IDEA中设置JVM运行参数1.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/IDEA中设置JVM运行参数1.png)
+![IDEA中设置JVM运行参数1.png](https://jasonkay_image.imfast.io/images/IDEA中设置JVM运行参数1.png)
 
-![IDEA中设置JVM运行参数2.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/IDEA中设置JVM运行参数2.png)
+![IDEA中设置JVM运行参数2.png](https://jasonkay_image.imfast.io/images/IDEA中设置JVM运行参数2.png)
 
 <br/>
 

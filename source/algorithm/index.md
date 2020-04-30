@@ -469,11 +469,11 @@ cover: http://api.mtyqx.cn/api/random.php?2
 
 **Alipay:**
 
-![alipay](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/alipay.jpg)
+![alipay](https://jasonkay_image.imfast.io/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
+![wechat](https://jasonkay_image.imfast.io/images/wechat.jpg)
 
 <br/>
 

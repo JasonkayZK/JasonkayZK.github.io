@@ -335,7 +335,7 @@ ThreadLocal向外暴露出基本的增删改查方法，几个方法都是很简
 
 <font color="#ff0000">**ThreadLocal的内部维护着一个叫做ThreadLocalmap的静态类，它由一个首尾闭合的动态数组组成（默认大小为16），每个数组都是一个Entry对象，该对象以ThreadLocal对象作为key，以传入的数据作为值进行封装而成.**</font>以下是TheadLocalMap的图示：
 
-![ThreadLocalMap的图示.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/ThreadLocalMap的图示.png)
+![ThreadLocalMap的图示.png](https://jasonkay_image.imfast.io/images/ThreadLocalMap的图示.png)
 
 ><br/>
 >
@@ -1330,7 +1330,7 @@ ThreadLocalMap包含了对ThreadLocal的弱引用以及值的强引用，但是�
 
 threadLocal,threadLocalMap,entry之间的关系如下图所示:
 
-![threadLocal引用示意图.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/threadLocal引用示意图.png)
+![threadLocal引用示意图.png](https://jasonkay_image.imfast.io/images/threadLocal引用示意图.png)
 
 上图中，实线代表强引用，虚线代表的是弱引用
 
@@ -1431,7 +1431,7 @@ Entry[]容量扩容2倍=64时，元素完美散列:
 
 再看threadLocal,threadLocalMap,entry之间的关系图:
 
-![threadLocal引用示意图.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/threadLocal引用示意图.png)
+![threadLocal引用示意图.png](https://jasonkay_image.imfast.io/images/threadLocal引用示意图.png)
 
 上图中，实线代表强引用，虚线代表的是弱引用，如果threadLocal外部强引用被置为null(threadLocalInstance=null)的话，threadLocal实例就没有一条引用链路可达，很显然在gc(垃圾回收)的时候势必会被回收, 因此entry就存在key为null的情况，而无法通过一个key为null去访问到该entry的value
 
@@ -1514,7 +1514,7 @@ private boolean cleanSomeSlots(int i, int n) {
 
 在扫描过程中，如果没有遇到脏entry就整个扫描过程持续log2(n)次，log2(n)的得来是因为`n >>>= 1`，每次n右移一位相当于n除以2。如果在扫描过程中遇到脏entry的话就会令n为当前hash表的长度（`n=len`），再扫描log2(n)趟，注意此时n增加无非就是多增加了循环次数从而通过nextIndex往后搜索的范围扩大，示意图如下
 
-![cleanSomeSlots示意图.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/cleanSomeSlots示意图.png)
+![cleanSomeSlots示意图.png](https://jasonkay_image.imfast.io/images/cleanSomeSlots示意图.png)
 
 按照n的初始值，搜索范围为黑线，当遇到了脏entry，此时n变成了哈希数组的长度（n取值增大），搜索范围log2(n)增大，红线表示。如果在整个搜索过程没遇到脏entry的话，搜索结束，采用这种方式的主要是用于时间效率上的平衡
 
@@ -1588,7 +1588,7 @@ private int expungeStaleEntry(int staleSlot) {
 
 下面，以一个例子更清晰的来说一下，假设当前table数组的情况如下图:
 
-![cleanSomeSlots执行情景图.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/cleanSomeSlots示意图.png)
+![cleanSomeSlots执行情景图.png](https://jasonkay_image.imfast.io/images/cleanSomeSlots示意图.png)
 
 如图当前n等于hash表的size即n=10，i=1,在第一趟搜索过程中通过nextIndex,i指向了索引为2的位置，此时table[2]为null，说明第一趟未发现脏entry,则第一趟结束进行第二趟的搜索
 
@@ -1678,7 +1678,7 @@ for (int i = prevIndex(staleSlot, len);
 
 该情形如下图所示。
 
-![向前环形搜索到脏entry，向后环形查找到可覆盖的entry的情况.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/向前环形搜索到脏entry，向后环形查找到可覆盖的entry的情况.png)
+![向前环形搜索到脏entry，向后环形查找到可覆盖的entry的情况.png](https://jasonkay_image.imfast.io/images/向前环形搜索到脏entry，向后环形查找到可覆盖的entry的情况.png)
 
 如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若查找到了可覆盖的entry，第2,3,4行代码先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换。交换之后脏entry就更换到了i处，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程
 
@@ -1686,7 +1686,7 @@ for (int i = prevIndex(staleSlot, len);
 
 该情形如下图所示。
 
-![前向环形搜索到脏entry,向后环形未搜索可覆盖entry.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/前向环形搜索到脏entry,向后环形未搜索可覆盖entry.png)
+![前向环形搜索到脏entry,向后环形未搜索可覆盖entry.png](https://jasonkay_image.imfast.io/images/前向环形搜索到脏entry,向后环形未搜索可覆盖entry.png)
 
 如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若没有查找到了可覆盖的entry，哈希桶（table[i]）为null的时候，后向环形查找过程结束。那么接下来在8,9行代码中，将插入的新entry直接放在staleSlot处即可，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程
 
@@ -1696,7 +1696,7 @@ for (int i = prevIndex(staleSlot, len);
 
 该情形如下图所示。
 
-![前向未搜索到脏entry，后向环形搜索到可覆盖的entry.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/前向未搜索到脏entry，后向环形搜索到可覆盖的entry.png)
+![前向未搜索到脏entry，后向环形搜索到可覆盖的entry.png](https://jasonkay_image.imfast.io/images/前向未搜索到脏entry，后向环形搜索到可覆盖的entry.png)
 
 如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束，若在整个过程未遇到脏entry，slotToExpunge初始状态依旧和staleSlot相同。在接下来的for循环中进行后向环形查找，若遇到了脏entry，在第7行代码中更新slotToExpunge为位置i。若查找到了可覆盖的entry，第2,3,4行代码先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换，交换之后脏entry就更换到了i处。如果在整个查找过程中都还没有遇到脏entry的话，会通过第5行代码，将slotToExpunge更新当前i处，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程
 
@@ -1704,7 +1704,7 @@ for (int i = prevIndex(staleSlot, len);
 
 该情形如下图所示
 
-![前向环形未搜索到脏entry,后向环形查找未查找到可覆盖的entry.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/前向环形未搜索到脏entry,后向环形查找未查找到可覆盖的entry.png)
+![前向环形未搜索到脏entry,后向环形查找未查找到可覆盖的entry.png](https://jasonkay_image.imfast.io/images/前向环形未搜索到脏entry,后向环形查找未查找到可覆盖的entry.png)
 
 如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束，若在整个过程未遇到脏entry，slotToExpunge初始状态依旧和staleSlot相同。在接下来的for循环中进行后向环形查找，若遇到了脏entry，在第7行代码中更新slotToExpunge为位置i。若没有查找到了可覆盖的entry，哈希桶（table[i]）为null的时候，后向环形查找过程结束。那么接下来在8,9行代码中，将插入的新entry直接放在staleSlot处即可。另外，如果发现slotToExpunge被重置，则第10行代码if判断为true,就使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程
 

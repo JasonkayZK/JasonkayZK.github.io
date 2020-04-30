@@ -88,7 +88,7 @@ Mon Dec 30 10:57:34 CST 2019Thread[Thread-1,5,main]==
 
 从日志可以看出在thead-0发生OOM之后, thread-1仍旧能够继续申请内存工作
 
-![JVM堆内存溢出.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/JVM堆内存溢出.jpg)
+![JVM堆内存溢出.jpg](https://jasonkay_image.imfast.io/images/JVM堆内存溢出.jpg)
 
 上图是JVM堆空间的变化。我们仔细观察一下在14:42:05~14:42:25之间曲线变化，你会发现使用堆的数量，突然间急剧下滑！这代表这一点，当一个线程抛出OOM异常后，它所占据的内存资源会全部被释放掉，从而不会影响其他线程的运行
 
@@ -194,7 +194,7 @@ The program is still running......
 
 下图是JVM堆空间的变化:
 
-![JVM堆内存溢出2.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/JVM堆内存溢出2.png)
+![JVM堆内存溢出2.png](https://jasonkay_image.imfast.io/images/JVM堆内存溢出2.png)
 
 可见在OOM线程发生了OOM之后, GC运行清理了部分内存, 但是还是存在垃圾, 所以Other线程在请求内存时由于OOM而挂断, 而OOM线程由于catch了Error而继续运行:
 

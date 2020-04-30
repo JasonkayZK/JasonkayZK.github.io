@@ -401,11 +401,11 @@ xsi:schemaLocation="http://www.w3school.com.cn note.xsd"
 
 从本人项目中，可以看看相应的代码：
 
-![xml1.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/xml1.png)
+![xml1.png](https://jasonkay_image.imfast.io/images/xml1.png)
 
 而何时名字空间**何时可以删除**呢，比如下面的情况：
 
-![xml2.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/xml2.png)
+![xml2.png](https://jasonkay_image.imfast.io/images/xml2.png)
 
 ><br/>
 >
@@ -419,6 +419,6 @@ xsi:schemaLocation="http://www.w3school.com.cn note.xsd"
 
 又例:
 
-![xml3.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/xml3.png)
+![xml3.png](https://jasonkay_image.imfast.io/images/xml3.png)
 
 <br/>

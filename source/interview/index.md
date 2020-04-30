@@ -1,6 +1,6 @@
 ---
 title: 张小凯のJava面试笔记
-cover:  https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/interview.jpg
+cover:  https://jasonkay_image.imfast.io/images/interview.jpg
 date: 2019-11-21 10:12:50
 ---
 
@@ -166,11 +166,11 @@ Java Web包括的知识主要有:
 
 **Alipay:**
 
-![alipay](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/alipay.jpg)
+![alipay](https://jasonkay_image.imfast.io/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
+![wechat](https://jasonkay_image.imfast.io/images/wechat.jpg)
 
 <br/>
 

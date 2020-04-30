@@ -720,11 +720,11 @@ public class SwaggerDemoApplicationTests {
 
 ### 演示界面
 
-![swaggerDemo1.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/swaggerDemo1.png)
+![swaggerDemo1.png](https://jasonkay_image.imfast.io/images/swaggerDemo1.png)
 
-![swaggerDemo2.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/swaggerDemo2.png)
+![swaggerDemo2.png](https://jasonkay_image.imfast.io/images/swaggerDemo2.png)
 
-![swaggerDemo3.png](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/swaggerDemo3.png)
+![swaggerDemo3.png](https://jasonkay_image.imfast.io/images/swaggerDemo3.png)
 
 <br/>
 

@@ -127,7 +127,7 @@ String s1 = "abc";
 String s2 = "abc";
 ```
 
-![create_string](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/create_string.png)
+![create_string](https://jasonkay_image.imfast.io/images/create_string.png)
 
 **需要注意的是:**
 
@@ -186,7 +186,7 @@ String s1 = "1";
 String s2 = new String("1");
 ```
 
-![创建字符串形式](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/创建字符串形式.png)
+![创建字符串形式](https://jasonkay_image.imfast.io/images/创建字符串形式.png)
 
 从图中可以看出，s1使用`" "`引号（也是平时所说的字面量）创建字符串. <font color="#0000ff">在编译期的时候就对常量池进行判断是否存在该字符串，如果存在则不创建直接返回对象的引用；如果不存在，则先在常量池中创建该字符串实例再返回实例的引用给s1. </font>**注意：编译期的常量池是静态常量池!**
 
@@ -198,7 +198,7 @@ String s2 = new String("1");
 
 `String s1 = "1" + "2" + "3"`:
 
-![连接形式创建字符串1](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/连接形式创建字符串1.png)
+![连接形式创建字符串1](https://jasonkay_image.imfast.io/images/连接形式创建字符串1.png)
 
 使用包含常量的字符串连接创建是也是常量，编译期就能确定了，直接入字符串常量池，当然同样需要判断是否已经存在该字符串!
 
@@ -206,7 +206,7 @@ String s2 = new String("1");
 
 `String s2 = "1" + "3" + new String("1") + "4"`
 
-![连接形式创建字符串2](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/连接形式创建字符串2.png)
+![连接形式创建字符串2](https://jasonkay_image.imfast.io/images/连接形式创建字符串2.png)
 
 <font color="#0000ff">当使用`+`连接字符串中含有变量时，也是在运行期才能确定的!</font>
 
@@ -222,7 +222,7 @@ String s2 = new String("1");
 
 `String s3 = new String("1") + new String("1");`
 
-![连接形式创建字符串3](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/连接形式创建字符串3.png)
+![连接形式创建字符串3](https://jasonkay_image.imfast.io/images/连接形式创建字符串3.png)
 
 这个过程跟上一例类似.
 
@@ -257,13 +257,13 @@ public class InternDemo {
 
 JDK6的内存模型如下：
 
-![JDK6的内存模型](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/JDK6的内存模型.png)
+![JDK6的内存模型](https://jasonkay_image.imfast.io/images/JDK6的内存模型.png)
 
 我们都知道JDK6中的常量池是放在永久代的，永久代和Java堆是两个完全分开的区域。<font color="#ff0000">而使用`+`连接而来的的对象会存在Java堆中，且并未将对象存于常量池中，</font>当调用 intern 方法时，如果常量池中已经该字符串，则返回池中的字符串；否则将此字符串添加到常量池中，并返回字符串的引用。所以结果为false。
 
 JDK7JDK8的内存模型如下：
 
-![JDK7后的内存模型](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/JDK7后的内存模型.png)
+![JDK7后的内存模型](https://jasonkay_image.imfast.io/images/JDK7后的内存模型.png)
 
   JDK7中，字符串常量池已经被转移至Java堆中，开发人员也对intern方法做了一些修改。<font color="#ff0000">因为字符串常量池和new的对象都存于Java堆中，</font>为了优化性能和减少内存开销，当调用 intern 方法时，如果常量池中已经存在该字符串，则返回池中字符串；否则直接存储堆中的引用，也就是字符串常量池中存储的是指向堆里的对象。所以结果为true。
 

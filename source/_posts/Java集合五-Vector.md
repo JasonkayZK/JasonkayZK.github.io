@@ -171,7 +171,7 @@ public class Vector<E>
 
 ### **Vector与Collection关系如下图**：
 
-![Vector与Collection关系.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/Vector与Collection关系.jpg)
+![Vector与Collection关系.jpg](https://jasonkay_image.imfast.io/images/Vector与Collection关系.jpg)
 
 Vector的数据结构和[ArrayList](https://jasonkayzk.github.io/2019/11/24/Java%E9%9B%86%E5%90%88%E4%BA%8C-ArrayList/)差不多，它**包含了3个成员变量**：elementData , elementCount， capacityIncrement
 

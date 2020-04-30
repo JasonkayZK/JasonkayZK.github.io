@@ -149,7 +149,7 @@ public class HashMap<K,V>
 
 **HashMap与Map关系如下图:**
 
-![HashMap与Map关系.jpg](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/HashMap与Map关系.jpg)
+![HashMap与Map关系.jpg](https://jasonkay_image.imfast.io/images/HashMap与Map关系.jpg)
 
 从图中可以看出:
 

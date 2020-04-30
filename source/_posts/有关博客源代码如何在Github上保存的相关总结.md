@@ -3,7 +3,7 @@ title: 有关博客源代码如何在Github上保存的相关总结
 toc: true
 date: 2019-09-06 14:05:15
 categories: 博客管理
-tags: [博客管理, 博客美化, Git学习]
+tags: [博客管理, 博客美化, Git]
 cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567761824699&di=633c2ef16967472223b534b6eee9e1fb&imgtype=0&src=http%3A%2F%2Fwx1.sinaimg.cn%2Flarge%2F007z5ekzgy1fz8hzbldi3j30rs0fmjvj.jpg
 description: 教你如何在Github中保存源代码.
 ---

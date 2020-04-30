@@ -2,7 +2,7 @@
 title: 张小凯と彼のBlog
 layout: about
 date: 2019-11-20 09:51:10
-cover: https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/about.jpg
+cover: https://jasonkay_image.imfast.io/images/about.jpg
 ---
 
 *Get busy living or get busy dying*  ————电影肖申克的救赎。
@@ -142,11 +142,11 @@ cover: https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/ab
 
 **Alipay:**
 
-![alipay](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/alipay.jpg)
+![alipay](https://jasonkay_image.imfast.io/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/wechat.jpg)
+![wechat](https://jasonkay_image.imfast.io/images/wechat.jpg)
 
 
 

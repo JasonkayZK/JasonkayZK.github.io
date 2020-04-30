@@ -148,7 +148,7 @@ sudo systemctl restart docker
 
 界面如下所示:
 
-![docker_vscode](https://raw.githubusercontent.com/JasonkayZK/blog_static/master/images/docker_vscode.png)
+![docker_vscode](https://jasonkay_image.imfast.io/images/docker_vscode.png)
 
 <br/>
 
