@@ -1,14 +1,14 @@
 ---
-title: aria2安装与配置
+title: Aria2安装与配置
 cover: http://api.mtyqx.cn/api/random.php?88
 date: 2020-05-01 13:51:50
 categories: 软件安装与配置
-tags: [软件安装与配置, aria2]
-description: 本文主要讲解下载工具aria2的安装与配置;
+tags: [软件安装与配置, Aria2]
+description: 本文主要讲解下载工具Aria2的安装与配置;
 ---
 
 
-本文主要讲解下载工具aria2的安装与配置;
+本文主要讲解下载工具Aria2的安装与配置;
 
 <br/>
 
@@ -20,7 +20,7 @@ description: 本文主要讲解下载工具aria2的安装与配置;
 
 <br/>
 
-## aria2安装与配置
+## Aria2安装与配置
 
 `Aria2`是一个命令行工具，优点是轻量、开源，支持多协议、多线程，可以直接使用`Aria2`命令来下载`BT`种子等资源文件;
 
@@ -92,10 +92,10 @@ GNU/Linux 64位: https://github.com/xzl2021/aria2-static-builds-with-128-threads
 
 ```bash
 $ cd /etc/ 
-$ sudo mkdir aria2 && cd aria2 && touch aria2c.conf && touch aria2.session
+$ sudo mkdir aria2 && cd aria2 && touch aria2.conf && touch aria2.session
 ```
 
-编辑aria2c.conf文件内容，内容如下:
+编辑aria2.conf文件内容，内容如下:
 
 ```bash
 # Trackers
