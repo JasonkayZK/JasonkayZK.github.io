@@ -43,6 +43,37 @@ description: 在Github仓库中给出了Golang项目的标准目录结构, 本�
 
 在Go 1.14中, `Go Modules`终于可以投入生产了。除非您有特定的原因不使用`Go Modules`，否则请使用Go Modules；因为使用了`Go Modules`就无需担心`$GOPATH`和项目放置位置。仓库中的go.mod文件假定您的项目托管在Github上，但这不是必需的。模块路径可以是任意的，尽管第一个模块路径组件的名称中应带有点（当前版本的Go不再强制使用该点，但是，如果您使用的是稍旧的版本，则在构建失败时不要感到惊讶）。如果您想了解更多信息，请参见问题37554和32819。
 
+下面是一个目录规范的示例：
+
+```bash
+.
+├─api
+├─assets
+├─build
+│  ├─ci
+│  └─package
+├─cmd
+│  └─app
+├─configs
+├─deployments
+├─docs
+├─examples
+├─githooks
+├─init
+├─internal
+│  └─app
+│      └─_your_app_
+├─scripts
+├─test
+├─third_party
+├─tools
+├─web
+│  ├─app
+│  ├─static
+│  └─template
+└─website
+```
+
 这个项目结构刻意做得很通用, 它并没有强套Golang的某一种特定的包结构.
 
 这也是社区努力的成果. 如果你见到一个新模式, 或是认为某个模式需要改进都可以开新的 issue.
