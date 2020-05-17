@@ -282,6 +282,300 @@ message Result {
 
 ### 导入定义
 
+在上面的例子中，Result消息类型与SearchResponse是定义在同一文件中的
+
+如果想要使用的消息类型已经在其他.proto文件中已经定义过了呢？
+
+可以通过导入（importing）其他.proto文件中的定义来使用它们。要导入其他.proto文件的定义，你需要在你的文件中添加一个导入声明，如：
+
+```protobuf
+import "myproject/other_protos.proto";
+```
+
+默认情况下你只能使用直接导入的.proto文件中的定义
+
+然而， 有时候你**需要移动一个.proto文件到一个新的位置，  可以不直接移动.proto文件， 只需放入一个伪 .proto 文件在老的位置， 然后使用import public转向新的位置**
+
+`import public` 依赖性会**通过任意导入包含import public声明的proto文件传递**
+
+例如：
+
+```protobuf
+// 这是新的proto
+// All definitions are moved here
+```
+
+```protobuf
+// 这是旧的proto
+// 所有客户端正在导入的包
+import public "new.proto";
+import "other.proto";
+```
+
+```protobuf
+// 客户端proto
+import "old.proto";
+// 现在你可以使用新旧两种包的proto定义了
+```
+
+通过在编译器命令行参数中使用`-I/--proto_path`protocal 编译器会在指定目录搜索要导入的文件
+
+如果没有给出标志，编译器会搜索编译命令被调用的目录。通常你只要指定proto_path标志为你的工程根目录就好。并且指定好导入的正确名称就好
+
+<br/>
+
+### 使用proto2消息类型
+
+在proto3消息中导入proto2的消息类型也是可以的，反之亦然;
+
+**但是proto2枚举不可以直接在proto3的标识符中使用（如果仅仅在proto2消息中使用是可以的）**
+
+<br/>
+
+### 嵌套类型
+
+你可以在其他消息类型中定义、使用消息类型，在下面的例子中，Result消息就定义在SearchResponse消息内，如：
+
+```protobuf
+message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+}
+```
+
+如果你想在它的父消息类型的外部重用这个消息类型，你需要以Parent.Type的形式使用它，如：
+
+```protobuf
+message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}
+```
+
+当然，你也可以将消息嵌套任意多层，如：
+
+```protobuf
+message Outer { // Level 0
+  message MiddleAA { // Level 1
+    message Inner { // Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
+  }
+  message MiddleBB { // Level 1
+    message Inner { // Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+  }
+}
+```
+
+<br/>
+
+### 更新一个消息类型
+
+如果一个已有的消息格式已无法满足新的需求——如，要在消息中添加一个额外的字段——但是同时旧版本写的代码仍然可用。不用担心！更新消息而不破坏已有代码是非常简单的。在更新时只要记住以下的规则即可。
+
+-   <red>**不要更改任何已有的字段的数值标识**</font>
+-   如果你增加新的字段，**使用旧格式的字段仍然可以被你新产生的代码所解析**。你应该记住这些元素的默认值这样你的新代码就可以以适当的方式和旧代码产生的数据交互。相似的，**通过新代码产生的消息也可以被旧代码解析：只不过新的字段会被忽视掉**。注意，<red>**未被识别的字段会在反序列化的过程中丢弃掉，所以如果消息再被传递给新的代码，新的字段依然是不可用的**（这和proto2中的行为是不同的，在proto2中未定义的域依然会随着消息被序列化）</font>
+-   **非required的字段可以移除——只要它们的标识号在新的消息类型中不再使用**<red>**（更好的做法可能是重命名那个字段，例如在字段前添加“OBSOLETE_”前缀，那样的话，使用的.proto文件的用户将来就不会无意中重新使用了那些不该使用的标识号**）</font>
+-   int32, uint32, int64,  uint64,和bool是全部兼容的，这意味着可以将这些类型中的一个转换为另外一个，而不会破坏向前、  向后的兼容性。**如果解析出来的数字与对应的类型不相符，那么结果就像在C++中对它进行了强制类型转换一样**（例如，如果把一个64位数字当作int32来 读取，那么它就会被截断为32位的数字）
+-   sint32和sint64是互相兼容的，但是它们与其他整数类型不兼容
+-   **string和bytes是兼容的——只要bytes是有效的UTF-8编码**
+-   嵌套消息与bytes是兼容的——只要bytes包含该消息的一个编码过的版本
+-   fixed32与sfixed32是兼容的，fixed64与sfixed64是兼容的
+-   枚举类型与int32，uint32，int64和uint64相兼容（注意如果值不相兼容则会被截断），然而在客户端反序列化之后他们可能会有不同的处理方式，例如，未识别的proto3枚举类型会被保留在消息中，但是他的表示方式会依照语言而定。int类型的字段总会保留他们的
+
+<br/>
+
+### Any
+
+Any类型消息**允许你在没有指定他们的.proto定义的情况下使用消息作为一个嵌套类型**
+
+一个Any类型包括一个可以被序列化bytes类型的任意消息，以及一个URL作为一个全局标识符和解析消息类型
+
+为了使用Any类型，你需要导入`import google/protobuf/any.proto`
+
+```protobuf
+import "google/protobuf/any.proto";
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}
+```
+
+对于给定的消息类型的默认类型URL是`type.googleapis.com/packagename.messagename`
+
+**不同语言的实现会支持动态库以线程安全的方式去帮助封装或者解封装Any值**
+
+例如在java中，Any类型会有特殊的`pack()`和`unpack()`访问器，在C++中会有`PackFrom()`和`UnpackTo()`方法
+
+```c++
+// Storing an arbitrary message type in Any.
+NetworkErrorDetails details = ...;
+ErrorStatus status;
+status.add_details()->PackFrom(details);
+
+// Reading an arbitrary message from Any.
+ErrorStatus status = ...;
+for (const Any& detail : status.details()) {
+  if (detail.Is<NetworkErrorDetails>()) {
+    NetworkErrorDetails network_error;
+    detail.UnpackTo(&network_error);
+    ... processing network_error ...
+  }
+}
+```
+
+**目前，用于Any类型的动态库仍在开发之中** 
+
+如果你已经很熟悉[proto2语法](https://developers.google.com/protocol-buffers/docs/proto?hl=zh-cn)，使用Any替换[拓展](https://developers.google.com/protocol-buffers/docs/proto?hl=zh-cn#extensions)
+
+<br/>
+
+### Oneof
+
+如果你的**消息中有很多可选字段， 并且同时至多一个字段会被设置**， 你可以加强这个行为，使用oneof特性**节省内存**
+
+Oneof字段就像可选字段， 除了它们会共享内存， 至多一个字段会被设置
+
+ **设置其中一个字段会清除其它字段。 你可以使用`case()`或者`WhichOneof()` 方法检查哪个oneof字段被设置**， 看你使用的是什么语言
+
+#### 使用Oneof
+
+为了在.proto定义Oneof字段， 你**需要在名字前面加上oneof关键字**, 比如下面例子的test_oneof:
+
+```protobuf
+message SampleMessage {
+  oneof test_oneof {
+    string name = 4;
+    SubMessage sub_message = 9;
+  }
+}
+```
+
+然后你可以增加oneof字段到 oneof 定义中
+
+**你可以增加任意类型的字段, 但是不能使用repeated关键字**
+
+在产生的代码中, oneof字段拥有同样的 getters 和setters， 就像正常的可选字段一样, 也有一个特殊的方法来检查到底那个字段被设置
+
+你可以在相应的语言[API指南](https://developers.google.com/protocol-buffers/docs/reference/overview?hl=zh-cn)中找到oneof API介绍
+
+****
+
+#### Oneof 特性
+
+**① 设置oneof会自动清除其它oneof字段的值**
+
+所以设置多次后，只有最后一次设置的字段有值:
+
+```java
+SampleMessage message;
+message.set_name("name");
+CHECK(message.has_name());
+message.mutable_sub_message();   // Will clear name field.
+CHECK(!message.has_name());
+```
+
+<br/>
+
+**② 如果解析器遇到同一个oneof中有多个成员，只有最会一个会被解析成消息**
+
+**③ oneof不支持`repeated`**
+
+**④ 反射API对oneof字段有效**
+
+**⑤ 如果使用C++,需确保代码不会导致内存泄漏**
+
+例如, 下面的代码会崩溃， 因为`sub_message` 已经通过`set_name()`删除了:
+
+```c++
+SampleMessage message;
+SubMessage* sub_message = message.mutable_sub_message();
+message.set_name("name");      // Will delete sub_message
+sub_message->set_...            // Crashes here
+```
+
+**⑥ 在C++中，如果你使用`Swap()`两个oneof消息，每个消息将拥有对方的值**
+
+例如在下面的例子中，`msg1`会拥有`sub_message`并且`msg2`会有`name`
+
+```c++
+SampleMessage msg1;
+msg1.set_name("name");
+SampleMessage msg2;
+msg2.mutable_sub_message();
+msg1.swap(&msg2);
+CHECK(msg1.has_sub_message());
+CHECK(msg2.has_name());
+```
+
+****
+
+#### 向后兼容性问题
+
+当增加或者删除oneof字段时一定要小心. **如果检查oneof的值返回`None/NOT_SET`, 它意味着oneof字段没有被赋值或者在一个不同的版本中赋值了**
+
+**你不会知道是哪种情况，因为没有办法判断如果未识别的字段是一个oneof字段**
+
+Tage 重用问题：
+
+-   **将字段移入或移除oneof：在消息被序列号或者解析后，你也许会失去一些信息（有些字段也许会被清除）**
+-   **删除一个字段或者加入一个字段：在消息被序列号或者解析后，这也许会清除你现在设置的oneof字段**
+-   **分离或者融合oneof：行为与移动常规字段相似**
+
+<br/>
+
+### Map（映射）
+
+如果你希望创建一个关联映射，protocol buffer提供了一种快捷的语法：
+
+```protobuf
+map<key_type, value_type> map_field = N;
+```
+
+其中`key_type`可以是任意Integer或者string类型（**除了floating和bytes的任意标量类型都是可以的**）`value_type`可以是任意类型
+
+例如，如果你希望创建一个project的映射，每个`Projecct`使用一个string作为key，你可以像下面这样定义：
+
+```protobuf
+map<string, Project> projects = 3;
+```
+
+-   **Map的字段可以是repeated**
+-   序列化后的顺序和**map迭代器的顺序是不确定的**，所以你不要期望以固定顺序处理Map
+-   当为.proto文件**产生生成文本格式的时候，map会按照key的顺序排序，数值化的key会按照数值排序**
+-   从其他map解析或合并时，如果有重复的映射键，则使用最后看到的键;
+-   从文本格式解析映射时，如果存在重复键，则解析可能会失败;
+
+生成map的API现在对于所有proto3支持的语言都可用了，你可以从[API指南](https://developers.google.com/protocol-buffers/docs/reference/overview?hl=zh-cn)找到更多信息
+
+<br/>
+
+### 向后兼容性问题
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
