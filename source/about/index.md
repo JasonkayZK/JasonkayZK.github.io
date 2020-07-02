@@ -23,6 +23,7 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 ## Blog更新历史
 
+*   **2020-07-01 网站PV突破15000！**
 *   **2020-06-21 网站UV突破9000! 感谢大家一路的支持!** <font color="#FF0000">❤</font>
 *   **2020-05-06 网站PV突破10000！**
 *   2020-05-03 修改网站鼠标指针样式
