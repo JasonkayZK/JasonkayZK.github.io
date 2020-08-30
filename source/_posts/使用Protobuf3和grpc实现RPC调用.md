@@ -3,6 +3,7 @@ title: 使用Protobuf3和grpc实现RPC调用
 cover: http://api.mtyqx.cn/api/random.php?38
 date: 2020-05-14 21:16:31
 categories: [Golang]
+toc: true
 tags: [Golang, Protobuf, grpc]
 description: 本文展示了通过Protobuf3定义服务接口并通过grpc实现简单的RPC调用
 ---
@@ -17,11 +18,11 @@ https://github.com/JasonkayZK/Go_Learn/tree/protobuf_grpc_demo
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 使用Protobuf3和grpc实现RPC调用
 

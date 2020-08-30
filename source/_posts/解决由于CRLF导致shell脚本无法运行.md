@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?25
 date: 2020-05-10 15:03:09
 categories: 技术杂谈
 tags: [技术杂谈]
+toc: true
 description: 在Windows下编辑的shell脚本在写入时默认的换行符为CRLF,而在Linux中换行符为LF这可能导致在Windows下编辑的脚本在Linux下运行报错;
 ---
 
@@ -14,11 +15,11 @@ description: 在Windows下编辑的shell脚本在写入时默认的换行符为C
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 解决由于CRLF导致shell脚本无法运行
 

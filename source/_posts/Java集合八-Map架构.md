@@ -1,6 +1,6 @@
 ---
 title: Java集合八-Map架构
-toc: false
+toc: true
 date: 2019-11-27 14:18:28
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: Java源码

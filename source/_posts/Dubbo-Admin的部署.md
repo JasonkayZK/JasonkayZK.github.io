@@ -1,6 +1,6 @@
 ---
 title: Dubbo-Admin的部署
-toc: false
+toc: true
 date: 2019-12-06 19:02:30
 cover: http://api.mtyqx.cn/api/random.php?3
 categories: Dubbo

@@ -4,6 +4,7 @@ cover: 'http://api.mtyqx.cn/api/random.php?x'
 date: 2020-08-28 21:00:38
 categories: [Github]
 tags: [Github, 技术杂谈]
+toc: true
 description: 其实很早之前Github出了一个新彩蛋，会自动将你仓库下的同名用户名仓库的 README 展示到你的个人页面的上方，之前搞了一个版本，这次做了一些升级和优化；
 ---
 
@@ -21,11 +22,11 @@ description: 其实很早之前Github出了一个新彩蛋，会自动将你仓�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Github个人介绍页美化
 

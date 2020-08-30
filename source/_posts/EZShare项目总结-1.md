@@ -4,7 +4,7 @@ date: 2020-01-22 15:35:56
 cover: http://api.mtyqx.cn/api/random.php?2
 categories: 项目总结
 tags: [项目总结]
-toc: false
+toc: true
 description: 本篇总结了EZShare项目的数据库表设计等方面的问题
 ---
 

@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?92
 date: 2020-05-10 17:07:14
 categories: Golang
 tags: [Golang, Gomod]
+toc: true
 description: 随着go modules在go1.11版推出，go1.12版功能不断改进，再到go1.13版完善优化，Go Modules基本成为了官方推荐的包依赖管理工具了
 ---
 
@@ -17,11 +18,11 @@ description: 随着go modules在go1.11版推出，go1.12版功能不断改进，
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Golang依赖管理gomod
 

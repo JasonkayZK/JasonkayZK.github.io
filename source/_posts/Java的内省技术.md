@@ -1,7 +1,7 @@
 ---
 title: Java的内省技术
 cover: http://api.mtyqx.cn/api/random.php?29
-toc: false
+toc: true
 date: 2020-03-02 13:28:39
 categories: 技术杂谈
 description: 以前知道Java中的反射, 也学习过一些和反射相关的内容. 今天看到了一个叫内省(IntroSpector)的技术, 所以就总结一下

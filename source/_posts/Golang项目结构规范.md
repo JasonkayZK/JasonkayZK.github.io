@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?1
 date: 2020-05-14 19:39:26
 categories: [Golang]
 tags: [Golang, 开发规范]
+toc: true
 description: 在Github仓库中给出了Golang项目的标准目录结构, 本文就来总结这个项目结构规范
 ---
 
@@ -17,11 +18,11 @@ description: 在Github仓库中给出了Golang项目的标准目录结构, 本�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 基于Google标准的Golang-Project-Layout
 

@@ -1,6 +1,6 @@
 ---
 title: Windows下仿Mac的Dock和ToolBar
-toc: false
+toc: true
 date: 2019-12-30 09:42:39
 cover: http://api.mtyqx.cn/api/random.php?19
 categories: 工具分享

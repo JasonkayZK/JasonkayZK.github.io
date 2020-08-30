@@ -1,6 +1,6 @@
 ---
 title: Java集合三-Iterator的Fail-Fast机制总结
-toc: false
+toc: true
 date: 2019-11-24 16:39:37
 cover: http://api.mtyqx.cn/api/random.php?13
 categories: Java源码

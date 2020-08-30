@@ -1,6 +1,6 @@
 ---
 title: 关于Mybatis-plus调用baseMapper报错Invalid-bound-statement的解决
-toc: false
+toc: true
 date: 2020-01-25 10:21:59
 cover: http://api.mtyqx.cn/api/random.php?9
 categories: Mybatis

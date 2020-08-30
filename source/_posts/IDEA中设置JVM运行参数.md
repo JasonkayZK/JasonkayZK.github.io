@@ -1,6 +1,6 @@
 ---
 title: IDEA中设置JVM运行参数
-toc: false
+toc: true
 date: 2019-11-25 10:09:54
 cover: http://api.mtyqx.cn/api/random.php?23
 categories: 软件安装与配置

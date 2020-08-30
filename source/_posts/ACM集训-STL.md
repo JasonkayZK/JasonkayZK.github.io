@@ -3,6 +3,7 @@ title: ACM集训-STL
 cover: http://api.mtyqx.cn/api/random.php?17
 date: 2020-04-03 15:44:30
 categories: ACM
+toc: true
 tags: [ACM, 算法题目]
 description: 记得上一次培训ACM是在六年前了. 最近准备面试的时候发现好多当年大一都能写出来的题目, 现在忘得一干二净. 正巧看到B站上有北理工的今年培训视频. 所以打算跟着视频再来一遍.
 ---

@@ -1,6 +1,6 @@
 ---
 title: SpringBoot集成Swagger
-toc: false
+toc: true
 date: 2020-01-02 17:08:51
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: Spring

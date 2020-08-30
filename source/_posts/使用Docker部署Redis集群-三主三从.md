@@ -1,6 +1,6 @@
 ---
 title: 使用Docker部署Redis集群-三主三从
-toc: false
+toc: true
 date: 2020-01-17 21:30:52
 cover: http://api.mtyqx.cn/api/random.php?21
 categories: [Docker, Redis]

@@ -1,6 +1,6 @@
 ---
 title: 'Java集合七-List总结(LinkedList, ArrayList使用场景及性能分析)'
-toc: false
+toc: true
 date: 2019-11-27 10:32:56
 cover: http://api.mtyqx.cn/api/random.php?7
 categories: Java源码

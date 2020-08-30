@@ -3,6 +3,7 @@ title: Linux文件系统
 cover: http://api.mtyqx.cn/api/random.php?66
 date: 2020-04-05 17:02:53
 categories: Linux
+toc: true
 tags: [Linux]
 description: 本文讲解Linux中的文件系统
 ---
@@ -13,11 +14,11 @@ description: 本文讲解Linux中的文件系统
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Linux文件系统
 

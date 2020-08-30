@@ -1,6 +1,6 @@
 ---
 title: Java中的IO流
-toc: false
+toc: true
 date: 2019-11-25 22:30:49
 cover: http://api.mtyqx.cn/api/random.php?5
 categories: IO基础

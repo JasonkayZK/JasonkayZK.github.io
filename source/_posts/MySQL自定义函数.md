@@ -1,6 +1,6 @@
 ---
 title: MySQL自定义函数
-toc: false
+toc: true
 date: 2019-12-04 10:02:09
 cover: http://api.mtyqx.cn/api/random.php?7
 categories: 数据库

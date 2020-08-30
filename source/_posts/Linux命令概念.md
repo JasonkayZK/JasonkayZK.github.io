@@ -3,7 +3,7 @@ title: Linux命令概念
 cover: http://api.mtyqx.cn/api/random.php?14
 date: 2020-04-05 10:49:47
 categories: Linux
-toc: false
+toc: true
 tags: [Linux]
 description: 本篇总结Linux操作系统下命令的概念
 ---
@@ -14,11 +14,11 @@ description: 本篇总结Linux操作系统下命令的概念
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Linux命令概念
 

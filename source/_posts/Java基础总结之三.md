@@ -1,6 +1,6 @@
 ---
 title: Java基础总结之三
-toc: false
+toc: true
 date: 2019-11-21 21:40:32
 cover: http://api.mtyqx.cn/api/random.php?52
 categories: 面试总结

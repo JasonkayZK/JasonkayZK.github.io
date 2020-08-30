@@ -1,5 +1,6 @@
 ---
 title: Ubuntu下安装IDEA
+toc: true
 date: 2019-09-04 21:42:35
 categories: 软件安装与配置
 cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567614716959&di=beb911c35cb994a43f2238ae6e873cc2&imgtype=0&src=http%3A%2F%2Fblog.didispace.com%2Fcontent%2Fimages%2Fposts%2Fidea-2018-1-17.gif

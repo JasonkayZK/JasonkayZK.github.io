@@ -1,6 +1,6 @@
 ---
 title: XML的总结
-toc: false
+toc: true
 date: 2019-12-05 17:22:35
 cover: http://api.mtyqx.cn/api/random.php?9
 categories: 技术杂谈

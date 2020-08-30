@@ -1,7 +1,7 @@
 ---
 title: Docker下安装与配置CentOS
 cover: http://api.mtyqx.cn/api/random.php?3
-toc: false
+toc: true
 date: 2020-04-05 09:07:04
 categories: Docker
 tags: [Docker]
@@ -16,11 +16,11 @@ description: 最近开始学习分布式大数据相关的一些内容. 一般�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Docker下安装与配置CentOS
 

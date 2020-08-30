@@ -1,6 +1,6 @@
 ---
 title: MySQL触发器
-toc: false
+toc: true
 date: 2019-12-04 10:02:18
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: 数据库

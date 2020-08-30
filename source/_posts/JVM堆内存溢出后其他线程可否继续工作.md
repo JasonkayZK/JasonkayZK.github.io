@@ -1,6 +1,6 @@
 ---
 title: JVM堆内存溢出后其他线程可否继续工作
-toc: false
+toc: true
 date: 2019-12-30 10:31:43
 cover: http://api.mtyqx.cn/api/random.php?9
 categories: 技术杂谈

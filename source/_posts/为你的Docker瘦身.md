@@ -5,6 +5,7 @@ date: 2020-04-26 19:36:59
 categories: Docker
 tags: [Docker]
 description: 使用Docker时间长之后, 由于docker在删除容器时不会删除容器的volume(在本地的目录映射), 所以可能会出现闲置的volume; 本文教你如何删除那些无用的volume;
+toc: true
 ---
 
 使用Docker时间长之后, 由于docker在删除容器时不会删除容器的volume(在本地的目录映射), 所以可能会出现闲置的volume; 本文教你如何删除那些无用的volume;
@@ -13,11 +14,11 @@ description: 使用Docker时间长之后, 由于docker在删除容器时不会�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 为你的Docker瘦身
 

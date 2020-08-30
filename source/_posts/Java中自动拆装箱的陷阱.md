@@ -1,6 +1,6 @@
 ---
 title: Java中自动拆装箱的陷阱
-toc: false
+toc: true
 date: 2019-12-12 21:16:11
 cover: http://api.mtyqx.cn/api/random.php?2
 categories: Java源码

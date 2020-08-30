@@ -1,7 +1,7 @@
 ---
 title: 分享一个IPFS协议索引的电子书搜索引擎
 cover: http://api.mtyqx.cn/api/random.php?43
-toc: false
+toc: true
 date: 2020-02-27 10:27:13
 categories: 工具分享
 tags: [软件推荐, 工具分享]

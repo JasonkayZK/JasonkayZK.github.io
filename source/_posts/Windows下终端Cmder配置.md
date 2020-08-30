@@ -1,6 +1,6 @@
 ---
 title: Windows下终端Cmder配置
-toc: false
+toc: true
 date: 2019-12-30 09:12:17
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: 工具分享

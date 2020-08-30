@@ -1,7 +1,7 @@
 ---
 title: Java阻塞队列
 cover: http://api.mtyqx.cn/api/random.php?2
-toc: false
+toc: true
 date: 2020-03-10 08:52:53
 categories: 并发编程
 tags: 并发编程

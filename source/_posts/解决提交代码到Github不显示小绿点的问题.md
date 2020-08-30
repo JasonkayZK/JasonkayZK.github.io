@@ -4,6 +4,7 @@ cover: 'http://api.mtyqx.cn/api/random.php?32'
 date: 2020-06-25 16:04:21
 categories: 程序人生
 tags: [Github, 程序人生]
+toc: true
 description: 最近在公司提交代码到Github的时候，发现提交了代码之后，在主页没有显示对应绿色的contributions；最后发现是git的邮箱配置问题；
 ---
 

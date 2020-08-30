@@ -3,6 +3,7 @@ title: Windows下添加cmder右键选项
 cover: http://api.mtyqx.cn/api/random.php?21
 date: 2020-05-10 14:19:09
 categories: 软件安装与配置
+toc: true
 tags: [软件安装与配置, cmder]
 description: 本文讲解了在win下配置cmder, 在右键选项中添加在此处打开的功能, 方便使用;
 ---
@@ -13,11 +14,11 @@ description: 本文讲解了在win下配置cmder, 在右键选项中添加在此
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Windows下添加cmder右键选项
 

@@ -1,6 +1,6 @@
 ---
 title: '[转]redis常用配置redis.conf说明'
-toc: false
+toc: true
 date: 2020-01-17 22:30:29
 cover: http://api.mtyqx.cn/api/random.php?8
 categories: [Redis, 软件安装与配置]

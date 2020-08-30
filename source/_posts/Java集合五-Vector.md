@@ -1,6 +1,6 @@
 ---
 title: Java集合五-Vector
-toc: false
+toc: true
 date: 2019-11-26 22:34:09
 cover: http://api.mtyqx.cn/api/random.php?2
 categories: Java源码

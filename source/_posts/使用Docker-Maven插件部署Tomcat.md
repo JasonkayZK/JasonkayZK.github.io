@@ -1,6 +1,6 @@
 ---
 title: 使用Docker-Maven插件部署Tomcat
-toc: false
+toc: true
 date: 2020-01-14 22:31:51
 cover: http://api.mtyqx.cn/api/random.php?19
 categories: Docker

@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?998
 date: 2020-04-30 15:47:29
 categories: Git
 tags: Git
+toc: true
 description: 对于多分支的代码库，将代码从一个分支转移到另一个分支是常见需求。这时分两种情况。一种情况是，你需要另一个分支的所有代码变动，那么就采用合并（git merge）。另一种情况是，你只需要部分代码变动（某几个提交），这时可以采用 Cherry pick。
 ---
 
@@ -15,11 +16,11 @@ description: 对于多分支的代码库，将代码从一个分支转移到另�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## git-cherry-pick教程
 

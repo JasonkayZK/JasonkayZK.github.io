@@ -1,6 +1,6 @@
 ---
 title: 怎么保证Redis和DB中的数据一致
-toc: false
+toc: true
 date: 2020-02-06 22:51:45
 cover: http://api.mtyqx.cn/api/random.php?21
 categories: Redis

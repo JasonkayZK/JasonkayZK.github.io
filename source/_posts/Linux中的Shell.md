@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?43
 date: 2020-04-06 19:08:10
 categories: Linux
 tags: [Linux]
+toc: true
 description: 本文总结了Linux中关于Shell的一些基础知识
 ---
 
@@ -14,11 +15,11 @@ description: 本文总结了Linux中关于Shell的一些基础知识
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Linux中的Shell
 

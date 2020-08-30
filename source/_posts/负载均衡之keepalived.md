@@ -3,6 +3,7 @@ title: 负载均衡之keepalived
 cover: http://api.mtyqx.cn/api/random.php?97
 date: 2020-04-12 14:08:31
 categories: 分布式
+toc: true
 tags: [分布式, 负载均衡, keepalived]
 description: 在前面介绍的LVS中容易发生单点故障的问题；当LVS或者RS挂掉时，后台的RS服务不再可靠。而通过部署keepalive可以达到检测单点故障，并达到自动切换LVS Server和剔除故障RS的效果。
 ---
@@ -13,11 +14,11 @@ description: 在前面介绍的LVS中容易发生单点故障的问题；当LVS�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 负载均衡之keepalived
 

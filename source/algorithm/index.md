@@ -31,7 +31,7 @@ cover: http://api.mtyqx.cn/api/random.php?2
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## ACM竞赛系列文章
 

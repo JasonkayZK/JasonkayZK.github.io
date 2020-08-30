@@ -1,6 +1,6 @@
 ---
 title: 'UUID生成算法,UUID还是snowflake'
-toc: false
+toc: true
 date: 2020-02-09 15:51:08
 cover: http://api.mtyqx.cn/api/random.php?22
 categories: 分布式

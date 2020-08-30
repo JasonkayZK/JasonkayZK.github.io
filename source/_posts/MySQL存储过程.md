@@ -1,6 +1,6 @@
 ---
 title: MySQL存储过程
-toc: false
+toc: true
 date: 2019-12-04 09:51:57
 cover: http://api.mtyqx.cn/api/random.php?17
 categories: 数据库

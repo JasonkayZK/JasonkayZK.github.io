@@ -1,6 +1,6 @@
 ---
 title: Java集合六-Stack
-toc: false
+toc: true
 date: 2019-11-27 10:05:10
 cover: http://api.mtyqx.cn/api/random.php?11
 categories: Java源码

@@ -1,6 +1,6 @@
 ---
 title: 关于JDK8添加的Spliterator的一些理解
-toc: false
+toc: true
 date: 2019-12-03 20:36:03
 cover: http://api.mtyqx.cn/api/random.php?1
 categories: Java源码

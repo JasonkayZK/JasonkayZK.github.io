@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?72
 date: 2020-05-22 20:50:15
 categories: [软件测试]
 tags: [软件测试, Postman]
+toc: true
 description: 本文讲述了如何编写Postman中的Tests脚本;
 ---
 
@@ -13,11 +14,11 @@ description: 本文讲述了如何编写Postman中的Tests脚本;
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Postman中Tests脚本总结
 

@@ -4,6 +4,7 @@ cover: http://api.mtyqx.cn/api/random.php?62
 date: 2020-05-22 20:52:08
 categories: [软件测试]
 tags: [软件测试, Postman, Newman]
+toc: true
 description: 本文讲述了如何使用Newman配合Postman进行自动化测试;
 ---
 
@@ -14,11 +15,11 @@ description: 本文讲述了如何使用Newman配合Postman进行自动化测试
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Postman结合Newman做自动化测试
 

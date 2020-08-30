@@ -1,6 +1,6 @@
 ---
 title: Maven打包java11报错Fatal error compiling的解决办法
-toc: false
+toc: true
 date: 2019-10-16 13:43:19
 categories: Maven
 cover: https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2652402318,679790988&fm=26&gp=0.jpg

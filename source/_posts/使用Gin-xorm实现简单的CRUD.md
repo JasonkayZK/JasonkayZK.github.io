@@ -3,6 +3,7 @@ title: '使用Gin+xorm实现简单的CRUD'
 cover: http://api.mtyqx.cn/api/random.php?22
 date: 2020-05-14 19:30:36
 categories: [Golang]
+toc: true
 tags: [Golang, Gin, xorm]
 description: 本文讲述了如何使用Gin和xorm实现一个简单的RESTful风格的接口, 并进行CRUD操作;
 ---
@@ -17,11 +18,11 @@ https://github.com/JasonkayZK/Go_Learn/tree/go-restful-xorm
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 使用Gin+xorm实现简单的CRUD
 

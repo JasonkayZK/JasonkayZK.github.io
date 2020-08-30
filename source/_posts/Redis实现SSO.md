@@ -1,6 +1,6 @@
 ---
 title: Redis实现SSO
-toc: false
+toc: true
 date: 2020-02-10 12:16:24
 cover: http://api.mtyqx.cn/api/random.php?41
 categories: Redis

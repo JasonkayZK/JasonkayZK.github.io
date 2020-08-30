@@ -1,6 +1,6 @@
 ---
 title: Netty解决通信中的粘包和拆包问题
-toc: false
+toc: true
 date: 2020-01-01 09:12:25
 cover: http://api.mtyqx.cn/api/random.php?17
 categories: Netty

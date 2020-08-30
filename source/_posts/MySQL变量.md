@@ -1,6 +1,6 @@
 ---
 title: MySQL变量
-toc: false
+toc: true
 date: 2019-12-04 20:25:48
 cover: http://api.mtyqx.cn/api/random.php?16
 categories: 数据库

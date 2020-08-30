@@ -3,6 +3,7 @@ title: Linux文本数据操作
 cover: http://api.mtyqx.cn/api/random.php?22
 date: 2020-04-05 21:58:35
 categories: Linux
+toc: true
 tags: [Linux]
 description: 本篇总结了一些简单的Linux相关的文本数据操作命令
 ---
@@ -13,11 +14,11 @@ description: 本篇总结了一些简单的Linux相关的文本数据操作命�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Linux文本数据操作
 

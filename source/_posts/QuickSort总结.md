@@ -1,6 +1,6 @@
 ---
 title: QuickSort总结
-toc: false
+toc: true
 date: 2020-02-06 11:00:05
 cover: http://api.mtyqx.cn/api/random.php?21
 categories: 算法

@@ -3,6 +3,7 @@ title: 使用Wakatime记录你的Coding数据
 cover: 'http://api.mtyqx.cn/api/random.php?33'
 date: 2020-08-28 16:01:03
 categories: 工具分享
+toc: true
 tags: [工具分享, 技术杂谈]
 description: 最近在搞Github主页美化，然后偶然发现了Wakatime这个可以记录你Coding时间的工具，在这里介绍下~
 ---
@@ -13,11 +14,11 @@ description: 最近在搞Github主页美化，然后偶然发现了Wakatime这�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 使用Wakatime记录你的Coding数据
 

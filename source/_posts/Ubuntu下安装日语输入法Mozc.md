@@ -1,6 +1,6 @@
 ---
 title: Ubuntu下安装日语输入法Mozc
-toc: false
+toc: true
 date: 2020-02-05 20:47:55
 cover: http://api.mtyqx.cn/api/random.php?7
 categories: 软件安装与配置

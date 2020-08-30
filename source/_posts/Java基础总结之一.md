@@ -1,6 +1,6 @@
 ---
 title: Java基础总结之一
-toc: false
+toc: true
 date: 2019-11-21 10:39:14
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: 面试总结

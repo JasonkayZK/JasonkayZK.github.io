@@ -1,6 +1,6 @@
 ---
 title: Redis面试相关问题
-toc: false
+toc: true
 date: 2020-02-05 23:28:43
 cover: http://api.mtyqx.cn/api/random.php?3
 categories: Redis

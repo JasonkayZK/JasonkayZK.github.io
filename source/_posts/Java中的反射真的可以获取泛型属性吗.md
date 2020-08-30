@@ -1,7 +1,7 @@
 ---
 title: Java中的反射真的可以获取泛型属性吗
 cover: http://api.mtyqx.cn/api/random.php?17
-toc: false
+toc: true
 date: 2020-03-25 14:48:22
 categories: 技术杂谈
 tags: [反射]
@@ -18,7 +18,7 @@ description: 众所周知，在Java中由于反射的存在使其可以成为介
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Java中的反射真的可以获取泛型属性吗
 

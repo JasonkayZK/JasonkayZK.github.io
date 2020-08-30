@@ -1,6 +1,6 @@
 ---
 title: mybatis-generator逆向工程总结
-toc: false
+toc: true
 date: 2020-01-15 17:25:08
 cover: http://api.mtyqx.cn/api/random.php?9
 categories: [Mybatis, 技术杂谈, 学习案例]

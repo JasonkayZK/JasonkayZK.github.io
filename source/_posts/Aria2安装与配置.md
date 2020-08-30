@@ -3,6 +3,7 @@ title: Aria2安装与配置
 cover: http://api.mtyqx.cn/api/random.php?88
 date: 2020-05-01 13:51:50
 categories: 软件安装与配置
+toc: true
 tags: [软件安装与配置, Aria2]
 description: 本文主要讲解下载工具Aria2的安装与配置;
 ---
@@ -14,11 +15,11 @@ description: 本文主要讲解下载工具Aria2的安装与配置;
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Aria2安装与配置
 

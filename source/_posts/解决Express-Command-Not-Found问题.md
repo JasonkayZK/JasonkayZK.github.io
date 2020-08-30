@@ -3,6 +3,7 @@ title: 解决Express Command Not Found问题
 cover: http://api.mtyqx.cn/api/random.php?56
 date: 2020-04-20 10:43:38
 categories: Node.js
+toc: true
 tags: [Node.js, Express, 软件安装与配置]
 description: 跟着《nodejs开发指南》初始化Express项目时, 使用npm安装了Express, 但是使用express命令初始化时仍然报错未找到express命令. 原来是express3+已经把创建一个APP的功能分离出来为express-generator.
 ---

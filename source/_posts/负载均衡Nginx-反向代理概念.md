@@ -3,6 +3,7 @@ title: 负载均衡Nginx
 cover: http://api.mtyqx.cn/api/random.php?83
 date: 2020-04-13 09:30:59
 categories: 分布式
+toc: true
 tags: [分布式, 负载均衡, Nginx]
 description: 前面讲述了四层的LVS负载均衡, 接下来讲述工作在七层的Nginx负载均衡;
 ---
@@ -13,11 +14,11 @@ description: 前面讲述了四层的LVS负载均衡, 接下来讲述工作在�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 负载均衡Nginx
 

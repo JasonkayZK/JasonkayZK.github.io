@@ -1,6 +1,6 @@
 ---
 title: Java集合四-LinkedList
-toc: false
+toc: true
 date: 2019-11-26 09:49:58
 cover: http://api.mtyqx.cn/api/random.php?17
 categories: Java源码

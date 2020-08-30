@@ -1,6 +1,6 @@
 ---
 title: Dubbo快速上手案例
-toc: false
+toc: true
 date: 2019-12-06 18:23:55
 cover: http://api.mtyqx.cn/api/random.php?12
 categories: Dubbo

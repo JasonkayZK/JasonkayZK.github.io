@@ -1,6 +1,6 @@
 ---
 title: Java集合二-ArrayList
-toc: false
+toc: true
 date: 2019-11-24 11:54:58
 cover: http://api.mtyqx.cn/api/random.php?1
 categories: Java源码

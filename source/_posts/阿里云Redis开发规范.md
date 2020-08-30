@@ -1,6 +1,6 @@
 ---
 title: 阿里云Redis开发规范
-toc: false
+toc: true
 date: 2019-12-30 12:34:53
 cover: http://api.mtyqx.cn/api/random.php?11
 categories: Redis

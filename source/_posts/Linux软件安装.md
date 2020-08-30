@@ -3,6 +3,7 @@ title: Linux软件安装
 cover: http://api.mtyqx.cn/api/random.php?44
 date: 2020-04-06 12:27:04
 categories: Linux
+toc: true
 tags: [Linux]
 description: 本文总结了在Linux中一些软件安装的方法
 ---
@@ -13,11 +14,11 @@ description: 本文总结了在Linux中一些软件安装的方法
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Linux软件安装
 

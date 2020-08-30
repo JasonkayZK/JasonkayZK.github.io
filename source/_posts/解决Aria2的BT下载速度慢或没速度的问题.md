@@ -3,6 +3,7 @@ title: 解决Aria2的BT下载速度慢或没速度的问题
 cover: http://api.mtyqx.cn/api/random.php?43
 date: 2020-05-02 17:43:02
 categories: 技术杂谈
+toc: true
 tags: [技术杂谈, Aria2]
 description: 在使用Aria2下载BT资源时总是出现无速度的情况, 转载了网上的一篇文章, 有时能解决BT无速度的情况;
 ---

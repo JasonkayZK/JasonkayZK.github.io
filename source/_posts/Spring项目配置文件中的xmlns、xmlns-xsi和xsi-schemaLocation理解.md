@@ -1,6 +1,6 @@
 ---
 title: 'Spring项目配置文件中的xmlns、xmlns:xsi和xsi:schemaLocation理解'
-toc: false
+toc: true
 date: 2019-12-05 16:11:39
 cover: http://api.mtyqx.cn/api/random.php?6
 categories: 技术杂谈

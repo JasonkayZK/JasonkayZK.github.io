@@ -1,6 +1,7 @@
 ---
 title: {{ title }}
 date: {{ date }}
+toc: true
 cover: http://api.mtyqx.cn/api/random.php?x
 categories: 
 tags: 
@@ -22,10 +23,6 @@ description:
 <br/>
 
 <!--more-->
-
-**目录:**
-
-<!-- toc -->
 
 <br/>
 

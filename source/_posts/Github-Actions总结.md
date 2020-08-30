@@ -4,6 +4,7 @@ cover: 'http://api.mtyqx.cn/api/random.php?86'
 date: 2020-08-28 16:00:13
 categories: [Github]
 tags: [技术杂谈, Github]
+toc: true
 description: GitHub Actions是 GitHub 的持续集成服务,于2018年10月推出。
 ---
 
@@ -11,11 +12,11 @@ description: GitHub Actions是 GitHub 的持续集成服务,于2018年10月推�
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## Github Actions总结
 

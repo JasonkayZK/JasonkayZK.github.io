@@ -1,6 +1,6 @@
 ---
 title: Fibonacci序列生成算法的优化
-toc: false
+toc: true
 date: 2020-02-25 16:38:54
 cover: http://api.mtyqx.cn/api/random.php?24
 categories: 算法

@@ -1,6 +1,6 @@
 ---
 title: 深入剖析Java中的void和java.lang.Void
-toc: false
+toc: true
 date: 2019-12-12 22:41:42
 cover: http://api.mtyqx.cn/api/random.php?6
 categories: Java源码

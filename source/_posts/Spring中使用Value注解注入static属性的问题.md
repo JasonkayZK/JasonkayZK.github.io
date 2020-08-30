@@ -1,6 +1,6 @@
 ---
 title: Spring中使用Value注解注入static属性的问题
-toc: false
+toc: true
 date: 2020-01-14 22:06:46
 cover: http://api.mtyqx.cn/api/random.php?10
 categories: Spring

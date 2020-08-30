@@ -1,6 +1,6 @@
 ---
 title: Java集合九-HashMap
-toc: false
+toc: true
 date: 2019-11-27 19:14:09
 cover: http://api.mtyqx.cn/api/random.php?8
 categories: Java源码

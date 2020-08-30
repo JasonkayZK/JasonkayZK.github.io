@@ -1,6 +1,6 @@
 ---
 title: Java集合一-Collection架构
-toc: false
+toc: true
 date: 2019-11-23 13:31:19
 cover: http://api.mtyqx.cn/api/random.php?21
 categories: Java源码

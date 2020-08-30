@@ -3,6 +3,7 @@ title: 负载均衡Nginx-一些常见的问题
 cover: http://api.mtyqx.cn/api/random.php?76
 date: 2020-04-13 09:33:35
 categories: 分布式
+toc: true
 tags: [分布式, 负载均衡, Nginx]
 description: 前一篇文章简要讲述了Nginx的配置. 本篇再此基础之上, 讲述使用Nginx时可能会出现的一些问题;
 ---
@@ -15,11 +16,11 @@ description: 前一篇文章简要讲述了Nginx的配置. 本篇再此基础之
 
 <!--more-->
 
-**目录:**
+<!-- **目录:** -->
 
 <!-- toc -->
 
-<br/>
+<!-- <br/> -->
 
 ## 负载均衡Nginx-Session一致性
 

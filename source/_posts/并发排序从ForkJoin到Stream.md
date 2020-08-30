@@ -1,6 +1,6 @@
 ---
 title: 并发排序从ForkJoin到Stream
-toc: false
+toc: true
 date: 2020-02-25 17:37:53
 cover: http://api.mtyqx.cn/api/random.php?11
 categories: 并发编程
