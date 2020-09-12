@@ -23,6 +23,7 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 ## Blog更新历史
 
+*   <font color="#ff0000">**2020-09-12 增加文件分享模块(90网盘提供技术支持)**</font>
 *   **2020-09-04 增加social-share分享模块**
 *   **2020-09-04 博客增加置顶功能以及置顶和最近三天NEW标签**
 *   **2020-09-01 博客一周年🎉🎉🎉**
