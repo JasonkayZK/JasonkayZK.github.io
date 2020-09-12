@@ -7,6 +7,14 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 *Get busy living or get busy dying*  ————电影肖申克的救赎。
 
+<HTML lang="en">
+    <div style="text-align: center;">
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="480" height="106" src="//music.163.com/outchain/player?type=2&id=513360721&auto=1&height=66"></iframe>
+</div>
+</HTML>
+
+
+
 ## 博客相关
 
 创立于: 2019年9月1日
@@ -17,12 +25,11 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 主题：https://nexmoe.com/hexo-theme-nexmoe.html
 
-个人公众号: **Coder张小凯**(内容同步更新)
-
-
+~~个人公众号: **Coder张小凯**(暂停维护)~~
 
 ## Blog更新历史
 
+*   2020-09-12 关于博客页面增加BGM：《云烟成雨》
 *   <font color="#ff0000">**2020-09-12 增加文件分享模块(90网盘提供技术支持)**</font>
 *   **2020-09-04 增加social-share分享模块**
 *   **2020-09-04 博客增加置顶功能以及置顶和最近三天NEW标签**
