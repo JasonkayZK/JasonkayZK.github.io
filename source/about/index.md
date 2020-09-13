@@ -29,6 +29,7 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 ## Blog更新历史
 
+*   2020-09-13 博客本地搜索XML加入CDN加速
 *   2020-09-12 关于博客页面增加BGM：《云烟成雨》
 *   <font color="#ff0000">**2020-09-12 增加文件分享模块(90网盘提供技术支持)**</font>
 *   **2020-09-04 增加social-share分享模块**
