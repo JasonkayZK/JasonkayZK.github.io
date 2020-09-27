@@ -29,6 +29,7 @@ cover: https://jasonkay_image.imfast.io/images/about.jpg
 
 ## Blog更新历史
 
+*   **2020-09-27 增加站内消息通知功能** - by https://www.jq22.com/yanshi7942
 *   **2020-09-26 增加简历投递模块**
 *   **2020-09-16 博客PV突破25000！**
 *   2020-09-13 博客本地搜索XML加入CDN加速
