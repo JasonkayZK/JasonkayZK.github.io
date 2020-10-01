@@ -4,6 +4,144 @@
             <img src="<%= theme.avatar %>" alt="<%= config.author || config.title %>">
         </a>
     </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
     <div class="nexmoe-count">
         <div><span><%= __('count.articles') %></span><%= site.posts.length %></div>
         <div><span><%= __('count.tags') %></span><%= site.tags.length %></div>
@@ -11,8 +149,10 @@
     </div>
     <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
         <% for (name in theme.menu) { %>
-        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="<%- url_for(theme.menu[name][0]) -%>" title="<%= name %>">
-            <i class="mdui-list-item-icon nexmoefont <% if (theme.menu[name][1]){ %><%= theme.menu[name][1] %><%} else{ %><%= 'icon-unorderedlist' %><% } %>"></i>
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="<%- url_for(theme.menu[name][0]) -%>"
+            title="<%= name %>">
+            <i
+                class="mdui-list-item-icon nexmoefont <% if (theme.menu[name][1]){ %><%= theme.menu[name][1] %><%} else{ %><%= 'icon-unorderedlist' %><% } %>"></i>
             <div class="mdui-list-item-content">
                 <%= name %>
             </div>
@@ -24,45 +164,45 @@
         <span style="color:#707070;font-size: 14px;">
             本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br />
             本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br />
-          </span>
-          <span id="showsectime" style="color:#707070;font-size: 14px;">
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
             本站已运行0天0小时0分0秒
-          </span> 
-          <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br/>
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br />
 
-          &copy; <%= date(new Date(), 'YYYY') %> <%= config.author || config.title %>
-          <%= __('Powered by') %> <a href="http://hexo.io/" target="_blank">Hexo</a>
-          & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+        &copy; <%= date(new Date(), 'YYYY') %> <%= config.author || config.title %>
+        <%= __('Powered by') %> <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
     </div>
 
     <div id="footer-info">
-        
+
     </div>
 
     <script type="text/javascript">
-        function NewDate(str) { 
+        function NewDate(str) {
             str = str.split('-');
-            var date = new Date(); 
-            date.setUTCFullYear(str[0], str[1] - 1, str[2]); 
-            date.setUTCHours(0, 0, 0, 0); 
-            return date; 
-        } 
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
         function showsectime() {
-            var birthDay =NewDate("2019-09-01");
-            var today=new Date();
-            var timeold=today.getTime()-birthDay.getTime();
-            var sectimeold=timeold/1000
-            var secondsold=Math.floor(sectimeold);
-            var msPerDay=24*60*60*1000; var e_daysold=timeold/msPerDay;
-            var daysold=Math.floor(e_daysold);
-            var e_hrsold=(daysold-e_daysold)*-24;
-            var hrsold=Math.floor(e_hrsold);
-            var e_minsold=(hrsold-e_hrsold)*-60;
-            var minsold=Math.floor((hrsold-e_hrsold)*-60); var seconds=Math.floor((minsold-e_minsold)*-60).toString();
-            document.getElementById("showsectime").innerHTML = "本站已运行"+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
             setTimeout(showsectime, 1000);
-        } 
+        }
         showsectime();
-      </script>
+    </script>
 
 </div><!-- .nexmoe-drawer -->
