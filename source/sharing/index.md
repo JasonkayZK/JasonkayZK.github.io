@@ -46,7 +46,7 @@ cover: http://api.mtyqx.cn/api/random.php?88
 
 <HTML lang="en">
 
-<div class = "container">
+<div class = "share-container">
     <iframe id="File-Sharing"
         title="File-Sharing"
         style='position:inherit; top:0px; left:0px; width:100%; height:1280px; z-index:999'
