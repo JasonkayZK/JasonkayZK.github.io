@@ -1,21 +1,22 @@
 <div class="nexmoe-post">
-    <div class="nexmoe-post-cover"> 
-        <% if (page.cover){ %>
-        <img src="<%- page.cover %>">
-        <%}  else{ %>
-            <img src="<%= theme.background %>">
-        <% } %>
-        <h1><%= page.title %></h1>
-    </div>
+  <div class="nexmoe-post-cover">
+    <% if (page.cover){ %>
+    <img src="<%- page.cover %>">
+    <%}  else{ %>
+    <img src="<%= theme.background %>">
+    <% } %>
+    <h1><%= page.title %></h1>
+  </div>
   <div class="nexmoe-post-meta">
     <a><i class="nexmoefont icon-calendar-fill"></i><%- date(page.date, "YYYY年MM月DD日") %></a>
     <a><i class="nexmoefont icon-areachart"></i><%= wordcount(page.content) %> 字</a>
-    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
-  </span></a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span
+          id="busuanzi_value_page_pv"></span>
+      </span></a>
     <a><i class="nexmoefont icon-time-circle-fill"></i>大概 <%= min2read(page.content, {cn: 250, en: 160}) %> 分钟</a>
 
     <% if (page.categories && page.categories.length){ %>
-      <%- list_categories(page.categories, {
+    <%- list_categories(page.categories, {
         show_count: false,
         class: 'nexmoefont icon-appstore-fill ',
         style: 'none',
@@ -23,7 +24,7 @@
       }) %>
     <% } %>
     <% if (page.tags && page.tags.length){ %>
-      <%- list_tags(page.tags, {
+    <%- list_tags(page.tags, {
         show_count: false,
         class: 'nexmoefont icon-tag-fill ',
         style: 'none',
@@ -33,35 +34,209 @@
   </div>
   <article>
     <% if (page.toc){ %>
-      <div id="toc" class="toc-article">
-          <ul class="markdownIt-TOC">
-               <%- toc(page.content, {list_number: false}) %>
-          </ul>
-      </div>
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <%- toc(page.content, {list_number: false}) %>
+      </ul>
+    </div>
     <%} %>
     <%- page.content %>
   </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- 文章分享 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
   <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
-  <br/>
+  <br />
 
   <% if (!page.reprint){ %>
-    <%- partial('_partial/copyright') %>
+  <%- partial('_partial/copyright') %>
   <% } %>
+
   <!-- 增加面试点击标题才显示答案等效果! -->
-  <script type="text/javascript">
-    $(".question").click(function(){
-        var a = $(".answer").eq($(".question").index(this));
-        a.is(".answer_shown") ? a.animate({'opacity':'1'}, 800).removeClass("answer_shown") : a.animate({'opacity':'0'}, 800).addClass("answer_shown");
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $("h1").text();
+    // 初始化
+    ajax({
+      url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/release/blog_like/",
+      type: 'post',
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({
+        "actionId": "get",
+        "docName": docName
+      })
+    }).then(
+      function fulfillHandler(data) {
+        $('#like-count').text(data.likeNum);
+      },
+      function rejectHandler(jqXHR, textStatus, errorThrown) {
+        $('#like-count').text(0);
+        console.log(jqXHR, textStatus, errorThrown);
+      }
+    ).catch(function errorHandler(error) {
+      $('#like-count').text(0);
+      console.log(error);
+    });
+
+    $(document).ready(function () {
+      $(".like-heart").on("click", function () {
+        var heart = $(this);
+        var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+        var intCount = parseInt(likeCount.html());
+        var rel = heart.attr("rel");
+
+        if (rel === "like") {
+          likeCount.html(intCount + 1);
+          heart.addClass("like-heartAnimation").attr("rel", "unlike");
+          ajax({
+            url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/release/blog_like/",
+            type: 'post',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({
+              "actionId": "add",
+              "docName": docName
+            })
+          }).catch(function errorHandler(error) {
+            console.log(error);
+          });
+        } else {
+          likeCount.html(intCount - 1);
+          heart.removeClass("like-heartAnimation").attr("rel", "like");
+          heart.css("background-position", "left");
+          ajax({
+            url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/release/blog_like/",
+            type: 'post',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({
+              "actionId": "subtract",
+              "docName": docName
+            })
+          }).catch(function errorHandler(error) {
+            console.log(error);
+          });
+        }
+      }).on("mouseleave", function () {
+        $(this).css("background-position", "");
+      });
     });
   </script>
   <style>
-    .answer_shown {
-        opacity: 0;
+    #like-container {
+      margin: 0 auto;
+      width: 900px;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
     }
   </style>
+
   <%- partial('_partial/comment') %>
 </div>
