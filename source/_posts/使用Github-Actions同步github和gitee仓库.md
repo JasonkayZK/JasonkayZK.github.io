@@ -159,6 +159,10 @@ jobs:
 
 希望能够解决这个问题；
 
+>目前关于仓库映射给出的解决方案：
+>
+>[同步时，Github和Gitee的仓库名可否不同？](https://github.com/Yikun/hub-mirror-action/issues/64)
+
 <br/>
 
 ## 附录
