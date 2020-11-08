@@ -906,6 +906,32 @@ main.js和App.vue就是通常的Vue项目，几乎无改动，下面我们重点
 
 其他使用方法可见上方文档；
 
+>   由于Electron的Linux和Mac的编译地址down掉，目前还没有恢复！
+>
+>   所以mac和linux上述命令会报错，类似于：
+>
+>   ```bash
+>   • cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+>   attempt=0
+>   waitTime=2
+>   • cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+>   attempt=1
+>   waitTime=4
+>   ……
+>   ⨯ Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a
+>   period of time, or established connection failed because connected host has failed to respond.
+>   ⨯ C:\Users\mcw\AppData\Roaming\npm\node_modules\electron-builder\node_modules\app-builder-bin\win\x64\app-builder.exe exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE stackTrace=..
+>   ```
+>
+>   见下面的issue：
+>
+>   -   [Unable to build AppImage on Windows (service.electron.build)](https://github.com/electron-userland/electron-builder/issues/4318)
+>   -   [Error: Cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443:](https://github.com/electron-userland/electron-build-service/issues/9)
+
+>   解决方案见：
+>
+>   -   [在Win10下交叉编译Electron项目](https://jasonkayzk.github.io/2020/11/08/在Win10下交叉编译Electron项目/)
+
 <br/>
 
 ### **后记**
