@@ -2,7 +2,7 @@
 title: 关于Mybatis-plus调用baseMapper报错Invalid-bound-statement的解决
 toc: true
 date: 2020-01-25 10:21:59
-cover: http://api.mtyqx.cn/api/random.php?9
+cover: https://acg.yanwz.cn/api.php?9
 categories: Mybatis
 tags: [Mybatis]
 description: 在Spring Boot项目中引入Mybatis-Plus之后, 直接调用baseMapper的方法时一直报错Invalid-bound-statement, 最后发现是依赖的问题

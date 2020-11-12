@@ -2,7 +2,7 @@
 title: 关于JDK8添加的Spliterator的一些理解
 toc: true
 date: 2019-12-03 20:36:03
-cover: http://api.mtyqx.cn/api/random.php?1
+cover: https://acg.yanwz.cn/api.php?1
 categories: Java源码
 tags: [Java基础, 集合]
 description: 最近在看Java集合源码的时候研究了一下Spliterator, 发现了Spliterator的一些问题, 在这一篇中总结一下

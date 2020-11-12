@@ -1,6 +1,6 @@
 ---
 title: 为你的Docker瘦身
-cover: http://api.mtyqx.cn/api/random.php?91
+cover: https://acg.yanwz.cn/api.php?91
 date: 2020-04-26 19:36:59
 categories: Docker
 tags: [Docker]

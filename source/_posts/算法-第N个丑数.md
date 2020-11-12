@@ -1,6 +1,6 @@
 ---
 title: '算法:第N个丑数'
-cover: http://api.mtyqx.cn/api/random.php?42
+cover: https://acg.yanwz.cn/api.php?42
 categories: 算法题目
 date: 1996-07-27 08:00:00
 toc: true

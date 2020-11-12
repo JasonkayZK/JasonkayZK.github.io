@@ -2,7 +2,7 @@
 title: Redis实现分布式Session
 toc: true
 date: 2020-02-10 12:15:05
-cover: http://api.mtyqx.cn/api/random.php?10
+cover: https://acg.yanwz.cn/api.php?10
 categories: Redis
 tags: [Redis, 分布式]
 description: 传统的session由服务器端生成并存储，当应用进行分布式集群部署的时候，如何保证不同服务器上session信息能够共享呢？本篇通过实战讲述如何使用Redis实现分布式Session共享

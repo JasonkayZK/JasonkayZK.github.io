@@ -2,7 +2,7 @@
 title: MySQL索引
 toc: true
 date: 2019-12-05 10:00:53
-cover: http://api.mtyqx.cn/api/random.php?6
+cover: https://acg.yanwz.cn/api.php?6
 categories: 数据库
 tags: [MySQL]
 description: 上一篇讲解了MySQL中的变量, 本篇讲解MySQL中的索引

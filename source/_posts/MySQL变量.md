@@ -2,7 +2,7 @@
 title: MySQL变量
 toc: true
 date: 2019-12-04 20:25:48
-cover: http://api.mtyqx.cn/api/random.php?16
+cover: https://acg.yanwz.cn/api.php?16
 categories: 数据库
 tags: [MySQL]
 description: 上一篇讲解了MySQL中的触发器, 本篇讲解MySQL中的变量

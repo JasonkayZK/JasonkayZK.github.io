@@ -1,6 +1,6 @@
 ---
 title: 使用Docker部署zookeeper集群
-cover: http://api.mtyqx.cn/api/random.php?99
+cover: https://acg.yanwz.cn/api.php?99
 date: 2020-04-26 20:07:32
 categories: Docker
 toc: true

@@ -2,7 +2,7 @@
 title: mybatis-generator逆向工程总结
 toc: true
 date: 2020-01-15 17:25:08
-cover: http://api.mtyqx.cn/api/random.php?9
+cover: https://acg.yanwz.cn/api.php?9
 categories: [Mybatis, 技术杂谈, 学习案例]
 tags: [Mybatis, 逆向工程]
 description: 最近使用的工程为了提高开发效率用到了Mybatis-Generator逆向工程产生了单表对应的POJO和Mapper.xml, 在此总结一下使用方法

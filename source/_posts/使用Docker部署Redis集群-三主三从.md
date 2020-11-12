@@ -2,7 +2,7 @@
 title: 使用Docker部署Redis集群-三主三从
 toc: true
 date: 2020-01-17 21:30:52
-cover: http://api.mtyqx.cn/api/random.php?21
+cover: https://acg.yanwz.cn/api.php?21
 categories: [Docker, Redis]
 tags: [Docker, Redis, 项目部署]
 description: 项目中用到了Redis, 所以打算用Docker在本地搭建一个Redis集群. 搭建时用到了docker-compose, 而网上大多数参考都是先搭建六个单节点, 然后再创建主从节点, 在这种方式下没办法细粒度的指定哪个节点为主节点, 哪个节点为指定主节点的从节点(其实可以, 但是很麻烦)

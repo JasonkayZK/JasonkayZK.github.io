@@ -1,6 +1,6 @@
 ---
 title: 使用Aria2搭建你自己的离线下载服务器
-cover: http://api.mtyqx.cn/api/random.php?62
+cover: https://acg.yanwz.cn/api.php?62
 date: 2020-05-02 16:14:20
 categories: 服务自建
 toc: true

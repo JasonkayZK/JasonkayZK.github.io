@@ -1,6 +1,6 @@
 ---
 title: 深入理解AQS实现原理
-cover: http://api.mtyqx.cn/api/random.php?5
+cover: https://acg.yanwz.cn/api.php?5
 toc: true
 date: 2020-03-10 10:51:33
 categories: 并发编程

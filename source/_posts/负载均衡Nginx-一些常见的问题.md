@@ -1,6 +1,6 @@
 ---
 title: 负载均衡Nginx-一些常见的问题
-cover: http://api.mtyqx.cn/api/random.php?76
+cover: https://acg.yanwz.cn/api.php?76
 date: 2020-04-13 09:33:35
 categories: 分布式
 toc: true

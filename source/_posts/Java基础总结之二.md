@@ -2,7 +2,7 @@
 title: Java基础总结之二
 toc: true
 date: 2019-11-21 19:59:32
-cover: http://api.mtyqx.cn/api/random.php?50
+cover: https://acg.yanwz.cn/api.php?50
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第二篇

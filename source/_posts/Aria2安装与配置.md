@@ -1,6 +1,6 @@
 ---
 title: Aria2安装与配置
-cover: http://api.mtyqx.cn/api/random.php?88
+cover: https://acg.yanwz.cn/api.php?88
 date: 2020-05-01 13:51:50
 categories: 软件安装与配置
 toc: true

@@ -1,6 +1,6 @@
 ---
 title: 解决提交代码到Github不显示小绿点的问题
-cover: 'http://api.mtyqx.cn/api/random.php?32'
+cover: 'https://acg.yanwz.cn/api.php?32'
 date: 2020-06-25 16:04:21
 categories: 程序人生
 tags: [Github, 程序人生]

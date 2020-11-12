@@ -1,7 +1,7 @@
 ---
 title: '【转】ShadowsocksR部署'
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?44'
+cover: 'https://acg.yanwz.cn/api.php?44'
 date: 2020-10-01 21:55:24
 categories: 服务自建
 tags: [服务自建, ShadowsocksR]

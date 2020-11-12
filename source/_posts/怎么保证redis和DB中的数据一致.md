@@ -2,7 +2,7 @@
 title: 怎么保证Redis和DB中的数据一致
 toc: true
 date: 2020-02-06 22:51:45
-cover: http://api.mtyqx.cn/api/random.php?21
+cover: https://acg.yanwz.cn/api.php?21
 categories: Redis
 description: 只要用缓存，就可能会涉及到缓存与数据库双存储双写，你只要是双写，就一定会有数据一致性的问题，那么你如何解决一致性问题？本篇文章探讨了如何保证Redis和DB中的数据一致
 ---

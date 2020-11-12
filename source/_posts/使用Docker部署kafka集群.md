@@ -1,6 +1,6 @@
 ---
 title: 使用Docker部署kafka集群
-cover: http://api.mtyqx.cn/api/random.php?92
+cover: https://acg.yanwz.cn/api.php?92
 date: 2020-04-26 20:15:21
 categories: Docker
 toc: true

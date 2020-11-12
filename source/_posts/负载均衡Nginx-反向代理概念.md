@@ -1,6 +1,6 @@
 ---
 title: 负载均衡Nginx
-cover: http://api.mtyqx.cn/api/random.php?83
+cover: https://acg.yanwz.cn/api.php?83
 date: 2020-04-13 09:30:59
 categories: 分布式
 toc: true

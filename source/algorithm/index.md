@@ -3,7 +3,7 @@
 title: Algorithm
 date: 2020-03-22 10:23:17
 layout: about
-cover: http://api.mtyqx.cn/api/random.php?2
+cover: https://acg.yanwz.cn/api.php?2
 ---
 
 *「人生とかホントはいきなり事じゃない」* ———— 2020.03.21悟

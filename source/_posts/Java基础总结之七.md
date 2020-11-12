@@ -2,7 +2,7 @@
 title: Java基础总结之七
 toc: true
 date: 2019-11-25 09:51:03
-cover: http://api.mtyqx.cn/api/random.php?31
+cover: https://acg.yanwz.cn/api.php?31
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第七篇

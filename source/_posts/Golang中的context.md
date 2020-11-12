@@ -1,7 +1,7 @@
 ---
 title: Golang中的context
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?58'
+cover: 'https://acg.yanwz.cn/api.php?58'
 date: 2020-09-23 19:34:32
 categories: Golang
 tags: [Golang]

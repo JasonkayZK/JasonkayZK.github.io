@@ -1,6 +1,6 @@
 ---
 title: Git Worktree的使用
-cover: http://api.mtyqx.cn/api/random.php?67
+cover: https://acg.yanwz.cn/api.php?67
 date: 2020-05-03 17:06:56
 categories: Git
 tags: [Git]

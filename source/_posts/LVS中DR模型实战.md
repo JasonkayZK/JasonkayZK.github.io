@@ -1,6 +1,6 @@
 ---
 title: LVS中DR模型实战
-cover: http://api.mtyqx.cn/api/random.php?88
+cover: https://acg.yanwz.cn/api.php?88
 date: 2020-04-10 12:44:00
 categories: 分布式
 tags: [分布式, 负载均衡, LVS]

@@ -2,7 +2,7 @@
 title: Netty解决通信中的粘包和拆包问题
 toc: true
 date: 2020-01-01 09:12:25
-cover: http://api.mtyqx.cn/api/random.php?17
+cover: https://acg.yanwz.cn/api.php?17
 categories: Netty
 tags: [Netty,  计算机网络]
 description: 在进行Java NIO学习时，如果客户端连续不断的向服务端发送数据包时，服务端接收的数据会出现两个数据包粘在一起的情况，这就是TCP协议中经常会遇到的粘包以及拆包的问题

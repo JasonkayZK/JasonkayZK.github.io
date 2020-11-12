@@ -2,7 +2,7 @@
 title: Windows下终端Cmder配置
 toc: true
 date: 2019-12-30 09:12:17
-cover: http://api.mtyqx.cn/api/random.php?12
+cover: https://acg.yanwz.cn/api.php?12
 categories: 工具分享
 tags: [工具分享, 软件推荐]
 description: 最近切换为Windows下面之后各种不适应, 尤其是Windows的终端, cmd和powershell说实话, 都不好用. 并且和Linux下面不同, 右键都没有在此处打开终端(即使设置了快捷键Ctrl + Alt + T还是要切换路径)

@@ -1,6 +1,6 @@
 ---
 title: Java阻塞队列
-cover: http://api.mtyqx.cn/api/random.php?2
+cover: https://acg.yanwz.cn/api.php?2
 toc: true
 date: 2020-03-10 08:52:53
 categories: 并发编程

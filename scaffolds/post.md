@@ -2,7 +2,7 @@
 title: {{ title }}
 date: {{ date }}
 toc: true
-cover: http://api.mtyqx.cn/api/random.php?x
+cover: https://acg.yanwz.cn/api.php?x
 categories: 
 tags: 
 description: 

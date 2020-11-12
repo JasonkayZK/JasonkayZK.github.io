@@ -1,6 +1,6 @@
 ---
 title: Java中的反射真的可以获取泛型属性吗
-cover: http://api.mtyqx.cn/api/random.php?17
+cover: https://acg.yanwz.cn/api.php?17
 toc: true
 date: 2020-03-25 14:48:22
 categories: 技术杂谈

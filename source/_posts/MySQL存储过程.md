@@ -2,7 +2,7 @@
 title: MySQL存储过程
 toc: true
 date: 2019-12-04 09:51:57
-cover: http://api.mtyqx.cn/api/random.php?17
+cover: https://acg.yanwz.cn/api.php?17
 categories: 数据库
 tags: [MySQL]
 description: 最近在复习数据库, 突然发现存储过程和触发器还没怎么用过, 所以在这篇总结一下关于MySQL中存储过程和触发器的用法

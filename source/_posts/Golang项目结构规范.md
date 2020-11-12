@@ -1,6 +1,6 @@
 ---
 title: 'Golang项目结构规范'
-cover: http://api.mtyqx.cn/api/random.php?1
+cover: https://acg.yanwz.cn/api.php?1
 date: 2020-05-14 19:39:26
 categories: [Golang]
 tags: [Golang, 开发规范]

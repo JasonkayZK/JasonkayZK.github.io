@@ -1,6 +1,6 @@
 ---
 title: Golang依赖管理gomod
-cover: http://api.mtyqx.cn/api/random.php?92
+cover: https://acg.yanwz.cn/api.php?92
 date: 2020-05-10 17:07:14
 categories: Golang
 tags: [Golang, Gomod]

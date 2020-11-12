@@ -2,7 +2,7 @@
 title: Java集合五-Vector
 toc: true
 date: 2019-11-26 22:34:09
-cover: http://api.mtyqx.cn/api/random.php?2
+cover: https://acg.yanwz.cn/api.php?2
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇总结了Java中的Vector

@@ -1,6 +1,6 @@
 ---
 title: '使用Gin+xorm实现简单的CRUD'
-cover: http://api.mtyqx.cn/api/random.php?22
+cover: https://acg.yanwz.cn/api.php?22
 date: 2020-05-14 19:30:36
 categories: [Golang]
 toc: true

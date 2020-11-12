@@ -1,6 +1,6 @@
 ---
 title: 解决由于DNS污染导致的网站无法访问问题
-cover: http://api.mtyqx.cn/api/random.php?20
+cover: https://acg.yanwz.cn/api.php?20
 date: 2020-04-21 20:00:37
 categories: [技术杂谈]
 toc: true

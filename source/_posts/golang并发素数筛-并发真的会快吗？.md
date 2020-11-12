@@ -1,6 +1,6 @@
 ---
 title: golang并发素数筛-并发真的会快吗？
-cover: 'http://api.mtyqx.cn/api/random.php?22'
+cover: 'https://acg.yanwz.cn/api.php?22'
 date: 2020-06-25 20:47:19
 categories: 并发编程
 toc: true

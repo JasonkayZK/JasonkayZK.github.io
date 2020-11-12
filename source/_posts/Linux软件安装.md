@@ -1,6 +1,6 @@
 ---
 title: Linux软件安装
-cover: http://api.mtyqx.cn/api/random.php?44
+cover: https://acg.yanwz.cn/api.php?44
 date: 2020-04-06 12:27:04
 categories: Linux
 toc: true

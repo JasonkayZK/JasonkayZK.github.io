@@ -2,7 +2,7 @@
 title: Java线程池ThreadPoolExecutor分析与实战
 toc: true
 date: 2020-02-06 22:37:43
-cover: http://api.mtyqx.cn/api/random.php?11
+cover: https://acg.yanwz.cn/api.php?11
 categories: 并发编程
 tags: [并发编程, 线程池]
 description: 本篇通过手写一个简单的线程池, 展现了Java线程池有关的内容, 并给出简单使用的实例

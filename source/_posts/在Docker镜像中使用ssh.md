@@ -1,6 +1,6 @@
 ---
 title: 在Docker镜像中使用ssh
-cover: http://api.mtyqx.cn/api/random.php?86
+cover: https://acg.yanwz.cn/api.php?86
 date: 2020-04-06 15:15:01
 categories: Docker
 tags: [Docker]

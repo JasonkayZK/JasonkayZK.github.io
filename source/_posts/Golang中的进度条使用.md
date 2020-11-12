@@ -1,7 +1,7 @@
 ---
 title: Golang中的进度条使用
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?88'
+cover: 'https://acg.yanwz.cn/api.php?88'
 date: 2020-09-29 23:50:12
 categories: Golang
 tags: [Golang, 进度条, Cli]

@@ -1,6 +1,6 @@
 ---
 title: 转-Protofuf3总结
-cover: http://api.mtyqx.cn/api/random.php?22
+cover: https://acg.yanwz.cn/api.php?22
 date: 2020-05-15 20:03:54
 categories: [Protobuf]
 tags: [Protobuf]

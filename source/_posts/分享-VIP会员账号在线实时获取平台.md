@@ -1,6 +1,6 @@
 ---
 title: 分享-VIP会员账号在线实时获取平台
-cover: http://api.mtyqx.cn/api/random.php?45
+cover: https://acg.yanwz.cn/api.php?45
 date: 2020-04-16 21:29:57
 categories: 工具分享
 toc: true

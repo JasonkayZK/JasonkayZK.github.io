@@ -1,6 +1,6 @@
 ---
 title: Linux文件系统
-cover: http://api.mtyqx.cn/api/random.php?66
+cover: https://acg.yanwz.cn/api.php?66
 date: 2020-04-05 17:02:53
 categories: Linux
 toc: true

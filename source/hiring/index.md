@@ -2,7 +2,7 @@
 title: 简历投递
 layout: about
 toc: true
-cover: http://api.mtyqx.cn/api/random.php?1
+cover: https://acg.yanwz.cn/api.php?1
 date: 2020-09-26 19:46:49
 ---
 

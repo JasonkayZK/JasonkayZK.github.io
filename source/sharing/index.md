@@ -2,7 +2,7 @@
 title: 文件分享
 date: 2020-09-12 17:03:26
 layout: about
-cover: http://api.mtyqx.cn/api/random.php?88
+cover: https://acg.yanwz.cn/api.php?88
 ---
 
 <br/>

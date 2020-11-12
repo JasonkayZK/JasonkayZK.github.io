@@ -1,6 +1,6 @@
 ---
 title: '算法:链表中倒数第k个结点'
-cover: http://api.mtyqx.cn/api/random.php?24
+cover: https://acg.yanwz.cn/api.php?24
 categories: 算法题目
 date: 1996-07-27 08:00:00
 tags: [算法题目, 链表, 双指针]

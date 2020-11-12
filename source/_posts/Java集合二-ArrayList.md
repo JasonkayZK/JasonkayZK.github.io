@@ -2,7 +2,7 @@
 title: Java集合二-ArrayList
 toc: true
 date: 2019-11-24 11:54:58
-cover: http://api.mtyqx.cn/api/random.php?1
+cover: https://acg.yanwz.cn/api.php?1
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇总结了Java中ArrayList

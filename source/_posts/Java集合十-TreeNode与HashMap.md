@@ -2,7 +2,7 @@
 title: Java集合十-TreeNode与HashMap
 toc: true
 date: 2019-12-03 17:39:33
-cover: http://api.mtyqx.cn/api/random.php?4
+cover: https://acg.yanwz.cn/api.php?4
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 ---

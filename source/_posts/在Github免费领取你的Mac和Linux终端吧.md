@@ -1,7 +1,7 @@
 ---
 title: 在Github免费领取你的Mac和Linux终端吧~
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?45'
+cover: 'https://acg.yanwz.cn/api.php?45'
 date: 2020-09-18 19:15:31
 categories: 工具分享
 tags: [工具分享, Github]

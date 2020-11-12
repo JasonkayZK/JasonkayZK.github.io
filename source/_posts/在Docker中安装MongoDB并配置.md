@@ -1,6 +1,6 @@
 ---
 title: 在Docker中安装MongoDB并配置
-cover: http://api.mtyqx.cn/api/random.php?77
+cover: https://acg.yanwz.cn/api.php?77
 date: 2020-04-21 10:09:45
 categories: Docker
 toc: true

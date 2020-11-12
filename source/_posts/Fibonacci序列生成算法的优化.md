@@ -2,7 +2,7 @@
 title: Fibonacci序列生成算法的优化
 toc: true
 date: 2020-02-25 16:38:54
-cover: http://api.mtyqx.cn/api/random.php?24
+cover: https://acg.yanwz.cn/api.php?24
 categories: 算法
 tags: [算法]
 description: 菲波那切数列在一些场景中很有用. 相信如何计算第n个斐波那契数是一些人接触到的第一个递归算法(尽管他的效率很低). 本篇讲述了如何一步步优化计算fib(n)

@@ -2,7 +2,7 @@
 title: Java集合一-Collection架构
 toc: true
 date: 2019-11-23 13:31:19
-cover: http://api.mtyqx.cn/api/random.php?21
+cover: https://acg.yanwz.cn/api.php?21
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇总结了Java中提供的集合类的相关知识

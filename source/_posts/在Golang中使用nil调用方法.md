@@ -1,7 +1,7 @@
 ---
 title: 在Golang中使用nil调用方法
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?55'
+cover: 'https://acg.yanwz.cn/api.php?55'
 date: 2020-09-23 19:34:21
 categories: Golang
 tags: [Golang]

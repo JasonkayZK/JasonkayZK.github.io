@@ -1,6 +1,6 @@
 ---
 title: 推荐一个在线学习Git的网站
-cover: http://api.mtyqx.cn/api/random.php?988
+cover: https://acg.yanwz.cn/api.php?988
 date: 2020-04-30 17:20:22
 categories: 工具分享
 tags: [工具分享, Git]

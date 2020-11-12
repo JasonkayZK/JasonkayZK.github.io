@@ -1,6 +1,6 @@
 ---
 title: '算法:包含min函数的栈'
-cover: http://api.mtyqx.cn/api/random.php?29
+cover: https://acg.yanwz.cn/api.php?29
 categories: 算法题目
 toc: true
 date: 1996-07-27 08:00:00

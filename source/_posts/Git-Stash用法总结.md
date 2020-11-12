@@ -1,6 +1,6 @@
 ---
 title: Git Stash用法总结
-cover: http://api.mtyqx.cn/api/random.php?41
+cover: https://acg.yanwz.cn/api.php?41
 date: 2020-05-03 10:57:45
 categories: Git
 tags: [Git]

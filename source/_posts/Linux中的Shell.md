@@ -1,6 +1,6 @@
 ---
 title: Linux中的Shell
-cover: http://api.mtyqx.cn/api/random.php?43
+cover: https://acg.yanwz.cn/api.php?43
 date: 2020-04-06 19:08:10
 categories: Linux
 tags: [Linux]

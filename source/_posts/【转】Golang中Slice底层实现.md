@@ -1,7 +1,7 @@
 ---
 title: 【转】Golang中Slice底层实现
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?23'
+cover: 'https://acg.yanwz.cn/api.php?23'
 date: 2020-10-04 11:21:48
 categories: Golang
 tags: [Golang, Slice]

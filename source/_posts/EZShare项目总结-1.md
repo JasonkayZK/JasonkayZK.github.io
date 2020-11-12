@@ -1,7 +1,7 @@
 ---
 title: EZShare项目总结-1
 date: 2020-01-22 15:35:56
-cover: http://api.mtyqx.cn/api/random.php?2
+cover: https://acg.yanwz.cn/api.php?2
 categories: 项目总结
 tags: [项目总结]
 toc: true

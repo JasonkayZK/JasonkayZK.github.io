@@ -1,6 +1,6 @@
 ---
 title: 解决Aria2的BT下载速度慢或没速度的问题
-cover: http://api.mtyqx.cn/api/random.php?43
+cover: https://acg.yanwz.cn/api.php?43
 date: 2020-05-02 17:43:02
 categories: 技术杂谈
 toc: true

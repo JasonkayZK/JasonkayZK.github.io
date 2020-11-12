@@ -1,6 +1,6 @@
 ---
 title: '算法:二叉搜索树的第k个结点'
-cover: http://api.mtyqx.cn/api/random.php?64
+cover: https://acg.yanwz.cn/api.php?64
 categories: 算法题目
 date: 1996-07-27 08:00:00
 tags: [算法题目, 二叉树, 搜索]

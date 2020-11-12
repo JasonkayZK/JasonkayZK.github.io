@@ -2,7 +2,7 @@
 title: MySQL自定义函数
 toc: true
 date: 2019-12-04 10:02:09
-cover: http://api.mtyqx.cn/api/random.php?7
+cover: https://acg.yanwz.cn/api.php?7
 categories: 数据库
 tags: [MySQL]
 description: 上一篇讲解了MySQL中的存储过程, 本篇讲解MySQL中的自定义函数

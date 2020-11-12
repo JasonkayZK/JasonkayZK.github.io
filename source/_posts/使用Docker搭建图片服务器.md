@@ -2,7 +2,7 @@
 title: 使用Docker搭建图片服务器
 toc: true
 date: 2020-01-16 11:08:15
-cover: http://api.mtyqx.cn/api/random.php?13
+cover: https://acg.yanwz.cn/api.php?13
 categories: Docker
 tags: [Docker, FTP, Nginx]
 description: 最近做项目需要用到图片服务器, 但是把vsftpd和nginx服务器下载, 配置还是有些麻烦, 所以自己基于fauria/vsftpd镜像构建了一个图片服务器方便使用

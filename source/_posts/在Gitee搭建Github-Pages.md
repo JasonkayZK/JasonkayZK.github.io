@@ -1,7 +1,7 @@
 ---
 title: 在Gitee搭建Github Pages
 toc: true
-cover: 'http://api.mtyqx.cn/api/random.php?74'
+cover: 'https://acg.yanwz.cn/api.php?74'
 date: 2020-09-18 19:10:08
 categories: 工具分享
 tags: [工具分享, 博客管理, Github]

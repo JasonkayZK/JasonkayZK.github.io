@@ -2,7 +2,7 @@
 title: Java集合四-LinkedList
 toc: true
 date: 2019-11-26 09:49:58
-cover: http://api.mtyqx.cn/api/random.php?17
+cover: https://acg.yanwz.cn/api.php?17
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇总结了Java中LinkedList

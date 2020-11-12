@@ -1,6 +1,6 @@
 ---
 title: Windows下添加cmder右键选项
-cover: http://api.mtyqx.cn/api/random.php?21
+cover: https://acg.yanwz.cn/api.php?21
 date: 2020-05-10 14:19:09
 categories: 软件安装与配置
 toc: true

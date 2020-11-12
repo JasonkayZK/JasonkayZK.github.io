@@ -1,6 +1,6 @@
 ---
 title: LVS功能配置
-cover: http://api.mtyqx.cn/api/random.php?11
+cover: https://acg.yanwz.cn/api.php?11
 date: 2020-04-10 11:49:22
 categories: 分布式
 toc: true

@@ -1,6 +1,6 @@
 ---
 title: 使用Protobuf3和grpc实现RPC调用
-cover: http://api.mtyqx.cn/api/random.php?38
+cover: https://acg.yanwz.cn/api.php?38
 date: 2020-05-14 21:16:31
 categories: [Golang]
 toc: true
