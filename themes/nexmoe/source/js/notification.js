@@ -46,7 +46,6 @@ Notification = function () {
     };
 
     var hide = function (id) {
-        console.log(id);
         $(document).find('.notification-' + id).remove();
         number = number - 1;
     };
