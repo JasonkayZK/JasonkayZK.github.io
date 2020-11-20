@@ -2,7 +2,7 @@
 title: 张小凯のProject
 layout: about
 date: 2020-01-20 10:20:36
-cover: https://jasonkay_image.imfast.io/images/project.jpeg
+cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/project.jpeg
 ---
 
 *創造的人生の持ち時間は10年だ。芸術家も設計家も同じだ。君の10年を、力を尽くして生きなさい*
@@ -460,11 +460,11 @@ Other:
 
 **Alipay:**
 
-![alipay](https://jasonkay_image.imfast.io/images/alipay.jpg)
+![alipay](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://jasonkay_image.imfast.io/images/wechat.jpg)
+![wechat](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wechat.jpg)
 
 <br/>
 

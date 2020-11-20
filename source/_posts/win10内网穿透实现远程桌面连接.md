@@ -48,13 +48,13 @@ https://www.natfrp.com/
 
 官网大概是这个样子的：
 
-![frp1.png](https://jasonkay_image.imfast.io/images/frp1.png)
+![frp1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp1.png)
 
 点击注册账号，填写资料注册账号；
 
 注册完成后的界面长这样，左边是菜单栏：
 
-![frp2.png](https://jasonkay_image.imfast.io/images/frp2.png)
+![frp2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp2.png)
 
 记住自己的访问密钥，待会用得上，同时不要把访问密钥透露给其他人！
 
@@ -62,7 +62,7 @@ https://www.natfrp.com/
 
 下载，然后解压缩即可：
 
-![frp3.png](https://jasonkay_image.imfast.io/images/frp3.png)
+![frp3.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp3.png)
 
 至此，网页注册完成！
 
@@ -76,15 +76,15 @@ https://www.natfrp.com/
 
 在控制面板中找到“系统”，点击左边的远程设置：
 
-![frp4.png](https://jasonkay_image.imfast.io/images/frp4.png)
+![frp4.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp4.png)
 
 把“允许远程协助连接这台计算机”前面的框勾上，下面选择“允许远程连接到此计算机”：
 
-![frp5.png](https://jasonkay_image.imfast.io/images/frp5.png)
+![frp5.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp5.png)
 
 然后点“选择用户”，注意看红框圈出的位置，这是被控电脑的用户名，待会用得上：
 
-![frp6.png](https://jasonkay_image.imfast.io/images/frp6.png)
+![frp6.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp6.png)
 
 然后点确定保存就好；
 
@@ -98,7 +98,7 @@ https://www.natfrp.com/
 >
 >   把“账户：使用空白密码的本地帐户只允许控制台登陆”禁用才可以连的上：
 >
->   ![frp7.png](https://jasonkay_image.imfast.io/images/frp7.png)
+>   ![frp7.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp7.png)
 >
 >   如果是家庭版的系统是没有组策略管理器的，需要加入组策略管理器，这里不再赘述；
 
@@ -108,15 +108,15 @@ https://www.natfrp.com/
 
 打开刚才下载的软件：
 
-![frp8.png](https://jasonkay_image.imfast.io/images/frp8.png)
+![frp8.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp8.png)
 
 软件大概长这样，用刚才网页上的访问密钥进行登陆：
 
-![frp9.png](https://jasonkay_image.imfast.io/images/frp9.png)
+![frp9.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp9.png)
 
 登陆完成后，点左边菜单栏的隧道，可以看到目前已经配置了一个隧道：
 
-![frp10.png](https://jasonkay_image.imfast.io/images/frp10.png)
+![frp10.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp10.png)
 
 点击加号新建隧道，输入本机IP，端口填win10远程桌面的端口，默认是3389，隧道名称随便填，如果不填的话就会产生一个随机的名称，隧道类型选择TCP；
 
@@ -126,15 +126,15 @@ https://www.natfrp.com/
 
 最后注意看一下左边的监听端口，类型为TCP的有没有3389这个端口，一般就在前面，如果没有的话就是远程桌面端口没有开启！
 
-![frp11.png](https://jasonkay_image.imfast.io/images/frp11.png)
+![frp11.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp11.png)
 
 点击创建，会弹出创建成功提示框，点击是，会多出一条记录：
 
-![frp12.png](https://jasonkay_image.imfast.io/images/frp12.png)
+![frp12.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp12.png)
 
 最后，点击开启刚才的隧道，会弹出日志信息，记住这个日志信息上面的IP或者服务器域名，待会通过这个IP连接被控电脑：
 
-![frp13.png](https://jasonkay_image.imfast.io/images/frp13.png)
+![frp13.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/frp13.png)
 
 至此，内网穿透全部搞定，被控电脑全部设置完毕；
 

@@ -37,7 +37,7 @@ description: 本文是Java面试总结中Java基础篇的第七篇
 
 结构如下图:
 
-![Classloader分类.png](https://jasonkay_image.imfast.io/images/Classloader分类.png)
+![Classloader分类.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/Classloader分类.png)
 
 -   **① Bootstrap Loader: 启动类加载器，是虚拟机自身的一部分, 负责将存放在\lib目录中的类库加载到虚拟机中。其无法被Java程序直接引用。 负责加载系统类  (指的是内置类，像是String)**
 -   **② ExtClassLoader: 负责加载扩展类(就是继承类和实现类)**
@@ -52,7 +52,7 @@ JVM中类的加载是由类加载器（ClassLoader）和它的子类来实现的
 
 类的加载过程如下图所示:
 
-![类的加载过程.jpeg](https://jasonkay_image.imfast.io/images/类的加载过程.jpeg)
+![类的加载过程.jpeg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/类的加载过程.jpeg)
 
 ① **类的加载**是指把类的.class文件中的数据读入到内存中，通常是创建一个字节数组读入.class文件，然后产生与所加载类对应的Class对象。加载完成后，Class对象还不完整，所以此时的类还不可用;
 
@@ -109,7 +109,7 @@ JVM中类的加载是由类加载器（ClassLoader）和它的子类来实现的
 
 双亲委派模型如下图:
 
-![双亲委派.jpeg](https://jasonkay_image.imfast.io/images/双亲委派.jpeg)
+![双亲委派.jpeg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/双亲委派.jpeg)
 
 ><br/>
 >
@@ -238,7 +238,7 @@ Java语言中一个显著的特点就是引入了垃圾回收机制，它使得J
 
 如下图所示:
 
-![堆内存的划分细节.png](https://jasonkay_image.imfast.io/images/堆内存的划分细节.png)
+![堆内存的划分细节.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/堆内存的划分细节.png)
 
 下面一一说明:
 
@@ -389,7 +389,7 @@ public class Test {
 
 GC效果如下图所示:
 
-![循环引用GC效果.png](https://jasonkay_image.imfast.io/images/循环引用GC效果.png)
+![循环引用GC效果.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/循环引用GC效果.png)
 
 ><br/>
 >

@@ -334,7 +334,7 @@ private static void symmetricScramble2(CharBuffer buffer) {
 
 如图所示为缓冲区的细节图:
 
-![Buffer_Structure](https://jasonkay_image.imfast.io/images/Buffer_Structure.png)
+![Buffer_Structure](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/Buffer_Structure.png)
 
 <br/>
 
@@ -356,7 +356,7 @@ private static void symmetricScramble2(CharBuffer buffer) {
 
 对应的方法为:
 
-![buffer_method](https://jasonkay_image.imfast.io/images/buffer_method.png)
+![buffer_method](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/buffer_method.png)
 
 <br/>
 
@@ -406,13 +406,13 @@ public class BufferModelDemo {
 
 查看下图来进行说明：
 
-![buffer_1](https://jasonkay_image.imfast.io/images/buffer_1.png)
+![buffer_1](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/buffer_1.png)
 
-![buffer_2](https://jasonkay_image.imfast.io/images/buffer_2.png)
+![buffer_2](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/buffer_2.png)
 
-![buffer_3](https://jasonkay_image.imfast.io/images/buffer_3.png)
+![buffer_3](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/buffer_3.png)
 
-![buffer_4](https://jasonkay_image.imfast.io/images/buffer_4.png)
+![buffer_4](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/buffer_4.png)
 
 
 

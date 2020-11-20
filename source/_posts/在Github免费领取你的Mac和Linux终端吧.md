@@ -64,7 +64,7 @@ description: 今天RSS推送了一个挺有趣的东西，能通过Github Action
 
 点击仓库中的Actions，并选择`mac`工作流，如下图：
 
-![fastmac1.png](https://jasonkay_image.imfast.io/images/fastmac1.png)
+![fastmac1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fastmac1.png)
 
 最后点击Run workflow，即可创建工作流(mac终端)；
 
@@ -76,11 +76,11 @@ description: 今天RSS推送了一个挺有趣的东西，能通过Github Action
 
 单击旁边的“mac”超链接，如下图：
 
-![fastmac2.png](https://jasonkay_image.imfast.io/images/fastmac2.png)
+![fastmac2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fastmac2.png)
 
 在下一个页面上，你会看到另一个旋转的橙色圆圈，这一次旁边有“build”，点击“build”，如下图：
 
-![fastmac3.png](https://jasonkay_image.imfast.io/images/fastmac3.png)
+![fastmac3.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fastmac3.png)
 
 这将显示创建工作流的log；
 
@@ -126,7 +126,7 @@ shell已经安装了brew，因此可以轻松添加所需的任何软件！
 
 要关闭会话，单击Actions屏幕右侧的红色“Cancel workflow”即可，如下图：
 
-![fastmac4.png](https://jasonkay_image.imfast.io/images/fastmac4.png)
+![fastmac4.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fastmac4.png)
 
 <BR/>
 
@@ -144,7 +144,7 @@ shell已经安装了brew，因此可以轻松添加所需的任何软件！
 
 首先，必须在fastmac项目的settings/secrets设置一个GitHub密码，其中包含连接到服务器所需的ssh私钥，如下图：
 
-![fastmac5.png](https://jasonkay_image.imfast.io/images/fastmac5.png)
+![fastmac5.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fastmac5.png)
 
 将该私钥其命名为SSH_KEY（必须是这个名字），并将**私钥文件**（例如：~/.ssh/id_rsa）内容粘贴为值；
 

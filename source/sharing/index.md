@@ -66,11 +66,11 @@ cover: https://acg.yanwz.cn/api.php?88
 
 **Alipay:**
 
-![alipay](https://jasonkay_image.imfast.io/images/alipay.jpg)
+![alipay](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://jasonkay_image.imfast.io/images/wechat.jpg)
+![wechat](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wechat.jpg)
 
 ## 赞助单
 

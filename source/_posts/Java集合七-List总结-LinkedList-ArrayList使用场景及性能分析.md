@@ -30,7 +30,7 @@ tags: [Java基础, 面试总结, 集合]
 
 先回顾一下List的框架图
 
-![List框架图.jpg](https://jasonkay_image.imfast.io/images/List框架图.jpg)
+![List框架图.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/List框架图.jpg)
 
 **① List 是一个接口，继承于Collection接口**. 它代表着有序的队列
 

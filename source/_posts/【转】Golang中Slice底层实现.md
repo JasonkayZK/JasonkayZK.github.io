@@ -170,7 +170,7 @@ type slice struct {
 }
 ```
 
-![slice1.png](https://jasonkay_image.imfast.io/images/slice1.png)
+![slice1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice1.png)
 
  切片的结构体由3部分构成：
 
@@ -178,7 +178,7 @@ type slice struct {
 -   len 代表当前切片的长度；
 -   cap 是当前切片的容量，cap 总是大于等于 len 的；
 
-![slice2.png](https://jasonkay_image.imfast.io/images/slice2.png)
+![slice2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice2.png)
 
 如果想从 slice 中得到一块内存地址，可以这样做：
 
@@ -263,7 +263,7 @@ func makeslice64(et *_type, len64, cap64 int64) slice {
 
 实现原理和上面的是一样的，只不过多了把 int64 转换成 int 这一步罢了。
 
-![slice3.png](https://jasonkay_image.imfast.io/images/slice3.png)
+![slice3.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice3.png)
 
 上图是用 make 函数创建的一个 len = 4， cap = 6 的切片：
 
@@ -271,13 +271,13 @@ func makeslice64(et *_type, len64, cap64 int64) slice {
 
 除了 make 函数可以创建切片以外，字面量也可以创建切片。
 
-![slice4.png](https://jasonkay_image.imfast.io/images/slice4.png)
+![slice4.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice4.png)
 
  这里是用字面量创建的一个 len = 6，cap = 6 的切片，这时候数组里面每个元素的值都初始化完成了。
 
 <font color="#f00">**需要注意的是 [ ] 里面不要写数组的容量，因为如果写了个数以后就是数组了，而不是切片了。**</font>
 
-![slice5.png](https://jasonkay_image.imfast.io/images/slice5.png)
+![slice5.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice5.png)
 
  还有一种简单的字面量创建切片的方法。如上图就 Slice A 创建出了一个 len = 3，cap = 3  的切片。同理，Slice B 创建出了一个 len = 2，cap = 4 的切片。 
 
@@ -316,7 +316,7 @@ nil 切片和空切片也是常用的。
 var slice []int
 ```
 
-![slice6.png](https://jasonkay_image.imfast.io/images/slice6.png)
+![slice6.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice6.png)
 
 nil 切片被用在很多标准库和内置函数中，描述一个不存在的切片的时候，就需要用到 nil 切片。比如函数在发生异常的时候，返回的切片就是 nil 切片。nil 切片的指针指向 nil。
 
@@ -327,7 +327,7 @@ silce := make( []int , 0 )
 slice := []int{ }
 ```
 
-![slice7.png](https://jasonkay_image.imfast.io/images/slice7.png)
+![slice7.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice7.png)
 
 空切片和 nil 切片的区别在于：**空切片指向的地址不是nil，指向的是一个内存地址，但是它没有分配任何内存空间，即底层元素包含0个元素。**
 
@@ -463,7 +463,7 @@ After newSlice = [10 30 30 40 50], Pointer = 0xc4200b0180, len = 5, cap = 8
 
 用图表示出上述过程：
 
-![slice8.png](https://jasonkay_image.imfast.io/images/slice8.png)
+![slice8.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice8.png)
 
 从图上我们可以很容易的看出，新的切片和之前的切片已经不同了，因为新的切片更改了一个值，并没有影响到原来的数组：**新切片指向的数组是一个全新的数组；**
 
@@ -516,7 +516,7 @@ After array = [10 30 50 40]
 
 把上述过程用图表示出来，如下图。
 
-![slice9.png](https://jasonkay_image.imfast.io/images/slice9.png)
+![slice9.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice9.png)
 
 通过打印的结果，我们可以看到，在这种情况下，**扩容以后并没有新建一个新的数组，扩容前后的数组都是同一个，这也就导致了新的切片修改了一个值，也影响到了老的切片了。**
 
@@ -593,7 +593,7 @@ func slicecopy(to, fm slice, width uintptr) int {
 
 <font color="#f00">**slicecopy 方法最终的复制结果取决于较短的那个切片，当较短的切片复制完成，整个复制过程就全部完成了。**</font>
 
-![slice10.png](https://jasonkay_image.imfast.io/images/slice10.png)
+![slice10.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice10.png)
 
 举个例子，比如：
 
@@ -681,7 +681,7 @@ value = 40 , value-addr = c4200aedf8 , slice-addr = c4200b0338
 
 从上面结果我们可以看到，<font color="#f00">**如果用 range 的方式去遍历一个切片，拿到的 Value 其实是切片里面的值拷贝。所以每次打印 Value 的地址都不变。**</font>
 
-![slice11.png](https://jasonkay_image.imfast.io/images/slice11.png)
+![slice11.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/slice11.png)
 
 <font color="#f00">**由于 Value 是值拷贝的，并非引用传递，所以直接改 Value 是达不到更改原切片值的目的的，需要通过 `&slice[index]` 获取真实的地址。**</font>
 

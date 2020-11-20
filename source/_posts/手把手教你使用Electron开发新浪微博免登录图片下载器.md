@@ -66,7 +66,7 @@ vue add vue-cli-plugin-electron-builder
 
 启动之后如下：
 
-![electron_1.jpg](https://jasonkay_image.imfast.io/images/electron_1.jpg)
+![electron_1.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/electron_1.jpg)
 
 至此，我们的开发环境和初始化项目完成！
 
@@ -872,19 +872,19 @@ main.js和App.vue就是通常的Vue项目，几乎无改动，下面我们重点
 
 我们在软件中填入userId，并选择时间日期，最后点击“立即下载”；
 
-![weiboPicDownloader_1.png](https://jasonkay_image.imfast.io/images/weiboPicDownloader_1.png)
+![weiboPicDownloader_1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/weiboPicDownloader_1.png)
 
 稍等片刻，爬虫完成后，会弹出保存窗口，选择下载目录后即可开始下载：
 
-![weiboPicDownloader_2.png](https://jasonkay_image.imfast.io/images/weiboPicDownloader_2.png)
+![weiboPicDownloader_2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/weiboPicDownloader_2.png)
 
 开始下载：
 
-![weiboPicDownloader_3.png](https://jasonkay_image.imfast.io/images/weiboPicDownloader_3.png)
+![weiboPicDownloader_3.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/weiboPicDownloader_3.png)
 
 完成下载：
 
-![weiboPicDownloader_4.png](https://jasonkay_image.imfast.io/images/weiboPicDownloader_4.png)
+![weiboPicDownloader_4.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/weiboPicDownloader_4.png)
 
 最后即可在你选择的目录找的下载的图片啦！
 

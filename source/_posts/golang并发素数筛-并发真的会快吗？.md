@@ -105,7 +105,7 @@ AddPrimeFilterChan()每次启动会初始化并添加一个新的channel，作�
 
 过滤过程如下图：
 
-![go_prime.png](https://jasonkay_image.imfast.io/images/go_prime.png)
+![go_prime.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/go_prime.png)
 
 其中：图中大方块代表一个filter，对应于代码中的一个Channel；
 

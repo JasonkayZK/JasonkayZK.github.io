@@ -57,7 +57,7 @@ date: 2020-09-26 19:46:49
 
 **Wechat(ID：z271226192)：**
 
- <img src="https://jasonkay_image.imfast.io/images/wechat_add.jpg" width = "376" height = "487" alt="wechat_add.jpg" align="center" />
+ <img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wechat_add.jpg" width = "376" height = "487" alt="wechat_add.jpg" align="center" />
 
 <br/>
 

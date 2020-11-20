@@ -285,7 +285,7 @@ index = {
 
 书名索引书中一个术语引用页码的索引：
 
-![book_index.png](https://jasonkay_image.imfast.io/images/book_index.png)
+![book_index.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/book_index.png)
 
 <BR/>
 
@@ -295,7 +295,7 @@ index = {
 
 文本分析器由一个分词器和多个过滤器组成：
 
-![text_analysis.png](https://jasonkay_image.imfast.io/images/text_analysis.png)
+![text_analysis.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/text_analysis.png)
 
 **① 分词器**
 
@@ -548,7 +548,7 @@ func (idx index) search(text string) [][]int {
 
 下一步是计算列表之间的集合交集，这样我们将得到一个匹配所有令牌的文档列表：
 
-![venn.png](https://jasonkay_image.imfast.io/images/venn.png)
+![venn.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/venn.png)
 
 由于我们的倒排索引中的id是按升序排序插入的，所以可以在线性时间内计算两个列表之间的交集：
 

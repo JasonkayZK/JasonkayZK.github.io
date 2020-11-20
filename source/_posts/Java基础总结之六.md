@@ -71,7 +71,7 @@ Java集合主要可以划分为4个部分：
 
 Java集合工具包框架图(如下)：
 
-![Collection框架结构.jpg](https://jasonkay_image.imfast.io/images/Collection框架结构.jpg)
+![Collection框架结构.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/Collection框架结构.jpg)
 
  看上面的框架图，先抓住它的主干，即Collection和Map。
 

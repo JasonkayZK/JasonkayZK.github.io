@@ -269,7 +269,7 @@ function checkForWord(request, sender, sendResponse) {
 
 随后，就可以在扩展栏中看到一个新的扩展，如下图：
 
-![jQuery_Checker.png](https://jasonkay_image.imfast.io/images/jQuery_Checker.png)
+![jQuery_Checker.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/jQuery_Checker.png)
 
 <br/>
 
@@ -277,7 +277,7 @@ function checkForWord(request, sender, sendResponse) {
 
 点击插件后显示popup.html页面，点击`Check jQuery`按钮即可查看当前页面是否采用了jQuery：
 
-![jQuery_Checker_2.png](https://jasonkay_image.imfast.io/images/jQuery_Checker_2.png)
+![jQuery_Checker_2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/jQuery_Checker_2.png)
 
 <br/>
 
@@ -309,7 +309,7 @@ function checkForWord(request, sender, sendResponse) {
 
 如下图所示：
 
-![content_scripts.png](https://jasonkay_image.imfast.io/images/content_scripts.png)
+![content_scripts.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/content_scripts.png)
 
 <br/>
 

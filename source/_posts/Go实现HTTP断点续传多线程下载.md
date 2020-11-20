@@ -111,7 +111,7 @@ HTTP/1.1 200 OK...Accept-Ranges: bytesContent-Length: 146515
 
 最后，看一个具体的断点续传的例子：
 
-![download.jpg](https://jasonkay_image.imfast.io/images/download.jpg)
+![download.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/download.jpg)
 
 <BR/>
 
