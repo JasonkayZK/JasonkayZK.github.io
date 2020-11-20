@@ -94,7 +94,7 @@ Math类中提供了三个与取整有关的方法：`ceil、floor、round`, 这�
 
 ① ceil的英文意义是天花板: 该方法就表示向上取整，Math.ceil(11.3)的结果为12,Math.ceil(-11.3)的结果是-11；
 
-② floor的英文意义是地板，该方法就表示向下取整，Math.ceil(11.6)的结果为11,Math.ceil(-11.6)的结果是-12;
+② floor的英文意义是地板，该方法就表示向下取整，Math.floor(11.6)的结果为11,Math.floor(-11.6)的结果是-12;
 
 ③ <font color="#ff0000">round方法表示“四舍五入”，算法为Math.floor(x+0.5)，即将原来的数字加上0.5后再向下取整;</font>
 
