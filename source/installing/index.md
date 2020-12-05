@@ -1,5 +1,5 @@
 ---
-title: 软件安装大全
+title: 软件安装
 toc: true
 date: 2019-09-04 20:28:29
 cover: https://acg.yanwz.cn/api.php?21
@@ -10,7 +10,7 @@ layout: about
 
 <br/>
 
-## 软件安装大全
+## 软件安装
 
 **创立于: 2020年12月5日(迁移自《记一次重装软件》)**
 
@@ -48,7 +48,7 @@ layout: about
 | [XMind](#XMind)                                     | XMind8                    |  2019-09-04  | 推荐在JDK8环境下安装；                                       |
 | [Zookeeper](#Zookeeper)                             | 3.4.14                    |  2019-09-04  |                                                              |
 | [Postman](#Postman)                                 | Any                       |  2019-09-04  |                                                              |
-| [Docker](#Docker)                                   | Any                       |  2019-09-04  |                                                              |
+| [Docker](#Docker)                                   | Docker 18.09              |  2019-09-04  |                                                              |
 | [Java11](#Java11)                                   | 11.0.x                    |  2019-09-04  | 不推荐安装JDK11，虽然已经出到JDK15了，但是很多项目仍然使用JDK8，比如Andriod； |
 | [7Zip](#7Zip)                                       | Any                       |  2019-09-04  |                                                              |
 | [Nodejs与npm](#Nodejs与npm)                         | Any                       |  2019-09-04  | 下载、解压缩、配置环境变量、生成软连接、配置cnpm加速；       |
@@ -72,6 +72,7 @@ layout: about
 | ~~[Redis-desktop-manager](#Redis-desktop-manager)~~ | Any                       |  2019-09-04  | Redis-Desktop-Manager已收费不推荐安装；<br />推荐：[AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager) |
 | [PythonModules](#PythonModules)                     | /                         |  2019-09-04  |                                                              |
 | [NpmModules](#NpmModules)                           | /                         |  2019-09-04  | 安装cnpm、Vue-Cli、yarn等；                                  |
+| [Gradle](#Gradle)                                   | 6.7.1                     |  2020-12-05  |                                                              |
 |                                                     |                           |              |                                                              |
 
 
@@ -290,50 +291,160 @@ cd /opt/apache-tomcat-x.x.x/bin/
 
 ### Postman
 
-​		一个网页调试工具, 测试Restful接口后端的数据.
+一个网页调试工具, 测试Restful接口后端的数据.
 
-​		直接通过snap商店安装即可.
+直接通过snap商店安装即可；
 
-有个小坑:
-
-​		在安装过程中, 我不小心关闭了snap, 重新打开后提示:
-
-**error: snap "Postman" has "install-snap" change in progress**
-
-**其实就是软件之前安装了一次，只是没安装完就强行停止了**
-
-**解决方案**
-
-**运行如下命令**
-
-```bash
-~$ snap changes
-ID  Status  Spawn                  Ready                  Summary
-4    Error  yesterday at 21:20 CST  yesterday at 21:31 CST  Install "Postman" snap
-5    Doing  yesterday at 22:36 CST  -                      Install "Postman" snap
-```
-
-可以看到ID=5  Doing就是我之前安装失败的。
-
-现在我们终止它
-
-```bash
-~$ sudo snap abort 5
-```
-
-好了，可以重新安装了。
+>   有个小坑：
+>
+>   在安装过程中, 我不小心关闭了snap, 重新打开后提示:
+>
+>   **error: snap "Postman" has "install-snap" change in progress**
+>
+>   **其实就是软件之前安装了一次，只是没安装完就强行停止了**
+>
+>   **解决方案**
+>
+>   **运行如下命令**
+>
+>   ```bash
+>   ~$ snap changes
+>   ID  Status  Spawn                  Ready                  Summary
+>   4    Error  yesterday at 21:20 CST  yesterday at 21:31 CST  Install "Postman" snap
+>   5    Doing  yesterday at 22:36 CST  -                      Install "Postman" snap
+>   ```
+>
+>   可以看到ID=5  Doing就是我之前安装失败的。
+>
+>   现在我们终止它
+>
+>   ```bash
+>   ~$ sudo snap abort 5
+>   ```
+>
+>   好了，可以重新安装了。
 
 
 
 ### Docker
 
-​		可以通过:
+操作系统是CentOS 7.6；
+
+#### 1.查看系统内容
 
 ```bash
-sudo apt-get install docker.io #安装docker
+[root@localhost /]# uname -r
+3.10.0-957.el7.x86_64
 ```
 
-​		直接安装Docker
+如果版本过低，sudo yum update 升级到最新；
+
+#### 2.卸载旧版本(如果安装过旧版本的话)
+
+```bash
+$ sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+```
+
+#### 3.配置阿里云Docker Yum源
+
+（1）安装需要的软件包， yum-util 提供yum-config-manager功能，另外两个是devicemapper驱动依赖的：
+
+```bash
+sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+```
+
+（2）设置yum源
+
+```bash
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+```
+
+#### 4.查看Docker版本以及安装
+
+命令: `yum list docker-ce`
+
+```bash
+yum list docker-ce
+
+已加载插件：fastestmirror, langpacks
+Loading mirror speeds from cached hostfile
+ * base: mirrors.cn99.com
+ * extras: mirrors.cn99.com
+ * updates: mirrors.shu.edu.cn
+可安装的软件包
+docker-ce.x86_64           
+```
+
+安装Docker最新版本：
+
+```bash
+sudo yum install docker-ce
+```
+
+#### 5.启动Docker服务并加入开机启动
+
+```bash
+$ sudo systemctl start docker
+$ sudo systemctl enable docker
+```
+
+#### 6.查看docker版本
+
+```bash
+[root@localhost /]# docker version
+Client:
+ Version:           18.09.0
+ API version:       1.39
+ Go version:        go1.10.4
+ Git commit:        4d60db4
+ Built:             Wed Nov  7 00:48:22 2018
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          18.09.0
+  API version:      1.39 (minimum version 1.12)
+  Go version:       go1.10.4
+  Git commit:       4d60db4
+  Built:            Wed Nov  7 00:19:08 2018
+  OS/Arch:          linux/amd64
+  Experimental:     false
+```
+
+如图所示，我们的安装已经完成。
+
+#### 7.卸载
+
+查询安装过的包
+
+`yum list installed | grep docker`
+
+```bash
+[root@localhost /]# yum list installed | grep docker
+containerd.io.x86_64                    1.2.0-3.el7                    @docker-ce-stable
+docker-ce.x86_64                        3:18.09.0-3.el7                @docker-ce-stable
+docker-ce-cli.x86_64                    1:18.09.0-3.el7                @docker-ce-stable
+```
+
+删除安装的软件包
+
+```bash
+yum -y remove docker-ce.x86_64 
+```
+
+删除镜像/容器等
+
+```bash
+rm -rf /var/lib/docker
+```
 
 
 
@@ -1059,9 +1170,9 @@ sudo apt install filezilla
 
 #### 1): 下载压缩包
 
-​		[Apache-Maven官方网站](https://maven.apache.org/download.cgi)
+[Apache-Maven官方网站](https://maven.apache.org/download.cgi)
 
-**注: ** <font color="#FF0000">压缩包应选择Binary tar.gz archive类型, 而Source tar.gz archive为源码压缩包, 无法直接运行!</font>
+**注:** <font color="#FF0000">压缩包应选择Binary tar.gz archive类型, 而Source tar.gz archive为源码压缩包, 无法直接运行!</font>
 
 #### 2): 解压缩
 
@@ -1069,7 +1180,7 @@ sudo apt install filezilla
 sudo tar -zvxf apache-maven-x.x.x-bin.tar.gz -C /opt/
 ```
 
-​		将文件解压缩到/opt/目录下
+将文件解压缩到/opt/目录下
 
 #### 3): 设置文件权限或所属
 
@@ -1097,7 +1208,7 @@ export PATH=$PATH:${JAVA_HOME}/bin:${M2_HOME}/bin
 
 #### 5): 配置阿里云镜像
 
-​		默认会在国外的服务器上面下载jar包, 速度很是慢, 修改%M2_HOME%/conf/settings.xml文件, 在mirrors标签内部添加:
+默认会在国外的服务器上面下载jar包, 速度很是慢, 修改`%M2_HOME%/conf/settings.xml`文件, 在mirrors标签内部添加:
 
 ```xml
 <mirror> 
@@ -1110,7 +1221,7 @@ export PATH=$PATH:${JAVA_HOME}/bin:${M2_HOME}/bin
 
 **注: 可能出现的错误:安装maven 错误: 找不到或无法加载主类 org.codehaus.plexus.classworlds.launcher.Launcher**
 
-​		可能是你下载错了安装包了, 应该下载二进制源的压缩包，然后可以根据安装说明(installation instructions)进行配置。
+可能是你下载错了安装包了, 应该下载二进制源的压缩包，然后可以根据安装说明(installation instructions)进行配置。
 
 
 
@@ -1393,5 +1504,71 @@ sudo cnpm install -g vue-cli
 ```bash
 yarn config set registry https://registry.npm.taobao.org
 ```
+
+<br/>
+
+### Gradle
+
+#### 1.下载Gradle
+
+官方网站：[https://gradle.org/install/#manually](https://gradle.org/install/#manually)
+
+提供了两种下载方式：
+
+-   Binary-only是只下载二进制源码；
+-   Complete, with docs and sources是下载源码和文档；
+
+如果有阅读文档的需求可以下载第二个，没有需要的下载Binary-only即可；
+
+#### 2.解压缩安装
+
+将压缩包解压缩即完成安装；
+
+#### 3.配置环境变量
+
+配置环境变量：
+
+-   GRADLE_HOME：解压到的目录；
+-   GRADLE_USER_HOME：自定义Gradle仓库目录或者Maven的仓库目录；
+
+修改环境变量Path：
+
+-   $GRADLE_HOME/bin；
+
+#### 4.配置Gradle仓库源
+
+在Gradle安装目录下的 init.d 目录下，新建一个 init.gradle 文件，里面填写以下配置：
+
+```groovy
+allprojects {
+    repositories {
+        maven { url 'file://.......'}
+        mavenLocal()
+        maven { name "Alibaba" ; url "https://maven.aliyun.com/repository/public" }
+        maven { name "Bstek" ; url "http://nexus.bsdn.org/content/groups/public/" }
+        mavenCentral()
+    }
+
+    buildscript { 
+        repositories { 
+            maven { name "Alibaba" ; url 'https://maven.aliyun.com/repository/public' }
+            maven { name "Bstek" ; url 'http://nexus.bsdn.org/content/groups/public/' }
+            maven { name "M2" ; url 'https://plugins.gradle.org/m2/' }
+        }
+    }
+}
+```
+
+repositories 中写的是获取 jar 包的顺序：先是本地的 Maven 仓库路径；接着的 mavenLocal() 是获取 Maven 本地仓库的路径，可以和第一条一样，但是不冲突；第三条和第四条是从国内和国外的网络上仓库获取；最后的 mavenCentral() 是从Apache提供的中央仓库获取 jar 包；
+
+#### 5.IDEA配置Gradle
+
+在IDEA的Setting里打开"Build, Execution, Deployment"-"Build Tools"-"Gradle"；
+
+如果在变量和配置文件中设置了Gradle的仓库路径，在 Service directory path 中就会自动填写地址，如果想改的话可以手动修改；
+
+具体见下图：
+
+![gradle_idea.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/gradle_idea.png)
 
 <br/>
