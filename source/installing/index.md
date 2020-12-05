@@ -1,101 +1,85 @@
 ---
-title: 记一次重装软件
-date: 2019-09-04 20:28:29
-categories: 软件安装与配置
-cover: https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567610690539&di=d4bd9feb4a48df7cea264ae2f82657c2&imgtype=0&src=http%3A%2F%2Fww1.sinaimg.cn%2Fmw690%2F72fb8549gw1ej1njtw67qj20hs0l240r.jpg
-tags: [程序人生, 生活总结, 软件安装与配置]
-description: 继重装完系统之后, 软件安装的总结, 以及一些自己比较喜欢的软件推荐!
+title: 软件安装大全
 toc: true
+date: 2019-09-04 20:28:29
+cover: https://acg.yanwz.cn/api.php?21
+layout: about
 ---
 
-继重装完系统之后, 这次我们来继续在新系统上面安装一些软件.
+*Get busy living or get busy dying*  ————电影肖申克的救赎。
 
 <br/>
 
-<!--more-->
+## 软件安装大全
 
-<!-- **目录:** -->
+**创立于: 2020年12月5日(迁移自《记一次重装软件》)**
 
-<!-- toc -->
+**页面成立原因：总结下各个平台（主要是Linux下）软件的安装方法，尽量跟着我的步骤走一次就成功**
 
-## 一. 需要安装的软件列表
-
-​		因为在决定重装系统之前, 我已经将计算机里面的软件列了一张表, 所以可以按照记录的表单进行安装, 不分顺序, 主要的软件有:
-
-1.  Typora: 超好用的Markdown编辑器
-2.  IDEA: Java IDE, 懂得都懂
-3.  Firefox: Linux自带, 我觉得比Chrome好用.
-4.  Git: 极客必备吧!
-5.  ssh: 远程连接必备.
-6.  Python 3.6.8: 科研必备了吧基本上.
-7.  Tomcat: JavaEE 容器.
-8.  XMind: 依赖于Java的思维导图.
-9.  Zookeeper: 分布式框架.
-10.  Postman: Restful接口的测试工具, 超级好用!
-11.  Docker: 虚拟化能少得了?
-12.  Java 8/11: Java开发, 现在开始用Java 11, 新的LTS版本.
-13.  7Zip: 压缩工具
-14.  Nodejs: 基于谷歌Chrome的前端JavaScript 运行环境, 可以让你不在浏览器也运行JS.
-15.  Npm: nodejs的包管理, 类似于Python的pip
-16.  Redis: K-V数据库, NoSQL的巅峰?(笑)
-17.  RabbitMQ/Kafka: 分布式消息队列.
-18.  Mysql: 关系数据库, RDBMS的巅峰?(笑)
-19.  Telnet: 类似于SSH的远古远程连接, 作Zookeeper的测试用.
-20.  Vscode: 微软的开源IDE, 主要写前端网页/Python这种脚本型语言用一下子.
-21.  Flash: 浏览器里看视频用的.(虽然H5普及了, 但是还有人用Flash, 哎!)
-22.  Arthas: 阿里爸爸的开源Java诊断工具
-23.  Erlang: 写数据库/消息队列等插件用到的编程语言
-24.  Eclipse: 小的工程用Eclipse也挺好, 不吃内存, 相比Idea
-25.  Ruby: 写数据库/消息队列等插件用到的编程语言
-26.  Gem: Ruby中的包管理, 类似于Python的pip
-27.  Putty: 基于ssh的客户端管理
-28.  Filezilla: 基于ssh的远程访问, 文件传输等, 很是方便!
-29.  Workbench: Mysql的一个图形化管理, 相比于Navicat差了点, 但是Navicat要钱啊!
-30.  Maven: Java的项目管理工具
-31.  Htop: 一个酷炫的类似于微软的任务管理器
-32.  Sougo: 输入法
-33.  curl: 下载链接用到的工具
-34.  pip3: Python3的包管理工具
-35.  Okular: 一个PDF查看器, 可以简单做一些笔记, 很吃内存, 凑活用吧!
-36.  net-tools: ifconfig, netstat等等, 都在里面了
-37.  rpm: Red-Hat的软件包管理, CentOS里面的apt
-38.  uGet: 一个下载工具
-39.  vim: 服务器等等无图形化界面中的文档编辑器
-40.  redis-desktop-manager: Redis的一个图形化管理工具
-41.  Python Modules:
-     1.  numpy
-     2.  scipy
-     3.  matplotlib
-     4.  tensorflow
-     5.  keras
-42.  Npm Modules:
-     1.  Hexo
-     2.  Vue
-     3.  yarn
-     4.  cnpm
-
-
-
-的确是有一点多, 但是得益于Ubuntu的软件管理apt, 其实大部分都可以用一句apt install安装啦!
-
-
-
-## 二. 软件安装
+**其他：Linux软件安装综述**
 
 在Linux中, 安装软件有很多很多种方法, 如: 
 
 1.  通过apt/yum安装: 安装极其方便, 不需要你考虑依赖, 不用手动编译; 坏处是, 安装的文件分散在各个地方, 配置起来可能很是麻烦! **(有时需要借助sudo find where -name which 命令查找!)**
 2.  通过源码编译安装: 需要自己下载, 解压缩, 编译, 配置环境; 好处是文件都在你指定的文件夹, 环境也是你自己配的, 修改设置就很容易!
 
-对于上面列举的两种情况, 可以看出还是有一点点小的区别的!
+对于上面列举的两种情况, 可以看出还是有一点点小的区别的！
 
  **我个人建议**:
 
-​		<font color="#FF0000">对于不需要配置的软件, 尽量用apt等软件管理进行安装, 比较方便;<br />		对于Redis, RabbitMQ等, 需要更改配置的, 使用源码安装, 可以方便修改配置信息!</font>
+-   <font color="#FF0000">对于不需要配置的软件, 尽量用apt等软件管理进行安装, 比较方便；</font>
+-   <font color="#FF0000">对于Redis, RabbitMQ等, 需要更改配置的, 使用源码安装, 可以方便修改配置信息!</font>
 
-​	下面按照上面列出的顺序写一下这些软件的安装方法, 对于一些坑比较多的软件, 将会单独在一篇博客里面介绍如何安装, 如何配置, 如何避开那些坑!
+下面按照上面列出的顺序写一下这些软件的安装方法，对于一些坑比较多的软件，将会单独在一篇博客里面介绍如何安装，如何配置，如何避开那些坑！
 
-### 1. Typora
+<br/>
+
+## Linux软件列表
+
+| **软件名称**                                        | **软件版本**              | **添加时间** | **备注**                                                     |
+| :-------------------------------------------------- | :------------------------ | :----------: | ------------------------------------------------------------ |
+| [Typora](#Typora)                                   | Any                       |  2019-09-04  |                                                              |
+| [IDEA](#IDEA)                                       | Any                       |  2019-09-04  |                                                              |
+| [Firefox](#Firefox)                                 | Any                       |  2019-09-04  | **推荐使用Chrome浏览器；**                                   |
+| [Git](#Git)                                         | Any                       |  2019-09-04  | 包括安装、配置、生成SSH-Key和验证                            |
+| [SSH](#SSH)                                         | Any                       |  2019-09-04  |                                                              |
+| [Python3.6](#Python3.6)                             | 3.6.x                     |  2019-09-04  |                                                              |
+| [Tomcat](#Tomcat)                                   | Any                       |  2019-09-04  | 下载、解压缩、配置环境、测试                                 |
+| [XMind](#XMind)                                     | XMind8                    |  2019-09-04  | 推荐在JDK8环境下安装；                                       |
+| [Zookeeper](#Zookeeper)                             | 3.4.14                    |  2019-09-04  |                                                              |
+| [Postman](#Postman)                                 | Any                       |  2019-09-04  |                                                              |
+| [Docker](#Docker)                                   | Any                       |  2019-09-04  |                                                              |
+| [Java11](#Java11)                                   | 11.0.x                    |  2019-09-04  | 不推荐安装JDK11，虽然已经出到JDK15了，但是很多项目仍然使用JDK8，比如Andriod； |
+| [7Zip](#7Zip)                                       | Any                       |  2019-09-04  |                                                              |
+| [Nodejs与npm](#Nodejs与npm)                         | Any                       |  2019-09-04  | 下载、解压缩、配置环境变量、生成软连接、配置cnpm加速；       |
+| [Redis](#Redis)                                     | 5.0.5<br />(编译源码安装) |  2019-09-04  | 下载、解压缩、编译、配置环境变量、安装工具utils、验证；      |
+| [Mysql](#Mysql)                                     | 8.0.x                     |  2019-09-04  | Apt安装、配置用户&密码、权限、开机启动等；                   |
+| [Telnet](#Telnet)                                   | Any                       |  2019-09-04  |                                                              |
+| [VSCode](#VSCode)                                   | Any                       |  2019-09-04  | 安装、插件推荐；                                             |
+| ~~[Flash](#Flash)~~                                 | /                         |  2019-09-04  | 已过时，不推荐安装；                                         |
+| [Arthas](#Arthas)                                   | Any                       |  2019-09-04  |                                                              |
+| [Putty](#Putty)                                     | Any                       |  2019-09-04  |                                                              |
+| [FileZilla](#FileZilla)                             | Any                       |  2019-09-04  |                                                              |
+| [Maven](#Maven)                                     | Any                       |  2019-09-04  | 下载、解压缩、配置环境变量、配置阿里云镜像；                 |
+| [Htop](#Htop)                                       | Any                       |  2019-09-04  |                                                              |
+| [Sougo](#Sougo)                                     | Any                       |  2019-09-04  | 下载、安装Fcitx、验证；                                      |
+| [Curl](#Curl)                                       | Any                       |  2019-09-04  |                                                              |
+| [Pip3](#Pip3)                                       | Any                       |  2019-09-04  | 安装、配置、升级、更换源、降级安装；                         |
+| [Okular](#Okular)                                   | Any                       |  2019-09-04  | 一个KDE出品的PDF阅读器；                                     |
+| [netTools](#netTools)                               | Any                       |  2019-09-04  |                                                              |
+| [Rpm](#Rpm)                                         | Any                       |  2019-09-04  |                                                              |
+| [uGet](#uGet)                                       | Any                       |  2019-09-04  |                                                              |
+| ~~[Redis-desktop-manager](#Redis-desktop-manager)~~ | Any                       |  2019-09-04  | Redis-Desktop-Manager已收费不推荐安装；<br />推荐：[AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager) |
+| [PythonModules](#PythonModules)                     | /                         |  2019-09-04  |                                                              |
+| [NpmModules](#NpmModules)                           | /                         |  2019-09-04  | 安装cnpm、Vue-Cli、yarn等；                                  |
+|                                                     |                           |              |                                                              |
+
+
+具体软件安装可见右上角TOC，快速访问；
+
+<br/>
+
+### Typora
 
 ​		一个Markdown阅读器, 先下载的这个也是因为, 就可以及时总结了.
 
@@ -103,7 +87,7 @@ toc: true
 
 
 
-### 2. IDEA
+### IDEA
 
 ​		Java的一个神级IDE. 
 
@@ -111,17 +95,17 @@ toc: true
 
 
 
-### 3. Firefox
+### Firefox
 
-​		这个是Linux自带的开源浏览器.
+这个是Linux自带的开源浏览器.
 
-​		顺便说一点, 我的是<font color="#FF0000">注册了Firefox账号</font>的, 所以我的所有插件, 书签,密码, 甚至访问记录在重新登录之后都是可以自动全部导入的, 和原来的浏览器一模一样! 将重装成本及耗时降到了零!
+顺便说一点, 我的是<font color="#FF0000">注册了Firefox账号</font>的, 所以我的所有插件, 书签,密码, 甚至访问记录在重新登录之后都是可以自动全部导入的, 和原来的浏览器一模一样! 将重装成本及耗时降到了零!
 
-​		所以这里强烈建议各位: **注册一个浏览器账号进行数据同步**, 否则换台电脑你就只能面对空白的书签和插件发呆了.
+所以这里强烈建议各位: **注册一个浏览器账号进行数据同步**, 否则换台电脑你就只能面对空白的书签和插件发呆了.
 
 
 
-### 4. Git
+### Git
 
 #### 1): 安装
 
@@ -176,23 +160,23 @@ cat ~/.ssh/rsa.pub
 
 
 
-### 5. SSH
+### SSH
 
-​		Ubuntu 自带了ssh工具, 无需额外安装了!
-
-
-
-### 6. Python 3.6
-
-​		如果你安装的是Ubuntu 18.04 LTS 或者更高的版本, 则在安装好了之后, 会直接默认为Python3.6.8版本, 因为Python2.7 讲在不久的将来停止维护. 
-
-​		如果你是低版本, 可以尝试使用apt/yum进行安装, 这里不多介绍.
+Ubuntu 自带了ssh工具, 无需额外安装了!
 
 
 
-### 7. Tomcat
+### Python3.6
 
-​		其实Apache开源的那些软件, 安装步骤都是一个尿性:
+如果你安装的是Ubuntu 18.04 LTS 或者更高的版本, 则在安装好了之后, 会直接默认为Python3.6.8版本, 因为Python2.7 讲在不久的将来停止维护. 
+
+如果你是低版本, 可以尝试使用apt/yum进行安装, 这里不多介绍.
+
+
+
+### Tomcat
+
+其实Apache开源的那些软件, 安装步骤都是一个尿性:
 
 1.  下载压缩包
 2.  解压缩
@@ -272,7 +256,7 @@ cd /opt/apache-tomcat-x.x.x/bin/
 
 
 
-### 8. XMind
+### XMind
 
 ​		Java编写的一个思维导图工具, 但是居然不支持Java 11!(新系统我使用的是Java 11)
 
@@ -296,7 +280,7 @@ cd /opt/apache-tomcat-x.x.x/bin/
 
 
 
-### 9. Zookeeper
+### Zookeeper
 
 ​		Apache的又一个开源分布式框架, 安装和配置见我的另一篇博客:
 
@@ -304,7 +288,7 @@ cd /opt/apache-tomcat-x.x.x/bin/
 
 
 
-### 10. Postman
+### Postman
 
 ​		一个网页调试工具, 测试Restful接口后端的数据.
 
@@ -341,7 +325,7 @@ ID  Status  Spawn                  Ready                  Summary
 
 
 
-### 11. Docker
+### Docker
 
 ​		可以通过:
 
@@ -353,7 +337,7 @@ sudo apt-get install docker.io #安装docker
 
 
 
-### 12. Java 11
+### Java11
 
 ​		由于Java 11是最新的LTS, 并且优化了大量和虚拟机有关的代码, 所以我就在这次重装之后, 直接上手了Java 11, 一步到位.
 
@@ -407,7 +391,7 @@ Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.4+10-LTS, mixed mode)
 
 
 
-### 13. 7Zip
+### 7Zip
 
 ​		7zip是一个支持多种压缩格式的压缩软件.
 
@@ -419,7 +403,7 @@ sudo apt-get install p7zip
 
 
 
-### 14&15. Nodejs与npm
+### Nodejs与npm
 
 #### 1): 下载
 
@@ -435,8 +419,9 @@ sudo tar -zxvf node-vx.x.x-linux-x64.tar.gz -C /opt/
 
 #### 3): 配置环境变量:
 
-​		因为 /opt/node/bin这个目录是不在环境变量中的
-​		如果要在任意目录访问的话，需要将node 所在的目录，添加PATH环境变量里面
+因为 /opt/node/bin这个目录是不在环境变量中的；
+
+如果要在任意目录访问的话，需要将node 所在的目录，添加PATH环境变量里面
 
 ``` bash
 sudo vim /etc/profile  #全局环境变量配置文件
@@ -480,15 +465,15 @@ sudo ln -s /opt/node/bin/cnpm /usr/local/bin/cnpm
 
 
 
-### 16. Redis
+### Redis
 
-​		由于之前的系统是通过apt直接安装的, 导致在修改配置文件时, 基本找不到配置文件, 所以这里采用了源码编译的方式进行安装.
+由于之前的系统是通过apt直接安装的, 导致在修改配置文件时, 基本找不到配置文件, 所以这里采用了源码编译的方式进行安装.
 
-​		当然, 官方网站也是有安装教程的, 但是还是不够详细;
+当然, 官方网站也是有安装教程的, 但是还是不够详细;
 
 #### 1): 下载
 
-​		在Redis的官方网站下载源码压缩包: [Redis官网](https://redis.io/download)
+在Redis的官方网站下载源码压缩包: [Redis官网](https://redis.io/download)
 
 或使用wget: 
 
@@ -496,7 +481,7 @@ sudo ln -s /opt/node/bin/cnpm /usr/local/bin/cnpm
 wget http://download.redis.io/releases/redis-x.x.x.tar.gz
 ```
 
-将-x.x.x换成你要安装的版本
+将-x.x.x换成你要安装的版本；
 
 #### 2): 解压缩
 
@@ -513,34 +498,61 @@ cd /opt/redis-x.x.x
 make
 ```
 
-**注:**
+>   **注1：**
+>
+>   编译时如果系统很干净（指server版的什么都没装）可能有错，这时可以按照错误提示把没安装的安装了。可能缺少的有`jemalloc，lua, hiredis,  linenoise`；
+>
+>   进入解压后的目录 :
+>
+>   ```bash
+>   cd redis-x.x.x
+>   ```
+>
+>   找到并进入deps目录，用ls查看就可以知道有没有了. 如果没有就在这目录下使用命令 :
+>
+>   ```bash
+>   make jemalloc
+>   make lua
+>   make hiredis
+>   make linenoise 
+>   ```
+>
+>   把这些依赖安装就可以了；
+>
+>   make成功之后就可以看到提示:
+>
+>   ```bash
+>   LINK redis-check-aof
+>   Hint: It’s a good idea to run ‘make test’ ;)
+>   make[1]: Leaving directory ‘/opt/redis-x.x.x/src’
+>   ```
+>
+>   从最后一行可以看出它提示可以去/opt/redis-x.x.x/src目录查看了，进去后会有很多东西。
 
-​		编译时如果系统很干净（指server版的什么都没装）可能有错，这时可以按照错误提示把没安装的安装了。可能缺少的有jemalloc，lua, hiredis,  linenoise。只要进入解压后的目录 :
-
-```bash
-cd redis-x.x.x
-```
-
-​		找到并进入deps目录，用ls查看就可以知道有没有了. 如果没有就在这目录下使用命令 :
-
-```bash
-make jemalloc
-make lua
-make hiredis
-make linenoise 
-```
-
-​		把这些依赖安装就可以了。
-
-make成功之后就可以看到提示:
-
-```bash
-LINK redis-check-aof
-Hint: It’s a good idea to run ‘make test’ ;)
-make[1]: Leaving directory ‘/opt/redis-x.x.x/src’
-```
-
-从最后一行可以看出它提示可以去/opt/redis-x.x.x/src目录查看了，进去后会有很多东西。
+>   **注2：GCC版本过低**
+>
+>   默认CentOS的GCC版本是很低的，可能会无法编译；
+>
+>   （安装6版本的redis，gcc版本一定要5.3以上，centos6.6默认安装4.4.7；centos7.5.1804默认安装4.8.5）
+>
+>   这里要升级gcc了：
+>
+>   ```bash
+>   yum -y install centos-release-scl && yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++ devtoolset-9-binutils && scl enable devtoolset-9
+>   ```
+>
+>   使scl(softwar collections)包命令持久化：
+>
+>   ```bash
+>   echo "source /opt/rh/devtoolset-9/enable" >> /etc/profile
+>   source /etc/profile
+>   ```
+>
+>   查看gcc版本：
+>
+>   ```bash
+>   gcc -v
+>   ```
 
 修改编译后的文件夹:
 
@@ -552,9 +564,14 @@ sudo mv /opt/redis-x.x.x/src /opt/redis-x.x.x/bin
 
 #### 4): 检查编译生成的文件
 
-​		进入/usr/soft/redis目录，有个bin文件夹，再进，里面有这几个文件就行了:
-​	redis-benchmark redis-check-rdb redis-sentinel
-​	redis-check-aof redis-cli redis-server
+进入/usr/soft/redis目录，有个bin文件夹，再进，里面有这几个文件就行了:
+
+-   redis-benchmark
+-   redis-check-rdb
+-   redis-sentinel
+-   redis-check-aof
+-   redis-cli
+-   redis-server
 
 #### 5): 配置环境变量
 
@@ -565,11 +582,11 @@ export REDIS_HOME=/opt/redis-5.0.5
 export PATH=$PATH:${REDIS_HOME}/bin
 ```
 
-再使source命令使其立即生效
+再使source命令使其立即生效；
 
 #### 6): 安装运行工具utils
 
-​		由于之前编译的, 在运行时是默认启动, 即使用的是默认的配置文件, 并不是我们想要的.
+由于之前编译的, 在运行时是默认启动, 即使用的是默认的配置文件, 并不是我们想要的；
 
 1.  在编译的文件夹内除了src目录有一个utils目录，进入里面:
 
@@ -624,8 +641,6 @@ export PATH=$PATH:${REDIS_HOME}/bin
     pidfile /var/run/redis_6379.pid
     ```
 
-    
-
 10.  默认数据库数量: databases 16
      这是上面默认的目录: dir /var/lib/redis/6379
 
@@ -637,16 +652,15 @@ export PATH=$PATH:${REDIS_HOME}/bin
 
 12.  启动成功!
 
-**注:**
-
-若发现启动失败, 提示:
-
-```bash
-Failed to start redisd.service: Unit redisd.service not found.
-```
-
-​	说没有这个服务，就想着是不是redis_6379改名时是不是有问题，查看了一下没错啊
-用service redis_6379 start启动，居然提示的是redis_6379已经改名了，要用systemctl daemon-reload这命令. 输入systemctl daemon-reload，再输入service redisd start就可以了。
+>   **注:**
+>
+>   若发现启动失败, 提示：
+>
+>   ```bash
+>   Failed to start redisd.service: Unit redisd.service not found.
+>   ```
+>
+>   输入`systemctl daemon-reload`，再输入`service redisd start`就可以了；
 
 #### 7): 验证安装:
 
@@ -661,13 +675,7 @@ ss -tanl
 
 
 
-### 17: RabbitMQ/Kafka
-
-​	待更新
-
-
-
-### 18: Mysql
+### Mysql
 
 ​		安装mysql的时候, 我是使用的apt安装的. 按道理并不推荐使用apt安装!
 
@@ -891,7 +899,7 @@ password:
 
 
 
-### 19. Telnet
+### Telnet
 
 #### 1): 使用apt安装
 
@@ -916,7 +924,7 @@ sudo /etc/init.d/xinetd restart
 
 
 
-### 20. VSCode
+### VSCode
 
 #### 1): 安装
 
@@ -985,7 +993,7 @@ sudo dpkg -i code_1.24.1-1528912196_amd64.deb
 
 
 
-### 21. Flash
+### Flash
 
 ​		Ubuntu虽然默认自带了浏览器Firefox, 但是没有自带Flash, 导致你在登录一些不支持H5的网站的时候, 使用Flash播放的视频无法播放. 
 
@@ -1005,7 +1013,7 @@ sudo apt install adobe-flashplugin
 
 
 
-### 22. Arthas
+### Arthas
 
 #### 1): 下载安装包
 
@@ -1027,31 +1035,7 @@ sudo apt install adobe-flashplugin
 
 
 
-### 23. Erlang
-
-​		待更新
-
-
-
-### 24. Eclipse
-
-​		待更新
-
-
-
-### 25. Ruby
-
-​		待更新
-
-
-
-### 26. Gem
-
-​		待更新
-
-
-
-### 27. Putty
+### Putty
 
 ​		使用apt安装即可
 
@@ -1061,7 +1045,7 @@ sudo apt install putty
 
 
 
-### 28. FileZilla
+### FileZilla
 
 ​		使用apt安装即可
 
@@ -1071,17 +1055,7 @@ sudo apt install filezilla
 
 
 
-### 29. Workbench
-
-​		使用apt安装即可
-
-```bash
-sudo apt install mysql-workbench
-```
-
-
-
-### 30. Maven
+### Maven
 
 #### 1): 下载压缩包
 
@@ -1140,7 +1114,7 @@ export PATH=$PATH:${JAVA_HOME}/bin:${M2_HOME}/bin
 
 
 
-### 31. Htop
+### Htop
 
 ​		通过apt安装即可, 很方便的终端任务管理器
 
@@ -1150,7 +1124,7 @@ sudo apt install htop
 
 
 
-### 32. Sougo
+### Sougo
 
 ​		以前在安装搜狗输入法的时候, 还需要自己安装Fcitx等依赖, 现在Sougo貌似已经提供了?(疑问)
 
@@ -1168,7 +1142,7 @@ sudo apt install htop
 
 
 
-### 33. Curl
+### Curl
 
 ​		通过apt安装即可
 
@@ -1178,7 +1152,7 @@ sudo apt install curl
 
 
 
-### 34. Pip3
+### Pip3
 
 #### 1): 安装
 
@@ -1315,7 +1289,7 @@ sudo pip3 install numpy==1.16
 
 
 
-### 35. Okular
+### Okular
 
 ​		一个PDF阅读器, 占用内存还不小, 没什么特别的, 看电子书用的而已. 使用apt安装即可!
 
@@ -1325,7 +1299,7 @@ sudo apt install okular
 
 
 
-### 36. net-tools
+### netTools
 
 ​		使用apt安装即可!
 
@@ -1335,7 +1309,7 @@ sudo apt install net-tools
 
 
 
-### 37. Rpm
+### Rpm
 
 ​		使用apt安装即可.
 
@@ -1345,7 +1319,7 @@ sudo apt install rpm
 
 
 
-### 38. uGet
+### uGet
 
 ​		一个图形化的下载工具, 使用apt安装即可!
 
@@ -1355,19 +1329,7 @@ sudo apt install uget
 
 
 
-### 39: Vim
-
-​		ubuntu自带的编辑器为vi, vim比起他强大了不少. 可以通过建立命令别名(alias)修改默认vi为vim编辑器. 
-
-​		使用apt安装.
-
-```bash
-sudo apt install vim
-```
-
-
-
-### 40: Redis-desktop-manager
+### Redis-desktop-manager
 
 ​		一个图形化的Redis管理工具, 可以在ubuntu的snap应用商店找到下载. 或者通过snap命令下载.
 
@@ -1379,19 +1341,20 @@ sudo snap install redis-desktop-manager
 
 
 
-### 41 Python Modules
+### PythonModules
 
 		1. tensorflow
-  		2. scipy
-                		3. matplotlib
-                                    		4. numpy
-                              		5. keras
+	
+	 		2. scipy
+	            		3. matplotlib
+	                          		4. numpy
+	                       		5. keras
 
 等........, 通过pip install 安装即可!
 
 
 
-### 42: Npm Modules
+### NpmModules
 
 #### 1. 安装cnpm[国内线路版npm]
 
@@ -1431,3 +1394,4 @@ sudo cnpm install -g vue-cli
 yarn config set registry https://registry.npm.taobao.org
 ```
 
+<br/>
