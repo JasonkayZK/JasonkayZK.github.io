@@ -94,11 +94,11 @@ GitHub Actions 有一些自己的术语。
 
 ### workflow 文件
 
-<red>**GitHub Actions 的配置文件叫做 workflow 文件，存放在代码仓库的`.github/workflows`目录。**</font>
+<font color="#f00">**GitHub Actions 的配置文件叫做 workflow 文件，存放在代码仓库的`.github/workflows`目录。**</font>
 
 workflow 文件**采用 [YAML 格式](http://www.ruanyifeng.com/blog/2016/07/yaml.html)**，文件名可以任意取，但是后缀名统一为`.yml`，比如`foo.yml`。
 
-<red>**一个库可以有多个 workflow 文件。GitHub 只要发现`.github/workflows`目录里面有`.yml`文件，就会自动运行该文件。**</font>
+<font color="#f00">**一个库可以有多个 workflow 文件。GitHub 只要发现`.github/workflows`目录里面有`.yml`文件，就会自动运行该文件。**</font>
 
 workflow 文件的配置字段非常多，详见[官方文档](https://help.github.com/en/articles/workflow-syntax-for-github-actions)。
 
@@ -162,7 +162,7 @@ on:
 
 第一项是分钟，第二项是小时，第三项是天，第四项是月，第五项是星期几。可使用[crontab](https://crontab.guru/)在线配置想要的时间。
 
-<red>**action中可以运行预定工作流程的最短间隔是每 5 分钟一次**</font>
+<font color="#f00">**action中可以运行预定工作流程的最短间隔是每 5 分钟一次**</font>
 
 完整事件详见[触发工作流程的事件](https://help.github.com/cn/actions/reference/events-that-trigger-workflows#webhook-events)。
 
@@ -324,7 +324,7 @@ steps:
       super_secret: ${{ secrets.YourSecrets }}
 ```
 
-<red>**`secret name`不区别大小写**；</font>
+<font color="#f00">**`secret name`不区别大小写**；</font>
 
 所以如果新建`secret`的的名字是`name`，使用时`secrets.name`或者`secrets.Name`都是ok的；
 
