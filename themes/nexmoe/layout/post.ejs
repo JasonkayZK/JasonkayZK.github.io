@@ -85,69 +85,73 @@
     }
 
     var docName = $("h1").text();
-    // 初始化
-    ajax({
-      url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
-      type: 'post',
-      contentType: 'application/json; charset=utf-8',
-      data: JSON.stringify({
-        "actionId": "get",
-        "docName": docName
-      })
-    }).then(
-      function fulfillHandler(data) {
-        $('#like-count').text(data.likeNum);
-      },
-      function rejectHandler(jqXHR, textStatus, errorThrown) {
-        $('#like-count').text(0);
-        console.log(jqXHR, textStatus, errorThrown);
-      }
-    ).catch(function errorHandler(error) {
-      $('#like-count').text(0);
-      console.log(error);
-    });
-
-    $(document).ready(function () {
-      $(".like-heart").on("click", function () {
-        var heart = $(this);
-        var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
-        var intCount = parseInt(likeCount.html());
-        var rel = heart.attr("rel");
-
-        if (rel === "like") {
-          likeCount.html(intCount + 1);
-          heart.addClass("like-heartAnimation").attr("rel", "unlike");
-          ajax({
-            url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
-            type: 'post',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({
-              "actionId": "add",
-              "docName": docName
-            })
-          }).catch(function errorHandler(error) {
-            console.log(error);
-          });
-        } else {
-          likeCount.html(intCount - 1);
-          heart.removeClass("like-heartAnimation").attr("rel", "like");
-          heart.css("background-position", "left");
-          ajax({
-            url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
-            type: 'post',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({
-              "actionId": "subtract",
-              "docName": docName
-            })
-          }).catch(function errorHandler(error) {
-            console.log(error);
-          });
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
         }
-      }).on("mouseleave", function () {
-        $(this).css("background-position", "");
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
       });
-    });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
   </script>
   <style>
     #like-container {
