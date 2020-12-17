@@ -671,11 +671,11 @@ make
 sudo mv /opt/redis-x.x.x/src /opt/redis-x.x.x/bin
 ```
 
-将src重命名为bin
+将src重命名为bin；
 
 #### 4): 检查编译生成的文件
 
-进入/usr/soft/redis目录，有个bin文件夹，再进，里面有这几个文件就行了:
+进入bin目录，里面有这几个可执行文件就行了:
 
 -   redis-benchmark
 -   redis-check-rdb
@@ -699,7 +699,7 @@ export PATH=$PATH:${REDIS_HOME}/bin
 
 由于之前编译的, 在运行时是默认启动, 即使用的是默认的配置文件, 并不是我们想要的；
 
-1.  在编译的文件夹内除了src目录有一个utils目录，进入里面:
+1.  在编译的文件夹内除了src(后为bin)目录，还有一个utils目录，进入里面:
 
 2.  运行:
 
@@ -718,7 +718,31 @@ export PATH=$PATH:${REDIS_HOME}/bin
     Cli Executable : /opt/redis-x.x.x/bin/redis-cli
     ```
 
-    
+    >   对于在云服务器安装redis，可能会出现报错：
+    >
+    >   ```bash
+    >   This systems seems to use systemd.
+    >   Please take a look at the provided example service unit files in this directory, and adapt and install them. Sorry!
+    >   ```
+    >
+    >   这时，编辑脚本`install_server.sh`：
+    >
+    >   ```bash
+    >   vi ./install_server.sh
+    >   ```
+    >
+    >   注释掉下面几行即可：
+    >
+    >   ```bash
+    >   #bail if this system is managed by systemd
+    >   #_pid_1_exe="$(readlink -f /proc/1/exe)"
+    >   #if [ "${_pid_1_exe##*/}" = systemd ]
+    >   #then
+    >   #       echo "This systems seems to use systemd."
+    >   #       echo "Please take a look at the provided example service unit files in this directory, and adapt and install them. Sorry!"
+    >   #       exit 1
+    >   #fi
+    >   ```
 
 4.  前四个点回车确定就可以了，第五个的时候: 输入安装地址
 
@@ -746,22 +770,23 @@ export PATH=$PATH:${REDIS_HOME}/bin
     daemonize yes
     ```
 
-9.  说明是后台服务了进程获得的ID号，这ID号要保存:
+    说明是后台服务了，并且进程获得的ID号:
 
     ```bash
-    pidfile /var/run/redis_6379.pid
+    /var/run/redis_6379.pid
     ```
 
-10.  默认数据库数量: databases 16
-     这是上面默认的目录: dir /var/lib/redis/6379
+    默认数据库数量: databases 16；
 
-11.  然后启动服务:
+    默认的目录: /var/lib/redis/6379；
 
-     ```bash
-     service redisd start
-     ```
+9.  然后启动服务:
 
-12.  启动成功!
+    ```bash
+    service redisd start
+    ```
+
+10.  启动成功！
 
 >   **注:**
 >
@@ -784,7 +809,85 @@ ss -tanl
 
 显示127.0.0.1:6379，说明启动成功了。
 
+#### 8): 添加密码：
 
+默认Redis是没有密码的，如果暴露在公网相当危险！
+
+>   <font color="#f00">**另外Redis的查询速度是非常快的，外部用户一秒内可以尝试多大150K个密码；**</font>
+>
+>   <font color="#f00">**所以密码要尽量长；**</font>
+
+在配置文件中有个参数：`requirepass`，这个就是配置redis访问密码的参数；
+
+如：`requirepass test123`；
+
+修改配置文件后需要重启：
+
+```bash
+service redisd restart
+```
+
+之后测试：
+
+```bash
+$ redis-cli -p 6379
+> redis 127.0.0.1:6379> auth test123
+> OK
+```
+
+成功！
+
+#### 9): 远程连接配置
+
+在默认情况下Redis是处于安全模式，仅能保证本地连接，如果想要远程连接需要修改配置：
+
+**① 注释掉redis.window.conf文件中的bind属性设置**
+
+将Redis配置中默认的`bind 127.0.0.1`注释：
+
+```bash
+$ vi /etc/redis/6379.conf
+...
+#bind 127.0.0.1
+...
+```
+
+**② 把protected-mode属性设置no**
+
+```bash
+$ vi /etc/redis/6379.conf
+...
+protected-mode no
+...
+```
+
+保存；
+
+>   <font color="#f00">**此时如果Redis配置了密码，则无法使用`service redisd restart`重启，报错：**</font>
+>
+>   ```bash
+>   $ service redisd restart
+>   Stopping ...
+>   (error) NOAUTH Authentication required.
+>   Waiting for Redis to shutdown ...
+>   Waiting for Redis to shutdown ...
+>   ```
+>
+>   此时需要首先登录Redis，使用`shutdown`关闭Redis：
+>
+>   ```bash
+>   $ redis-cli -p 6379
+>   127.0.0.1:6379> auth <password>
+>   OK
+>   127.0.0.1:6379> shutdown # 关闭Redis
+>   not connected> exit
+>   ```
+>
+>   随后再使用`service redisd start`启动Redis！
+
+重启后，即可远程登录！
+
+<br/>
 
 ### Mysql
 
