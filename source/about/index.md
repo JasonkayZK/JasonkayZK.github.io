@@ -633,6 +633,17 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 </div>
 
 <div class="progress-container">
+    <span>TypeScript：</span>
+    <div class="progress progress-striped active">
+        <span class="progress-text">TypeScript：85%</span>
+        <div class="progress-bar" 
+            role="progressbar"
+            style="width: 85%;background-color: #D4BBA7;">
+        </div>
+    </div>
+</div>
+
+<div class="progress-container">
     <span>Bootstrap：</span>
     <div class="progress progress-striped active">
         <span class="progress-text">Bootstrap：35%</span>
