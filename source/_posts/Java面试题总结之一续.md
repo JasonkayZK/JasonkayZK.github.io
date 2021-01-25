@@ -2,7 +2,7 @@
 title: Java面试题总结之一续
 toc: true
 date: 2019-12-25 20:05:30
-cover: https://acg.yanwz.cn/api.php?7
+cover: https://img.paulzzh.tech/touhou/random?7
 categories: 面试总结
 tags: [Java面试]
 description: 这些题是前段时间一位同学在阿里云面试的时候，面试官问到的

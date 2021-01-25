@@ -2,7 +2,7 @@
 title: QuickSort总结
 toc: true
 date: 2020-02-06 11:00:05
-cover: https://acg.yanwz.cn/api.php?21
+cover: https://img.paulzzh.tech/touhou/random?21
 categories: 算法
 tags: [算法, 排序]
 description: 最近总结面试题, 复习了一下面试题, 顺便研究了一下快排的优化

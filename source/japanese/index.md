@@ -2,7 +2,7 @@
 title: 日本語勉強教室
 layout: about
 date: 2020-01-20 10:20:36
-cover: https://acg.yanwz.cn/api.php?0
+cover: https://img.paulzzh.tech/touhou/random?0
 ---
 
 *創造的人生の持ち時間は10年だ。芸術家も設計家も同じだ。君の10年を、力を尽くして生きなさい*

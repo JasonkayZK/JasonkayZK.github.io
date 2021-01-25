@@ -2,7 +2,7 @@
 title: EZShare项目总结-2
 toc: true
 date: 2020-01-22 20:39:16
-cover: https://acg.yanwz.cn/api.php?14
+cover: https://img.paulzzh.tech/touhou/random?14
 categories: 项目总结
 tags: [项目总结]
 description: 本篇在数据库表建立完毕的基础之上, 总结一下EZShare项目的后端技术选型(后续可能会进行修改和添加), 以及后端的一些配置, 最后总结一下Mybatis-Plus提供的代码生成技术

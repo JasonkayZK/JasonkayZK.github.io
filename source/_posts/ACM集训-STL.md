@@ -1,6 +1,6 @@
 ---
 title: ACM集训-STL
-cover: https://acg.yanwz.cn/api.php?17
+cover: https://img.paulzzh.tech/touhou/random?17
 date: 2020-04-03 15:44:30
 categories: ACM
 toc: true

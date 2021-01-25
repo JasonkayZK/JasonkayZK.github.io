@@ -2,7 +2,7 @@
 title: {{ title }}
 date: {{ date }}
 toc: true
-cover: https://acg.yanwz.cn/api.php?x
+cover: https://img.paulzzh.tech/touhou/random?x
 categories: 
 tags: 
 description: 

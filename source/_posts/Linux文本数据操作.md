@@ -1,6 +1,6 @@
 ---
 title: Linux文本数据操作
-cover: https://acg.yanwz.cn/api.php?22
+cover: https://img.paulzzh.tech/touhou/random?22
 date: 2020-04-05 21:58:35
 categories: Linux
 toc: true

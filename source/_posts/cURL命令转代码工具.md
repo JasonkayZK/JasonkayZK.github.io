@@ -1,7 +1,7 @@
 ---
 title: cURL命令转代码工具
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?45'
+cover: 'https://img.paulzzh.tech/touhou/random?45'
 date: 2020-12-07 15:28:10
 categories: 技术杂谈
 tags: [技术杂谈, cURL]

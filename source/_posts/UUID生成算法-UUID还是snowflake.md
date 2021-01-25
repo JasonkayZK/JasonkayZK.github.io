@@ -2,7 +2,7 @@
 title: 'UUID生成算法,UUID还是snowflake'
 toc: true
 date: 2020-02-09 15:51:08
-cover: https://acg.yanwz.cn/api.php?22
+cover: https://img.paulzzh.tech/touhou/random?22
 categories: 分布式
 tags: [分布式, UUID]
 description: UUID是通用唯一识别码（Universally Unique Identifier）的缩写, 其目的是让分布式系统中的所有元素，都能有唯一的辨识资讯，而不需要透过中央控制端来做辨识资讯的指定。如此一来，就不需考虑数据库建立时的名称重复问题. 目前最广泛应用的 UUID，即是微软的 Microsoft's Globally Unique Identifiers (GUIDs)，而其他重要的应用，则有 Linux ext2/ext3 档案系统、LUKS 加密分割区等

@@ -1,6 +1,6 @@
 ---
 title: Linux命令概念
-cover: https://acg.yanwz.cn/api.php?14
+cover: https://img.paulzzh.tech/touhou/random?14
 date: 2020-04-05 10:49:47
 categories: Linux
 toc: true

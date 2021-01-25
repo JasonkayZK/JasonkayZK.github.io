@@ -2,7 +2,7 @@
 title: Java基础总结之三
 toc: true
 date: 2019-11-21 21:40:32
-cover: https://acg.yanwz.cn/api.php?52
+cover: https://img.paulzzh.tech/touhou/random?52
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第三篇

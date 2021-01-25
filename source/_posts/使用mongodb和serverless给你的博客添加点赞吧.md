@@ -1,7 +1,7 @@
 ---
 title: 使用mongodb和serverless给你的博客添加点赞吧
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?13'
+cover: 'https://img.paulzzh.tech/touhou/random?13'
 date: 2020-10-26 19:50:59
 categories: 博客管理
 tags: [博客管理, 博客美化, MongoDB, Serverless, FaaS]

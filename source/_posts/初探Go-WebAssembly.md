@@ -1,7 +1,7 @@
 ---
 title: 初探Go-WebAssembly
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?65'
+cover: 'https://img.paulzzh.tech/touhou/random?65'
 date: 2020-09-23 20:06:47
 categories: Golang
 tags: [Golang, WebAssembly]

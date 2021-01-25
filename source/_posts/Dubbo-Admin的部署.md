@@ -2,7 +2,7 @@
 title: Dubbo-Admin的部署
 toc: true
 date: 2019-12-06 19:02:30
-cover: https://acg.yanwz.cn/api.php?3
+cover: https://img.paulzzh.tech/touhou/random?3
 categories: Dubbo
 tags: [Dubbo]
 description: 本篇讲述了在本地部署官方提供的Dubbo-Admin, 并解决了在打包部署时存在CuratorConnectionLossException异常的问题

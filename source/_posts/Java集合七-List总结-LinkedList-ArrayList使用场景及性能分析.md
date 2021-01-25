@@ -2,7 +2,7 @@
 title: 'Java集合七-List总结(LinkedList, ArrayList使用场景及性能分析)'
 toc: true
 date: 2019-11-27 10:32:56
-cover: https://acg.yanwz.cn/api.php?7
+cover: https://img.paulzzh.tech/touhou/random?7
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 ---

@@ -1,7 +1,7 @@
 ---
 title: 调教Chrome中的小恐龙游戏
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?56'
+cover: 'https://img.paulzzh.tech/touhou/random?56'
 date: 2020-12-07 17:15:15
 categories: 技术杂谈
 tags: [技术杂谈]

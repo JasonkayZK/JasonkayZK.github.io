@@ -2,7 +2,7 @@
 title: 学习进度
 layout: about
 date: 2019-11-20 09:51:10
-cover: 'https://acg.yanwz.cn/api.php?100'
+cover: 'https://img.paulzzh.tech/touhou/random?100'
 toc: true
 ---
 

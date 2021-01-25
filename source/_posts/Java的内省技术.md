@@ -1,6 +1,6 @@
 ---
 title: Java的内省技术
-cover: https://acg.yanwz.cn/api.php?29
+cover: https://img.paulzzh.tech/touhou/random?29
 toc: true
 date: 2020-03-02 13:28:39
 categories: 技术杂谈

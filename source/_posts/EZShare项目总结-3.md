@@ -2,7 +2,7 @@
 title: EZShare项目总结-3
 toc: true
 date: 2020-01-25 13:50:28
-cover: https://acg.yanwz.cn/api.php?21
+cover: https://img.paulzzh.tech/touhou/random?21
 categories: 项目总结
 tags: [项目总结]
 description: 本篇在第二篇的基础之上完成项目配置和Spring-Boot框架之间的整合, 最后通过完成Dict类的相关业务逻辑, 完成配置集成测试

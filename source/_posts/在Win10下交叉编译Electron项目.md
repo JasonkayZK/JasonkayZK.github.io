@@ -1,7 +1,7 @@
 ---
 title: 在Win10下交叉编译Electron项目
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?73'
+cover: 'https://img.paulzzh.tech/touhou/random?73'
 date: 2020-11-08 20:49:52
 categories: Electron
 tags: [Electron, 交叉编译]

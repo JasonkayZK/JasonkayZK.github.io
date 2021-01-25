@@ -1,6 +1,6 @@
 ---
 title: Github个人介绍页美化
-cover: 'https://acg.yanwz.cn/api.php?x'
+cover: 'https://img.paulzzh.tech/touhou/random?x'
 date: 2020-08-28 21:00:38
 categories: [Github]
 tags: [Github, 技术杂谈]

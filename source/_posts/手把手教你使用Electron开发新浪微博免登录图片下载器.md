@@ -1,7 +1,7 @@
 ---
 title: 手把手教你使用Electron开发新浪微博免登录图片下载器
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?66'
+cover: 'https://img.paulzzh.tech/touhou/random?66'
 date: 2020-11-04 11:21:53
 categories: Electron
 tags: [工具分享, Electron, 新浪微博]

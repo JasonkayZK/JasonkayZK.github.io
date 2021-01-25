@@ -2,7 +2,7 @@
 title: 阿里云Redis开发规范
 toc: true
 date: 2019-12-30 12:34:53
-cover: https://acg.yanwz.cn/api.php?11
+cover: https://img.paulzzh.tech/touhou/random?11
 categories: Redis
 tags: [Redis, 开发规范]
 description: 转自阿里云云栖社区的Redis开发规范

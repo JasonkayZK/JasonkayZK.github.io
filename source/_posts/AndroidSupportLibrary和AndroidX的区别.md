@@ -1,7 +1,7 @@
 ---
 title: AndroidSupportLibrary和AndroidX的区别
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?21'
+cover: 'https://img.paulzzh.tech/touhou/random?21'
 date: 2021-01-13 10:00:25
 categories: Android
 tags: [Android]

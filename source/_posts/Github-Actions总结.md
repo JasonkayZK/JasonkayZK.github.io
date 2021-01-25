@@ -1,6 +1,6 @@
 ---
 title: Github Actions总结
-cover: 'https://acg.yanwz.cn/api.php?86'
+cover: 'https://img.paulzzh.tech/touhou/random?86'
 date: 2020-08-28 16:00:13
 categories: [Github]
 tags: [技术杂谈, Github]

@@ -1,6 +1,6 @@
 ---
 title: 'git-cherry-pick教程'
-cover: https://acg.yanwz.cn/api.php?998
+cover: https://img.paulzzh.tech/touhou/random?998
 date: 2020-04-30 15:47:29
 categories: Git
 tags: Git

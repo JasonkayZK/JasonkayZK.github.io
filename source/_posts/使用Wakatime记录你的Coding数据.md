@@ -1,6 +1,6 @@
 ---
 title: 使用Wakatime记录你的Coding数据
-cover: 'https://acg.yanwz.cn/api.php?33'
+cover: 'https://img.paulzzh.tech/touhou/random?33'
 date: 2020-08-28 16:01:03
 categories: 工具分享
 toc: true

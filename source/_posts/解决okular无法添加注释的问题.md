@@ -1,7 +1,7 @@
 ---
 title: 解决okular无法添加注释的问题
 toc: true
-cover: 'https://acg.yanwz.cn/api.php?44'
+cover: 'https://img.paulzzh.tech/touhou/random?44'
 date: 2020-11-10 20:39:18
 categories: 技术杂谈
 tags: [技术杂谈, Okular]
