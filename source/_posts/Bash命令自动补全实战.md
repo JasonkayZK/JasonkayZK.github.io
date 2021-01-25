@@ -1,7 +1,7 @@
 ---
 title: Bash命令自动补全实战
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?123'
+cover: 'https://acg.toubiec.cn/random?123'
 date: 2020-12-07 11:29:21
 categories: Linux
 tags: [Linux, 技术杂谈, Bash]

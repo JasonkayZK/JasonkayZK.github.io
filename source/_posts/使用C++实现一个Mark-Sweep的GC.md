@@ -1,7 +1,7 @@
 ---
 title: 使用C++实现一个Mark-Sweep的GC
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?53'
+cover: 'https://acg.toubiec.cn/random?53'
 date: 2020-12-12 19:50:23
 categories: C++
 tags: [C++, GC]

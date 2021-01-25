@@ -1,7 +1,7 @@
 ---
 title: Typora编辑代码块时的小技巧
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?88'
+cover: 'https://acg.toubiec.cn/random?88'
 date: 2021-01-22 10:31:55
 categories: 技术杂谈
 tags: [技术杂谈, Typora]

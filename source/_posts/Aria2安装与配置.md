@@ -1,6 +1,6 @@
 ---
 title: Aria2安装与配置
-cover: https://img.paulzzh.tech/touhou/random?88
+cover: https://acg.toubiec.cn/random?88
 date: 2020-05-01 13:51:50
 categories: 软件安装与配置
 toc: true

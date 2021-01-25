@@ -2,7 +2,7 @@
 title: Java基础总结之七
 toc: true
 date: 2019-11-25 09:51:03
-cover: https://img.paulzzh.tech/touhou/random?31
+cover: https://acg.toubiec.cn/random?31
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第七篇

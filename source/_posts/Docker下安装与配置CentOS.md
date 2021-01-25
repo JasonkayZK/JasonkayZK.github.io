@@ -1,6 +1,6 @@
 ---
 title: Docker下安装与配置CentOS
-cover: https://img.paulzzh.tech/touhou/random?3
+cover: https://acg.toubiec.cn/random?3
 toc: true
 date: 2020-04-05 09:07:04
 categories: Docker

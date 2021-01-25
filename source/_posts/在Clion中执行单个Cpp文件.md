@@ -1,7 +1,7 @@
 ---
 title: 在Clion中执行单个Cpp文件
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://acg.toubiec.cn/random?3'
 date: 2020-11-15 16:09:26
 categories: C++
 tags: [C++, 技术杂谈, Clion]

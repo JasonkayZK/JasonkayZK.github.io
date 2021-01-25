@@ -1,6 +1,6 @@
 ---
 title: 分享一个IPFS协议索引的电子书搜索引擎
-cover: https://img.paulzzh.tech/touhou/random?43
+cover: https://acg.toubiec.cn/random?43
 toc: true
 date: 2020-02-27 10:27:13
 categories: 工具分享

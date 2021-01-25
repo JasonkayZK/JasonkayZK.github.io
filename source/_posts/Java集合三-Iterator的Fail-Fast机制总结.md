@@ -2,7 +2,7 @@
 title: Java集合三-Iterator的Fail-Fast机制总结
 toc: true
 date: 2019-11-24 16:39:37
-cover: https://img.paulzzh.tech/touhou/random?13
+cover: https://acg.toubiec.cn/random?13
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇以ArrayList为例, 总结了Java中Iterator出现的Fail-Fast(快速失败)机制

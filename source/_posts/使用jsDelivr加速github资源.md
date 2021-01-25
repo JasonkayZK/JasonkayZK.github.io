@@ -1,7 +1,7 @@
 ---
 title: 使用jsDelivr加速github资源
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?323'
+cover: 'https://acg.toubiec.cn/random?323'
 date: 2020-11-20 16:23:09
 categories: 技术杂谈
 tags: [技术杂谈, Github, CDN] 

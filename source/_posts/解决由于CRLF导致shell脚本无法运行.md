@@ -1,6 +1,6 @@
 ---
 title: 解决由于CRLF导致shell脚本无法运行
-cover: https://img.paulzzh.tech/touhou/random?25
+cover: https://acg.toubiec.cn/random?25
 date: 2020-05-10 15:03:09
 categories: 技术杂谈
 tags: [技术杂谈]

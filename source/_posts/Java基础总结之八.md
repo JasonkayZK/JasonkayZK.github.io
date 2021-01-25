@@ -2,7 +2,7 @@
 title: Java基础总结之八
 toc: true
 date: 2019-12-05 14:07:35
-cover: https://img.paulzzh.tech/touhou/random?22
+cover: https://acg.toubiec.cn/random?22
 categories: 面试总结
 tags: [Java基础, XML]
 description: 本文是Java面试总结中Java基础篇的第八篇

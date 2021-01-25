@@ -2,7 +2,7 @@
 title: 文件分享
 date: 2020-09-12 17:03:26
 layout: about
-cover: https://img.paulzzh.tech/touhou/random?88
+cover: https://acg.toubiec.cn/random?88
 ---
 
 <br/>

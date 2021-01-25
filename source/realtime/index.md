@@ -2,7 +2,7 @@
 title: 实时数据统计
 date: 2020-08-29 15:28:33
 layout: about
-cover: https://img.paulzzh.tech/touhou/random?99
+cover: https://acg.toubiec.cn/random?99
 ---
 
 *It takes a strong man to save himself, and a great man to save another.*

@@ -2,7 +2,7 @@
 title: IDEA中设置JVM运行参数
 toc: true
 date: 2019-11-25 10:09:54
-cover: https://img.paulzzh.tech/touhou/random?23
+cover: https://acg.toubiec.cn/random?23
 categories: 软件安装与配置
 description: 对JVM运行参数进行修改是JVM性能调优的重要手段，下面介绍在应用程序开发过程中JVM参数设置的几种方式
 ---

@@ -1,6 +1,6 @@
 ---
 title: 分享-VIP会员账号在线实时获取平台
-cover: https://img.paulzzh.tech/touhou/random?45
+cover: https://acg.toubiec.cn/random?45
 date: 2020-04-16 21:29:57
 categories: 工具分享
 toc: true

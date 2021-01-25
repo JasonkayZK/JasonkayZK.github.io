@@ -1,6 +1,6 @@
 ---
 title: Postman中Tests脚本总结
-cover: https://img.paulzzh.tech/touhou/random?72
+cover: https://acg.toubiec.cn/random?72
 date: 2020-05-22 20:50:15
 categories: [软件测试]
 tags: [软件测试, Postman]

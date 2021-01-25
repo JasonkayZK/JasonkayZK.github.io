@@ -2,7 +2,7 @@
 title: Windows下仿Mac的Dock和ToolBar
 toc: true
 date: 2019-12-30 09:42:39
-cover: https://img.paulzzh.tech/touhou/random?19
+cover: https://acg.toubiec.cn/random?19
 categories: 工具分享
 tags: [工具分享, 软件推荐]
 description: 本次推荐的工具是一个在Windows下仿Mac的Dock和Finder的插件, 使用起来非常方便

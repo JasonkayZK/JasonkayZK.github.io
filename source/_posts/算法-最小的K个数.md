@@ -1,6 +1,6 @@
 ---
 title: '算法:最小的K个数'
-cover: https://img.paulzzh.tech/touhou/random?38
+cover: https://acg.toubiec.cn/random?38
 categories: 算法题目
 date: 1996-07-27 08:00:00
 tags: [算法题目, 数组]

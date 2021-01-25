@@ -2,7 +2,7 @@
 title: 友情链接
 layout: about
 date: 2020-03-11 13:13:00
-cover: https://img.paulzzh.tech/touhou/random?5
+cover: https://acg.toubiec.cn/random?5
 ---
 
 *創造的人生の持ち時間は10年だ。芸術家も設計家も同じだ。君の10年を、力を尽くして生きなさい*

@@ -2,7 +2,7 @@
 title: 解决Mybatis分页插件PageHelper的Interceptor不匹配的问题
 toc: true
 date: 2020-01-16 14:24:39
-cover: https://img.paulzzh.tech/touhou/random?6
+cover: https://acg.toubiec.cn/random?6
 categories: Mybatis
 tags: [Mybatis]
 description: 使用Mybatis的PageHelper插件时候报错java.lang.ClassCastException-com.github.pagehelper.PageHelper cannot be cast to org.apache.ibatis.plugin.Interceptor异常, 网上搜索资料最后解决了问题

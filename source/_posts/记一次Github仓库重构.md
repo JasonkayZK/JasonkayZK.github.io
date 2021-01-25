@@ -1,6 +1,6 @@
 ---
 title: 记一次Github仓库重构
-cover: https://img.paulzzh.tech/touhou/random?7
+cover: https://acg.toubiec.cn/random?7
 toc: true
 date: 2020-03-03 21:56:04
 categories: 程序人生

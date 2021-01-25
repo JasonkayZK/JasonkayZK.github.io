@@ -1,7 +1,7 @@
 ---
 title: 迁移MongoDB官方Atlas集群中数据
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?90'
+cover: 'https://acg.toubiec.cn/random?90'
 date: 2020-12-17 09:26:03
 categories: MongoDB
 tags: [MongoDB]

@@ -1,7 +1,7 @@
 ---
 title: Go实现HTTP断点续传多线程下载
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?7'
+cover: 'https://acg.toubiec.cn/random?7'
 date: 2020-09-28 11:30:47
 categories: Golang
 tags: [Golang, 断点续传, 多线程下载]

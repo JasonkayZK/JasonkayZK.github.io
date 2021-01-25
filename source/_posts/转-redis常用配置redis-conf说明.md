@@ -2,7 +2,7 @@
 title: '[转]redis常用配置redis.conf说明'
 toc: true
 date: 2020-01-17 22:30:29
-cover: https://img.paulzzh.tech/touhou/random?8
+cover: https://acg.toubiec.cn/random?8
 categories: [Redis, 软件安装与配置]
 tags: [Redis, 软件安装与配置]
 description: 本篇总结在redis.conf中常用的配置内容

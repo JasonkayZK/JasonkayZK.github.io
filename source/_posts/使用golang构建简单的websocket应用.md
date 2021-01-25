@@ -1,7 +1,7 @@
 ---
 title: 使用golang构建简单的websocket应用
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?53'
+cover: 'https://acg.toubiec.cn/random?53'
 date: 2020-10-28 15:31:17
 categories: Websocket
 tags: [Golang, Websocket]

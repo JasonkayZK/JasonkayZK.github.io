@@ -1,6 +1,6 @@
 ---
 title: Postman结合Newman做自动化测试
-cover: https://img.paulzzh.tech/touhou/random?62
+cover: https://acg.toubiec.cn/random?62
 date: 2020-05-22 20:52:08
 categories: [软件测试]
 tags: [软件测试, Postman, Newman]

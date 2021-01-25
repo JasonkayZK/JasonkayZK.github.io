@@ -1,6 +1,6 @@
 ---
 title: 解决Express Command Not Found问题
-cover: https://img.paulzzh.tech/touhou/random?56
+cover: https://acg.toubiec.cn/random?56
 date: 2020-04-20 10:43:38
 categories: Node.js
 toc: true
