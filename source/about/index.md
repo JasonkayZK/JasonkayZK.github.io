@@ -27,7 +27,8 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 
 ## **Blog更新历史**
 
-*   **2020-01-18 拆分About页面，添加学习进度页面**
+*   **2021-01-28 博客文章300篇！**
+*   **2021-01-18 拆分About页面，添加学习进度页面**
 *   **2021-01-16 博客UV突破30000、PV突破50000！感谢大家支持🎉🎉🎉**
 *   **2021-01-15 上线创意白板功能** - by https://wbo.ophir.dev/
 *   <font color="#ff0000">**2020-12-19 新增实时数据统计页面(原实时代码页面)，添加博客实时文章热榜**</font>
