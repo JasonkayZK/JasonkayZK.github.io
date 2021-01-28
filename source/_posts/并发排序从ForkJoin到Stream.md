@@ -2,7 +2,7 @@
 title: 并发排序从ForkJoin到Stream
 toc: true
 date: 2020-02-25 17:37:53
-cover: https://acg.toubiec.cn/random?11
+cover: https://img.paulzzh.tech/touhou/random?11
 categories: 并发编程
 tags: [算法, 并发编程]
 description: 在前面"几种常见排序方法的优化(下)"一文中, 我总结了针对归并排序的一些优化方法. 但是即使是优化, 整个排序过程也是建立在单个线程当中的. 而自顶向下的归并排序在将数组拆分之后, 左右两部分是不会被同一个递归栈访问的, 容易想到可以开辟两个线程(递归的)分别进行左右归并排序. 本篇就在此基础之上探讨有关ForkJoin和Stream的一些操作

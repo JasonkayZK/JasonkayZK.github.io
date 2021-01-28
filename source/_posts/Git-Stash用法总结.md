@@ -1,6 +1,6 @@
 ---
 title: Git Stash用法总结
-cover: https://acg.toubiec.cn/random?41
+cover: https://img.paulzzh.tech/touhou/random?41
 date: 2020-05-03 10:57:45
 categories: Git
 tags: [Git]

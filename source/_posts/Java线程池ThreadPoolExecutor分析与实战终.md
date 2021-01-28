@@ -1,6 +1,6 @@
 ---
 title: Java线程池ThreadPoolExecutor分析与实战终
-cover: https://acg.toubiec.cn/random?22
+cover: https://img.paulzzh.tech/touhou/random?22
 toc: true
 date: 2020-03-05 14:13:03
 categories: 并发编程

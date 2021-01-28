@@ -2,7 +2,7 @@
 title: Java集合八-Map架构
 toc: true
 date: 2019-11-27 14:18:28
-cover: https://acg.toubiec.cn/random?12
+cover: https://img.paulzzh.tech/touhou/random?12
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 ---

@@ -2,7 +2,7 @@
 title: Java基础总结之六
 toc: true
 date: 2019-11-22 14:12:59
-cover: https://acg.toubiec.cn/random?3
+cover: https://img.paulzzh.tech/touhou/random?3
 categories: 面试总结
 tags: Java基础
 description: 本文是Java面试总结中Java基础篇的第六篇

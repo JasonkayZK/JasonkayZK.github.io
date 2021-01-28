@@ -1,7 +1,7 @@
 ---
 title: Go创建Goroutine时显式调用时的坑
 toc: true
-cover: 'https://acg.toubiec.cn/random?23'
+cover: 'https://img.paulzzh.tech/touhou/random?23'
 date: 2021-01-21 11:27:42
 categories: Golang
 tags: [Golang, GoRoutine]

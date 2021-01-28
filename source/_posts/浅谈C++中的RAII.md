@@ -1,7 +1,7 @@
 ---
 title: 浅谈C++中的RAII
 toc: true
-cover: 'https://acg.toubiec.cn/random?78'
+cover: 'https://img.paulzzh.tech/touhou/random?78'
 date: 2020-12-13 11:08:44
 categories: C++
 tags: [C++, RAII]

@@ -1,7 +1,7 @@
 ---
 title: '使用Golang建立一个简单的全文搜索引擎'
 toc: true
-cover: 'https://acg.toubiec.cn/random?21'
+cover: 'https://img.paulzzh.tech/touhou/random?21'
 date: 2020-08-31 15:48:14
 categories: [ElasticSearch]
 tags: [ElasticSearch, Golang]

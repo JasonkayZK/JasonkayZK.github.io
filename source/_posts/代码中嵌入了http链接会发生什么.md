@@ -1,7 +1,7 @@
 ---
 title: 代码中嵌入了http链接会发生什么
 toc: true
-cover: 'https://acg.toubiec.cn/random?55'
+cover: 'https://img.paulzzh.tech/touhou/random?55'
 date: 2020-12-07 16:15:44
 categories: 技术杂谈
 tags: [技术杂谈]

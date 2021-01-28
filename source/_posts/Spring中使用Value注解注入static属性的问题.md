@@ -2,7 +2,7 @@
 title: Spring中使用Value注解注入static属性的问题
 toc: true
 date: 2020-01-14 22:06:46
-cover: https://acg.toubiec.cn/random?10
+cover: https://img.paulzzh.tech/touhou/random?10
 categories: Spring
 tags: [Spring]
 description: 今天在写项目的时候使用了@Value注解在static属性上注入了值, 启动项目后一直报NPE, 后来才发现spring中不能直接向static属性注入值

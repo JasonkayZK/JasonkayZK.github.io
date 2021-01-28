@@ -1,7 +1,7 @@
 ---
 title: 对抗SSH恶意访问
 toc: true
-cover: 'https://acg.toubiec.cn/random?99'
+cover: 'https://img.paulzzh.tech/touhou/random?99'
 date: 2020-12-08 10:42:28
 categories: Linux
 tags: [Linux, SSH]

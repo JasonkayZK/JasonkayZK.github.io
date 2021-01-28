@@ -1,7 +1,7 @@
 ---
 title: 使用Go实现一个进度条并发下载器
 toc: true
-cover: 'https://acg.toubiec.cn/random?2'
+cover: 'https://img.paulzzh.tech/touhou/random?2'
 date: 2020-09-30 20:53:04
 categories: Golang
 tags: [Golang, 进度条, 多线程下载]

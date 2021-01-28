@@ -3,7 +3,7 @@
 title: Algorithm
 date: 2020-03-22 10:23:17
 layout: about
-cover: https://acg.toubiec.cn/random?2
+cover: https://img.paulzzh.tech/touhou/random?2
 ---
 
 *「人生とかホントはいきなり事じゃない」* ———— 2020.03.21悟

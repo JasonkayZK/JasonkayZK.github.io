@@ -2,7 +2,7 @@
 title: 软件安装
 toc: true
 date: 2019-09-04 20:28:29
-cover: https://acg.toubiec.cn/random?21
+cover: https://img.paulzzh.tech/touhou/random?21
 layout: about
 ---
 

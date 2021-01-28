@@ -1,6 +1,6 @@
 ---
 title: 负载均衡LVS-三种模型推导
-cover: https://acg.toubiec.cn/random?78
+cover: https://img.paulzzh.tech/touhou/random?78
 date: 2020-04-08 08:43:02
 categories: 分布式
 toc: true

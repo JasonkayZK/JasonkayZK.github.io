@@ -1,6 +1,6 @@
 ---
 title: 在Docker镜像中使用ssh
-cover: https://acg.toubiec.cn/random?86
+cover: https://img.paulzzh.tech/touhou/random?86
 date: 2020-04-06 15:15:01
 categories: Docker
 tags: [Docker]

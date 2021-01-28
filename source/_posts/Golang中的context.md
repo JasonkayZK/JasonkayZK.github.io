@@ -1,7 +1,7 @@
 ---
 title: Golang中的context
 toc: true
-cover: 'https://acg.toubiec.cn/random?58'
+cover: 'https://img.paulzzh.tech/touhou/random?58'
 date: 2020-09-23 19:34:32
 categories: Golang
 tags: [Golang]

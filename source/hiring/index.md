@@ -2,7 +2,7 @@
 title: 简历投递
 layout: about
 toc: true
-cover: https://acg.toubiec.cn/random?1
+cover: https://img.paulzzh.tech/touhou/random?1
 date: 2020-09-26 19:46:49
 ---
 

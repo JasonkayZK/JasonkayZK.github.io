@@ -1,6 +1,6 @@
 ---
 title: 使用Aria2搭建你自己的离线下载服务器
-cover: https://acg.toubiec.cn/random?62
+cover: https://img.paulzzh.tech/touhou/random?62
 date: 2020-05-02 16:14:20
 categories: 服务自建
 toc: true

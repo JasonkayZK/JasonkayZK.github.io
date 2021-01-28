@@ -1,6 +1,6 @@
 ---
 title: 解决由于DNS污染导致的网站无法访问问题
-cover: https://acg.toubiec.cn/random?20
+cover: https://img.paulzzh.tech/touhou/random?20
 date: 2020-04-21 20:00:37
 categories: [技术杂谈]
 toc: true

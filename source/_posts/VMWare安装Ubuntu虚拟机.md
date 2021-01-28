@@ -1,7 +1,7 @@
 ---
 title: VMWare安装Ubuntu虚拟机
 toc: true
-cover: 'https://acg.toubiec.cn/random?23'
+cover: 'https://img.paulzzh.tech/touhou/random?23'
 date: 2020-12-05 21:08:41
 categories: 软件安装与配置
 tags: [软件安装与配置, VMWare, 虚拟机]

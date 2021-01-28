@@ -2,7 +2,7 @@
 title: Dubbo快速上手案例
 toc: true
 date: 2019-12-06 18:23:55
-cover: https://acg.toubiec.cn/random?12
+cover: https://img.paulzzh.tech/touhou/random?12
 categories: Dubbo
 tags: [Dubbo]
 description: 最近开始学习Dubbo框架, 这一篇主要总结了首次使用Dubbo并集成Spring的一个快速上手的例子

@@ -1,7 +1,7 @@
 ---
 title: 使用MongoDB查找最近阅读最多的文章
 toc: true
-cover: 'https://acg.toubiec.cn/random?23'
+cover: 'https://img.paulzzh.tech/touhou/random?23'
 date: 2020-12-19 11:28:08
 categories: MongoDB
 tags: [MongoDB, Node.js, 博客管理]

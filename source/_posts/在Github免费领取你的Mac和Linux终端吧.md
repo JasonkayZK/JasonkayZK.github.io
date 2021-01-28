@@ -1,7 +1,7 @@
 ---
 title: 在Github免费领取你的Mac和Linux终端吧~
 toc: true
-cover: 'https://acg.toubiec.cn/random?45'
+cover: 'https://img.paulzzh.tech/touhou/random?45'
 date: 2020-09-18 19:15:31
 categories: 工具分享
 tags: [工具分享, Github]

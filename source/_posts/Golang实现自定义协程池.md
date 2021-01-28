@@ -1,7 +1,7 @@
 ---
 title: Golang实现自定义协程池
 toc: true
-cover: 'https://acg.toubiec.cn/random?98'
+cover: 'https://img.paulzzh.tech/touhou/random?98'
 date: 2020-09-25 17:34:17
 categories: Golang
 tags: [Golang, 协程池]

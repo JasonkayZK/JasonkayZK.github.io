@@ -2,7 +2,7 @@
 title: Ubuntu下安装日语输入法Mozc
 toc: true
 date: 2020-02-05 20:47:55
-cover: https://acg.toubiec.cn/random?7
+cover: https://img.paulzzh.tech/touhou/random?7
 categories: 软件安装与配置
 tags: [日本語, 软件安装与配置]
 description: 由于个人学习日语的原因, 需要在Ubuntu下安装日语输入法. 所以本篇记录了在Ubuntu下安装日语输入法Mozc的过程

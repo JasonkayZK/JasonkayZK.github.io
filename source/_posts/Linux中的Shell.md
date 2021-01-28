@@ -1,6 +1,6 @@
 ---
 title: Linux中的Shell
-cover: https://acg.toubiec.cn/random?43
+cover: https://img.paulzzh.tech/touhou/random?43
 date: 2020-04-06 19:08:10
 categories: Linux
 tags: [Linux]

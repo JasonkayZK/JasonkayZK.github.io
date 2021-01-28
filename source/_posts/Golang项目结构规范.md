@@ -1,6 +1,6 @@
 ---
 title: 'Golang项目结构规范'
-cover: https://acg.toubiec.cn/random?1
+cover: https://img.paulzzh.tech/touhou/random?1
 date: 2020-05-14 19:39:26
 categories: [Golang]
 tags: [Golang, 开发规范]

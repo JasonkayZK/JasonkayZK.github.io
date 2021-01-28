@@ -2,7 +2,7 @@
 title: 深入剖析Java中的void和java.lang.Void
 toc: true
 date: 2019-12-12 22:41:42
-cover: https://acg.toubiec.cn/random?6
+cover: https://img.paulzzh.tech/touhou/random?6
 categories: Java源码
 tags: [Java源码]
 description: 在Java的源码中, 使用到了很多Void类型(这里不是关键字void, 而是Void类). 本文解析了Java中Void类与void关键字的区别与作用

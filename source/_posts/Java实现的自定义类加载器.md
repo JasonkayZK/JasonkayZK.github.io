@@ -2,7 +2,7 @@
 title: Java实现的自定义类加载器
 toc: true
 date: 2019-12-25 11:12:32
-cover: https://acg.toubiec.cn/random?2
+cover: https://img.paulzzh.tech/touhou/random?2
 categories: Java源码
 tags: [Java基础, 类加载器]
 description: 本文实例讲述了Java实现的自定义类加载器

@@ -1,6 +1,6 @@
 ---
 title: Linux文件系统
-cover: https://acg.toubiec.cn/random?66
+cover: https://img.paulzzh.tech/touhou/random?66
 date: 2020-04-05 17:02:53
 categories: Linux
 toc: true

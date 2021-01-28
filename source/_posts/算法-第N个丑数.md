@@ -1,6 +1,6 @@
 ---
 title: '算法:第N个丑数'
-cover: https://acg.toubiec.cn/random?42
+cover: https://img.paulzzh.tech/touhou/random?42
 categories: 算法题目
 date: 1996-07-27 08:00:00
 toc: true

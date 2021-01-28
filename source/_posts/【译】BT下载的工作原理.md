@@ -1,7 +1,7 @@
 ---
 title: 【译】BT下载的工作原理
 toc: true
-cover: 'https://acg.toubiec.cn/random?74'
+cover: 'https://img.paulzzh.tech/touhou/random?74'
 date: 2020-09-25 22:42:39
 categories: 技术杂谈
 tags: [技术杂谈, BitTorrent]

@@ -1,6 +1,6 @@
 ---
 title: 分享一个在线P2P文件传送网站(支持视频流)
-cover: https://acg.toubiec.cn/random?44
+cover: https://img.paulzzh.tech/touhou/random?44
 toc: true
 date: 2020-02-28 18:54:48
 categories: 工具分享

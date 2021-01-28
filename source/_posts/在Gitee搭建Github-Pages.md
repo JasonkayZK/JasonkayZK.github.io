@@ -1,7 +1,7 @@
 ---
 title: 在Gitee搭建Github Pages
 toc: true
-cover: 'https://acg.toubiec.cn/random?74'
+cover: 'https://img.paulzzh.tech/touhou/random?74'
 date: 2020-09-18 19:10:08
 categories: 工具分享
 tags: [工具分享, 博客管理, Github]

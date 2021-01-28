@@ -1,7 +1,7 @@
 ---
 title: Golang中的进度条使用
 toc: true
-cover: 'https://acg.toubiec.cn/random?88'
+cover: 'https://img.paulzzh.tech/touhou/random?88'
 date: 2020-09-29 23:50:12
 categories: Golang
 tags: [Golang, 进度条, Cli]

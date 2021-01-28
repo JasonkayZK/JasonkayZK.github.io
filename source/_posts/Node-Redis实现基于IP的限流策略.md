@@ -1,7 +1,7 @@
 ---
 title: Node+Redis实现基于IP的限流策略
 toc: true
-cover: 'https://acg.toubiec.cn/random?44'
+cover: 'https://img.paulzzh.tech/touhou/random?44'
 date: 2020-12-17 20:40:36
 categories: Node.js
 tags: [技术杂谈, Node.js, Redis]

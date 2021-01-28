@@ -1,6 +1,6 @@
 ---
 title: '算法:和为S的连续正数序列'
-cover: https://acg.toubiec.cn/random?49
+cover: https://img.paulzzh.tech/touhou/random?49
 categories: 算法题目
 date: 1996-07-27 08:00:00
 tags: [算法题目, 数学]

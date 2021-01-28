@@ -1,7 +1,7 @@
 ---
 title: 解决Android项目下载Gradle速度极慢的问题
 toc: true
-cover: 'https://acg.toubiec.cn/random?2'
+cover: 'https://img.paulzzh.tech/touhou/random?2'
 date: 2021-01-13 10:29:37
 categories: Android
 tags: [Android, Gradle]

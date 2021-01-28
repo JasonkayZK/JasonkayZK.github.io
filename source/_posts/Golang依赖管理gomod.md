@@ -1,6 +1,6 @@
 ---
 title: Golang依赖管理gomod
-cover: https://acg.toubiec.cn/random?92
+cover: https://img.paulzzh.tech/touhou/random?92
 date: 2020-05-10 17:07:14
 categories: Golang
 tags: [Golang, Gomod]

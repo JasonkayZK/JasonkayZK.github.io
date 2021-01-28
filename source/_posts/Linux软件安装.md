@@ -1,6 +1,6 @@
 ---
 title: Linux软件安装
-cover: https://acg.toubiec.cn/random?44
+cover: https://img.paulzzh.tech/touhou/random?44
 date: 2020-04-06 12:27:04
 categories: Linux
 toc: true
