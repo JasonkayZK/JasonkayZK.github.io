@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?44'
 date: 2020-10-01 21:55:24
 categories: 服务自建
-tags: [服务自建, ShadowsocksR]
+tags: [服务自建, Shadowsocks]
 description: 一个自建ShadowsocksR的经历；
 ---
 
