@@ -53,7 +53,7 @@ layout: about
 | [7Zip](#7Zip)                                       | Any                       |  2019-09-04  |                                                              |
 | [Nodejs与npm](#Nodejs与npm)                         | Any                       |  2019-09-04  | 下载、解压缩、配置环境变量、生成软连接、配置cnpm加速；       |
 | [Redis](#Redis)                                     | 5.0.5<br />(编译源码安装) |  2019-09-04  | 下载、解压缩、编译、配置环境变量、安装工具utils、验证；      |
-| [Mysql](#Mysql)                                     | 8.0.x                     |  2019-09-04  | Apt安装、配置用户&密码、权限、开机启动等；                   |
+| [Mysql](#Mysql)                                     | 8.0.x                     |  2021-03-10  | Apt&Yum安装、配置用户&密码、权限、开机启动等；               |
 | [Telnet](#Telnet)                                   | Any                       |  2019-09-04  |                                                              |
 | [VSCode](#VSCode)                                   | Any                       |  2019-09-04  | 安装、插件推荐；                                             |
 | ~~[Flash](#Flash)~~                                 | /                         |  2019-09-04  | 已过时，不推荐安装；                                         |
@@ -917,7 +917,7 @@ tcp6       0      0 [::]:mysql              [::]:*                  LISTEN      
 #### 3): 检测mysql服务状态
 
 ```bash
-~$ systemctl status mysql.service
+~$ systemctl status mysqld.service
 ● mysql.service - MySQL Community Server
    Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: en
    Active: active (running) since Wed 2019-09-04 16:25:24 CST; 17h ago
@@ -957,7 +957,7 @@ Query OK, ....
 
 ​		显示Query OK, 即更新密码成功;
 
-​		其中`root@localhos`，`localhost`就是本地访问，配置成`%`就是所有主机都可连接；
+​		其中`root@localhost`，`localhost`就是本地访问，配置成`%`就是所有主机都可连接；
 
 ​		第二个`'123456'`为你给新增权限用户设置的密码，`%`代表所有主机，也可以是具体的ip;
 
@@ -1008,7 +1008,7 @@ update user set authentication_string=password("ln122920"),plugin='mysql_native_
 然后重启mysql服务:
 
 ```bash
-sudo systemctl restart mysql.service
+sudo systemctl restart mysqld.service
 ```
 
 再次登录即可!
@@ -1111,7 +1111,9 @@ password:
 
 ​		输入密码之后即可登录.
 
-
+>   使用Yum安装MySQL见：
+>
+>   -   [Cenos7.3安装mysql8.0](https://javamana.com/2021/03/20210309224512268n.html)
 
 ### Telnet
 
