@@ -21,6 +21,7 @@ cover: https://img.paulzzh.tech/touhou/random?99
 
 - **实时代码统计：**[Wakatime](https://wakatime.com/)
 - **实时文章热榜：**MongoDB + [Tencent SCF](https://cloud.tencent.com/product/scf)
+- **实时应用热榜：**[ManicTime](https://www.manictime.com/) + [ManicTime Server](https://manictime.uservoice.com/knowledgebase/articles/686154-what-is-manictime-server) + [Tencent SCF](https://cloud.tencent.com/product/scf)
 
 **更多说明：**
 
@@ -30,11 +31,11 @@ cover: https://img.paulzzh.tech/touhou/random?99
 
 ### **实时文章热榜**
 
-<div id="hot-list">
-<table id="hot-list-table" width="100%">
+<div>
+<table id="passage-hot-list" class="hot-list-table" width="100%">
 </table>
 <style>
-    #hot-list-table {
+    .hot-list-table {
         line-height: 3.1;
         text-align: left;
         box-shadow: 0 0 0 2px #EED
@@ -64,7 +65,54 @@ $.get("https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/hot_list/", (r
             str += '<td valign="top" width="20%"><span>' + obj.view_count + '</span></td>';
             str += '</tr>'
         });
-        $("#hot-list-table").append(str);
+        $("#passage-hot-list").append(str);
+    }
+);
+</script>
+
+<br/>
+
+### **实时应用热榜**
+
+<font color="#f00">**实时应用热榜记录了博主最近24H内使用软件时长的排行榜。**</font>
+
+<div>
+<table id="app-hot-list" class="hot-list-table" width="100%">
+</table>
+<style>
+    .hot-list-table {
+        line-height: 3.1;
+        text-align: left;
+        box-shadow: 0 0 0 2px #EED
+    }
+    article table td {
+        border-right: 1px solid #eee;
+        padding: 0px 40px;
+        padding-top: 0px;
+        padding-right: 80px;
+        padding-bottom: 0px;
+        padding-left: 20px;
+    }
+}
+</style>
+</div>
+<script type="text/javascript">
+let query_length = 15;
+let before_timespan = 24;
+$.get("https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/app_hot_list?query_length="+query_length+"&before_timespan="+before_timespan, (res) => {
+        var data = res.data;
+        var str = '';
+        str += '<tr>'
+        str += '<td valign="top" width="70%"><h3><b>应用软件名称</b></h3></td>';
+        str += '<td><h3><b>使用时长/分钟</b></h3></td>';
+        str += '/<tr>'
+        $.each(data, function(i, obj) {
+            str += '<tr>'
+            str += '<td valign="top" width="80%"><h4>' + obj[0] + '</h4></td>';
+            str += '<td valign="top" width="20%"><span>' + obj[1].toFixed(2) + '</span></td>';
+            str += '</tr>'
+        });
+        $("#app-hot-list").append(str);
     }
 );
 </script>
