@@ -3,8 +3,8 @@ title: 使用Go打包二进制React单页面应用
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?77'
 date: 2021-03-28 20:59:08
-categories: Go
-tags: [Go, SPA, React]
+categories: Golang
+tags: [Golang, SPA, React]
 description: Golang在1.16中加入了embed包，可以将文件直接打包为二进制；除此之外，github的开源库rakyll/statik也提供了类似的功能，并且使用起来也很方便；本文使用rakyll/statik库，以一个TODO List应用为例，打包了一个二进制的React SPA应用；
 ---
 
