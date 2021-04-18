@@ -27,6 +27,7 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 
 ## **Blog更新历史**
 
+*   **2021-04-17 增加在线思维导图页面**
 *   **2021-03-30 增加幸运抽页面(测试)**
 *   **2021-03-20 实时数据页面增加实时应用统计热榜**
 *   **2021-03-20 博客PV超过60000！**
