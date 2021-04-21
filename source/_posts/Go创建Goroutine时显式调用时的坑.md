@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?23'
 date: 2021-01-21 11:27:42
 categories: Golang
-tags: [Golang, GoRoutine]
+tags: [Golang, Goroutine]
 description: 在Go中可以直接通过go关键字直接创建一个goroutine并在子goroutine中直接调用函数；但是有时候由于调用的方式不同会存在一些问题；
 ---
 
