@@ -3,8 +3,8 @@ title: Promise中的all、race和any
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?43'
 date: 2021-05-14 11:12:57
-categories: Node
-tags: [Node, Promise]
+categories: Node.js
+tags: [Node.js, Promise]
 description: 为了解决回调地狱问题，在现代JS中加入了Promise；并且Promise包括了all、race和any三个不同的方法；本文分别讲述了这三个方法，以及具体的使用场景；
 ---
 
