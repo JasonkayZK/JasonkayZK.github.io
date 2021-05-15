@@ -8,8 +8,6 @@ tags: [Docker, Docker-Compose, ElasticSearch]
 description: 最近在学习Go中集成ELK，需要搭建至少单节点的ELK服务，就用ElasticSearch官方的镜像和Docker-Compose创建了单节点的ELK；本文讲述了如何使用Docker-Compose部署单节点ELK，使用的版本为7.1.0，当然也适用于其他版本的搭建；
 ---
 
-
-
 最近在学习Go中集成ELK，需要搭建至少单节点的ELK服务，就用ElasticSearch官方的镜像和Docker-Compose创建了单节点的ELK；
 
 本文讲述了如何使用Docker-Compose部署单节点ELK，使用的版本为7.1.0，当然也适用于其他版本的搭建；
@@ -17,6 +15,11 @@ description: 最近在学习Go中集成ELK，需要搭建至少单节点的ELK�
 源代码：
 
 -   https://github.com/JasonkayZK/docker_repo/tree/elk-v7.1-single
+
+系列文章：
+
+-   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
+-   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
 
 <br/>
 
@@ -73,7 +76,7 @@ services:
         volumes:
             - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
         ports:
-            - "4560:4560"
+            - "5044:5044"
         links:
             - elasticsearch
 
@@ -136,7 +139,7 @@ input {
   tcp {
     mode => "server"
     host => "0.0.0.0"
-    port => 4560
+    port => 5044
     codec => json
   }
 }
@@ -329,5 +332,9 @@ curl -XGET "http://127.0.0.1:9200/ik_v2/chinese/3?pretty"
 
 -   https://github.com/JasonkayZK/docker_repo/tree/elk-v7.1-single
 
+系列文章：
+
+-   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
+-   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
 
 <br/>
