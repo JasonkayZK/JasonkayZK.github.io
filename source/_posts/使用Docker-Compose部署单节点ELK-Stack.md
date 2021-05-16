@@ -22,6 +22,7 @@ description: 在上一篇文章《使用Docker-Compose部署单节点ELK》中�
 
 -   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
 -   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
+-   [在Go中集成ELK服务](/2021/05/16/在Go中集成ELK服务/)
 
 <br/>
 
@@ -426,6 +427,7 @@ docker logs -f docker_repo_filebeat_1
 
 -   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
 -   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
+-   [在Go中集成ELK服务](/2021/05/16/在Go中集成ELK服务/)
 
 文章参考：
 

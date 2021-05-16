@@ -20,6 +20,7 @@ description: 最近在学习Go中集成ELK，需要搭建至少单节点的ELK�
 
 -   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
 -   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
+-   [在Go中集成ELK服务](/2021/05/16/在Go中集成ELK服务/)
 
 <br/>
 
@@ -336,5 +337,6 @@ curl -XGET "http://127.0.0.1:9200/ik_v2/chinese/3?pretty"
 
 -   [使用Docker-Compose部署单节点ELK](/2021/05/15/使用Docker-Compose部署单节点ELK/)
 -   [使用Docker-Compose部署单节点ELK-Stack](/2021/05/15/使用Docker-Compose部署单节点ELK-Stack/)
+-   [在Go中集成ELK服务](/2021/05/16/在Go中集成ELK服务/)
 
 <br/>
