@@ -118,7 +118,23 @@ reboot后登录，ping百度等网站，成功则说明配置成功；
 
 ### **下载和配置软件**
 
-可通过yum安装vim、htop、ntp、net-tools等软件；
+配置yum源：
+
+```bash
+# 安装epel库
+yum -y install epel-release
+yum -y update
+
+# 配置阿里云源
+# 备份
+mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+# 配置
+curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+# 生成缓存
+yum makecache
+```
+
+随后，可通过yum安装vim、htop、ntp、net-tools等软件；
 
 配置ntp：
 
@@ -156,7 +172,15 @@ SELINUX=disabled
 ```bash
 $ vim /etc/ssh/sshd_config
 # 修改
-UseDNS on
+UseDNS yes
+```
+
+允许Root身份登录、允许空密码登录、是否允许使用密码认证：
+
+```bash
+PermitRootLogin yes #允许root登录
+PermitEmptyPasswords no #不允许空密码登录
+PasswordAuthentication yes # 设置是否使用口令验证
 ```
 
 >   在制作镜像快照前，如果系统是CentOS6，则还需要删除`/etc/udev/rules.d/70-persistent-net.rules`文件；
