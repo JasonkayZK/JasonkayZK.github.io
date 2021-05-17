@@ -121,10 +121,6 @@ reboot后登录，ping百度等网站，成功则说明配置成功；
 配置yum源：
 
 ```bash
-# 安装epel库
-yum -y install epel-release
-yum -y update
-
 # 配置阿里云源
 # 备份
 mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
@@ -132,6 +128,10 @@ mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
 curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
 # 生成缓存
 yum makecache
+
+# 安装epel库
+yum -y install epel-release
+yum -y update
 ```
 
 随后，可通过yum安装vim、htop、ntp、net-tools等软件；
@@ -167,12 +167,19 @@ $ vim /etc/selinux/config
 SELINUX=disabled
 ```
 
+禁用防火墙firewalld：
+
+```bash
+systemctl stop firewalld
+systemctl disable firewalld
+```
+
 关闭sshd服务的DNS加快SSH登录：
 
 ```bash
 $ vim /etc/ssh/sshd_config
 # 修改
-UseDNS yes
+UseDNS no
 ```
 
 允许Root身份登录、允许空密码登录、是否允许使用密码认证：
