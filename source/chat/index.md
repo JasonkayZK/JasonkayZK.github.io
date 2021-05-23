@@ -22,7 +22,6 @@ layout: false
     <textarea id="content-value" cols="30" rows="10" placeholder="说点什么吧..."></textarea>
     <button onclick="send()">发送</button>
 </div>
-
 <div class="im-content">
     <div class="content" id="content">
         <div class="content-header" id="content-header"><a onclick="showChatHistory()">点击加载更多历史消息</a></div>
@@ -53,20 +52,20 @@ layout: false
     }
     return fmt;
 }
-let uname = sessionStorage.getItem("uname");
-let uuid = sessionStorage.getItem("uuid");
+let uname = localStorage.getItem("uname");
+let uuid = localStorage.getItem("uuid");
 let insertTime = Date.now() * 1000000;
 let messageCount = 20;
 if (isEmpty(uname) || isEmpty(uuid)) {
     uname = prompt('给自己起个响亮的名字吧');
     uuid = createUUID(10);
-    sessionStorage.setItem("uname", uname);
-    sessionStorage.setItem("uuid", uuid);
+    localStorage.setItem("uname", uname);
+    localStorage.setItem("uuid", uuid);
 }
 let ws = undefined;
 if (uname) {
     uname = uname.trim()
-    ws = new WebSocket("ws://159.75.131.252:18008/im");
+    ws = new WebSocket("wss://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443/im");
     system("正在连接服务器...")
     ws.onopen = function () {
         ws.send(JSON.stringify({
@@ -193,7 +192,7 @@ function userListDom(userList) {
 // 获取历史群聊消息
 function showChatHistory() {
     let httpRequest = new XMLHttpRequest();
-    let url = `http://159.75.131.252:18008/chat_history?insert_time=${insertTime}&message_count=${messageCount}`;
+    let url = `https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443?insert_time=${insertTime}&message_count=${messageCount}`;
     httpRequest.open('GET', url, true);
     httpRequest.send();
     httpRequest.onreadystatechange = function () {
