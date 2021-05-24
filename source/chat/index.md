@@ -63,9 +63,12 @@ if (isEmpty(uname) || isEmpty(uuid)) {
     localStorage.setItem("uuid", uuid);
 }
 let ws = undefined;
+let wsUrl = "wss://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443/im";
+let sendFixHeartTimer = null;
+const heartBeatTime = 100000;
 if (uname) {
     uname = uname.trim()
-    ws = new WebSocket("wss://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443/im");
+    ws = new WebSocket(wsUrl);
     system("正在连接服务器...")
     ws.onopen = function () {
         ws.send(JSON.stringify({
@@ -74,6 +77,7 @@ if (uname) {
             "content": "Hello Go WebSocket",
             "username": uname
         }));
+        sendFixHeartBeat();
     };
     ws.onmessage = function (evt) {// 绑定收到消息事件
         console.log("Received Message: " + evt.data);
@@ -89,6 +93,7 @@ if (uname) {
             "username": uname,
             "message_time": new Date().getTime()
         }))
+        clearInterval(sendFixHeartTimer);
     };
 } else {
     system("服务器未连接，请给自己起个名字吧～，<a href=''>点我起名</a>")
@@ -192,7 +197,7 @@ function userListDom(userList) {
 // 获取历史群聊消息
 function showChatHistory() {
     let httpRequest = new XMLHttpRequest();
-    let url = `https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443?insert_time=${insertTime}&message_count=${messageCount}`;
+    let url = `https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com:443/chat_history?insert_time=${insertTime}&message_count=${messageCount}`;
     httpRequest.open('GET', url, true);
     httpRequest.send();
     httpRequest.onreadystatechange = function () {
@@ -242,6 +247,16 @@ function isEmpty(obj) {
 function backToButton() {
     let content = document.getElementById("content");
     content.scrollTop = content.scrollHeight;
+}
+function sendFixHeartBeat() {
+    if (ws !== null) {
+        clearInterval(sendFixHeartTimer);
+        sendFixHeartTimer = setInterval(() => {
+            ws.send(JSON.stringify({
+                "message_type": "ping",
+            }))
+        }, heartBeatTime);
+    }
 }
 </script>
 </body>
