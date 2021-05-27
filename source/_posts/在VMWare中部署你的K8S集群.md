@@ -12,6 +12,11 @@ description: 如果要学Kubernetes的话，怎么能够没有自己的Kubernete
 
 本文从零开始，手把手教你搭建Kubernetes集群！
 
+系列文章：
+
+-   [在VMWare中部署你的K8S集群](/2021/05/16/在VMWare中部署你的K8S集群/)
+-   [CentOS7安装minikube](/2021/05/26/CentOS7安装minikube/)
+
 <br/>
 
 <!--more-->
@@ -932,6 +937,11 @@ Commercial support is available at
 <br/>
 
 ## **附录**
+
+系列文章：
+
+-   [在VMWare中部署你的K8S集群](/2021/05/16/在VMWare中部署你的K8S集群/)
+-   [CentOS7安装minikube](/2021/05/26/CentOS7安装minikube/)
 
 文章参考：
 
