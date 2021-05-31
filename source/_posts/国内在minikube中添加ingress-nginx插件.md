@@ -16,6 +16,11 @@ description: 在使用minikube时，需要打开许多addons；由于国内“�
 
 -   https://github.com/JasonkayZK/kubernetes-learn/tree/book-learn/chapter5/ingress-nginx
 
+系列文章：
+
+-   [《国内在minikube中添加ingress-nginx插件》](/2021/05/30/国内在minikube中添加ingress-nginx插件/)
+-   [《配置Ingress处理TLS传输》](/2021/05/31/配置Ingress处理TLS传输/)
+
 文章参考：
 
 -   [使用ingress-nginx访问k8s内服务](https://www.jianshu.com/p/46dd82cb4d68)
@@ -659,9 +664,13 @@ You've hit kubia-replicaset-l99pk
 
 -   https://github.com/JasonkayZK/kubernetes-learn/tree/book-learn/chapter5/ingress-nginx
 
+系列文章：
+
+-   [《国内在minikube中添加ingress-nginx插件》](/2021/05/30/国内在minikube中添加ingress-nginx插件/)
+-   [《配置Ingress处理TLS传输》](/2021/05/31/配置Ingress处理TLS传输/)
+
 文章参考：
 
 -   [使用ingress-nginx访问k8s内服务](https://www.jianshu.com/p/46dd82cb4d68)
-
 
 <br/>
