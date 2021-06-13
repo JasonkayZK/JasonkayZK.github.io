@@ -19,12 +19,13 @@ cover: https://img.paulzzh.tech/touhou/random?88
 
 **技术支持:** 
 
--   [90网盘](https://www.90pan.com/about.php?action=about)
+-   ~[90网盘](https://www.90pan.com/about.php?action=about)~
+-   [老狗盘](https://www.laogoupan.com/)
 -   [文叔叔](https://www.wenshushu.cn/)
 
 ### 使用说明
 
-由于**90网盘限制单个文件上传150MB，并且限制分块压缩上传(如果好用，会考虑冲会员)**，所以：
+由于**老狗盘限制单个文件上传150MB，并且限制分块压缩上传(如果好用，会考虑冲会员)**，所以：
 
 **对于≥150MB的文件，使用文叔叔分享；**
 
@@ -52,7 +53,7 @@ cover: https://img.paulzzh.tech/touhou/random?88
         style='position:inherit; top:0px; left:0px; width:100%; height:1280px; z-index:999'
         frameborder='no'
         scrolling='true'
-        src="https://www.90pan.com/n52415">
+        src="https://www.laogoupan.com/n15005">
     </iframe>
 </div>
 
