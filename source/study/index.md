@@ -30,6 +30,7 @@ toc: true
 
 | **项目名称**                                                 | **说明**                                                  |
 | :----------------------------------------------------------- | :-------------------------------------------------------- |
+| [rust-learn](https://github.com/JasonkayZK/rust-learn)   | 学习Rust仓库                                            |
 | [kotlin_learn](https://github.com/JasonkayZK/kotlin_learn)   | 学习Kotlin仓库                                            |
 | [android_learn](https://github.com/JasonkayZK/android_learn) | 学习Android仓库                                           |
 | [assembly_learn](https://github.com/JasonkayZK/assembly_learn) | 学习汇编仓库                                              |
@@ -52,6 +53,7 @@ toc: true
 | [Dubbo_Learn](https://github.com/JasonkayZK/Dubbo_Learn)     | 学习Dubbo仓库                                             |
 | [JavaScript_Learn](https://github.com/JasonkayZK/JavaScript_Learn) | 学习JavaScript仓库                                        |
 | [SQL_Learn](https://github.com/JasonkayZK/SQL_Learn)         | 学习SQL仓库<br />《SQL学习指南(第二版)》笔记              |
+| [kubernetes-learn](https://github.com/JasonkayZK/kubernetes-learn)         | 学习Kubernetes仓库              |
 | [Scala_Learn](https://github.com/JasonkayZK/Scala_Learn)     | 学习Scala仓库                                             |
 | [Linux_Shell](https://github.com/JasonkayZK/Linux_Shell)     | 学习Shell仓库                                             |
 | [Python](https://github.com/JasonkayZK/Python)               | 学习Python仓库                                            |
@@ -142,6 +144,17 @@ toc: true
         <div class="progress-bar" 
             role="progressbar"
             style="width: 30%;background-color: #5CB8E5;">
+        </div>
+    </div>
+</div>
+
+<div class="progress-container">
+    <span>Rust：</span>
+    <div class="progress progress-striped active">
+        <span class="progress-text">Rust：20%</span>
+        <div class="progress-bar" 
+            role="progressbar"
+            style="width: 20%;background-color: #F4E2A6;">
         </div>
     </div>
 </div>
@@ -477,12 +490,12 @@ toc: true
 </div>
 
 <div class="progress-container">
-    <span>K8S：</span>
+    <span>Kubernetes：</span>
     <div class="progress progress-striped active">
-        <span class="progress-text">K8S：10%</span>
+        <span class="progress-text">Kubernetes：25%</span>
         <div class="progress-bar" 
             role="progressbar"
-            style="width: 10%;background-color: #FFCC00;">
+            style="width: 25%;background-color: #FFCC00;">
         </div>
     </div>
 </div>
