@@ -10,7 +10,13 @@ description: UUID是通用唯一识别码（Universally Unique Identifier）的�
 
 UUID是通用唯一识别码（Universally Unique Identifier）的缩写, 其目的是让分布式系统中的所有元素，都能有唯一的辨识资讯，而不需要透过中央控制端来做辨识资讯的指定。如此一来，就不需考虑数据库建立时的名称重复问题. 目前最广泛应用的 UUID，即是微软的 Microsoft's Globally Unique Identifiers (GUIDs)，而其他重要的应用，则有 Linux ext2/ext3 档案系统、LUKS 加密分割区等
 
-本篇总结了一些UUID生成算法, 以及一些UUID生成算法的实现
+本篇总结了一些UUID生成算法, 以及一些UUID生成算法的实现；
+
+系列文章：
+
+-   [UUID生成算法-UUID还是snowflake](/2020/02/09/UUID生成算法-UUID还是snowflake/)
+-   [高性能分布式ID生成器实现方法总结](/2021/06/20/高性能分布式ID生成器实现方法总结/)
+-   [在Go中仅使用MySQL实现高性能分布式ID生成器](/2021/06/20/在Go中仅使用MySQL实现高性能分布式ID生成器/)
 
 <br/>
 
@@ -240,9 +246,14 @@ UUID性能比较: [使用java9的uuid生成方式，让uuid生成速度提升一
 
 ### 附录
 
+系列文章：
+
+-   [UUID生成算法-UUID还是snowflake](/2020/02/09/UUID生成算法-UUID还是snowflake/)
+-   [高性能分布式ID生成器实现方法总结](/2021/06/20/高性能分布式ID生成器实现方法总结/)
+-   [在Go中仅使用MySQL实现高性能分布式ID生成器](/2021/06/20/在Go中仅使用MySQL实现高性能分布式ID生成器/)
+
 参考文章:
 
 -   [UUID百度百科](https://baike.baidu.com/item/UUID/5921266?fr=aladdin#2)
 -   [使用java9的uuid生成方式，让uuid生成速度提升一个档次](https://blog.csdn.net/weixin_33919941/article/details/89545209)
 -   [UUID介绍与生成方法](https://blog.csdn.net/nawenqiang/article/details/82684001)
--   

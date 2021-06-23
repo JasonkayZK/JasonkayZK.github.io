@@ -8,8 +8,6 @@ tags: [PostgreSQL, PipelineDB, 流式数据库]
 description: 在大数据时代，像是Spark、Flink这些大数据分析工具都提供了相应的流式分析解决方案；对于像是MySQL这种传统的关系型数据库是否能够实现流式分析呢？当然！PipelineDB就是这么一个基于PostgreSQL实现的流式数据库，并且PipelineDB已经成为了PostgreSQL中的一个插件，我们可以在PostgreSQL中安装并直接使用！本文就来讲述实时流数据库PipelineDB，并带你推开流式数据分析的大门；
 ---
 
-
-
 在大数据时代，像是Spark、Flink这些大数据分析工具都提供了相应的流式分析解决方案；对于像是MySQL这种传统的关系型数据库是否能够实现流式分析呢？
 
 当然！PipelineDB就是这么一个基于PostgreSQL实现的流式数据库，并且PipelineDB已经成为了PostgreSQL中的一个插件，我们可以在PostgreSQL中安装并直接使用！
