@@ -3,7 +3,7 @@ title: 两行Nginx代码获取访问者的公网IP
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?33'
 date: 2020-11-13 10:38:44
-categories: 技术杂谈
+categories: Nginx
 tags: [Nginx, 技术杂谈]
 description: 今天在RSS上看到的内容，无需配置后台，利用Nginx即可返回访问者的公网IP地址；感觉挺实用的，就翻译了一下；
 ---
