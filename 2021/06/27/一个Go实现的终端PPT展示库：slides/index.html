@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>一个Go实现的终端PPT展示库：slides - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="slides是一个可以在终端将Markdown转换为PPT的库，你甚至可以直接在终端展示PPT的同时执行PPT中的代码片段！">
+<meta name="keywords" content="技术杂谈,Golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个Go实现的终端PPT展示库：slides">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/06/27/一个Go实现的终端PPT展示库：slides/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="slides是一个可以在终端将Markdown转换为PPT的库，你甚至可以直接在终端展示PPT的同时执行PPT中的代码片段！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-07-03T15:36:24.115Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个Go实现的终端PPT展示库：slides">
+<meta name="twitter:description" content="slides是一个可以在终端将Markdown转换为PPT的库，你甚至可以直接在终端展示PPT的同时执行PPT中的代码片段！">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1625326619128">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1NWK4EEKDF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>361</div>
+        <div><span>标签</span>204</div>
+        <div><span>分类</span>50</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/sharing/" title="文件分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                文件分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/hiring/" title="简历投递">
+            <i class="mdui-list-item-icon nexmoefont icon-mail-fill"></i>
+            <div class="mdui-list-item-content">
+                简历投递
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/lucky/" title="幸运抽">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                幸运抽
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/love/" title="♥Love♥">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                ♥Love♥
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:271226192@qq.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/Android/" style="font-size: 10.95px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.95px;">Aria2</a> <a href="/tags/BFS/" style="font-size: 10.48px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.48px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/C/" style="font-size: 11.9px;">C++</a> <a href="/tags/CDN/" style="font-size: 10.48px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CentOS/" style="font-size: 11.9px;">CentOS</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10px;">Cli</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/DFS/" style="font-size: 10.48px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.48px;">DLL</a> <a href="/tags/Docker/" style="font-size: 17.62px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.48px;">Docker-Compose</a> <a href="/tags/Dubbo/" style="font-size: 10.48px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.33px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.48px;">Electron</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.48px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 12.86px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.29px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 19.05px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.48px;">Goroutine</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.48px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.48px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.48px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 18.1px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.38px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.43px;">Java面试</a> <a href="/tags/Kubernates/" style="font-size: 10px;">Kubernates</a> <a href="/tags/Kubernetes/" style="font-size: 11.43px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.95px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.95px;">Lambda表达式</a> <a href="/tags/Linux/" style="font-size: 17.14px;">Linux</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 11.9px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.9px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 12.38px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.95px;">Mybatis</a> <a href="/tags/NIO/" style="font-size: 10.95px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 11.9px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.43px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.48px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.48px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.48px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.48px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redis/" style="font-size: 12.38px;">Redis</a> <a href="/tags/Rust/" style="font-size: 10px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.48px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.95px;">Shadowsocks</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.43px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/Tomcat/" style="font-size: 10.48px;">Tomcat</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/VMWare/" style="font-size: 11.9px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.95px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.48px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/minikube/" style="font-size: 10.48px;">minikube</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 16.67px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.48px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.48px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.71px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.43px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.86px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.9px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.48px;">双指针</a> <a href="/tags/反射/" style="font-size: 11.43px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.48px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.48px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.48px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.48px;">多线程下载</a> <a href="/tags/字符串/" style="font-size: 13.33px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.48px;">学习案例</a> <a href="/tags/工具分享/" style="font-size: 18.57px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 16.19px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.48px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 19.52px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.9px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.95px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.86px;">数学</a> <a href="/tags/数据库/" style="font-size: 10px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.81px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日本語/" style="font-size: 11.43px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.48px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.95px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.95px;">查找</a> <a href="/tags/栈/" style="font-size: 10.95px;">栈</a> <a href="/tags/正则表达式/" style="font-size: 10.95px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/流式数据库/" style="font-size: 10px;">流式数据库</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/程序人生/" style="font-size: 17.62px;">程序人生</a> <a href="/tags/算法/" style="font-size: 11.9px;">算法</a> <a href="/tags/算法题目/" style="font-size: 20px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.48px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.95px;">线程池</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.48px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/负载均衡/" style="font-size: 12.38px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/软件安装与配置/" style="font-size: 16.19px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15.24px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.48px;">软件测试</a> <a href="/tags/进度条/" style="font-size: 10.48px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.48px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.81px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.76px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15.71px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.95px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.95px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.43px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">17</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">38</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/07/03/深圳，搬家，杂乱/">深圳，搬家，杂乱</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/28/一文看懂Go方法中的值接收器和引用接收器/">一文看懂Go方法中的值接收器和引用接收器</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/27/一个Go实现的终端PPT展示库：slides/">一个Go实现的终端PPT展示库：slides</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/27/软件发布版本Alpha、Beta、GA、RC等含义总结/">软件发布版本Alpha、Beta、GA、RC等含义总结</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/26/Linux中的chroot命令/">Linux中的chroot命令</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2021 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.tech/touhou/random?44">
+    
+    <h1>一个Go实现的终端PPT展示库：slides</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年06月27日</a>
+    <a><i class="nexmoefont icon-areachart"></i>687 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 3 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/技术杂谈/">技术杂谈</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一个Go实现的终端PPT展示库：slides"><span class="toc-text">一个Go实现的终端PPT展示库：slides</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#基本使用"><span class="toc-text">基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建PPT-Markdown-文件"><span class="toc-text">创建PPT(Markdown)文件</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#①-分页"><span class="toc-text">① 分页</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#②-处理PPT文件"><span class="toc-text">② 处理PPT文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#③-PPT翻页"><span class="toc-text">③ PPT翻页</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#④-执行代码块"><span class="toc-text">④ 执行代码块</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#⑤-切换主题"><span class="toc-text">⑤ 切换主题</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>slides是一个可以在终端将Markdown转换为PPT的库，你甚至可以直接在终端展示PPT的同时执行PPT中的代码片段！</p>
+<p>Github地址：</p>
+<ul>
+<li><a href="https://github.com/maaslalani/slides" target="_blank" rel="noopener">https://github.com/maaslalani/slides</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一个Go实现的终端PPT展示库：slides"><a href="#一个Go实现的终端PPT展示库：slides" class="headerlink" title="一个Go实现的终端PPT展示库：slides"></a><strong>一个Go实现的终端PPT展示库：slides</strong></h2><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a><strong>安装</strong></h3><p>本质上slides就是一个二进制工具，直接下载官方Release的二进制，放在PATH下即可；</p>
+<p>当然也可以自己Clone源代码，然后自己编译并加入PATH中；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注：由于项目使用到了Golang 1.16的特性：<code>embed</code>，所以自行编译需要Go的版本至少为1.16！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a><strong>基本使用</strong></h3><h4 id="创建PPT-Markdown-文件"><a href="#创建PPT-Markdown-文件" class="headerlink" title="创建PPT(Markdown)文件"></a><strong>创建PPT(Markdown)文件</strong></h4><p>任意一个Markdown文件都可以被作为一个<code>PPT</code>；</p>
+<h5 id="①-分页"><a href="#①-分页" class="headerlink" title="① 分页"></a><strong>① 分页</strong></h5><p><strong>PPT各页之间通过<code>---</code>来划分；</strong></p>
+<p>如下面的的文件会被划分为三页：</p>
+<p>pages.md</p>
+<pre><code class="markdown"># First Page
+first page
+
+---
+
+# Second Page
+second page
+
+---
+
+# Third Page
+third page</code></pre>
+<br>
+
+<h5 id="②-处理PPT文件"><a href="#②-处理PPT文件" class="headerlink" title="② 处理PPT文件"></a><strong>② 处理PPT文件</strong></h5><p>只需将Markdown格式的文件作为<code>slides</code>程序的参数即可展示PPT，如：</p>
+<pre><code class="bash">$ slides pages.md</code></pre>
+<p>当然你也可以使用管道将一个输入流传递给slides，如：</p>
+<pre><code class="bash">$ curl http://example.com/slides.md | slides</code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>注：当你向<code>slides</code>命令传递一个Markdown文件时，他会跟踪并实时渲染这个文件的变化！</strong></font></p>
+</blockquote>
+<br>
+
+<h5 id="③-PPT翻页"><a href="#③-PPT翻页" class="headerlink" title="③ PPT翻页"></a><strong>③ PPT翻页</strong></h5><p>下一页：</p>
+<ul>
+<li>space</li>
+<li>right</li>
+<li>down</li>
+<li>enter</li>
+<li>n</li>
+<li>k</li>
+<li>l</li>
+</ul>
+<p>上一页：</p>
+<ul>
+<li>left</li>
+<li>up</li>
+<li>p</li>
+<li>h</li>
+<li>j</li>
+</ul>
+<br>
+
+<h5 id="④-执行代码块"><a href="#④-执行代码块" class="headerlink" title="④ 执行代码块"></a><strong>④ 执行代码块</strong></h5><p>可以使用<code>ctrl+e</code>来执行目前所展示的这段PPT中的代码段；</p>
+<p>例如，下面是官方提供的一个例子：</p>
+<pre><code class="markdown"># Code blocks
+
+Slides allows you to execute code blocks directly inside your slides!
+
+Just press `ctrl+e` and the result of the code block will be displayed as virtual
+text in your slides.
+
+Currently supported languages:
+* `bash`
+* `go`
+* `ruby`
+* `python`
+* `elixir`
+
+---
+
+### Bash
+
+​```bash
+ls
+​```
+
+---
+
+### Go
+
+​```go
+package main
+
+import &quot;fmt&quot;
+
+func main() {
+  fmt.Println(&quot;Hello, world!&quot;)
+}
+​```
+
+---
+
+### Python
+
+​```python
+print(&quot;Hello, world!&quot;)
+​```</code></pre>
+<p>下面是一些执行后结果：</p>
+<pre><code>
+   ▒▒▒▒ Bash     
+
+     ls          
+
+ ascii_slides.md 
+ code_blocks.md  
+ preprocess.md   
+ slides.md       
+ temp.md  </code></pre><p>Go的结果：</p>
+<pre><code class="go">
+   ▒▒▒▒ Go                          
+
+     package main                   
+
+     import &quot;fmt&quot;                   
+
+     func main() {                  
+       fmt.Println(&quot;Hello, world!&quot;) 
+     }                              
+
+ Hello, world!                      </code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>当然，这段代码的执行还是依赖于你本机中的环境！</strong></font></p>
+<p>  <font color="#f00"><strong>如果你本机并没有Python，它是不可能执行的！</strong></font></p>
+</blockquote>
+<p>个人比较推荐使用一些脚本语言进行展示，但是比较遗憾的是，目前还不支持Node.js；</p>
+<p>博主也是提出了一个Issue：</p>
+<ul>
+<li><a href="https://github.com/maaslalani/slides/issues/57" target="_blank" rel="noopener">feature：Code execution with Node.</a></li>
+</ul>
+<br>
+
+<h5 id="⑤-切换主题"><a href="#⑤-切换主题" class="headerlink" title="⑤ 切换主题"></a><strong>⑤ 切换主题</strong></h5><p>主题的切换可以非常的简单，只需要在Markdown文件的顶部声明你的主题的样式即可：</p>
+<pre><code class="markdown">---
+theme: ./path/to/theme.json
+---</code></pre>
+<p>当然，官方也是已经提供了一个颜值很高的主题了：</p>
+<ul>
+<li><a href="https://github.com/maaslalani/slides/tree/main/styles/theme.json" target="_blank" rel="noopener">https://github.com/maaslalani/slides/tree/main/styles/theme.json</a></li>
+</ul>
+<br>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h3><p>除了可以直接执行代码以外，slides还有其他很多比较有趣的功能，比如：表格展示、流程图等等；</p>
+<p>大家不妨可以去体验一下！</p>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h2><p>Github地址：</p>
+<ul>
+<li><a href="https://github.com/maaslalani/slides" target="_blank" rel="noopener">https://github.com/maaslalani/slides</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/06/27/一个Go实现的终端PPT展示库：slides/" title="https://jasonkayzk.github.io/2021/06/27/一个Go实现的终端PPT展示库：slides/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/06/27/一个Go实现的终端PPT展示库：slides/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $("h1").text();
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="valine"></div>
+<!--载入js，在</body>之前插入即可-->
+<script src="https://cdn.jsdelivr.net/npm/valine@1.3.9/dist/Valine.min.js"></script>
+<!--Leancloud 操作库:-->
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<!-- 修改评论区的边界 -->
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+
+</style>
+<script>
+    new Valine({
+        av: AV,
+        el: '.valine',
+        appId: 'Ak9ceXVMoxs53V6ClY9mtxaC-gzGzoHsz',
+        appKey: 'R3dlvrMMwjNhbpBvABQdM3Tm',
+        placeholder: 'ヾﾉ≧∀≦)o来啊，快活啊!',
+        pageSize: '10',
+        avatar: 'mp',
+        visitor: 'true',
+        notify: 'true', 
+        verify: 'true'
+    })
+</script>
+
+
+
+<!-- <script>
+  // 使用方法 https://valine.js.org/quickstart.html
+  var notify = 'true' == true ? true : false;
+  var verify = 'true' == true ? true : false;
+  new Valine({
+      // AV 对象来自上面引入av-min.js(老司机们不要开车➳♡゛扎心了老铁)
+      
+      el: '.valine_thread',
+      app_id: '',
+      app_key: '',
+
+    });
+</script> -->
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1625326619265"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/xtaodada/xtaodada.github.io@0.0.2/copy.js"></script>
+
+
+
+  
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    Notification.create(
+      // Title
+      "Tencent&字节内推中📧",
+      // Text
+      "简历投递处：<BR/><a href='https://jasonkayzk.github.io/hiring/'>简历投递</a>",
+      // Illustration
+      "/images/avatar4.jpg",
+      // Effect
+      'fadeInRight',
+      // Position 1, 2, 3, 4
+      position,
+      closeTime
+    );
+    setTimeout(() => {
+      Notification.create(
+        "资源下载⚡",
+        "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 1050);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

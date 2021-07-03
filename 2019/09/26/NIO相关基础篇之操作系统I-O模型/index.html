@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>NIO相关基础篇之操作系统I/O模型 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型、零拷贝等一些内容.">
+<meta name="keywords" content="操作系统,NIO,IO模型">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NIO相关基础篇之操作系统I&#x2F;O模型">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/26/NIO相关基础篇之操作系统I-O模型/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型、零拷贝等一些内容.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/kernel_space.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/linux_structure.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/io_buffer.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/blockingIO.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/nonblockingIO.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/io_multiplexing.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/signalDriverIO.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/AIO.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fiveIO_conpare.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fiveIO_conpare2.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/normal_nonzerocopy.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/normal_nonzerocopy_timesequence.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy1.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy2.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence2.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence3.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy3.png">
+<meta property="og:updated_time" content="2021-07-03T15:36:24.107Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="NIO相关基础篇之操作系统I&#x2F;O模型">
+<meta name="twitter:description" content="本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型、零拷贝等一些内容.">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/kernel_space.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1625326657027">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1NWK4EEKDF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>361</div>
+        <div><span>标签</span>204</div>
+        <div><span>分类</span>50</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/sharing/" title="文件分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                文件分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/hiring/" title="简历投递">
+            <i class="mdui-list-item-icon nexmoefont icon-mail-fill"></i>
+            <div class="mdui-list-item-content">
+                简历投递
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/lucky/" title="幸运抽">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                幸运抽
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/love/" title="♥Love♥">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                ♥Love♥
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:271226192@qq.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/Android/" style="font-size: 10.95px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.95px;">Aria2</a> <a href="/tags/BFS/" style="font-size: 10.48px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.48px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/C/" style="font-size: 11.9px;">C++</a> <a href="/tags/CDN/" style="font-size: 10.48px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CentOS/" style="font-size: 11.9px;">CentOS</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10px;">Cli</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/DFS/" style="font-size: 10.48px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.48px;">DLL</a> <a href="/tags/Docker/" style="font-size: 17.62px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.48px;">Docker-Compose</a> <a href="/tags/Dubbo/" style="font-size: 10.48px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.33px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.48px;">Electron</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.48px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 12.86px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.29px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 19.05px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.48px;">Goroutine</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.48px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.48px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.48px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 18.1px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.38px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.43px;">Java面试</a> <a href="/tags/Kubernates/" style="font-size: 10px;">Kubernates</a> <a href="/tags/Kubernetes/" style="font-size: 11.43px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.95px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.95px;">Lambda表达式</a> <a href="/tags/Linux/" style="font-size: 17.14px;">Linux</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 11.9px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.9px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 12.38px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.95px;">Mybatis</a> <a href="/tags/NIO/" style="font-size: 10.95px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 11.9px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.43px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.48px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.48px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.48px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.48px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redis/" style="font-size: 12.38px;">Redis</a> <a href="/tags/Rust/" style="font-size: 10px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.48px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.95px;">Shadowsocks</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.43px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/Tomcat/" style="font-size: 10.48px;">Tomcat</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/VMWare/" style="font-size: 11.9px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.95px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.48px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/minikube/" style="font-size: 10.48px;">minikube</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 16.67px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.48px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.48px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.71px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.43px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.86px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.9px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.48px;">双指针</a> <a href="/tags/反射/" style="font-size: 11.43px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.48px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.48px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.48px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.48px;">多线程下载</a> <a href="/tags/字符串/" style="font-size: 13.33px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.48px;">学习案例</a> <a href="/tags/工具分享/" style="font-size: 18.57px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 16.19px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.48px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 19.52px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.9px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.95px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.86px;">数学</a> <a href="/tags/数据库/" style="font-size: 10px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.81px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日本語/" style="font-size: 11.43px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.48px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.95px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.95px;">查找</a> <a href="/tags/栈/" style="font-size: 10.95px;">栈</a> <a href="/tags/正则表达式/" style="font-size: 10.95px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/流式数据库/" style="font-size: 10px;">流式数据库</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/程序人生/" style="font-size: 17.62px;">程序人生</a> <a href="/tags/算法/" style="font-size: 11.9px;">算法</a> <a href="/tags/算法题目/" style="font-size: 20px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.48px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.95px;">线程池</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.48px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/负载均衡/" style="font-size: 12.38px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/软件安装与配置/" style="font-size: 16.19px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15.24px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.48px;">软件测试</a> <a href="/tags/进度条/" style="font-size: 10.48px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.48px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.81px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.76px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15.71px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.95px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.95px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.43px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">17</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">38</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/07/03/深圳，搬家，杂乱/">深圳，搬家，杂乱</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/28/一文看懂Go方法中的值接收器和引用接收器/">一文看懂Go方法中的值接收器和引用接收器</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/27/一个Go实现的终端PPT展示库：slides/">一个Go实现的终端PPT展示库：slides</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/27/软件发布版本Alpha、Beta、GA、RC等含义总结/">软件发布版本Alpha、Beta、GA、RC等含义总结</a>
+          </li>
+        
+          <li>
+            <a href="/2021/06/26/Linux中的chroot命令/">Linux中的chroot命令</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2021 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=1660559555,3010069585&fm=26&gp=0.jpg">
+    
+    <h1>NIO相关基础篇之操作系统I/O模型</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月26日</a>
+    <a><i class="nexmoefont icon-areachart"></i>5.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 25 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/IO基础/">IO基础</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/IO模型/">IO模型</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/NIO/">NIO</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/操作系统/">操作系统</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#NIO相关基础篇之操作系统I-O模型"><span class="toc-text">NIO相关基础篇之操作系统I/O模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-用户空间以及内核空间概念"><span class="toc-text">一. 用户空间以及内核空间概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-Linux-网络-I-O模型-五种"><span class="toc-text">二. Linux 网络 I/O模型(五种)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-阻塞I-O-Blocking-I-O"><span class="toc-text">1. 阻塞I/O (Blocking I/O)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-非阻塞I-O-Non-Blocking-I-O"><span class="toc-text">2. 非阻塞I/O (Non-Blocking I/O)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-I-O复用（I-O-Multiplexing"><span class="toc-text">3. I/O复用（I/O Multiplexing)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-文件描述符fd"><span class="toc-text">4. 文件描述符fd</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-Linux内核中的一些命令"><span class="toc-text">5. Linux内核中的一些命令</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#select"><span class="toc-text">select</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#poll"><span class="toc-text">poll</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#epoll"><span class="toc-text">epoll</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-信号驱动的I-O-Signal-Driven-I-O"><span class="toc-text">6. 信号驱动的I/O (Signal Driven I/O)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-异步I-O"><span class="toc-text">7. 异步I/O</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-五种I-O模型的对比"><span class="toc-text">三. 五种I/O模型的对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-Zero-Copy-零拷贝"><span class="toc-text">四. Zero-Copy(零拷贝)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-为什么需要零拷贝"><span class="toc-text">1. 为什么需要零拷贝</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-零拷贝详述"><span class="toc-text">2. 零拷贝详述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-零拷贝进阶"><span class="toc-text">3. 零拷贝进阶</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-直接内存"><span class="toc-text">五. 直接内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#六-Selector空轮询处理"><span class="toc-text">六. Selector空轮询处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#六-总结"><span class="toc-text">六. 总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>本篇继上篇之后, 继续NIO相关话题内容，主要谈谈一些Linux 网络 I/O模型下与NIO相关的知识, 主要包括:</p>
+<ul>
+<li>用户空间以及内核空间: </li>
+<li>Linux 网络 I/O模型: Blocking I/O, Non-Blocking I/O, I/O Multiplexing, Signal Driven I/O, Asynchronous I/O</li>
+<li>五种I/O模型对比</li>
+<li>文件描述符fd以及Linux内核命令: select, poll, epoll等</li>
+<li>Zero-Copy相关;</li>
+<li>直接内存</li>
+<li>Selector空轮询在Netty中的处理: </li>
+<li>……</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="NIO相关基础篇之操作系统I-O模型"><a href="#NIO相关基础篇之操作系统I-O模型" class="headerlink" title="NIO相关基础篇之操作系统I/O模型"></a>NIO相关基础篇之操作系统I/O模型</h2><h3 id="一-用户空间以及内核空间概念"><a href="#一-用户空间以及内核空间概念" class="headerlink" title="一. 用户空间以及内核空间概念"></a>一. 用户空间以及内核空间概念</h3><p>我们知道现在操作系统都是采用虚拟存储器，那么对32位操作系统而言，它的寻址空间（虚拟存储空间）为4G（2的32次方）。操心系统的核心是内核，独立于普通的应用程序，可以访问受保护的内存空间，也有访问底层硬件设备的所有权限。<font color="#0000ff">为了保证用户进程不能直接操作内核，保证内核的安全，操心系统将虚拟空间划分为两部分，一部分为内核空间，一部分为用户空间。</font></p>
+<p>针对linux操作系统而言，将最高的1G字节（从虚拟地址0xC0000000到0xFFFFFFFF），供内核使用，称为内核空间，而将较低的3G字节（从虚拟地址0x00000000到0xBFFFFFFF），供各个进程使用，称为用户空间。每个进程可以通过系统调用进入内核，因此，Linux内核由系统内的所有进程共享。于是，从具体进程的角度来看，每个进程可以拥有4G字节的虚拟空间。</p>
+<p>空间分配如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/kernel_space.png" alt="kernel_space"></p>
+<br>
+
+<p>有了用户空间和内核空间，<font color="#ff0000">整个linux内部结构可以分为三部分，从最底层到最上层依次是：硬件–&gt;内核空间–&gt;用户空间。</font></p>
+<p>如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/linux_structure.png" alt="linux_structure"></p>
+<br>
+
+<p><strong>需要注意的细节问题，从上图可以看出内核的组成:</strong></p>
+<blockquote>
+<ol>
+<li><font color="#ff0000">内核空间中存放的是内核代码和数据，而进程的用户空间中存放的是用户程序的代码和数据。不管是内核空间还是用户空间，它们都处于虚拟空间中</font></li>
+<li>Linux使用两级保护机制：0级供内核使用，3级供用户程序使用。</li>
+</ol>
+</blockquote>
+<br>
+
+<hr>
+<h3 id="二-Linux-网络-I-O模型-五种"><a href="#二-Linux-网络-I-O模型-五种" class="headerlink" title="二. Linux 网络 I/O模型(五种)"></a>二. Linux 网络 I/O模型(五种)</h3><p>我们都知道，为了OS的安全性等的考虑，<font color="#ff0000">进程是无法直接操作I/O设备的，其<em>必须通过</em>系统调用请求内核来协助完成I/O动作，而内核会为每个I/O设备维护一个buffer</font></p>
+<p>如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/io_buffer.png" alt="io_buffer"></p>
+<p><font color="#ff0000">整个请求过程为： 用户进程发起请求，内核接受到请求后，从I/O设备中获取数据到buffer中，再将buffer中的数据copy到用户进程的地址空间，该用户进程获取到数据后再响应客户端</font></p>
+<p><font color="#ff0000">在整个请求过程中，数据输入至buffer需要时间，而从buffer复制数据至进程也需要时间</font></p>
+<p>因此<font color="#0000ff">根据在这两段时间内等待方式的不同</font>，I/O动作可以分为以下<strong>五种模式</strong>：</p>
+<ul>
+<li><strong>阻塞I/O (Blocking I/O)</strong></li>
+<li><strong>非阻塞I/O (Non-Blocking I/O)</strong></li>
+<li><strong>I/O复用（I/O Multiplexing)</strong></li>
+<li><strong>信号驱动的I/O (Signal Driven I/O)</strong></li>
+<li><strong>异步I/O (Asynchrnous I/O)</strong> </li>
+</ul>
+<p><strong>说明：</strong>如果像了解更多可能需要linux/unix方面的知识了，可自行去学习一些网络编程原理应该有详细说明，<strong>不过对大多数java程序员来说，不需要了解底层细节，知道个概念就行，知道对于系统而言，底层是支持的</strong>。</p>
+<blockquote>
+<p>  <strong>记住这两点很重要</strong></p>
+<ol>
+<li>等待数据准备 (Waiting for the data to be ready) <ol start="2">
+<li>将数据从内核拷贝到进程中 (Copying the data from the kernel to the process)</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<br>
+
+<h4 id="1-阻塞I-O-Blocking-I-O"><a href="#1-阻塞I-O-Blocking-I-O" class="headerlink" title="1. 阻塞I/O (Blocking I/O)"></a>1. 阻塞I/O (Blocking I/O)</h4><p><font color="#ff0000">在linux中，默认情况下所有的socket都是blocking，</font>一个典型的读操作流程大概是这样：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/blockingIO.png" alt="blockingIO"></p>
+<p>当用户进程调用了<code>recvfrom</code>这个系统调用，内核就开始了IO的第一个阶段：等待数据准备.</p>
+<p>对于network io来说，很多时候数据在一开始还没有到达（比如，还没有收到一个完整的UDP包），这个时候内核就要等待足够的数据到来。而在用户进程这边，整个进程会被阻塞。当内核一直等到数据准备好了，它就会将数据从内核中拷贝到用户内存，然后内核返回结果，用户进程才解除block的状态，重新运行起来。 </p>
+<p>所以，<font color="#ff0000">blocking IO的特点就是在IO执行的两个阶段都被block了.</font></p>
+<br>
+
+<h4 id="2-非阻塞I-O-Non-Blocking-I-O"><a href="#2-非阻塞I-O-Non-Blocking-I-O" class="headerlink" title="2. 非阻塞I/O (Non-Blocking I/O)"></a>2. 非阻塞I/O (Non-Blocking I/O)</h4><p><font color="#ff0000">linux下，可以通过设置socket使其变为non-blocking.</font></p>
+<p>当对一个non-blocking socket执行读操作时，流程是这个样子：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/nonblockingIO.png" alt="nonblockingIO"></p>
+<p><font color="#0000ff">当用户进程调用recvfrom时，系统不会阻塞用户进程，而是立刻返回一个ewouldblock错误，从用户进程角度讲，并不需要等待，而是马上就得到了一个结果.</font></p>
+<p>用户进程判断标志是ewouldblock时，就知道数据还没准备好，于是它就可以去做其他的事了，于是它可以再次发送recvfrom，一旦内核中的数据准备好了。并且又再次收到了用户进程的system call，那么它马上就将数据拷贝到了用户内存，然后返回.</p>
+<p><font color="#ff0000">当一个应用程序在一个循环里对一个非阻塞调用recvfrom，我们称为轮询. 应用程序不断轮询内核，看看是否已经准备好了某些操作. 这通常是<em>浪费CPU时间</em>，但这种模式偶尔会遇到.</font></p>
+<br>
+
+<h4 id="3-I-O复用（I-O-Multiplexing"><a href="#3-I-O复用（I-O-Multiplexing" class="headerlink" title="3. I/O复用（I/O Multiplexing)"></a>3. I/O复用（I/O Multiplexing)</h4><p>IO multiplexing这个词可能有点陌生，但是如果我说select，epoll，大概就都能明白了。有些地方也称这种IO方式为<code>event driven IO</code>.</p>
+<p><font color="#ff0000">我们都知道，select/epoll的好处就在于单个process就可以同时处理多个网络连接的IO. 它的基本原理就是select/epoll这个function会不断的轮询所负责的所有socket，当某个socket有数据到达了，就通知用户进程。</font></p>
+<p>它的流程如图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/io_multiplexing.png" alt="io_multiplexing"></p>
+<p>当用户进程调用了select，那么整个进程会被block，而同时，内核会“监视”所有select负责的socket，当任何一个socket中的数据准备好了，select就会返回。这个时候用户进程再调用read操作，将数据从内核拷贝到用户进程. </p>
+<p>这个图和blocking IO的图其实并没有太大的不同，事实上，还更差一些。因为这里需要使用两个system call (select 和 recvfrom)，而blocking IO只调用了一个system call (recvfrom)。</p>
+<p><font color="#0000ff">但是，用select的优势在于它可以同时处理多个connection. 所以，如果处理的连接数不是很高的话，<em>使用select/epoll的webserver不一定比使用multi-threading + blocking IO的web server性能更好，可能延迟还更大</em>.</font></p>
+<p><font color="#ff0000">select/epoll的优势并不是对于单个连接能处理得更快，而是在于能处理更多的连接.</font></p>
+<p>在IO multiplexing Model中，实际中，对于每一个socket，一般都设置成为non-blocking，但是，如上图所示，整个用户的process其实是一直被block的。只不过process是被select这个函数block，而不是被socket IO给block。</p>
+<br>
+
+<h4 id="4-文件描述符fd"><a href="#4-文件描述符fd" class="headerlink" title="4. 文件描述符fd"></a>4. 文件描述符fd</h4><p><font color="#0000ff">Linux的内核将所有外部设备都可以看做一个文件来操作。那么我们对与外部设备的操作都可以看做对文件进行操作。我们对一个文件的读写，都通过调用内核提供的系统调用；内核给我们返回一个file descriptor（fd,文件描述符）.</font></p>
+<p>而对一个socket的读写也会有相应的描述符，称为socketfd(socket描述符）. <font color="#ff0000">描述符就是一个数字，指向内核中一个结构体（文件路径，数据区，等一些属性）。那么我们的应用程序对文件的读写就通过对描述符的读写完成。</font></p>
+<br>
+
+<h4 id="5-Linux内核中的一些命令"><a href="#5-Linux内核中的一些命令" class="headerlink" title="5. Linux内核中的一些命令"></a>5. Linux内核中的一些命令</h4><h5 id="select"><a href="#select" class="headerlink" title="select"></a>select</h5><p><strong>基本原理：</strong>select 函数监视的文件描述符分3类，分别是: <code>writefds、readfds、和exceptfds</code>.</p>
+<p><font color="#ff0000">调用后select函数会阻塞，直到有描述符就绪（有数据 可读、可写、或者有except），或者超时（timeout指定等待时间，如果立即返回设为null即可），函数返回。当select函数返回后，可以通过遍历fdset，来找到就绪的描述符。</font></p>
+<p><strong>缺点</strong>: </p>
+<ul>
+<li><p><font color="#0000ff">select最大的缺陷就是单个进程所打开的FD是有一定限制的.</font></p>
+<p><font color="#ff0000">它由FDSETSIZE设置，32位机默认是1024个，64位机默认是2048。一般来说这个数目和系统内存关系很大!</font></p>
+<p>具体数目可以<code>cat /proc/sys/fs/file-max</code>察看;</p>
+</li>
+</ul>
+<br>
+
+<ul>
+<li><p><font color="#0000ff">对socket进行扫描时是线性扫描，即采用轮询的方法，效率较低.</font></p>
+<p><font color="#ff0000">当套接字比较多的时候，每次select()都要通过遍历FDSETSIZE个Socket来完成调度，不管哪个Socket是活跃的，都遍历一遍。这会浪费很多CPU时间。</font></p>
+<p>如果能给套接字注册某个回调函数，当他们活跃时，自动完成相关操作，那就避免了轮询，这正是epoll与kqueue做的!</p>
+</li>
+</ul>
+<br>
+
+<ul>
+<li><font color="#0000ff">需要维护一个用来存放大量fd的数据结构，这样会使得用户空间和内核空间在传递该结构时复制开销大.</font></li>
+</ul>
+<br>
+
+<h5 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h5><p><strong>基本原理：</strong>poll本质上和select没有区别，它将用户传入的数组拷贝到内核空间，然后查询每个fd对应的设备状态，如果设备就绪则在设备等待队列中加入一项并继续遍历，如果遍历完所有fd后没有发现就绪设备，则挂起当前进程，直到设备就绪或者主动超时，被唤醒后它又要再次遍历fd.这个过程经历了多次无谓的遍历.</p>
+<p><strong>与poll的区别在于</strong>:</p>
+<p><font color="#ff0000">它没有最大连接数的限制，原因是它是基于链表来存储的!</font></p>
+<p>但是同样有缺点：</p>
+<ul>
+<li>大量的fd的数组被整体复制于用户态和内核地址空间之间，而不管这样的复制是不是有意义;</li>
+<li>poll还有一个特点是“水平触发”，如果报告了fd后，没有被处理，那么下次poll时会再次报告该fd;</li>
+</ul>
+<p><strong>注意：</strong>从上面看，select和poll都需要在返回后，通过遍历文件描述符来获取已经就绪的socket. 事实上，同时连接的大量客户端在一时刻可能只有很少的处于就绪状态，因此随着监视的描述符数量的增长，其效率也会线性下降。</p>
+<br>
+
+<h5 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h5><p>epoll是在2.6内核中提出的，是之前的select和poll的增强版本. <font color="#0000ff">相对于select和poll来说，epoll更加灵活，没有描述符限制。epoll使用一个文件描述符管理多个描述符，将用户关系的文件描述符的事件存放到内核的一个事件表中，这样在用户空间和内核空间的copy只需一次。</font></p>
+<p><strong>基本原理：</strong>epoll支持水平触发和边缘触发，最大的特点在于<font color="#0000ff">边缘触发，它只告诉进程哪些fd刚刚变为就绪态，并且只会通知一次。还有一个特点是，epoll使用“事件”的就绪通知方式，通过epollctl注册fd，一旦该fd就绪，内核就会采用类似callback的回调机制来激活该fd，epollwait便可以收到通知。</font></p>
+<p><strong>epoll的优点：</strong></p>
+<ul>
+<li>没有最大并发连接的限制，能打开的FD的上限远大于1024（1G的内存上能监听约10万个端口）</li>
+<li>效率提升，不是轮询的方式，不会随着FD数目的增加效率下降。 只有活跃可用的FD才会调用callback函数；即Epoll最大的优点就在于它只管你“活跃”的连接，而跟连接总数无关，因此在实际的网络环境中，Epoll的效率就会远远高于select和poll;</li>
+<li>内存拷贝，利用mmap()文件映射内存加速与内核空间的消息传递；即epoll使用mmap减少复制开销。</li>
+</ul>
+<p><font color="#ff0000"><strong>JDK1.5_update10版本使用epoll替代了传统的select/poll，极大的提升了NIO通信的性能。</strong></font></p>
+<blockquote>
+<p>  <strong>备注：</strong>JDK NIO的BUG，例如臭名昭著的epoll bug，它会导致Selector空轮询，最终导致CPU 100%。官方声称在JDK1.6版本的update18修复了该问题，但是直到JDK1.7版本该问题仍旧存在，只不过该BUG发生概率降低了一些而已，它并没有被根本解决。后文将介绍空轮询问题.</p>
+</blockquote>
+<br>
+
+<h4 id="6-信号驱动的I-O-Signal-Driven-I-O"><a href="#6-信号驱动的I-O-Signal-Driven-I-O" class="headerlink" title="6. 信号驱动的I/O (Signal Driven I/O)"></a>6. 信号驱动的I/O (Signal Driven I/O)</h4><p>由于signal driven IO在实际中并不常用，所以简单提下。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/signalDriverIO.png" alt="signalDriverIO"></p>
+<p>很明显可以看出用户进程不是阻塞的!</p>
+<p>首先用户进程建立SIGIO信号处理程序，并通过系统调用sigaction执行一个信号处理函数，这时用户进程便可以做其他的事了，一旦数据准备好，系统便为该进程生成一个SIGIO信号，去通知它数据已经准备好了，于是用户进程便调用recvfrom把数据从内核拷贝出来，并返回结果。</p>
+<br>
+
+<h4 id="7-异步I-O"><a href="#7-异步I-O" class="headerlink" title="7. 异步I/O"></a>7. 异步I/O</h4><p>一般来说，这些函数通过告诉内核启动操作并在整个操作（包括内核的数据到缓冲区的副本）完成时通知我们。这个模型和前面的信号驱动I/O模型的主要区别是，在信号驱动的I/O中，内核告诉我们何时可以启动I/O操作，但是异步I/O时，内核告诉我们何时I/O操作完成。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/AIO.png" alt="AIO"></p>
+<p><font color="#0000ff">当用户进程向内核发起某个操作后，会立刻得到返回，并把所有的任务都交给内核去完成（包括将数据从内核拷贝到用户自己的缓冲区），内核完成之后，只需返回一个信号告诉用户进程已经完成就可以了.</font></p>
+<br>
+
+<hr>
+<h3 id="三-五种I-O模型的对比"><a href="#三-五种I-O模型的对比" class="headerlink" title="三. 五种I/O模型的对比"></a>三. 五种I/O模型的对比</h3><p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fiveIO_conpare.png" alt="fiveIO_conpare"></p>
+<blockquote>
+<p>  <strong>结果表明：</strong>前四个模型之间的主要区别是第一阶段，四个模型的第二阶段是一样的：过程受阻在调用recvfrom当数据从内核拷贝到用户缓冲区。然而，异步I/O处理两个阶段，与前四个不同。</p>
+</blockquote>
+<p><strong>从同步、异步，以及阻塞、非阻塞两个维度来划分来看：</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/fiveIO_conpare2.png" alt="fiveIO_conpare2"></p>
+<br>
+
+<hr>
+<h3 id="四-Zero-Copy-零拷贝"><a href="#四-Zero-Copy-零拷贝" class="headerlink" title="四. Zero-Copy(零拷贝)"></a>四. Zero-Copy(零拷贝)</h3><h4 id="1-为什么需要零拷贝"><a href="#1-为什么需要零拷贝" class="headerlink" title="1. 为什么需要零拷贝"></a>1. 为什么需要零拷贝</h4><p>考虑这样一种常用的情形：你需要将静态内容（类似图片、文件）展示给用户。那么这个情形就意味着你需要先将静态内容从磁盘中拷贝出来放到一个内存buf中，然后将这个buf通过socket传输给用户，进而用户或者静态内容的展示。这看起来再正常不过了，但是实际上这是很低效的流程，我们把上面的这种情形抽象成下面的过程：</p>
+<pre><code class="java">read(file, tmp_buf, len);
+write(socket, tmp_buf, len);</code></pre>
+<p>首先调用read将静态内容，这里假设为文件A，读取到tmp_buf, 然后调用write将tmp_buf写入到socket中，如图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence.png" alt="zerocopy_timesequence"></p>
+<br>
+
+<p>在这个过程中文件A的经历了4次copy的过程, 数据拷贝流程如下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/normal_nonzerocopy.gif" alt="normal_nonzerocopy.gif"></p>
+<br>
+
+<ol>
+<li>首先，调用read时，文件A拷贝到了kernel模式；</li>
+<li>之后，CPU控制将kernel模式数据copy到user模式下；</li>
+<li>调用write时，先将user模式下的内容copy到kernel模式下的socket的buffer中；</li>
+<li>最后将kernel模式下的socket buffer的数据copy到网卡设备中传送；</li>
+</ol>
+<p>从上面的过程可以看出，<font color="#0000ff">数据白白从kernel模式到user模式走了一圈，浪费了2次copy(第一次，从kernel模式拷贝到user模式；第二次从user模式再拷贝回kernel模式，即上面4次过程的第2和3步骤。)。而且上面的过程中kernel和user模式的上下文的切换也是4次。</font></p>
+<p>如下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/normal_nonzerocopy_timesequence.gif" alt="normal_nonzerocopy_timesequence.gif"></p>
+<p>幸运的是，你<font color="#ff0000">可以用一种叫做Zero-Copy的技术来去掉这些无谓的copy。应用程序用Zero-Copy来请求kernel直接把disk的data传输给socket，而不是通过应用程序传输。Zero-Copy大大提高了应用程序的性能，并且减少了kernel和user模式上下文的切换。</font></p>
+<br>
+
+<h4 id="2-零拷贝详述"><a href="#2-零拷贝详述" class="headerlink" title="2. 零拷贝详述"></a>2. 零拷贝详述</h4><p>Zero-Copy技术省去了将操作系统的read buffer拷贝到程序的buffer，以及从程序buffer拷贝到socket buffer的步骤，直接将read buffer拷贝到socket buffer. Java NIO中的FileChannal.transferTo()方法就是这样的实现，这个实现是依赖于操作系统底层的sendFile()实现的。</p>
+<pre><code class="java">public void transferTo(long position, long count, WritableByteChannel target);</code></pre>
+<p>他底层的调用时系统调用<strong>sendFile()</strong>方法：</p>
+<pre><code class="c++">#include &lt;sys/socket.h&gt;
+ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);</code></pre>
+<p>下图展示了在transferTo()之后的数据流向：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy1.png" alt="zerocopy1"></p>
+<p>下图展示了在使用transferTo()之后的上下文切换：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy2.png" alt="zerocopy2"></p>
+<p>使用了Zero-Copy技术之后，整个过程如下：</p>
+<ol>
+<li>transferTo()方法使得文件A的内容直接拷贝到一个read buffer（kernel buffer）中；</li>
+<li>然后数据(kernel buffer)拷贝到socket buffer中。</li>
+<li>最后将socket buffer中的数据拷贝到网卡设备（protocol engine）中传输；<br>这显然是一个伟大的进步：这里把上下文的切换次数从4次减少到2次，同时也把数据copy的次数从4次降低到了3次。</li>
+</ol>
+<p>但是这是Zero-Copy么，答案是否定的。</p>
+<p>如果底层NIC（网络接口卡）支持gather操作，我们能进一步减少内核中的数据拷贝。在Linux 2.4以及更高版本的内核中，socket缓冲区描述符已被修改用来适应这个需求。这种方式不但减少多次的上下文切换，同时消除了需要CPU参与的重复的数据拷贝。用户这边的使用方式不变，而内部已经有了质的改变!</p>
+<br>
+
+<h4 id="3-零拷贝进阶"><a href="#3-零拷贝进阶" class="headerlink" title="3. 零拷贝进阶"></a>3. 零拷贝进阶</h4><p>Linux 2.1内核开始引入了sendfile函数（上一节有提到）,用于将文件通过socket传送。</p>
+<pre><code class="c++">sendfile(socket, file, len);</code></pre>
+<p>该函数通过一次系统调用完成了文件的传送，减少了原来read/write方式的模式切换。此外更是减少了数据的copy, sendfile的详细过程如图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence2.png" alt="zerocopy_timesequence2"></p>
+<p>通过sendfile传送文件只需要一次系统调用，当调用sendfile时：</p>
+<ol>
+<li>首先（通过DMA）将数据从磁盘读取到kernel buffer中；</li>
+<li>然后将kernel buffer拷贝到socket buffer中；</li>
+<li>最后将socket buffer中的数据copy到网卡设备（protocol engine）中发送；</li>
+</ol>
+<p>这个过程就是第二节（详述）中的那个步骤。</p>
+<p>sendfile与read/write模式相比，少了一次copy。但是从上述过程中也可以发现从kernel buffer中将数据copy到socket buffer是没有必要的。</p>
+<p>Linux2.4 内核对sendfile做了改进，如图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy_timesequence3.png" alt="zerocopy_timesequence3"></p>
+<p>改进后的处理过程如下：</p>
+<ol>
+<li>将文件拷贝到kernel buffer中；</li>
+<li>向socket buffer中追加当前要发生的数据在kernel buffer中的位置和偏移量；</li>
+<li>根据socket buffer中的位置和偏移量直接将kernel buffer的数据copy到网卡设备（protocol engine）中；</li>
+</ol>
+<p>经过上述过程，数据只经过了2次copy就从磁盘传送出去了。这个才是真正的Zero-Copy(这里的零拷贝是针对kernel来讲的，数据在kernel模式下是Zero-Copy)。</p>
+<p>正是Linux2.4的内核做了改进，<font color="#ff0000">Java中的TransferTo()实现了Zero-Copy,</font>如下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/zerocopy3.png" alt="zerocopy3"></p>
+<p>Zero-Copy技术的使用场景有很多，比如Kafka, 又或者是Netty等，可以大大提升程序的性能。使用的一般场景为:</p>
+<ul>
+<li>文件较大，读写较慢，追求速度</li>
+<li>JVM内存不足，不能加载太大数据</li>
+<li>内存带宽不够，即存在其他程序或线程存在大量的IO操作，导致带宽本来就小</li>
+</ul>
+<p>以上都建立在不需要进行数据文件操作的情况下，如果既需要这样的速度，也需要进行数据操作怎么办？那么使用NIO的直接内存！</p>
+<br>
+
+<hr>
+<h3 id="五-直接内存"><a href="#五-直接内存" class="headerlink" title="五. 直接内存"></a>五. 直接内存</h3><p>首先，它的作用位置处于传统IO（BIO）与零拷贝之间，为何这么说？</p>
+<pre><code>传统IO，可以把磁盘的文件经过内核空间，读到JVM空间，然后进行各种操作，最后再写到磁盘或是发送到网络，效率较慢但支持数据文件操作。
+零拷贝则是直接在内核空间完成文件读取并转到磁盘（或发送到网络）。由于它没有读取文件数据到JVM这一环，因此程序无法操作该文件数据，尽管效率很高！</code></pre><p>而直接内存则介于两者之间，效率一般且可操作文件数据。直接内存（mmap技术）将文件直接映射到内核空间的内存，返回一个操作地址（address），它解决了文件数据需要拷贝到JVM才能进行操作的窘境。而是直接在内核空间直接进行操作，省去了内核空间拷贝到用户空间这一步操作。</p>
+<p>NIO的直接内存是由MappedByteBuffer实现的。核心即是map()方法，该方法把文件映射到内存中，获得内存地址addr，然后通过这个addr构造MappedByteBuffer类，以暴露各种文件操作API。</p>
+<p>由于MappedByteBuffer申请的是堆外内存，因此不受Minor GC控制，只能在发生Full GC时才能被回收。而DirectByteBuffer改善了这一情况，它是MappedByteBuffer类的子类，同时它实现了DirectBuffer接口，维护一个Cleaner对象来完成内存回收。因此它既可以通过Full GC来回收内存，也可以调用clean()方法来进行回收。</p>
+<p>另外，直接内存的大小可通过jvm参数来设置：-XX:MaxDirectMemorySize。</p>
+<p>NIO的MappedByteBuffer还有一个兄弟叫做HeapByteBuffer。顾名思义，它用来在堆中申请内存，本质是一个数组。由于它位于堆中，因此可受GC管控，易于回收。</p>
+<br>
+
+<hr>
+<h3 id="六-Selector空轮询处理"><a href="#六-Selector空轮询处理" class="headerlink" title="六. Selector空轮询处理"></a>六. Selector空轮询处理</h3><p>在NIO中通过Selector的轮询当前是否有IO事件，根据JDK NIO api描述，Selector的select方法会一直阻塞，直到IO事件达到或超时，但是在Linux平台上这里有时会出现问题:</p>
+<p><font color="#0000ff">在某些场景下select方法会直接返回，即使没有超时并且也没有IO事件到达，这就是著名的epoll bug.</font>这是一个比较严重的bug，它会导致线程陷入死循环，会让CPU飙到100%，极大地影响系统的可靠性，到目前为止，JDK都没有完全解决这个问题。</p>
+<p>但是Netty有效的规避了这个问题，经过实践证明，epoll bug已Netty框架解决，Netty的处理方式是这样的：</p>
+<p><font color="#ff0000">记录select空转的次数，定义一个阀值，这个阀值默认是512，可以在应用层通过设置系统属性io.netty.selectorAutoRebuildThreshold传入，当空转的次数超过了这个阀值，重新构建新Selector，将老Selector上注册的Channel转移到新建的Selector上，关闭老Selector，用新的Selector代替老Selector，详细实现可以查看NioEventLoop中的selector和rebuildSelector方法.</font></p>
+<br>
+
+<hr>
+<h3 id="六-总结"><a href="#六-总结" class="headerlink" title="六. 总结"></a>六. 总结</h3><p>本篇从Linux的用户空间以及内核空间为起始, 讲述了:</p>
+<ul>
+<li>用户空间以及内核空间: </li>
+<li>Linux 网络 I/O模型: Blocking I/O, Non-Blocking I/O, I/O Multiplexing, Signal Driven I/O, Asynchronous I/O</li>
+<li>五种I/O模型对比</li>
+<li>文件描述符fd以及Linux内核命令: select, poll, epoll等</li>
+<li>Zero-Copy相关;</li>
+<li>直接内存</li>
+<li>Selector空轮询在Netty中的处理: </li>
+<li>……</li>
+</ul>
+<br>
+
+<hr>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>文章参考:</p>
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/5SKgdkC0kaHN495psLd3Tg?scene=25#wechat_redirect" target="_blank" rel="noopener">NIO相关基础篇三</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzU0MzQ5MDA0Mw==&mid=2247483913&idx=1&sn=2da53737b8e8908cf3efdae9621c9698&chksm=fb0be89dcc7c618b0d5a1ba8ac654295454cfc2fa81fbae5a6de49bf0a91a305ca707e9864fc&scene=21#wechat_redirect" target="_blank" rel="noopener">什么是Zero-Copy？</a></li>
+<li><a href="https://blog.csdn.net/localhost01/article/details/83422888" target="_blank" rel="noopener">浅谈NIO与零拷贝</a></li>
+<li><a href="https://www.cnblogs.com/devilwind/p/8351732.html" target="_blank" rel="noopener">Selector空轮询处理</a></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/26/NIO相关基础篇之操作系统I-O模型/" title="https://jasonkayzk.github.io/2019/09/26/NIO相关基础篇之操作系统I-O模型/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/26/NIO相关基础篇之操作系统I-O模型/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $("h1").text();
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="valine"></div>
+<!--载入js，在</body>之前插入即可-->
+<script src="https://cdn.jsdelivr.net/npm/valine@1.3.9/dist/Valine.min.js"></script>
+<!--Leancloud 操作库:-->
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<!-- 修改评论区的边界 -->
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+
+</style>
+<script>
+    new Valine({
+        av: AV,
+        el: '.valine',
+        appId: 'Ak9ceXVMoxs53V6ClY9mtxaC-gzGzoHsz',
+        appKey: 'R3dlvrMMwjNhbpBvABQdM3Tm',
+        placeholder: 'ヾﾉ≧∀≦)o来啊，快活啊!',
+        pageSize: '10',
+        avatar: 'mp',
+        visitor: 'true',
+        notify: 'true', 
+        verify: 'true'
+    })
+</script>
+
+
+
+<!-- <script>
+  // 使用方法 https://valine.js.org/quickstart.html
+  var notify = 'true' == true ? true : false;
+  var verify = 'true' == true ? true : false;
+  new Valine({
+      // AV 对象来自上面引入av-min.js(老司机们不要开车➳♡゛扎心了老铁)
+      
+      el: '.valine_thread',
+      app_id: '',
+      app_key: '',
+
+    });
+</script> -->
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1625326657157"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/xtaodada/xtaodada.github.io@0.0.2/copy.js"></script>
+
+
+
+  
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    Notification.create(
+      // Title
+      "Tencent&字节内推中📧",
+      // Text
+      "简历投递处：<BR/><a href='https://jasonkayzk.github.io/hiring/'>简历投递</a>",
+      // Illustration
+      "/images/avatar4.jpg",
+      // Effect
+      'fadeInRight',
+      // Position 1, 2, 3, 4
+      position,
+      closeTime
+    );
+    setTimeout(() => {
+      Notification.create(
+        "资源下载⚡",
+        "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 1050);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
