@@ -184,7 +184,7 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 <br/>
 
-### **创建面板**
+### **创建查询图表**
 
 随后我们还可以创建相关的面板：点击右侧的`+ New Visualization`，创建图表；
 
@@ -196,9 +196,23 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 <br/>
 
+### **创建表盘(Dashboard)**
+
+最后，点击Create，选择Dashboard，输入表盘名称即可创建表盘；
+
+在表盘中点击Edit，然后点击`Add Widget`即可添加对应表盘；
+
+例如：
+
+![redash_5.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/redash_5.png)
+
+同时可以一键同步所有数据
+
+<br/>
+
 ## **后记**
 
-除了上面的一些基本功能之外，Redash还提供了发送日报邮件等功能；
+除了上面的一些基本功能和丰富的数据源等优点之外，Redash还提供了发送日报邮件等功能；
 
 有兴趣的童鞋可以深入学习~
 
