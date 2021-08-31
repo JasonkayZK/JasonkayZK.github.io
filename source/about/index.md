@@ -28,6 +28,7 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
+*   **2021-08-31 删除博客复制时的版权声明**
 *   **2021-06-23 博客PV突破100000！**
 *   2021-06-21 移除点击出现心形标志特效
 *   <font color="#ff0000">**2021-05-23 增加在线群聊页面**</font>
