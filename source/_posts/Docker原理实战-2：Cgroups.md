@@ -511,6 +511,7 @@ top
 >
 >   ```bash
 >   rmdir /sys/fs/cgroup/memory/testmemorylimit/
+>   ```
 
 <br/>
 
