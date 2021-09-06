@@ -28,6 +28,8 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2021-09-06 确认博客IP已被国内三大运营商禁封、百度收录禁封、Gitee Pages禁封！**</font>
+*   **2021-09-01 博客二周年，感谢大家的支持！🎉🎉🎉**
 *   **2021-08-31 删除博客复制时的版权声明**
 *   **2021-06-23 博客PV突破100000！**
 *   2021-06-21 移除点击出现心形标志特效
