@@ -220,7 +220,9 @@ local hooks可以使用支持`additional_dependencies` 的语言或者 `docker_i
 
 <br/>
 
-## **一个Rust项目的配置例子**
+## **几配置例子**
+
+### **Rust项目**
 
 https://github.com/JasonkayZK/rust-learn/blob/main/.pre-commit-config.yaml
 
@@ -243,6 +245,37 @@ repos:
         entry: cargo fmt --
         language: rust
         types: [ rust ]
+```
+
+<br/>
+
+### **Go项目**
+
+https://github.com/JasonkayZK/Go_Learn/blob/master/.pre-commit-config.yaml
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [ --markdown-linebreak-ext=md ]
+
+  - repo: local
+    hooks:
+      - id: go-fmt
+        name: go fmt
+        entry: gofmt -w -s --
+        language: golang
+        types: [ go ]
+      - id: go-imports
+        name: go imports
+        entry: goimports --
+        language: golang
+        types: [ go ]
 ```
 
 <br/>
