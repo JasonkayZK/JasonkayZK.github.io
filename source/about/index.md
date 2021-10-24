@@ -28,6 +28,9 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2021-10-24 博客PV突破14W、UV突破10W！祝大家1024程序员节快乐！🎉🎉🎉**</font>
+*   2021-10-24 **[畅所欲言](/chat/)**页面增加项目开源地址说明
+*   2021-10-24 更新简历投递页面
 *   <font color="#ff0000">**2021-09-06 确认博客IP已被国内三大运营商禁封、百度收录禁封、Gitee Pages禁封！**</font>
 *   **2021-09-01 博客二周年，感谢大家的支持！🎉🎉🎉**
 *   **2021-08-31 删除博客复制时的版权声明**

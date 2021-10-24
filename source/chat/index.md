@@ -31,6 +31,10 @@ layout: false
         <ul id="user-list"></ul>
     </div>
 </div>
+<div style="margin-top: 15pt;text-align: center">
+聊天室代码已开源：
+<a href='https://github.com/JasonkayZK/web-chat'>https://github.com/JasonkayZK/web-chat</a>
+</div>
 <script>
     Date.prototype.format = function (fmt = "yyyy-MM-dd hh:mm:ss") {
     let o = {
