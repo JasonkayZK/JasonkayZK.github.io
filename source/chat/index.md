@@ -4,6 +4,30 @@ date: 2021-05-23 17:14:08
 layout: false
 ---
 {% raw %}
+<html lang="zh">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    </head>
+    <body>
+        <div class="back-home">
+            <a href="/"> <button>←返回主页</button> </a>
+        </div>
+        <div class = "board-container" align='center'>
+            <iframe id="board"
+                title="board"
+                style='position:inherit; top:0px; left:0px; width:80%; height:66%; z-index:999;'
+                frameborder='no'
+                scrolling='true'
+                src="https://chat.getloli.com/room/@JasonkayZK?title=JasonkayZK-chatroom">
+            </iframe>
+        </div>
+        <div style="margin-top: 15pt;text-align: center">
+            聊天面板已在Github同步展示♥：
+            <a href='https://github.com/JasonkayZK/'>https://github.com/JasonkayZK/</a>
+        </div>
+    </body>
+</html>
+<!--
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -264,5 +288,6 @@ function sendFixHeartBeat() {
 }
 </script>
 </body>
+-->
 </html>
 {% endraw %}
