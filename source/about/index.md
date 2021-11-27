@@ -28,7 +28,6 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
-*   2021-11-27 **增加了Google AdSense（请允许我恰Google的烂钱/(ㄒoㄒ)/~~）**
 *   2021-10-31 <font color="#ff0000">**原[畅所欲言](/chat/)页面代码保留；**</font>开源地址：[JasonkayZK/web-chat](https://github.com/JasonkayZK/web-chat)
 *   2021-10-31 原**[畅所欲言](/chat/)页面**内容移除，改用新的链接[chat.getloli.com](https://chat.getloli.com/room/@JasonkayZK?title=JasonkayZK-chatroom)，并在Github主页做聊天同步！
 *   <font color="#ff0000">**2021-10-24 博客PV突破14W、UV突破10W！祝大家1024程序员节快乐！🎉🎉🎉**</font>
