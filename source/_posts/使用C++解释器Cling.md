@@ -57,7 +57,7 @@ wget https://root.cern.ch/download/cling/cling_2020-11-05_ROOT-centos7.tar.bz2
 解压缩：
 
 ```shell
-tar -cjf cling_2020-11-05_ROOT-centos7.tar.bz2
+tar -xjvf cling_2020-11-05_ROOT-centos7.tar.bz2
 ```
 
 此时已经安装完成，并且官方已经提供了Clang和LLVM环境，二进制文件在`bin`目录下：
