@@ -29,6 +29,7 @@ description: 距离上一次写文章已经过去三个多月了，最近一直�
 -   [The Rust Programming Language](https://doc.rust-lang.org/book/#the-rust-programming-language)
 -   [Rust语言圣经(Rust教程 Rust Course)](https://course.rs/)
 -   [Learn Rust With Entirely Too Many Linked Lists](https://rust-unofficial.github.io/too-many-lists/index.html#learn-rust-with-entirely-too-many-linked-lists)
+-   [通过例子学 Rust 中文版](https://rustwiki.org/zh-CN/rust-by-example/index.html)
 -   [Rust编程之道](https://book.douban.com/subject/30418895/)
 
 一些进阶书籍：
