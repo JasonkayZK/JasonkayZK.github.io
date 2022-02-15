@@ -246,49 +246,409 @@ memcached的集群比较特殊，严格来说它只能算是**伪集群**，因�
 
 ### **结构体、错误以及常量定义**
 
-首先定义每一台
+#### **① 结构体定义**
 
+首先定义每一台缓存服务器的数据结构：
 
+core/host.go
 
+```go
+type Host struct {
+	// the host id: ip:port
+	Name string
 
+	// the load bound of the host
+	LoadBound int64
+}
+```
 
+其中：
 
+-   Name：缓存服务器的Ip地址 + 端口，如：`127.0.0.1:8000`
+-   LoadBound：缓存服务器当前处理的“请求”缓存数，这个字段在后文**含有负载边界值的一致性Hash**中会用到；
 
+其次，定义一致性Hash的结构：
 
+core/algorithm.go
+
+```go
+// Consistent is an implementation of consistent-hashing-algorithm
+type Consistent struct {
+	// the number of replicas
+	replicaNum int
+
+	// the total loads of all replicas
+	totalLoad int64
+
+	// the hash function for keys
+	hashFunc func(key string) uint64
+
+	// the map of virtual nodes	to hosts
+	hostMap map[string]*Host
+
+	// the map of hashed virtual nodes to host name
+	replicaHostMap map[uint64]string
+
+	// the hash ring
+	sortedHostsHashSet []uint64
+
+	// the hash ring lock
+	sync.RWMutex
+}
+```
+
+其中：
+
+-   replicaNum：表示每个真实的缓存服务器在Hash环中存在的虚拟节点数；
+-   totalLoad：所有物理服务器对应的总缓存“请求”数（这个字段在后文**含有负载边界值的一致性Hash**中会用到）；
+-   hashFunc：计算Hash环映射以及Key映射的散列函数；
+-   hostMap：物理服务器名称对应的Host结构体映射；
+-   replicaHostMap：Hash环中虚拟节点对应真实缓存服务器名称的映射；
+-   sortedHostsHashSet：Hash环；
+-   sync.RWMutex：操作Hash环时用到的读写锁；
+
+大概的结构如上所示，下面我们来看一些常量和错误的定义；
+
+<br/>
+
+#### **② 常量和错误定义**
+
+常量的定义如下：
+
+core/algorithm.go
+
+```go
+const (
+	// The format of the host replica name
+	hostReplicaFormat = `%s%d`
+)
+
+var (
+	// the default number of replicas
+	defaultReplicaNum = 10
+
+	// the load bound factor
+	// ref: https://research.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html
+	loadBoundFactor = 0.25
+
+	// the default Hash function for keys
+	defaultHashFunc = func(key string) uint64 {
+		out := sha512.Sum512([]byte(key))
+		return binary.LittleEndian.Uint64(out[:])
+	}
+)
+```
+
+分别表示：
+
+-   defaultReplicaNum：默认情况下，每个真实的物理服务器在Hash环中虚拟节点的个数；
+-   loadBoundFactor：负载边界因数（这个字段在后文**含有负载边界值的一致性Hash**中会用到）；
+-   defaultHashFunc：默认的散列函数，**这里用到的是SHA512算法，并取的是`unsigned int64`，这一点和上面介绍的`0~2^32-1`有所区别！**
+-   hostReplicaFormat：虚拟节点名称格式，**这里的虚拟节点的格式为：`%s%d`，和上文提到的`10.24.23.227#1`的格式有所区别，但是道理是一样的！**
+
+还有一些错误的定义：
+
+core/error.go
+
+```go
+var (
+	ErrHostAlreadyExists = errors.New("host already exists")
+
+	ErrHostNotFound = errors.New("host not found")
+)
+```
+
+分别表示服务器已经注册，以及缓存服务器未找到；
+
+下面来看具体的方法实现！
 
 <br/>
 
 ### **注册/注销缓存服务器**
 
+#### **① 注册缓存服务器**
 
+注册缓存服务器的代码如下：
 
+core/algorithm.go
 
+```go
+func (c *Consistent) RegisterHost(hostName string) error {
+	c.Lock()
+	defer c.Unlock()
 
+	if _, ok := c.hostMap[hostName]; ok {
+		return ErrHostAlreadyExists
+	}
 
+	c.hostMap[hostName] = &Host{
+		Name:      hostName,
+		LoadBound: 0,
+	}
 
+	for i := 0; i < c.replicaNum; i++ {
+		hashedIdx := c.hashFunc(fmt.Sprintf(hostReplicaFormat, hostName, i))
+		c.replicaHostMap[hashedIdx] = hostName
+		c.sortedHostsHashSet = append(c.sortedHostsHashSet, hashedIdx)
+	}
 
+	// sort hashes in ascending order
+	sort.Slice(c.sortedHostsHashSet, func(i int, j int) bool {
+		if c.sortedHostsHashSet[i] < c.sortedHostsHashSet[j] {
+			return true
+		}
+		return false
+	})
 
+	return nil
+}
+```
 
+代码比较简单，简单说一下；
 
+首先，检查服务器是否已经注册，如果已经注册，则直接返回已经注册的错误；
 
+随后，创建一个Host对象，并且在 for 循环中创建多个虚拟节点：
+
+-   根据 hashFunc 计算服务器散列值**【注：此处计算的散列值可能和之前的值存在冲突，本实现中暂不考虑这种场景】**；
+-   将散列值加入 replicaHostMap 中；
+-   将散列值加入 sortedHostsHashSet 中；
+
+最后，对Hash环进行排序；
+
+>   **这里使用数组作为Hash环只是为了便于说明，在实际实现中建议选用其他数据结构进行实现，以获取更好的性能；**
+
+当缓存服务器信息写入 replicaHostMap 映射以及 Hash 环后，即完成了缓存服务器的注册；
 
 <br/>
 
-### **查询Key**
+#### **② 注销缓存服务器**
 
+注销缓存服务器的代码如下：
 
+core/algorithm.go
 
+```go
+func (c *Consistent) UnregisterHost(hostName string) error {
+	c.Lock()
+	defer c.Unlock()
 
+	if _, ok := c.hostMap[hostName]; !ok {
+		return ErrHostNotFound
+	}
 
+	delete(c.hostMap, hostName)
 
+	for i := 0; i < c.replicaNum; i++ {
+		hashedIdx := c.hashFunc(fmt.Sprintf(hostReplicaFormat, hostName, i))
+		delete(c.replicaHostMap, hashedIdx)
+		c.delHashIndex(hashedIdx)
+	}
 
+	return nil
+}
 
+// Remove hashed host index from the hash ring
+func (c *Consistent) delHashIndex(val uint64) {
+	idx := -1
+	l := 0
+	r := len(c.sortedHostsHashSet) - 1
+	for l <= r {
+		m := (l + r) / 2
+		if c.sortedHostsHashSet[m] == val {
+			idx = m
+			break
+		} else if c.sortedHostsHashSet[m] < val {
+			l = m + 1
+		} else if c.sortedHostsHashSet[m] > val {
+			r = m - 1
+		}
+	}
+	if idx != -1 {
+		c.sortedHostsHashSet = append(c.sortedHostsHashSet[:idx], c.sortedHostsHashSet[idx+1:]...)
+	}
+}
+```
 
+和注册缓存服务器相反，将服务器在 Map 映射以及 Hash 环中去除即完成了注销；
 
+这里的逻辑和上面注册的逻辑极为类似，这里不再赘述！
 
 <br/>
 
-## **一致性Hash算法检验**
+### **查询Key（核心）**
+
+查询 Key 是整个一致性 Hash 算法的核心，但是实现起来也并不复杂；
+
+代码如下：
+
+core/algorithm.go
+
+```go
+func (c *Consistent) GetKey(key string) (string, error) {
+	hashedKey := c.hashFunc(key)
+	idx := c.searchKey(hashedKey)
+	return c.replicaHostMap[c.sortedHostsHashSet[idx]], nil
+}
+
+func (c *Consistent) searchKey(key uint64) int {
+	idx := sort.Search(len(c.sortedHostsHashSet), func(i int) bool {
+		return c.sortedHostsHashSet[i] >= key
+	})
+
+	if idx >= len(c.sortedHostsHashSet) {
+		// make search as a ring
+		idx = 0
+	}
+
+	return idx
+}
+```
+
+代码首先计算 key 的散列值；
+
+随后，在Hash环上“顺时针”寻找可以缓存的第一台缓存服务器：
+
+```go
+idx := sort.Search(len(c.sortedHostsHashSet), func(i int) bool {
+    return c.sortedHostsHashSet[i] >= key
+})
+```
+
+**注意到，如果 key 比当前Hash环中最大的虚拟节点的 hash 值还大，则选择当前 Hash环 中 hash 值最小的一个节点（即“环形”的逻辑）：**
+
+```go
+if idx >= len(c.sortedHostsHashSet) {
+    // make search as a ring
+    idx = 0
+}
+```
+
+searchKey 返回了虚拟节点在 Hash 环数组中的 index；
+
+随后，我们使用 map 返回 index 对应的缓存服务器的名称即可；
+
+至此，一致性 Hash 算法基本实现，接下来我们来验证一下；
+
+<br/>
+
+## **一致性Hash算法实践与检验**
+
+### **算法验证前准备**
+
+#### **① 缓存服务器准备**
+
+在验证算法之前，我们还需要准备几台缓存服务器；
+
+为了简单起见，这里使用了 HTTP 服务器作为缓存服务器，具体代码如下所示：
+
+server/main.go
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"net/http"
+	"sync"
+	"time"
+)
+
+type CachedMap struct {
+	KvMap sync.Map
+	Lock  sync.RWMutex
+}
+
+var (
+	cache = CachedMap{KvMap: sync.Map{}}
+
+	port = flag.String("p", "8080", "port")
+
+	regHost = "http://localhost:18888"
+
+	expireTime = 10
+)
+
+func main() {
+	flag.Parse()
+
+	stopChan := make(chan interface{})
+	startServer(*port)
+	<-stopChan
+}
+
+func startServer(port string) {
+	hostName := fmt.Sprintf("localhost:%s", port)
+
+	fmt.Printf("start server: %s\n", port)
+
+	err := registerHost(hostName)
+	if err != nil {
+		panic(err)
+	}
+
+	http.HandleFunc("/", kvHandle)
+	err = http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		err = unregisterHost(hostName)
+		if err != nil {
+			panic(err)
+		}
+		panic(err)
+	}
+}
+
+func kvHandle(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	if _, ok := cache.KvMap.Load(r.Form["key"][0]); !ok {
+		val := fmt.Sprintf("hello: %s", r.Form["key"][0])
+		cache.KvMap.Store(r.Form["key"][0], val)
+		fmt.Printf("cached key: {%s: %s}\n", r.Form["key"][0], val)
+
+		time.AfterFunc(time.Duration(expireTime)*time.Second, func() {
+			cache.KvMap.Delete(r.Form["key"][0])
+			fmt.Printf("removed cached key after 3s: {%s: %s}\n", r.Form["key"][0], val)
+		})
+	}
+
+	val, _ := cache.KvMap.Load(r.Form["key"][0])
+
+	_, err := fmt.Fprintf(w, val.(string))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func registerHost(host string) error {
+	resp, err := http.Get(fmt.Sprintf("%s/register?host=%s", regHost, host))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func unregisterHost(host string) error {
+	resp, err := http.Get(fmt.Sprintf("%s/unregister?host=%s", regHost, host))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+```
+
+代码接受由命令行指定的 `-p` 参数指定查询端口号；
+
+
+
+
+
+
 
 
 
@@ -311,6 +671,10 @@ memcached的集群比较特殊，严格来说它只能算是**伪集群**，因�
 >   参考：
 >
 >   -   https://ai.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html
+
+
+
+
 
 
 
