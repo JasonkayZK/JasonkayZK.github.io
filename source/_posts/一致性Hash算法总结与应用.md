@@ -642,37 +642,392 @@ func unregisterHost(host string) error {
 }
 ```
 
-代码接受由命令行指定的 `-p` 参数指定查询端口号；
+代码接受由命令行指定的 `-p` 参数指定服务器端口号；
 
+代码执行后，会调用 `startServer` 函数启动一个http服务器；
 
+在 `startServer` 函数中，首先调用 `registerHost` 在代理服务器上进行注册（下文会讲），并监听 `/` 路径，具体代码如下：
 
+```go
+func startServer(port string) {
+	hostName := fmt.Sprintf("localhost:%s", port)
 
+	fmt.Printf("start server: %s\n", port)
 
+	err := registerHost(hostName)
+	if err != nil {
+		panic(err)
+	}
 
+	http.HandleFunc("/", kvHandle)
+	err = http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		err = unregisterHost(hostName)
+		if err != nil {
+			panic(err)
+		}
+		panic(err)
+	}
+}
+```
 
+`kvHandle` 函数对请求进行处理：
 
+```go
+func kvHandle(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
 
+	if _, ok := cache.KvMap.Load(r.Form["key"][0]); !ok {
+		val := fmt.Sprintf("hello: %s", r.Form["key"][0])
+		cache.KvMap.Store(r.Form["key"][0], val)
+		fmt.Printf("cached key: {%s: %s}\n", r.Form["key"][0], val)
 
+		time.AfterFunc(time.Duration(expireTime)*time.Second, func() {
+			cache.KvMap.Delete(r.Form["key"][0])
+			fmt.Printf("removed cached key after 3s: {%s: %s}\n", r.Form["key"][0], val)
+		})
+	}
 
+	val, _ := cache.KvMap.Load(r.Form["key"][0])
 
+	_, err := fmt.Fprintf(w, val.(string))
+	if err != nil {
+		panic(err)
+	}
+}
+```
 
+首先，解析来自路径的参数：`?key=xxx`；
 
+随后，查询服务器中的缓存（为了简单起见，这里使用 `sync.Map` 来模拟缓存）：
 
+-   如果缓存不存在，则写入缓存，并通过 `time.AfterFunc` 设置缓存过期时间（`expireTime`）；
 
+最后，返回缓存；
+
+<br/>
+
+#### **② 缓存代理服务器准备**
+
+有了缓存服务器之后，我们还需要一个代理服务器来选择具体选择哪个缓存服务器来请求；
+
+代码如下：
+
+proxy/proxy.go
+
+```go
+package proxy
+
+import (
+	"fmt"
+	"github.com/jasonkayzk/consistent-hashing-demo/core"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+type Proxy struct {
+	consistent *core.Consistent
+}
+
+// NewProxy creates a new Proxy
+func NewProxy(consistent *core.Consistent) *Proxy {
+	proxy := &Proxy{
+		consistent: consistent,
+	}
+	return proxy
+}
+
+func (p *Proxy) GetKey(key string) (string, error) {
+
+	host, err := p.consistent.GetKey(key)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://%s?key=%s", host, key))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Printf("Response from host %s: %s\n", host, string(body))
+
+	return string(body), nil
+}
+
+func (p *Proxy) RegisterHost(host string) error {
+
+	err := p.consistent.RegisterHost(host)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("register host: %s success", host))
+	return nil
+}
+
+func (p *Proxy) UnregisterHost(host string) error {
+	err := p.consistent.UnregisterHost(host)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("unregister host: %s success", host))
+	return nil
+}
+```
+
+代理服务器的逻辑很简单，就是创建一个一致性Hash结构： `Consistent`，把 `Consistent` 和请求缓存服务器的逻辑进行了一层封装；
+
+<br/>
+
+### **算法验证**
+
+#### **启动代理服务器**
+
+启动代理服务器的代码如下：
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/jasonkayzk/consistent-hashing-demo/core"
+	"github.com/jasonkayzk/consistent-hashing-demo/proxy"
+	"net/http"
+)
+
+var (
+	port = "18888"
+
+	p = proxy.NewProxy(core.NewConsistent(10, nil))
+)
+
+func main() {
+	stopChan := make(chan interface{})
+	startServer(port)
+	<-stopChan
+}
+
+func startServer(port string) {
+	http.HandleFunc("/register", registerHost)
+	http.HandleFunc("/unregister", unregisterHost)
+	http.HandleFunc("/key", getKey)
+
+	fmt.Printf("start proxy server: %s\n", port)
+
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func registerHost(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	err := p.RegisterHost(r.Form["host"][0])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	_, _ = fmt.Fprintf(w, fmt.Sprintf("register host: %s success", r.Form["host"][0]))
+}
+
+func unregisterHost(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	err := p.UnregisterHost(r.Form["host"][0])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	_, _ = fmt.Fprintf(w, fmt.Sprintf("unregister host: %s success", r.Form["host"][0]))
+}
+
+func getKey(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	val, err := p.GetKey(r.Form["key"][0])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	_, _ = fmt.Fprintf(w, fmt.Sprintf("key: %s, val: %s", r.Form["key"][0], val))
+}
+```
+
+和缓存服务器类似，这里采用 HTTP 服务器来模拟；
+
+代理服务器监听 18888 端口的几个路由：
+
+-   `/register`：注册缓存服务器；
+-   `/unregister`：注销缓存服务器；
+-   `/key`：查询缓存Key；
+
+>   **这里为了简单起见，使用了这种方式进行服务注册，实际使用时请使用其他组件进行实现！**
+
+接下来启动缓存服务器：
+
+```
+start proxy server: 18888
+```
+
+<br/>
+
+#### **启动缓存服务器**
+
+分别启动三个缓存服务器：
+
+```bash
+$ go run server/main.go -p 8080
+start server: 8080
+
+$ go run server/main.go -p 8081
+start server: 8081
+
+$ go run server/main.go -p 8082
+start server: 8082
+```
+
+同时，代理服务器输出：
+
+```
+register host: localhost:8080 success
+register host: localhost:8081 success
+register host: localhost:8082 success
+```
+
+可以看到缓存服务器已经成功注册；
+
+<br/>
+
+#### **请求代理服务器获取Key**
+
+可以使用 `curl` 命令请求代理服务器获取缓存 `key`：
+
+```bash
+$ curl localhost:18888/key?key=123
+key: 123, val: hello: 123
+```
+
+此时，代理服务器输出：
+
+```
+Response from host localhost:8080: hello: 123
+```
+
+同时，8000端口的缓存服务器输出：
+
+```
+cached key: {123: hello: 123}
+removed cached key after 10s: {123: hello: 123}
+```
+
+可以看到，8000端口的服务器对key值进行了缓存，并在10秒后清除了缓存；
+
+<br/>
+
+#### **尝试多次获取Key**
+
+尝试获取多个Key：
+
+```
+Response from host localhost:8082: hello: 45363456
+Response from host localhost:8080: hello: 4
+Response from host localhost:8082: hello: 1
+Response from host localhost:8080: hello: 2
+Response from host localhost:8082: hello: 3
+Response from host localhost:8080: hello: 4
+Response from host localhost:8082: hello: 5
+Response from host localhost:8080: hello: 6
+Response from host localhost:8082: hello: sdkbnfoerwtnbre
+Response from host localhost:8082: hello: sd45555254tg423i5gvj4v5
+Response from host localhost:8081: hello: 0
+Response from host localhost:8082: hello: 032452345
+```
+
+可以看到不同的key被散列到了不同的缓存服务器；
+
+接下来我们通过debug查看具体的变量来一探究竟；
+
+<br/>
+
+#### **通过Debug查看注册和Hash环**
+
+开启debug，并注册单个缓存服务器后，查看 Consistent 中的值：
+
+![consistent-hash-debug-1.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-debug-1.jpg)
+
+注册三个缓存服务器后，查看 Consistent 中的值：
+
+![consistent-hash-debug-2.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-debug-2.jpg)
+
+从debug中的变量，我们就可以很清楚的看到注册不同数量的服务器时，一致性Hash上服务器的动态变化！
+
+以上就是基本的一致性Hash算法的实现了！
+
+**但是很多时候，我们的缓存服务器需要同时处理大量的缓存请求，而通过上面的算法，我们总是会去同一台缓存服务器去获取缓存数据；**
+
+**如果很多的热点数据都落在了同一台缓存服务器上，则可能会出现性能瓶颈；**
+
+Google 在2017年提出了： **含有负载边界值的一致性Hash算法；**
+
+下面我们在基本的一致性Hash算法的基础上，**实现含有负载边界值的一致性Hash！**
 
 <br/>
 
 ## **含有负载边界值的一致性Hash**
 
-17年时，Google 提出了含有负载边界值的一致性Hash算法，此算法主要应用于服务器组中资源不同的场景；
+### **算法描述**
+
+17年时，Google 提出了含有负载边界值的一致性Hash算法，此算法主要应用于在实现一致性的同时，实现负载的平均性；
 
 >   **此算法最初由 Vimeo 的 Andrew Rodland 在 [haproxy](https://github.com/haproxy/haproxy) 中实现并开源；**
 >
 >   参考：
 >
 >   -   https://ai.googleblog.com/2017/04/consistent-hashing-with-bounded-loads.html
+>
+>   arvix论文地址：
+>
+>   -   https://arxiv.org/abs/1608.01350
 
+这个算法将缓存服务器视为一个含有一定容量的桶（可以简单理解为Hash桶），将客户端视为球，则平均性目标表示为：所有约等于平均密度（球的数量除以桶的数量）：
 
+实际使用时，可以设定一个平均密度的参数 ε，将每个桶的容量设置为平均加载时间的 [下上限](https://en.wikipedia.org/wiki/Floor_and_ceiling_functions) (1+ε)；
+
+具体的计算过程如下：
+
+-   首先，计算 key 的 Hash 值；
+-   随后，沿着 Hash 环顺时针寻找第一台满足条件（平均容量限制）的服务器；
+-   获取缓存；
+
+例如下面的图：
+
+![consistent-hash-12.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-12.png)
+
+使用哈希函数将 6 个球和 3 个桶分配给 Hash环 上的随机位置，假设每个桶的容量设置为 2，按 ID 值的递增顺序分配球；
+
+-   1号球顺时针移动，进入C桶；
+-   2号球进入A桶；
+-   3号和4号球进入B桶；
+-   5号球进入C桶；
+-   然后6号球顺时针移动，首先击中B桶；但是桶 B 的容量为 2，并且已经包含球 3 和 4，所以球 6 继续移动到达桶 C，但该桶也已满；最后，球 6 最终进入具有备用插槽的桶 A；
+
+<br/>
+
+### **算法实现**
+
+在上面基本一致性 Hash 算法实现的基础上，我们继续实现
 
 
 
