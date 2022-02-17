@@ -90,7 +90,7 @@ description: 一致性Hash算法是解决分布式缓存等问题的一种算法
 
 将Key映射至服务器遵循下面的逻辑：
 
-<red>**从缓存对象key的位置开始，沿顺时针方向遇到的第一个服务器，便是当前对象将要缓存到的服务器；**</font>
+<font color="#f00">**从缓存对象key的位置开始，沿顺时针方向遇到的第一个服务器，便是当前对象将要缓存到的服务器；**</font>
 
 假设我们有 "semlinker"、"kakuqo"、"lolo"、"fer" 四个对象，分别简写为 o1、o2、o3 和 o4；
 
@@ -124,7 +124,7 @@ K3 => CS1
 
 以上便是一致性Hash的工作原理；
 
->   <red>**可以看到，一致性Hash就是：将原本单个点的Hash映射，转变为了在一个环上的某个片段上的映射！**</font>
+>   <font color="#f00">**可以看到，一致性Hash就是：将原本单个点的Hash映射，转变为了在一个环上的某个片段上的映射！**</font>
 
 下面我们来看几种服务器扩缩容的场景；
 
@@ -180,7 +180,7 @@ K3 => CS1
 
 **针对上面的问题，我们可以通过：引入虚拟节点来解决负载不均衡的问题：**
 
-<red>**即将每台物理服务器虚拟为一组虚拟服务器，将虚拟服务器放置到哈希环上，如果要确定对象的服务器，需先确定对象的虚拟服务器，再由虚拟服务器确定物理服务器；**</font>
+<font color="#f00">**即将每台物理服务器虚拟为一组虚拟服务器，将虚拟服务器放置到哈希环上，如果要确定对象的服务器，需先确定对象的虚拟服务器，再由虚拟服务器确定物理服务器；**</font>
 
 如下图所示：
 
@@ -192,7 +192,7 @@ K3 => CS1
 
 #### **虚拟节点的计算**
 
-虚拟节点的hash计算通常可以采用：<red>**对应节点的IP地址加数字编号后缀 hash（10.24.23.227#1) 的方式；**</font>
+虚拟节点的hash计算通常可以采用：<font color="#f00">**对应节点的IP地址加数字编号后缀 hash（10.24.23.227#1) 的方式；**</font>
 
 举个例子，node-1节点IP为10.24.23.227，正常计算`node-1`的hash值：
 
@@ -206,8 +206,8 @@ K3 => CS1
 
 >   **注意：**
 >
->   -   <red>**分配的虚拟节点个数越多，映射在hash环上才会越趋于均匀，节点太少的话很难看出效果；**</font>
->   -   <red>**引入虚拟节点的同时也增加了新的问题，要做虚拟节点和真实节点间的映射，`对象key->虚拟节点->实际节点`之间的转换；**</font>
+>   -   <font color="#f00">**分配的虚拟节点个数越多，映射在hash环上才会越趋于均匀，节点太少的话很难看出效果；**</font>
+>   -   <font color="#f00">**引入虚拟节点的同时也增加了新的问题，要做虚拟节点和真实节点间的映射，`对象key->虚拟节点->实际节点`之间的转换；**</font>
 
 <br/>
 
@@ -1027,23 +1027,240 @@ Google 在2017年提出了： **含有负载边界值的一致性Hash算法；**
 
 ### **算法实现**
 
-在上面基本一致性 Hash 算法实现的基础上，我们继续实现
+在上面基本一致性 Hash 算法实现的基础上，我们继续实现**含有负载边界值的一致性Hash算法；**
 
+在核心算法中添加根据负载情况查询Key的函数，以及增加/释放负载值的函数；
 
+根据负载情况查询 Key 的函数：
 
+core/algorithm.go
 
+```go
+func (c *Consistent) GetKeyLeast(key string) (string, error) {
+	c.RLock()
+	defer c.RUnlock()
 
+	if len(c.replicaHostMap) == 0 {
+		return "", ErrHostNotFound
+	}
 
+	hashedKey := c.hashFunc(key)
+	idx := c.searchKey(hashedKey) // Find the first host that may serve the key
+
+	i := idx
+	for {
+		host := c.replicaHostMap[c.sortedHostsHashSet[i]]
+		loadChecked, err := c.checkLoadCapacity(host)
+		if err != nil {
+			return "", err
+		}
+		if loadChecked {
+			return host, nil
+		}
+		i++
+
+		// if idx goes to the end of the ring, start from the beginning
+		if i >= len(c.replicaHostMap) {
+			i = 0
+		}
+	}
+}
+
+func (c *Consistent) checkLoadCapacity(host string) (bool, error) {
+
+	// a safety check if someone performed c.Done more than needed
+	if c.totalLoad < 0 {
+		c.totalLoad = 0
+	}
+
+	var avgLoadPerNode float64
+	avgLoadPerNode = float64((c.totalLoad + 1) / int64(len(c.hostMap)))
+	if avgLoadPerNode == 0 {
+		avgLoadPerNode = 1
+	}
+	avgLoadPerNode = math.Ceil(avgLoadPerNode * (1 + loadBoundFactor))
+
+	candidateHost, ok := c.hostMap[host]
+	if !ok {
+		return false, ErrHostNotFound
+	}
+
+	if float64(candidateHost.LoadBound)+1 <= avgLoadPerNode {
+		return true, nil
+	}
+
+	return false, nil
+}
+```
+
+在 GetKeyLeast 函数中，首先根据 searchKey 函数，顺时针获取可能满足条件的第一个虚拟节点；
+
+随后调用 checkLoadCapacity 校验当前缓存服务器的负载数是否满足条件：
+
+-   **candidateHost.LoadBound+1 <= (c.totalLoad + 1) / len(hosts) * (1 + loadBoundFactor)**
+
+如果不满足条件，则沿着 Hash 环走到下一个虚拟节点，继续判断是否满足条件，直到满足条件；
+
+>   **这里使用的是无条件的 `for` 循环，因为一定存在低于 平均负载*(1 + loadBoundFactor) 的虚拟节点！**
+
+增加/释放负载值的函数：
+
+core/algorithm.go
+
+```go
+func (c *Consistent) Inc(hostName string) {
+	c.Lock()
+	defer c.Unlock()
+
+	atomic.AddInt64(&c.hostMap[hostName].LoadBound, 1)
+	atomic.AddInt64(&c.totalLoad, 1)
+}
+
+func (c *Consistent) Done(host string) {
+	c.Lock()
+	defer c.Unlock()
+
+	if _, ok := c.hostMap[host]; !ok {
+		return
+	}
+	atomic.AddInt64(&c.hostMap[host].LoadBound, -1)
+	atomic.AddInt64(&c.totalLoad, -1)
+}
+```
+
+逻辑比较简单，就是原子的对对应缓存服务器进行负载加减一操作；
+
+<br/>
+
+### **算法测试**
+
+#### **修改代理服务器代码**
+
+在代理服务器中增加路由：
+
+proxy/proxy.go
+
+```go
+func (p *Proxy) GetKeyLeast(key string) (string, error) {
+
+	host, err := p.consistent.GetKeyLeast(key)
+	if err != nil {
+		return "", err
+	}
+	p.consistent.Inc(host)
+
+	time.AfterFunc(time.Second*10, func() { // drop the host after 10 seconds(for testing)!
+		fmt.Printf("dropping host: %s after 10 second\n", host)
+		p.consistent.Done(host)
+	})
+
+	resp, err := http.Get(fmt.Sprintf("http://%s?key=%s", host, key))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Printf("Response from host %s: %s\n", host, string(body))
+
+	return string(body), nil
+}
+```
+
+>   **注意：这里模拟的是单个key请求可能会持续10s钟；**
+
+启动代理服务器时增加路由：
+
+main.go
+
+```go
+func startServer(port string) {
+	
+    // ......
+    
+	http.HandleFunc("/key_least", getKeyLeast)
+
+	// ......
+}
+
+func getKeyLeast(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	val, err := p.GetKeyLeast(r.Form["key"][0])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	_, _ = fmt.Fprintf(w, fmt.Sprintf("key: %s, val: %s", r.Form["key"][0], val))
+}
+```
+
+<br/>
+
+#### **测试**
+
+启动代理服务器，并开启三台缓存服务器；
+
+通过下面的命令获取含有负载边界的Key：
+
+```bash
+$ curl localhost:18888/key_least?key=123
+key: 123, val: hello: 123
+```
+
+多次请求后的结果如下：
+
+````
+```
+start proxy server: 18888
+register host: localhost:8080 success
+register host: localhost:8081 success
+register host: localhost:8082 success
+
+Response from host localhost:8080: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8081: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8081: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8081: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8081: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8080: hello: 123
+Response from host localhost:8082: hello: 123
+Response from host localhost:8082: hello: 123
+```
+````
+
+可以看到，缓存被均摊到了其他服务器（这是由于一个缓存请求会持续10s导致的）！
 
 <br/>
 
 ## **总结**
 
+本文抛砖引玉的讲解了一致性Hash算法的原理，并提供了Go的实现；
 
+在此基础之上，根据 Google 的论文实现了带有负载边界的一致性Hash算法；
 
+当然上面的代码在实际生产环境下仍然需要部分改进，如：
 
+-   服务注册；
+-   缓存服务器实现；
+-   心跳检测；
+-   ……
 
-
+大家在实际使用时，可以根据需要，搭配实际的组件！
 
 <br/>
 
