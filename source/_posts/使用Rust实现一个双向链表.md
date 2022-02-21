@@ -921,23 +921,75 @@ let res = a.x.map(|str| {
 
 根据我们之前说的，首先使用 `Box::from_raw` 将裸指针还原为 `Box<Node<T>>` 类型（为返回头节点数据做准备）；
 
+然后将链表的头节点指向当前节点的下一个节点；
 
+随后，修改链表头节点的内容：
 
+判断当前链表头节点是否为 None（弹出元素后是否变为空链表）：
 
+-   如果链表为空，则将尾节点也置为 `None`；
+-   否则链表不为空，将当前链表头节点的 `prev` 置为 `None`（表示当前 节点已经变为链表的头节点）；
 
+最后，使用前文提到的 `into_val` 函数，将 `Box<Node<T>>` 中的值取出，完成；
 
+<br/>
 
+同样的，尾部弹出一个元素：
 
+```rust
+/// Removes the last element from a list and returns it, or `None` if
+/// it is empty.
+///
+/// This operation should compute in *O*(1) time.
+pub fn pop_back(&mut self) -> Option<T> {
+  self.tail.map(|node| {
+    self.length -= 1;
 
+    unsafe {
+      let node = Box::from_raw(node.as_ptr());
 
+      self.tail = node.prev;
 
+      match self.tail {
+        None => self.head = None,
+        Some(tail) => (*tail.as_ptr()).next = None,
+      }
+      node.into_val()
+    }
+  })
+}
+```
 
+<br/>
 
+### **④ 查看首尾元素：peek()**
 
+由于在 Rust 中是区分元素所有权，并且区分可变和不可变引用的（未标注 `mut` 默认为不可变引用）；
 
+因此在 Rust 中实现 `peek()` 和在其他编程语言中略有不同！
 
+我们需要分别实现：
 
+-   `peek()`：返回不可变引用类型；
+-   `peek_mut()`：返回可变引用类型；
 
+>   <red>**需要注意的是：上面两个方法仅仅返回元素的引用，而元素的所有权还是在链表中；**</font>
+
+#### **实现 `peek_front()`**
+
+先来实现 `peek_front()`，代码如下：
+
+```rust
+pub fn peek_front(&self) -> Option<&T> {
+    unsafe {
+      self.head.as_ref().map(|node| &node.as_ref().val)
+    }
+}
+```
+
+代码非常简洁，只有一行；我们一个方法一个方法的来看；
+
+首先，
 
 
 
