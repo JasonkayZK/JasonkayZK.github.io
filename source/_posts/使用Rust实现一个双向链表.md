@@ -711,6 +711,238 @@ pub fn push_back(&mut self, val: T) {
 
 ### **③ 首尾弹出元素：pop()**
 
+`pop()` 函数会将头部或者尾部的元素弹出；
+
+所谓弹出就是：将元素从链表中删除，并且返回具有所有权的 `T`（如果存在的话）；
+
+同时，为了确切的表达是否存在元素，返回值我们使用 `Option<T>` 类型表示；
+
+下面来实现从头部弹出元素的方法 `pop_front`；
+
+代码如下所示：
+
+```rust
+/// Removes the first element and returns it, or `None` if the list is
+/// empty.
+///
+/// This operation should compute in *O*(1) time.
+pub fn pop_front(&mut self) -> Option<T> {
+    self.head.map(|node| {
+        self.length -= 1;
+
+        unsafe {
+            let node = Box::from_raw(node.as_ptr());
+
+            self.head = node.next;
+
+            match self.head {
+                None => self.tail = None,
+                Some(head) => (*head.as_ptr()).prev = None,
+            }
+            node.into_val()
+        }
+    })
+}
+```
+
+>   **注意到上面的代码风格，只是调用了 `self.head.map()` 即完成了所有功能；**
+>
+>   **这种函数式编程的风格在Rust中非常常见；**
+
+#### **补充内容：Option**
+
+在解释上面的代码之前，这里需要补充一些关于 `Option` 的知识：
+
+在 Rust 中所有的变量一定都不为 Null，即不会发生空指针；
+
+例如，下面的结构体：
+
+```rust
+struct Foo {
+    x: String,
+    y: String,
+}
+
+let foo = Foo {
+    x: "foo".to_string(),
+    y: "bar".to_string(),
+};
+```
+
+如果不对 x 或 y 初始化，则将导致编译错误！
+
+**而 Null 值的语义就是通过枚举类型 Option 来显示标注的！**
+
+Option 的定义如下：
+
+```rust
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[rustc_diagnostic_item = "Option"]
+#[stable(feature = "rust1", since = "1.0.0")]
+pub enum Option<T> {
+    /// No value.
+    #[lang = "None"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    None,
+    /// Some value of type `T`.
+    #[lang = "Some"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+}
+```
+
+其中，`None` 即对应了语义上的 `Null`，而 `Some(T)` 表示存在一个值；
+
+>   <red>**注意到，在 Option 中也存在空指针优化！**</font>
+>
+>   <red>**因此 `Option<T>` 占用的内存大小和 `T` 是完全相同的！**</font>
+
+>   <red>**枚举 Option 在设计上的思考：**</font>
+>
+>   <red>**如果你确定某个变量一定不为空，则无需使用 Option 来包装类型，此时在使用时，完全不需要担心会产生空指针等异常；**</font>
+>
+>   <red>**只有在你不确定某个变量是否一定有值时，才需要使用 Option 进行包装；**</font>
+>
+>   在使用 Option 时：
+>
+>   <red>**由于 `Option<T>` 类型和 `T` 类型是完全不同的两个类型，Rust 会要求使用者显式的处理空指针的情况（取值为`None`的情况），因此极大的避免了空指针的行为！**</font>
+>
+>   见：
+>
+>   -   [后悔发明Null：堪称CS史上最严重错误，至少造成10亿美金损失](https://cloud.tencent.com/developer/article/1677524)
+
+例如，修改上面的例子：
+
+```rust
+struct Foo {
+    x: Option<String>,
+    y: Option<String>,
+}
+
+let foo = Foo {
+    x: Option::from("foo".to_string()),
+    y: None,
+};
+```
+
+此时就可以表示一个None值；
+
+<br/>
+
+简单介绍了 `Option` 后，下面来看一下 `self.head.map()`；
+
+在 Rust 中，可能会存在很多 Option，如果需要将一个 Option 进行处理后，再返回另一个 Option 通常需要三个步骤：
+
+`判断 Option A 是 Some` => `解出 A` => `处理A，得到结果B` => `判断B是否为None` => `包装并返回 Option B`
+
+整个步骤异常繁杂：
+
+```rust
+struct Foo {
+    x: Option<String>,
+    y: Option<String>,
+}
+
+let a = Foo {
+    x: Option::from("foo".to_string()),
+    y: None,
+};
+
+let mut b: String = "".to_string();
+if a.x.is_some() {
+    b = a.x.unwrap();
+}
+
+let res = if b.ends_with("0") {
+    Some(b)
+} else {
+    None
+};
+
+println!("{:?}", res); // None
+```
+
+考虑到这种场景非常常见，因此 Rust 在 Option 中提供了 `map` 方法：
+
+```rust
+pub const fn map<U, F>(self, f: F) -> Option<U>
+where
+F: ~const FnOnce(T) -> U,
+F: ~const Drop,
+{
+    match self {
+        Some(x) => Some(f(x)),
+        None => None,
+    }
+}
+```
+
+用于将一个 `Option<T>` 类型转换为 `Option<U>` 类型；
+
+因此，上面的例子可以直接被简化为：
+
+```rust
+let res = a.x.map(|str| {
+    if str.ends_with("o") {
+        str
+    } else {
+        None
+    }
+});
+```
+
+<br/>
+
+经过上面的补充知识可以知道，`self.head.map()` 会处理整个弹出逻辑，并将头节点转换为返回值弹出；
+
+如果 head 为空，`map` 函数会直接返回 None；
+
+下面具体来看 `map` 函数中 Lambda表达式的逻辑：
+
+```rust
+|node| {
+    self.length -= 1;
+
+    unsafe {
+        let node = Box::from_raw(node.as_ptr());
+
+        self.head = node.next;
+
+        match self.head {
+            None => self.tail = None,
+            Some(head) => (*head.as_ptr()).prev = None,
+        }
+        node.into_val()
+    }
+}
+```
+
+此时，node 表示已经从 Option 中解出来的类型，即：`NonNull<Node<T>>`，裸指针类型；
+
+根据我们之前说的，首先使用 `Box::from_raw` 将裸指针还原为 `Box<Node<T>>` 类型（为返回头节点数据做准备）；
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
