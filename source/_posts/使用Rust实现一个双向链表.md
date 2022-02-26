@@ -8,8 +8,6 @@ tags: [Rust, 算法]
 description: 如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；同时，双向链表也引入了循环引用的问题，这也是导致内存难以释放的一个场景；没想到一个简简单单的双向链表居然涉及如此之多的问题！本文就使用Unsafe Rust实现了双向链表；
 ---
 
-
-
 如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！
 
 总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；
@@ -52,6 +50,8 @@ description: 如何激怒一个Rust爱好者？让他用Rust实现一个双向�
 >   这里也提供我学习[《Learn Rust With Entirely Too Many Linked Lists》](https://rust-unofficial.github.io/too-many-lists/index.html#learn-rust-with-entirely-too-many-linked-lists)这本书的源代码：
 >
 >   -   https://github.com/JasonkayZK/rust-learn/tree/algorithm/too-many-lists
+
+最后，本文内容超过 2w 字，希望你能静下心来通篇阅读，相信你一定会有所收获！
 
 那么，废话不多说，下面来使用 Unsafe Rust 实现一个双向链表吧！
 
@@ -537,7 +537,7 @@ impl<T> Default for LinkedList<T> {
 >
 >   **在给`_marker`进行赋值时，我们直接使用了PhantomData；**
 >
->   <red>**这是因为实际上PhantomData是一个ZST（Zero-Size Type），即无内存大小类型；**</font>
+>   <font color="#f00">**这是因为实际上PhantomData是一个ZST（Zero-Size Type），即无内存大小类型；**</font>
 >
 >   从 `PhantomData` 的定义中我们也能看出来：
 >
@@ -547,9 +547,9 @@ impl<T> Default for LinkedList<T> {
 >   pub struct PhantomData<T: ?Sized>;
 >   ```
 >
->   <red>**得益于Rust的优化，这些结构体在编译后都是不会占用内存大小的！**</font>
+>   <font color="#f00">**得益于Rust的优化，这些结构体在编译后都是不会占用内存大小的！**</font>
 >
->   <red>**因此，我们的 `_marker` 字段在编译后，甚至不会占用内存空间！**</font>
+>   <font color="#f00">**因此，我们的 `_marker` 字段在编译后，甚至不会占用内存空间！**</font>
 
 接下来，我们为 LinkedList 简单实现了 `Default` Trait，这使得我们可以通过两种方式创建出一个 LinkedList：
 
@@ -638,9 +638,9 @@ Note: this is an associated function, which means that you have to call it as Bo
 
 文档写的也非常清楚：
 
-<red>**最简单的方法是使用 `Box::from_raw` 函数将原始指针转换回 Box，从而允许 Box 析构函数执行清理；**</font>
+<font color="#f00">**最简单的方法是使用 `Box::from_raw` 函数将原始指针转换回 Box，从而允许 Box 析构函数执行清理；**</font>
 
-<red>**所以我们只需要将裸指针再转为实际的 Box，然后通过 Box 退出作用域后直接释放内存即可；**</font>
+<font color="#f00">**所以我们只需要将裸指针再转为实际的 Box，然后通过 Box 退出作用域后直接释放内存即可；**</font>
 
 >   **注：上面的技巧在 Unsafe Rust 中非常常见！**
 >
@@ -663,7 +663,7 @@ match self.head {
 
 **注意，这里使用到了 `unsafe`，因为我们需要将链表中的头指针 `head` 裸指针进行解引用并修改其 `prev` 值；**
 
->   <red>**Rust中，只有五类可以在 Unsafe Rust 中进行而不能在 Safe Rust 中进行的操作：**</font>
+>   <font color="#f00">**Rust中，只有五类可以在 Unsafe Rust 中进行而不能在 Safe Rust 中进行的操作：**</font>
 >
 >   -   **解引用裸指针**
 >   -   **调用不安全的函数或方法**
@@ -793,19 +793,19 @@ pub enum Option<T> {
 
 其中，`None` 即对应了语义上的 `Null`，而 `Some(T)` 表示存在一个值；
 
->   <red>**注意到，在 Option 中也存在空指针优化！**</font>
+>   <font color="#f00">**注意到，在 Option 中也存在空指针优化！**</font>
 >
->   <red>**因此 `Option<T>` 占用的内存大小和 `T` 是完全相同的！**</font>
+>   <font color="#f00">**因此 `Option<T>` 占用的内存大小和 `T` 是完全相同的！**</font>
 
->   <red>**枚举 Option 在设计上的思考：**</font>
+>   <font color="#f00">**枚举 Option 在设计上的思考：**</font>
 >
->   <red>**如果你确定某个变量一定不为空，则无需使用 Option 来包装类型，此时在使用时，完全不需要担心会产生空指针等异常；**</font>
+>   <font color="#f00">**如果你确定某个变量一定不为空，则无需使用 Option 来包装类型，此时在使用时，完全不需要担心会产生空指针等异常；**</font>
 >
->   <red>**只有在你不确定某个变量是否一定有值时，才需要使用 Option 进行包装；**</font>
+>   <font color="#f00">**只有在你不确定某个变量是否一定有值时，才需要使用 Option 进行包装；**</font>
 >
 >   在使用 Option 时：
 >
->   <red>**由于 `Option<T>` 类型和 `T` 类型是完全不同的两个类型，Rust 会要求使用者显式的处理空指针的情况（取值为`None`的情况），因此极大的避免了空指针的行为！**</font>
+>   <font color="#f00">**由于 `Option<T>` 类型和 `T` 类型是完全不同的两个类型，Rust 会要求使用者显式的处理空指针的情况（取值为`None`的情况），因此极大的避免了空指针的行为！**</font>
 >
 >   见：
 >
@@ -973,7 +973,7 @@ pub fn pop_back(&mut self) -> Option<T> {
 -   `peek()`：返回不可变引用类型；
 -   `peek_mut()`：返回可变引用类型；
 
->   <red>**需要注意的是：上面两个方法仅仅返回元素的引用，而元素的所有权还是在链表中；**</font>
+>   <font color="#f00">**需要注意的是：上面两个方法仅仅返回元素的引用，而元素的所有权还是在链表中；**</font>
 
 #### **实现 `peek_front()`**
 
@@ -989,45 +989,1742 @@ pub fn peek_front(&self) -> Option<&T> {
 
 代码非常简洁，只有一行；我们一个方法一个方法的来看；
 
-首先，
+首先，和之前类似，Option 提供了 `as_ref` 方法，可以将 `Option<T>` 转为 `Option<&T>` 而不用频繁的拆包再包装；
 
+之后再次调用 `map` 方法（**注意，此时 node 的类型为 `&NonNull<Node<T>>`，即裸指针的引用类型**），**将当前 Option 中的 裸指针引用转为 `Option<&T>` ，即Node节点的引用；**
 
+在上面的 `&node.as_ref().val` 中：
 
+首先 `node.as_ref()` 做的事情是：
 
+```rust
+#[stable(feature = "nonnull", since = "1.25.0")]
+#[rustc_const_unstable(feature = "const_ptr_as_ref", issue = "91822")]
+#[must_use]
+#[inline]
+pub const unsafe fn as_ref<'a>(&self) -> &'a T {
+  // SAFETY: the caller must guarantee that `self` meets all the
+  // requirements for a reference.
+  unsafe { &*self.as_ptr() }
+}
+```
 
+即，`as_ref` 会将裸指针解引用，并将实际的Node节点元素的引用返回，即：`&Node<T>`;
 
+>   **这里直接支持这个操作的原因是因为：**
+>
+>   <font color="#f00">**我们使用了 `NonNull` 类型，保证了指针一定不为空，即：裸指针一定不为空指针！**</font>
 
+随后，我们取出 `node.as_ref().val` 即：**裸指针对应Node节点的 val 字段，我们真正返回的元素！**
 
+**最后 `&node.as_ref().val` 表示取 node 节点 val 元素的引用！**
 
-
+>   **总结：**
+>
+>   **`&node.as_ref().val` 的顺序为：**
+>
+>   ```rust
+>   &((node.as_ref()).val)
+>   ```
+>
+>   **上面的函数和取引用操作缺一不可！**
 
 <br/>
 
+#### **实现 `peek_back()`**
+
+对应的，`peek_back()`，代码如下：
+
+```rust
+pub fn peek_back(&self) -> Option<&T> {
+  unsafe { self.tail.as_ref().map(|node| &node.as_ref().val) }
+}
+```
+
+这里不再赘述！
+
+<br/>
+
+#### **实现 `peek_front_mut()`**
+
+除了返回引用类型的元素之外，我们还要能返回可变引用类型：`Option<&mut T>`：
+
+使得用户能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！
+
+实现 `peek_front()` 的代码同样非常简洁，代码如下：
+
+```rust
+pub fn peek_front_mut(&mut self) -> Option<&mut T> {
+  unsafe { self.head.as_mut().map(|node| &mut node.as_mut().val) }
+}
+```
+
+相比于仅返回引用类型（只读）的情况，这里的修改主要是：
+
+-   `as_ref` 改为了 `as_mut`；
+-   `&node` 改为了 `&mut node`；
+
+思考一下，为什么这里需要将这么多的引用改为可变引用呢？
+
+首先，你需要明确一点：
+
+<font color="#f00">**在 Rust 中，如果修改一个容器中的元素，首先这个容器需要是可变的！**</font>
+
+那么，`head.as_mut()` 就获取了一个可变的裸指针（**即，这个裸指针指向的内存是可变的，而不是这个指针可变！**）；
+
+进而，此时 node 的类型为 `&mut NonNull<Node<T>>`；
+
+随后，调用 node 的 `as_mut` 方法：
+
+```rust
+#[stable(feature = "nonnull", since = "1.25.0")]
+#[rustc_const_unstable(feature = "const_ptr_as_ref", issue = "91822")]
+#[must_use]
+#[inline]
+pub const unsafe fn as_mut<'a>(&mut self) -> &'a mut T {
+  // SAFETY: the caller must guarantee that `self` meets all the
+  // requirements for a mutable reference.
+  unsafe { &mut *self.as_ptr() }
+}
+```
+
+可以看到，调用裸指针的 `as_mut` 方法需要一个可变指针 `&mut self`，这也是为什么上面使用了`head.as_mut()`；
+
+随后  `node.as_mut` 方法，返回一个裸指针解引用后的 Node 的可变引用：`&mut Node<T>`；
+
+最后，`&mut node.as_mut().val` 生成了 `&mut T`，即Node节点对应的可变引用！
+
+<br/>
+
+#### **实现 `peek_back_mut()`**
+
+对应的，`peek_back_()`，代码如下：
+
+```rust
+pub fn peek_back_mut(&mut self) -> Option<&mut T> {
+  unsafe { self.tail.as_mut().map(|node| &mut node.as_mut().val) }
+}
+```
+
+这里不再赘述！
+
+<br/>
+
+### **⑤ 根据index查看元素：`get_by_idx()`**
+
+有了查看首尾元素，我们自然还需要根据 index 索引查看任意位置的元素；
+
+但是这里需要明确一点：
+
+**api调用方很有可能传入了一个非法的index值，如：-1、超过链表长度的值等；**
+
+这个时候有两种处理方法：
+
+-   返回 None；
+-   返回错误；
+
+在这里，我们选择返回错误：
+
+**因为，如果仅仅返回 None，api调用方不能确定是因为 index 传错而导致的 None，还是链表本身就是空的！**
+
+下面我们补充一些关于 Rust 中错误处理的知识（**已经对这个内容很熟悉的同学可以跳过这部分**）！
+
+#### **补充：Rust中的错误处理**
+
+目前，主流的错误处理方法主要包括：
+
+-   try-catch：Java、C++；
+-   panic-recover：Go；
+-   error handling：Go；
+-   ……；
+
+>   详见：
+>
+>   -   [异常处理](https://zh.wikipedia.org/wiki/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86)
+
+总的来说，在 Rust 中主要有两种错误处理方式（和 Golang 比较类似）：
+
+-   **显式的 `panic`：主要用于测试，以及处理不可恢复的错误；（在原型开发中这很有用，比如 用来测试还没有实现的函数，不过这时使用 `unimplemented` 更能表达意图；）**
+-   **使用枚举 `Result`：当错误有可能发生，且应当由调用者处理时使用；**
+
+通常情况下，我们都使用枚举 Result：
+
+```rust
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[must_use = "this `Result` may be an `Err` variant, which should be handled"]
+#[rustc_diagnostic_item = "Result"]
+#[stable(feature = "rust1", since = "1.0.0")]
+pub enum Result<T, E> {
+    /// Contains the success value
+    #[lang = "Ok"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+
+    /// Contains the error value
+    #[lang = "Err"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    Err(#[stable(feature = "rust1", since = "1.0.0")] E),
+}
+```
+
+可以说，[`Result`](https://rustwiki.org/zh-CN/std/result/enum.Result.html) 是 [`Option`](https://rustwiki.org/zh-CN/std/option/enum.Option.html) 类型的更丰富的版本，描述的是可能的**错误**，而不是可能的**不存在**；
+
+也就是说，`Result<T，E>` 可以有两个结果的其中一个：
+
+-   `Ok<T>`：找到 `T` 元素；
+-   `Err<E>`：找到 `E` 元素，`E` 即表示错误的类型；
+
+<br/>
+
+#### **补充：Rust中自定义错误类型**
+
+有时候，我们可能需要自定义一些错误类型，如：`index不合法`；
+
+我们可以通过为我们的类型实现 `error::Error` Trait：
+
+```rust
+use std::{error, fmt};
+
+#[derive(Debug, Clone)]
+pub struct IndexOutOfRangeError;
+
+impl fmt::Display for IndexOutOfRangeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "index out of range")
+    }
+}
+
+impl error::Error for IndexOutOfRangeError {}
+```
+
+上面的代码定义了一个 `IndexOutOfRangeError` 类型，并实现了 `error::Error` Trait；
+
+>   **`error::Error` 中有许多方法可以重写以提供更多关于错误的信息，例如：**
+>
+>   -   backtrace；
+>   -   description；
+>   -   ……
+
+接下来，我们就可以在我们的代码中使用这个错误了，例如：
+
+```rust
+pub fn get_by_idx(&self, idx: usize) -> Result<Option<&T>, Box<dyn Error>> {
+  ......
+}
+```
+
+>   更多关于 Rust 中错误处理见：
+>
+>   -   [错误处理](https://rustwiki.org/zh-CN/rust-by-example/error.html)
+>   -   [Rust 官方文档](https://rustwiki.org/zh-CN/book/ch09-00-error-handling.html)
+
+<br/>
+
+#### **实现：get_by_idx方法**
+
+get_by_idx方法的代码如下：
+
+```rust
+pub fn get_by_idx(&self, idx: usize) -> Result<Option<&T>, Box<dyn Error>> {
+  let len = self.length;
+
+  if idx >= len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  // Iterate towards the node at the given index, either from the start or the end,
+  // depending on which would be faster.
+  let offset_from_end = len - idx - 1;
+  let mut cur;
+  if idx <= offset_from_end {
+    // Head to Tail
+    cur = self.head;
+    for _ in 0..idx {
+      match cur.take() {
+        None => {
+          cur = self.head;
+        }
+        Some(current) => unsafe {
+          cur = current.as_ref().next;
+        },
+      }
+    }
+  } else {
+    // Tail to Head
+    cur = self.tail;
+    for _ in 0..offset_from_end {
+      match cur.take() {
+        None => {
+          cur = self.tail;
+        }
+        Some(current) => unsafe {
+          cur = current.as_ref().prev;
+        },
+      }
+    }
+  }
+
+  unsafe { Ok(cur.as_ref().map(|node| &node.as_ref().val)) }
+}
+```
+
+下面来看一下代码；
+
+首先，判断用户传入的索引index是否大于了链表长度： `idx >= len`；
+
+>   **注意：这里并没有校验索引小于0，因为 `idx` 是 `usize` 类型的，一定不会小于0了！**
+
+随后，我们计算 `offset_from_end`，来判断是从链表头部到 index 近，还是尾部近（**充分利用我们双向链表的优势**）！
+
+##### **从头部寻找元素**
+
+如果 `idx <= offset_from_end`，说明从头部到 index 的距离更近：
+
+```rust
+// Head to Tail
+cur = self.head;
+for _ in 0..idx {
+  match cur.take() {
+    None => {
+      cur = self.head;
+    }
+    Some(current) => unsafe {
+      cur = current.as_ref().next;
+    },
+  }
+}
+```
+
+首先，代码将链表头部 `移动` 给了 `cur`；
+
+<br/>
+
+###### **补充内容：Copy Trait**
+
+看到这里，有人就会有疑问了：**Rust 中的 `=` 是 `move` 语义，这样做原链表中的 head 不就变成空值了！**
+
+的确，Rust中的 `=` 是 `move` 语义，但是<font color="#f00">**在Rust中存在另两个 Trait：`Clone & Copy`：**</font>
+
+```rust
+/// A common Trait for the ability to explicitly duplicate an object.
+#[stable(feature = "rust1", since = "1.0.0")]
+#[lang = "clone"]
+#[rustc_diagnostic_item = "Clone"]
+#[rustc_trivial_field_reads]
+pub trait Clone: Sized {
+    #[stable(feature = "rust1", since = "1.0.0")]
+    #[must_use = "cloning is often expensive and is not expected to have side effects"]
+    fn clone(&self) -> Self;
+
+    #[inline]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    fn clone_from(&mut self, source: &Self) {
+        *self = source.clone()
+    }
+}
 
 
+/// Types whose values can be duplicated simply by copying bits.
+#[stable(feature = "rust1", since = "1.0.0")]
+#[lang = "copy"]
+#[rustc_unsafe_specialization_marker]
+#[rustc_diagnostic_item = "Copy"]
+pub trait Copy: Clone {
+    // Empty.
+}
+```
 
+Clone 很好理解，就是由一个类型的实例创建出另一个相同类型的实例；
 
+而实现Copy的类型（**实现Copy需要先实现Clone**），可以使用简单字节copy的方式复制；
 
+<font color="#f00">**与Clone不同，Copy方式是隐式作用于类型变量，通过赋值语句来完成；**</font>
 
+>   **这一点有些类似于 Java 中的基本类型（如，int、double）；**
+>
+>   <font color="#f00">**并非所有的对象都需要使用对象包装，有些时候：直接对类型进行字节copy的成本要比生成一个指向对象的引用指针还要低！**</font>
 
+以下面的代码为例：
 
+```rust
+let mut x = Some(1);
+let y = x;
+let z = x.take();
+println!("{:?} {:?} {:?}", x, y, z); // None Some(1) Some(1)
+```
 
+上面的 `y = x` 为 Copy 语义，因此最终、y、z 都是存在值的！
+
+>   <font color="#f00">**注：在 Rust 中默认是 Move 语义，但是如果实现了 Copy Trait就会变为 Copy 语义；**</font>
+>
+>   <font color="#f00">**因此，明确一个变量是否实现了 Copy Trait 是非常重要的**</font>
+
+ `NonNull` 便实现了Clone 和 Copy Trait：
+
+```rust
+#[stable(feature = "nonnull", since = "1.25.0")]
+impl<T: ?Sized> Clone for NonNull<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+#[stable(feature = "nonnull", since = "1.25.0")]
+impl<T: ?Sized> Copy for NonNull<T> {}
+```
+
+因此上面的 `cur = self.head;` 最终会将变量 `cur` 也赋值为指向链表头部的裸指针；
+
+>   **补充内容：Option 中的 take 方法：**
+>
+>   **将 `Option<T>` 中的值 `T` 取出，如果 Option 为 None，则返回 None；** 
+
+<br/>
+
+随后，从头部开始遍历，直到第 idx 个节点：
+
+```rust
+for _ in 0..idx {
+  match cur.take() {
+    None => {
+      cur = self.head;
+    }
+    Some(current) => unsafe {
+      cur = current.as_ref().next;
+    },
+  }
+}
+```
+
+这段代码比较简单，执行完后，cur 就指向了链表中的第 idx 个节点；
+
+<br/>
+
+##### **从尾部寻找元素**
+
+如果 idx 节点离链表尾部比较近，则将会从尾部向前遍历；
+
+代码如下：
+
+```rust
+else {
+  // Tail to Head
+  cur = self.tail;
+  for _ in 0..offset_from_end {
+    match cur.take() {
+      None => {
+        cur = self.tail;
+      }
+      Some(current) => unsafe {
+        cur = current.as_ref().prev;
+      },
+    }
+  }
+}
+```
+
+这一段代码与从头开始遍历极为相似，这里不再赘述！
+
+<br/>
+
+##### **返回第 idx 个元素**
+
+经过上面的处理，最终会找到指向第 idx 个元素的裸指针：cur；
+
+最后，我们返回这个指针指向的节点中的值即可：
+
+```rust
+unsafe { Ok(cur.as_ref().map(|node| &node.as_ref().val)) }
+```
+
+至此，我们的根据 index 查看元素的方法已经完成！
+
+<br/>
+
+### **⑥ 根据index获取可变元素：get_by_idx_mut()**
+
+有了根据 index 获取只读元素的 `get_by_idx`，很自然的想到还会有获取可变元素的 `get_by_idx_mut`；
+
+与 `get_by_idx` 不同，`get_by_idx_mut` 的使用场景在内部实现中也会被大量用到，例如：
+
+-   根据元素插入指定的 index 位置；
+-   删除指定 index 位置的元素；
+-   ……
+
+因此，我们可以实现一个内部方法：返回指向 index 对应节点的可变裸指针来达到代码复用的效果：
+
+```rust
+ fn _get_by_idx_mut(&self, idx: usize) -> Result<Option<NonNull<Node<T>>>, Box<dyn Error>> {
+   let len = self.length;
+
+   if idx >= len {
+     return Err(Box::new(IndexOutOfRangeError {}));
+   }
+
+   // Iterate towards the node at the given index, either from the start or the end,
+   // depending on which would be faster.
+   let offset_from_end = len - idx - 1;
+   let mut cur;
+   if idx <= offset_from_end {
+     // Head to Tail
+     cur = self.head;
+     for _ in 0..idx {
+       match cur.take() {
+         None => {
+           cur = self.head;
+         }
+         Some(current) => unsafe {
+           cur = current.as_ref().next;
+         },
+       }
+     }
+   } else {
+     // Tail to Head
+     cur = self.tail;
+     for _ in 0..offset_from_end {
+       match cur.take() {
+         None => {
+           cur = self.tail;
+         }
+         Some(current) => unsafe {
+           cur = current.as_ref().prev;
+         },
+       }
+     }
+   }
+
+   Ok(cur)
+}
+```
+
+代码与 `get_by_idx` 方法即为相似，只是把 cur 声明为了 mut，并且直接返回 `Ok(cur)`！
+
+随后，直接使用这个内部方法实现我们的 `get_by_idx_mut` 方法：
+
+```rust
+pub fn get_by_idx_mut(&self, idx: usize) -> Result<Option<&mut T>, Box<dyn Error>> {
+  let mut cur = self._get_by_idx_mut(idx)?;
+  unsafe { Ok(cur.as_mut().map(|node| &mut node.as_mut().val)) }
+}
+```
+
+<br/>
+
+### **⑦ 在指定index(前)插入元素**
+
+经过前面的一些铺垫，这里实现的方法就显得比较常规了！
+
+具体代码如下：
+
+```rust
+pub fn insert_by_idx(&mut self, idx: usize, data: T) -> Result<(), Box<dyn Error>> {
+  let len = self.length;
+
+  if idx > len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  if idx == 0 {
+    return Ok(self.push_front(data));
+  } else if idx == len {
+    return Ok(self.push_back(data));
+  }
+
+  unsafe {
+    // Create Node
+    let mut spliced_node = Box::new(Node::new(data));
+    let before_node = self._get_by_idx_mut(idx - 1)?;
+    let after_node = before_node.unwrap().as_mut().next;
+    spliced_node.prev = before_node;
+    spliced_node.next = after_node;
+    let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+    // Insert Node
+    before_node.unwrap().as_mut().next = spliced_node;
+    after_node.unwrap().as_mut().prev = spliced_node;
+  }
+
+  self.length += 1;
+
+  Ok(())
+}
+```
+
+首先，如果 idx 大于 len，则返回错误（**这里可以相等，这相当于在链表尾部插入一个元素**）；
+
+随后，为了避免一些样板代码：
+
+-   `idx==0`可以被简化为：push_front；
+-   `idx == len`可以被简化为：push_back；
+
+如果是在链表的中间节点插入元素，则：
+
+```rust
+ // Create Node
+let mut spliced_node = Box::new(Node::new(data));
+let before_node = self._get_by_idx_mut(idx - 1)?;
+let after_node = before_node.unwrap().as_mut().next;
+spliced_node.prev = before_node;
+spliced_node.next = after_node;
+let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+// Insert Node
+before_node.unwrap().as_mut().next = spliced_node;
+after_node.unwrap().as_mut().prev = spliced_node;
+```
+
+首先，创建一个新的元素：`Box::new(Node::new(data))`；
+
+随后使用我们之前写过的方法：`self._get_by_idx_mut(idx - 1)?`，取出将要插入的 index 的前一个元素：before_node；
+
+>   **补充知识：`?`操作符**
+>
+>   如果你使用过 Kotlin 你就会对这个操作符很熟悉：
+>
+>   **`?`操作符放在一个返回 Result 类型的函数后：**
+>
+>   -   **如果函数返回 Error，则该函数会直接 return Error；**
+>   -   **否则，函数调用成功，返回函数的返回值；**
+>
+>   **`?`操作符经常用在如果调用函数发生错误，直接返回错误的场景，用于简化代码；**
+
+然后，通过 `let after_node = before_node.unwrap().as_mut().next;` 获取当前 index 处的节点（**因为插入新节点只需要修改这两个节点即可！**）；
+
+最后，修改待插入的节点的 `prev` 和 `next`，然后将节点插入：
+
+```rust
+spliced_node.prev = before_node;
+spliced_node.next = after_node;
+let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+// Insert Node
+before_node.unwrap().as_mut().next = spliced_node;
+after_node.unwrap().as_mut().prev = spliced_node;
+```
+
+>   **注：这里使用 `unwrap()` 直接获取节点的值是因为，我们能够保证这些节点一定不为 None！**
+>
+>   **否则会产生 panic 错误！**
+
+<br/>
+
+### **⑧ 删除index处的元素**
+
+有了在 index 前插入元素，下面我们继续实现删除 index 处元素的逻辑；
+
+和在 index 处插入元素类似：
+
+-   如果 `index >= len`，则报错（此时 index 没有元素，我们也不能移除元素）；
+-   如果 `idx == 0`，调用 pop_front；
+-   如果 `idx == len -1`，调用 pop_back；
+
+否则，进入移除在链表内部节点的逻辑；
+
+代码如下：
+
+```rust
+/// Removes the element at the given index and returns it.
+///
+/// This operation should compute in *O*(*n*) time.
+pub fn remove_by_idx(&mut self, idx: usize) -> Result<T, Box<dyn Error>> {
+  let len = self.length;
+
+  if idx >= len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  if idx == 0 {
+    return Ok(self.pop_front().unwrap());
+  } else if idx == len - 1 {
+    return Ok(self.pop_back().unwrap());
+  };
+
+  let cur = self._get_by_idx_mut(idx)?.unwrap();
+
+  self.unlink_node(cur);
+
+  unsafe {
+    let unlinked_node = Box::from_raw(cur.as_ptr());
+    Ok(unlinked_node.val)
+  }
+}
+```
+
+如果 index 为链表内部节点，则在移除时：
+
+首先，通过 `self._get_by_idx_mut(idx)?.unwrap();` 获取在 index 处的裸指针（待移除节点对应指针）；
+
+随后，调用 `unlink_node` 方法将该节点从链表中移除：
+
+```rust
+/// Unlinks the specified node from the current list.
+///
+/// Warning: this will not check that the provided node belongs to the current list.
+///
+/// This method takes care not to create mutable references to `element`,
+/// to maintain validity of aliasing pointers.
+#[inline]
+fn unlink_node(&mut self, mut node: NonNull<Node<T>>) {
+  let node = unsafe { node.as_mut() }; // this one is ours now, we can create an &mut.
+
+  // Not creating new mutable (unique!) references overlapping `element`.
+  match node.prev {
+    Some(prev) => unsafe { (*prev.as_ptr()).next = node.next },
+    // this node is the head node
+    None => self.head = node.next,
+  };
+
+  match node.next {
+    Some(next) => unsafe { (*next.as_ptr()).prev = node.prev },
+    // this node is the tail node
+    None => self.tail = node.prev,
+  };
+
+  self.length -= 1;
+}
+```
+
+**unlink_node 的逻辑非常简单，就是：**
+
+**修改待移除节点的前一个节点和后一个节点的指针，使得自身节点被移出原链表！**
+
+最后，代码通过：`Box::from_raw` 将裸指针还原为实际的 `Box<Node<T>>` 类型，并将节点中的元素值返回！
+
+```rust
+unsafe {
+  let unlinked_node = Box::from_raw(cur.as_ptr());
+  Ok(unlinked_node.val)
+}
+```
+
+>   **注：remove_by_idx 方法签名为：**
+>
+>   **`remove_by_idx(&mut self, idx: usize) -> Result<T, Box<dyn Error>>`**
+>
+>   <font color="#f00">**即，remove_by_idx 方法会直接将节点移除，并将在节点存放元素的所有权返回给方法调用者！**</font>
+
+<br/>
+
+### **⑨ 三种迭代器的实现：iter、iter_mut和into_iter**
+
+对应于 Rust 变量存在的三种形式（`&self`、`&mut self`、`self`），迭代器也被分为了三种：
+
+-   **IntoIter：获取元素所有权的迭代器，迭代器会获取原容器中全部元素所有权到迭代器中，随后被消耗掉；**
+-   **Iter：不可变引用类型的迭代器，即：对容器进行只读迭代；**
+-   **IterMut：可变引用类型的迭代器，即：不获取容器中元素的所有权，但是获取元素的可变引用进行迭代（可以在遍历时修改原容器中元素的值）；**
+
+#### **迭代器类型定义**
+
+首先我们为链表定义这三种迭代器类型：
+
+```rust
+pub struct IntoIter<T> {
+    list: LinkedList<T>,
+}
+
+pub struct Iter<'a, T: 'a> {
+    head: Option<NonNull<Node<T>>>,
+    tail: Option<NonNull<Node<T>>>,
+    len: usize,
+    _marker: PhantomData<&'a Node<T>>,
+}
+
+pub struct IterMut<'a, T: 'a> {
+    head: Option<NonNull<Node<T>>>,
+    tail: Option<NonNull<Node<T>>>,
+    len: usize,
+    _marker: PhantomData<&'a mut Node<T>>,
+}
+```
+
+对于 IntoIter 的结构声明是明确的，因为 IntoIter 会获取整个链表所有节点的所有权，因此直接将链表的所有权转移至 IntoIter 中即可；
+
+但是对于 Iter 和 IterMut 而言，我们需要 Copy 当前链表的头节点和尾节点，而非获取链表的所有权；
+
+同时，**对于 Iterator 的 Item 如果是引用类型，则需要指定对应元素的生命周期；**
+
+**但是由于 head 和 tail 中存放的是裸指针（即表示，其内存分配是由我们来管理的！），因此此时再次需要使用 `PhantomData` 来避免编译器对于生命周期的检查问题；**
+
+相对应的，下面是在双向链表中实现的各个类型的迭代器的构造方法：
+
+```rust
+pub fn into_iter(self) -> IntoIter<T> {
+  IntoIter { list: self }
+}
+
+pub fn iter(&self) -> Iter<'_, T> {
+  Iter {
+    head: self.head,
+    tail: self.tail,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}
+
+pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+  IterMut {
+    head: self.head,
+    tail: self.tail,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}
+```
+
+除了 IntoIter 直接获取的链表的所有权，Iter 和 IterMut 都是仅仅 Copy 裸指针；
+
+至此，我们对三种迭代器的定义完成，下面来具体实现每一种迭代器；
+
+<br/>
+
+#### **i.实现IntoIter**
+
+IntoIter的实现非常简单，因为我们已经完全将链表的所有权交给了 IntoIter；
+
+因此，如果需要正向遍历，我们直接调用 pop_front 即可；而如果需要反向遍历，我们只需要调用 pop_back；
+
+代码如下：
+
+```rust
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.list.pop_front()
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.list.length, Some(self.list.length))
+    }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.list.pop_back()
+    }
+}
+```
+
+由于双向链表可以从两个方向迭代，因此我们为 IntoIter 同时实现了两个 Trait：
+
+-   **Iterator：正向迭代器；**
+-   **DoubleEndedIterator：反向迭代器；**
+
+在实现 Iterator 时：
+
+首先，`type Item = T;` 声明了迭代器返回值类型为 `T`;
+
+而 `next` 就是用 pop_front 方法实现；
+
+同理，DoubleEndedIterator 使用 pop_back 方法实现；
+
+<font color="#f00">**需要注意的是：**</font>
+
+<font color="#f00">**由于 IntoIter 获取了整个链表的所有权，而我们是通过裸指针实现的链表，即我们需要手动管理这部分内存；**</font>
+
+<font color="#f00">**因此，我们需要手动为 IntoIter 实现 Drop Trait，以确保在 IntoIter 退出作用域后，能够准备的释放掉那些还没有被 move 出去的元素！**</font>
+
+具体实现代码如下：
+
+```rust
+impl<T> Drop for IntoIter<T> {
+    fn drop(&mut self) {
+        // only need to ensure all our elements are read;
+        // buffer will clean itself up afterwards.
+        for _ in &mut *self {}
+
+        println!("IntoIter has been dropped!")
+    }
+}
+```
+
+代码非常简单，我们直接通过 for 循环将 IntoIter 中还未被消费的元素直接取出来，然后忽略掉即可！
+
+>   **注1：**
+>
+>   <font color="#f00">**这里的 `for _ in &mut *self {}` 实际上就是调用的迭代器本身的 `next` 方法去取元素；**</font>
+>
+>   <font color="#f00">**而 `next` 是调用的链表的 pop_front 方法，该方法最终会调用 `Box::from_raw` 将裸指针转为具体的元素返回，因此实现了内存释放；**</font>
+
+>   **注2：**
+>
+>   <font color="#f00">**这里所做的也仅仅是将元素取出，并忽略（退出作用域）；**</font>
+>
+>   <font color="#f00">**具体的内存释放还要依赖于具体的范型类型 `T` 本身！**</font>
+
+<br/>
+
+#### **ii.实现Iter**
+
+相比于 IntoIter，在实现 Iter 时，我们需要自己手动维护 head 和 tail 裸指针；
+
+具体代码如下：
+
+```rust
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len == 0 {
+            None
+        } else {
+            self.head.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    let node = &*node.as_ptr();
+                    self.head = node.next;
+                    &node.val
+                }
+            })
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+
+    #[inline]
+    fn last(mut self) -> Option<&'a T> {
+        self.next_back()
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len == 0 {
+            None
+        } else {
+            self.tail.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    // Need an unbound lifetime to get 'a
+                    let node = &*node.as_ptr();
+                    self.tail = node.prev;
+                    &node.val
+                }
+            })
+        }
+    }
+}
+```
+
+正向和反向遍历实现起来也比较简单，具体的实现逻辑这里就不再赘述了；
+
+<font color="#f00">**需要注意的是：**</font>
+
+<font color="#f00">**因为 Iter 本质上只是对我们的链表中的 head、tail 以及 length 等属性进行了 Copy，而各个元素的所有权依然在链表中；**</font>
+
+<font color="#f00">**并且， head、tail 以及 length 实际上都是一个整型数字；**</font>
+
+<font color="#f00">**因此我们不需要为特别为 Iter 实现 Drop 方法，因为 Iter 中的所有类型均已经由 Rust 标准库实现了 Drop！**</font>
+
+<br/>
+
+#### **iii.实现IterMut**
+
+IterMut 的实现和 Iter 的实现几乎完全一致，只是将类型换为了：`type Item = &'a mut T`；
+
+具体实现的代码如下：
+
+```rust
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len == 0 {
+            None
+        } else {
+            self.head.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    let node = &mut *node.as_ptr();
+                    self.head = node.next;
+                    &mut node.val
+                }
+            })
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+
+    #[inline]
+    fn last(mut self) -> Option<&'a mut T> {
+        self.next_back()
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len == 0 {
+            None
+        } else {
+            self.tail.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    // Need an unbound lifetime to get 'a
+                    let node = &mut *node.as_ptr();
+                    self.tail = node.prev;
+                    &mut node.val
+                }
+            })
+        }
+    }
+}
+```
+
+这里不再赘述！
+
+<br/>
+
+### **⑩ 是否包含某元素：contains()**
+
+实现了迭代器之后，我们便很容易通过迭代器来遍历判断链表中是否包含某个元素；
+
+这里我们只需要只读权限即可，因此使用 iter 获取不可变引用的迭代器即可，代码如下：
+
+```rust
+/// Returns `true` if the `LinkedList` contains an element equal to the given value.
+///
+/// This operation should compute in *O*(*n*) time.
+///
+/// # Examples
+///
+/// ```
+/// use collection::list::linked_list::LinkedList;
+///
+/// let mut list = LinkedList::new();
+///
+/// list.push_back(0);
+/// list.push_back(1);
+/// list.push_back(2);
+///
+/// assert_eq!(list.contains(&0), true);
+/// assert_eq!(list.contains(&10), false);
+/// ```
+pub fn contains(&self, elem: &T) -> bool
+where
+T: PartialEq<T>,
+{
+  self.iter().any(|x| x == elem)
+}
+```
+
+代码非常简单，调用不可变引用迭代器 iter 的 any 方法，判断是否存在和 elem 相等的元素；
+
+代码虽然很简单，这里还是有两个可以补充的内容：
+
+-   Rust 中和比较相关的 Trait：Eq、PartialOrd、Ord等；
+-   声明范型约束；
+
+下面分别来看；
+
+#### **Rust 中和比较相关的 Trait**
+
+在 `core::cmp.rs` 模块里定义了用于两值之间比较的几个 Trait，分别是:
+
+-   **PartialEq**
+-   **Eq**
+-   **PartialOrd**
+-   **Ord**
+
+这四个 Trait 之间有这样一个关系:
+
+-   Eq 基于 PartialEq，即： `pub trait Eq: PartialEq`；
+-   PartialOrd 基于 PartialEq，即 `pub trait PartialOrd: PartialEq`；
+-   Ord 基于 Eq 和 PartialOrd， `pub trait PartialOrd: Eq + PartialOrd<Self>`；
+
+同时还定义了比较结果 `Ordering` 这样一个枚举类型：
+
+```rust
+pub enum Ordering {
+    Less = -1,
+    Equal = 0,
+    Greater = 1,
+}
+```
+
+下面具体来看每一种 Trait 分别表示什么；
+
+##### **部分等价关系：PartialEq**
+
+先说最基础的 `PartialEq`, 这个 trait 定义了两个方法:
+
+-   eq：两个值相等的话就返回 `true`, 需要使用者自行定义该方法；
+-   ne： 两个值不相等的话就返回 `true`；
+
+`PartialEq trait` 实现了[部分等价关系 Partial_equivalence_relation](https://en.wikipedia.org/wiki/Partial_equivalence_relation)，这种数值关系有以下特性:
+
+-   对称性 (symmetric): 如果 `a == b`, 那么 `b == a`；
+-   可传递性 (transitive): 如果 `a == b` 且 `b == c`, 那么 `a == c`；
+
+所有的基本数据类型都实现了 `PartialEq trait`，它们都定义在 [cmp.rs](https://blog.biofan.org/2019/08/rust-cmp/cmp.rs) 源代码文件里；
+
+并且，平时使用时只需要用 `#[derive]` 的方法实现即可，就像这样:
+
+```rust
+#[derive(PartialEq)]
+pub struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}
+```
+
+编译器会默认实现类似下面的代码：
+
+```rust
+impl PartialEq for Person {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id &&
+            self.name == other.name &&
+            self.height == other.height
+    }
+}
+```
+
+但如果我们在比较两个 `Person` 时，只想通过 `id` 属性来确定是不是同一个人，则可以手动定义 `PartialEq Trait` 的实现：
+
+```rust
+impl PartialEq for Person {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+```
+
+<br/>
+
+##### **等价关系：Eq**
+
+`Eq Trait` 实现了 [等价关系 Equivalence_relation](https://en.wikipedia.org/wiki/Equivalence_relation)，该数值关系具有以下特性：
+
+-   对称性 (symmetric): 如果 `a == b`, 那么 `b == a`
+-   可传递性 (transitive): 如果 `a == b` 且 `b == c`, 那么 `a == c`
+-   自反性 (reflexive): `a == a`
+
+<font color="#f00">**`Eq Trait` 基于 `PartialEq Trait`，但在此之上并没有添加新的方法定义；**</font>
+
+<font color="#f00">**这个 Trait 只是用于给编译器提示：这是个 `等份关系` 而不是个 `部分等价关系`； 因为编译器并不能检测 `自反性 (reflexive)`！**</font>
+
+**例如，在标准库中, 只有 f32 和 f64 没有实现 `Eq Trait`, 因为浮点值有两个特殊的值：**
+
+-   **NAN；**
+-   **INFINITY；**
+
+**它们本身是不可比较的，即： `NAN != NAN`；**
+
+我们可以来测试一下:
+
+```rust
+println!("NAN == NAN ? {}", std::f64::NAN == std::f64::NAN);
+```
+
+打印的结果是：
+
+```text
+NAN == NAN ? false
+```
+
+所以，上面的示例中定义的 `struct Person` 是无法用 `#[derive(Eq)]` 的方法定义的：
+
+```rust
+#[derive(Eq)]
+struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}
+```
+
+编译器会报出以下错误：
+
+```bash
+188 |     height: f64,
+    |     ^^^^^^^^^^^ the trait `std::cmp::Eq` is not implemented for `f64`
+    |
+    = note: required by `std::cmp::AssertParamIsEq`
+```
+
+但我们可以手动实现该 Trait：
+
+```rust
+struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}
+
+impl Eq for Person {}
+```
+
+<br/>
+
+##### **偏序关系：PartialOrd**
+
+`PartialOrd Trait` 基于 `PartialEq Trait` 实现，它新定义了几个方法：
+
+-   partial_cmp：需要使用者实现本方法，返回两值的比较结果；
+-   lt, le, gt, ge 已经定义好；
+
+偏序关系有以下特性：
+
+-   不对称性 antisymmetry: 如果 `a < b` 那么 `!(a > b)`；
+-   可传递性 transitive: 如果 `a < b` 且 `b < c` 那么 `a < c`；
+
+**标准库里的所有基本类型都已实现该 Trait；**
+
+**自定义类型可以直接使用 `#[derive]` 的方式由编译器实现该 Trait；**
+
+**或者也可像下面这样手动实现（这里是以身高来排序的）：**
+
+```rust
+impl PartialOrd for Person {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.height.partial_cmp(&other.height)
+    }
+}
+```
+
+<br/>
+
+##### **全序关系：Ord**
+
+`Ord Trait` 基于 `PartialOrd Trait` 和 `Eq Trait` 实现，它新定义了几个方法：
+
+-   cmp：需要使用者实现本方法，返回两值的比较结果；
+-   max, min, clamp 已经定义好；
+
+全序关系有以下特性：
+
+-   <font color="#f00">**完整的不对称性 (total antisymmetry): `a < b`, `a == b`, `a > b` 这三种结果只有一个是真；**</font>
+-   <font color="#f00">**可传递性 (transitive): 如果 `a < b` 且 `b < c` 那么 `a < c`；**</font>
+
+**在标准库中，f32 和 f64 没有实现 `Ord Trait`！**
+
+**同样是因为： `NAN` 和 `INFINITY` 的 不确定性， `NAN` 和 `INFINITY` 无法跟其它浮点值比较大小；**
+
+>   **更详细关于 Rust 中的比较可见：**
+>
+>   -   https://blog.biofan.org/2019/08/rust-cmp/
+>   -   [Equivalence_relation](https://en.wikipedia.org/wiki/Equivalence_relation)
+>   -   [Partial_equivalence_relation](https://en.wikipedia.org/wiki/Partial_equivalence_relation)
+>   -   [Total_order](https://en.wikipedia.org/wiki/Total_order)
+>   -   [nightly 版的 cmp.rs 源代码](https://blog.biofan.org/2019/08/rust-cmp/cmp.rs)
+>   -   [Part 3 Equivalence relations 等价关系与偏序关系](https://wenku.baidu.com/view/58f21acdba4cf7ec4afe04a1b0717fd5360cb29a.html)
+
+<br/>
+
+#### **声明范型约束**
+
+有些时候，我们需要限定范型的具体类型实现了一些 Trait 之后才能绑定另一些方法（最经典的：我们需要约束一个范型可比较才能为其实现排序）；
+
+此时我们就需要在说实现的方法中声明范型约束；
+
+Rust 中实现范型约束的方式有两种：
+
+```rust
+impl <A: TraitB + TraitC, D: TraitE + TraitF> MyTrait<A, D> for YourType {}
+
+// 当分别指定泛型的类型和约束时，使用 where 会更清晰
+
+impl <A, D> MyTrait<A, D> for YourType where
+    A: TraitB + TraitC,
+    D: TraitE + TraitF {}
+```
+
+>   **其实目前 Golang 中的范型也是采用了这种方式来对类型做限制；**
+>
+>   **但是 Golang 中的范型和 Rust 中还是非常不一样的！**
+
+<font color="#f00">**Rust 中的范型和 C++ 的实现方式非常类似，即：**</font>
+
+<font color="#f00">**对每一种具体类型生成其对应的代码，而非类似于 Java 中的类型擦除后进行类型转换，从而实现了：`零成本抽象`；**</font>
+
+<font color="#f00">**同时，Rust 在编译时会分析究竟有哪些类型满足了范型约束，而只为那些满足了约束的具体类型实现方法！**</font>
+
+<br/>
+
+### **⑪ 为实现Debug元素的链表实现遍历输出：traverse()**
+
+经过上面对范型约束的讲解，我们可以为实现了 Debug Trait 的、类型为范型 `<T>` 元素实现遍历打印的方法：
+
+```rust
+impl<T: Debug> LinkedList<T> {
+    pub fn traverse(&self) {
+        print!("{{ ");
+        for (idx, x) in self.iter().enumerate() {
+            print!(" [{}: {:?}] ", idx, *x)
+        }
+        println!(" }}");
+    }
+}
+```
+
+此时：
+
+**如果具体的类型 T 实现了 Debug Trait，则 Rust 编译器会自动的为装有该类型的链表生成上面的方法；**
+
+**而如果类型 T 并未实现 Debug Trait，此时 Rust 编译器不会为其对应的链表类型生成上面的方，此时如果在此链表上调用了 traverse 方法，编译器会报错，从而保证了正确的类型约束！**
+
+在这里，可能有些同学会有一些疑问：为什么不直接使用 `#[derive]` 让编译器自动帮我们生成打印链表的方法？
+
+例如：
+
+```rust
+#[derive(Debug)]
+impl<T> LinkedList<T> {
+  ......
+}
+```
+
+然而，这是不可能的！
+
+因为在我们的双向链表中：相邻的两个节点均为循环引用！
+
+**即：节点A ↔ 节点B**
+
+因此如果使用编译器为我们生成的代码，我们将会陷入死循环，永远也无法退出输出循环！
+
+>   关于引用循环，见：
+>
+>   -   [引用循环与内存泄漏](https://kaisery.github.io/trpl-zh-cn/ch15-06-reference-cycles.html#引用循环与内存泄漏)
+
+<br/>
+
+### **⑫ 释放链表Drop Trait和 clear()方法**
+
+回顾之前，我们为 IntoIter 实现了 Drop Trait；
+
+这是因为： **IntoIter 获取了链表的完整所有权，因此需要代替链表管理其内部元素的内存（或者说是生命周期）；**
+
+现在，我们**还需要为链表本身实现 Drop Trait：**
+
+<font color="#f00">**以确保在链表退出其作用域后（此后再也无法访问此链表），内部元素的内存能够正常的被释放；**</font>
+
+这里在实现时，参考了 Rust 源码中 LinkedList 中 Drop Trait的实现：
+
+```rust
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        struct DropGuard<'a, T>(&'a mut LinkedList<T>);
+
+        impl<'a, T> Drop for DropGuard<'a, T> {
+            fn drop(&mut self) {
+                // Continue the same loop we do below. This only runs when a destructor has
+                // panicked. If another one panics this will abort.
+                while self.0.pop_front().is_some() {}
+            }
+        }
+
+        while let Some(node) = self.pop_front() {
+            let guard = DropGuard(self);
+            drop(node);
+            mem::forget(guard);
+        }
+
+        println!("LinkedList dropped!")
+    }
+}
+```
+
+在这里，我们定义了一个 DropGuard，其内部只有 LinkedList 类型的属性，并再次为其也实现了 Drop Trait：
+
+```rust
+impl<'a, T> Drop for DropGuard<'a, T> {
+  fn drop(&mut self) {
+    // Continue the same loop we do below. This only runs when a destructor has
+    // panicked. If another one panics this will abort.
+    while self.0.pop_front().is_some() {}
+  }
+}
+```
+
+此处如此设计的原因是：
+
+确保在执行下面这段释放链表元素占用内存的代码时：
+
+```rust
+while let Some(node) = self.pop_front() {
+  let guard = DropGuard(self);
+  drop(node);
+  mem::forget(guard);
+}
+
+println!("LinkedList dropped!")
+```
+
+如果出现了 panic，则此时 DropGuard 可以再次尝试释放内存；
+
+而释放链表元素本身的代码非常简单，这里不再赘述；
+
+为链表实现了 Drop Trait 之后，我们可以很简单的为其实现 clear 方法，而无需担心内存泄露，下面我们来实现 clear 方法；
+
+<br/>
+
+#### **实现clear()方法**
+
+clear 方法非常简单：
+
+```rust
+pub fn clear(&mut self) {
+  *self = Self::new();
+}
+```
+
+这是得益于我们为双向链表实现了 Drop Trait；
+
+因此，**我们可以直接创建一个新的空双向链表来直接覆盖原链表，来实现 clear() 方法；**
+
+**而原链表在退出作用域之后会自动调用其 drop 方法，清空内部的节点以及对应元素，释放内存！**
+
+<br/>
+
+## **为链表添加测试用例**
+
+在 Rust 中，我们可以很方便的添加测试用例（甚至是在同一个文件中）；
+
+下面是为链表添加的一些测试用例：
+
+```rust
+#[cfg(test)]
+mod test {
+    use crate::list::linked_list::LinkedList;
+
+    #[test]
+    fn test_compiling() {}
+
+    #[test]
+    fn test_push_and_pop() {
+        let mut list = _new_list_i32();
+
+        assert_eq!(list.length, 5);
+        list.traverse();
+
+        assert_eq!(list.pop_front(), Some(-1));
+        assert_eq!(list.pop_back(), Some(i32::MAX));
+
+        assert_eq!(list.length, 3);
+        list.traverse();
+    }
+
+    #[test]
+    fn test_peak() {
+        let mut list = _new_list_string();
+
+        assert_eq!(list.peek_front(), Some(&String::from("abc")));
+        assert_eq!(list.peek_back(), Some(&String::from("hij")));
+
+        let cur = list.peek_front_mut();
+        assert_eq!(cur, Some(&mut String::from("abc")));
+        cur.map(|x| x.push(' '));
+
+        let cur = list.peek_back_mut();
+        assert_eq!(cur, Some(&mut String::from("hij")));
+        cur.map(|x| x.push(' '));
+
+        assert_eq!(list.peek_front(), Some(&String::from("abc ")));
+        assert_eq!(list.peek_back(), Some(&String::from("hij ")));
+        assert_eq!(list.length, 3);
+
+        list.traverse();
+    }
+
+    #[test]
+    fn test_get_idx() {
+        let list = _new_list_i32();
+
+        assert_eq!(list.get_by_idx(2).unwrap(), Some(&456));
+        assert_eq!(list.get_by_idx(3).unwrap(), Some(&789));
+
+        print!("before change: ");
+        list.traverse();
+        let cur = list.get_by_idx_mut(2).unwrap().unwrap();
+        assert_eq!(cur, &mut 456);
+
+        *cur <<= 1;
+        print!("after change: ");
+        list.traverse();
+
+        assert_eq!(list.get_by_idx(2).unwrap(), Some(&(456 << 1)));
+    }
+
+    #[test]
+    fn test_get_idx_err() {
+        let list = _new_list_i32();
+
+        assert!(list.get_by_idx(99).is_err());
+        assert!(list.get_by_idx_mut(99).is_err());
+    }
+
+    #[test]
+    fn test_insert_idx() {
+        let mut list = LinkedList::new();
+
+        list.push_back(String::from("1"));
+        list.push_back(String::from("2"));
+        list.push_back(String::from("3"));
+
+        list.insert_by_idx(1, String::from("99")).unwrap();
+        list.traverse();
+
+        assert_eq!(list.get_by_idx(0).unwrap(), Some(&String::from("1")));
+        assert_eq!(list.get_by_idx(1).unwrap(), Some(&String::from("99")));
+    }
+
+    #[test]
+    fn test_insert_idx_err() {
+        let mut list = LinkedList::new();
+
+        assert!(list.insert_by_idx(99, String::from("99")).is_err());
+    }
+
+    #[test]
+    fn test_remove_idx() {
+        let mut list = LinkedList::new();
+
+        list.push_back(String::from("1"));
+        list.push_back(String::from("2"));
+        list.push_back(String::from("3"));
+
+        let removed = list.remove_by_idx(1).unwrap();
+        list.traverse();
+
+        assert_eq!(removed, String::from("2"));
+
+        assert_eq!(list.get_by_idx(0).unwrap(), Some(&String::from("1")));
+        assert_eq!(list.get_by_idx(1).unwrap(), Some(&String::from("3")));
+    }
+
+    #[test]
+    fn test_remove_idx_err() {
+        let mut list: LinkedList<i32> = LinkedList::new();
+
+        assert!(list.remove_by_idx(99).is_err());
+    }
+
+    #[test]
+    fn test_contains() {
+        let list = _new_list_i32();
+
+        assert!(list.contains(&-1));
+        assert!(!list.contains(&-2));
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut list = _new_list_zst();
+
+        assert_eq!(list.length(), 3);
+
+        list.clear();
+
+        assert_eq!(list.length(), 0);
+    }
+
+    #[test]
+    fn test_iterator() {
+        let mut list1 = _new_list_i32();
+
+        print!("before change: ");
+        list1.traverse();
+        list1.iter_mut().for_each(|x| *x = *x - 1);
+        print!("after change: ");
+        list1.traverse();
+
+        let list2 = _new_list_string();
+        let list2_to_len = list2.into_iter().map(|x| x.len()).collect::<Vec<usize>>();
+        println!(
+            "transform list2 into len vec, list2_to_len: {:?}",
+            list2_to_len
+        );
+
+        // Compiling err:
+        // list2.traverse()
+    }
+
+    struct ZeroSizeType {}
+
+    fn _new_list_i32() -> LinkedList<i32> {
+        let mut list = LinkedList::new();
+
+        list.push_front(456);
+        list.push_front(123);
+        list.push_back(789);
+        list.push_front(-1);
+        list.push_back(i32::MAX);
+
+        list
+    }
+
+    fn _new_list_string() -> LinkedList<String> {
+        let mut list = LinkedList::new();
+
+        list.push_front(String::from("def"));
+        list.push_front(String::from("abc"));
+        list.push_back(String::from("hij"));
+
+        list
+    }
+
+    fn _new_list_zst() -> LinkedList<ZeroSizeType> {
+        let mut list = LinkedList::new();
+
+        list.push_front(ZeroSizeType {});
+        list.push_front(ZeroSizeType {});
+        list.push_back(ZeroSizeType {});
+
+        list
+    }
+}
+```
+
+执行下面的命令即可进行测试：
+
+```bash
+$ cargo test      
+   Compiling collection v0.1.0 (/Users/kylinkzhang/self-workspace/rust-learn/collection)
+    Finished test [unoptimized + debuginfo] target(s) in 1.18s
+     Running unittests (target/debug/deps/collection-617cd44adb150cd7)
+
+running 12 tests
+test list::linked_list::test::test_contains ... ok
+test list::linked_list::test::test_clear ... ok
+test list::linked_list::test::test_compiling ... ok
+test list::linked_list::test::test_insert_idx_err ... ok
+test list::linked_list::test::test_get_idx ... ok
+test list::linked_list::test::test_get_idx_err ... ok
+test list::linked_list::test::test_insert_idx ... ok
+test list::linked_list::test::test_peak ... ok
+test list::linked_list::test::test_remove_idx ... ok
+test list::linked_list::test::test_remove_idx_err ... ok
+test list::linked_list::test::test_iterator ... ok
+test list::linked_list::test::test_push_and_pop ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests collection
+
+running 2 tests
+test src/list/linked_list.rs - list::linked_list::LinkedList<T>::contains (line 289) ... ok
+test src/list/linked_list.rs - list::linked_list::LinkedList<T>::peek_front (line 141) ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.39s
+```
+
+除了会执行由 `mod test` 声明的测试用例之外，`cargo test` 还会测试代码注释中的测试用例；
+
+例如：
+
+```rust
+/// Returns `true` if the `LinkedList` contains an element equal to the given value.
+///
+/// This operation should compute in *O*(*n*) time.
+///
+/// # Examples
+///
+/// ```
+/// use collection::list::linked_list::LinkedList;
+///
+/// let mut list = LinkedList::new();
+///
+/// list.push_back(0);
+/// list.push_back(1);
+/// list.push_back(2);
+///
+/// assert_eq!(list.contains(&0), true);
+/// assert_eq!(list.contains(&10), false);
+/// ```
+pub fn contains(&self, elem: &T) -> bool
+where
+T: PartialEq<T>,
+{
+  self.iter().any(|x| x == elem)
+}
+```
+
+另外，非常值得注意的是，我在测试用例中**特别加入了对 ZST(Zero-Size Type) 的测试；**
+
+这个测试是非常重要的，因为在 Rust 中充斥着大量[零大小类型 (ZSTs)](https://nomicon.purewhite.io/exotic-sizes.html#零大小类型-zsts)！
+
+例如：
+
+```rust
+struct Nothing; // 无字段意味着没有大小
+
+// 所有字段都无大小意味着整个结构体无大小！
+struct LotsOfNothing {
+    foo: Nothing,
+    qux: (),      // 空元组无大小
+    baz: [u8; 0], // 空数组无大小
+}
+```
+
+就其本身而言，零尺寸类型（ZSTs）由于显而易见的原因是相当无用的；然而，就像 Rust 中许多奇怪的布局选择一样，它们的潜力在通用语境中得以实现：
+
+<font color="#f00">**在 Rust 中，任何产生或存储 ZST 的操作都可以被简化为无操作（no-op）！**</font>
+
+首先，存储它甚至没有意义——它不占用任何空间；另外，这种类型的值只有一个，所以任何加载它的操作都可以直接凭空产生它——这也是一个无操作（no-op），因为它不占用任何空间；
+
+这方面最极端的例子之一是 Set 和 Map：
+
+给定一个`Map<Key, Value>`，通常可以实现一个`Set<Key>`，作为`Map<Key, UselessJunk>`的一个薄封装；
+
+在许多语言中，这仍然需要为无用的封装分配空间，并进行存储和加载无用封装的工作，然后将其丢弃；因为，通常情况下对于编译器来说，分析这些类型是否是有用的，是非常困难的！
+
+**然而在 Rust 中，我们可以直接说`Set<Key> = Map<Key, ()>`！**
+
+<font color="#f00">**而 Rust 可以静态地知道每个加载和存储都是无用的，而且没有分配有任何大小；其结果是，单例化的代码基本上是 HashSet 的自定义实现，而没有任何 HashMap 要支持值所带来的开销！**</font>
+
+<font color="#f00">**安全的代码不需要担心 ZST，但是 Unsafe Rust 必须小心没有大小的类型的后果！特别是，指针偏移是无操作的，而分配器通常[需要一个非零的大小](https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc)；**</font>
+
+<font color="#f00">**因此在设计时需要特别注意：对 ZST 的引用（包括空片），就像所有其他的引用一样，必须是非空的，并且适当地对齐！**</font>
+
+<font color="#f00">**解引用 ZST 的空指针或未对齐指针是[未定义的行为](https://nomicon.purewhite.io/what-unsafe-does.html)，就像其他类型的引用一样；**</font>
+
+>   更多关于 ZST 见：
+>
+>   -   [非正常大小的类型](https://nomicon.purewhite.io/exotic-sizes.html#非正常大小的类型)
 
 <br/>
 
 ## **总结**
 
-呼呼~！你终于在 Rust 中实现了一个令人满意的双向链表！
+呼呼~！你终于在 Rust 中实现了一个令人满意的双向链表，并加入了大量的测试用例来保证其逻辑的正确性！
 
 经过了实现这个双向链表，我想你应该能学到下面这么多内容：
 
 -   Unsafe 用法；
+-   逆变、协变和不变；
 -   Rust 中部分类型的用法：
     -   NonNull；
     -   PhantomData；
     -   Option；
     -   ……
--   Rust 中的 Default；
+-   Rust 中的常用 Trait：
+    -   Default；
+    -   Copy；
+    -   Clone；
+    -   ……
+-   Rust中的比较：
+    -   PartialEq
+    -   Eq
+    -   PartialOrd
+    -   Ord
 -   Rust 中的 单元测试、文档测试以及文档注释；
 -   Rust 中的三种迭代器：IntoIter、Iter 和 IterMut；
 -   Rust 中的错误处理以及如何自定义错误类型；
