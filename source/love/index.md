@@ -6575,7 +6575,7 @@ body {
 				<canvas id="garden"></canvas>
 				<div id="words">
 					<div id="messages">
-						Lin Gu-ye, I have fallen in love with you for
+						Lin Gu-ye, We have been together for
 						<div id="elapseClock"></div>
 					</div>
 					<div id="loveu">
@@ -6620,7 +6620,7 @@ body {
 		var offsetX = $("#loveHeart").width() / 2;
 		var offsetY = $("#loveHeart").height() / 2 - 55;
 		var together = new Date();
-		together.setFullYear(2018, 9, 10);
+		together.setFullYear(2019, 4, 6);
 		together.setHours(0);
 		together.setMinutes(0);
 		together.setSeconds(0);
