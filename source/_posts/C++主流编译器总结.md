@@ -826,11 +826,23 @@ LLVM可以把C语言翻译成LLVM IR，然后解释执行，与Java的那一套�
 
 这是针对LLVM IR的汇编器，虽然名字里带as，实际上不是gcc那个as，它的功能是将`.ll`文件翻译为`.bc`文件，LLVM项目里，`.ll`称为LLVM汇编码，所以llvm-as也就是IR的汇编器了；
 
+例如：
+
+```bash
+$ llvm-as main.ll -o test.bc
+```
+
 <br/>
 
 #### **llvm-dis**
 
-与llvm-as刚好相反，IR的反汇编器，用来将`.bc`文件翻译为`.ll`文件；
+`llvm-dis` 命令与 `llvm-as` 刚好相反，IR的反汇编器，用来将`.bc`文件翻译为`.ll`文件；
+
+例如：
+
+```bash
+$ llvm-dis test.bc -o test.ll
+```
 
 <br/>
 
@@ -843,8 +855,8 @@ Clang能够调用起来整个编译器的流程，即在编译时它会调用上
 Clang通过指定 `-emit-llvm` 参数，可以配合`-S`或`-c`生成`.ll`或`.bc`文件，这样我们就能把Clang的部分和LLVM的后端分离开来独立运行：
 
 ```bash
-clang -emit-llvm -c main.c -o main.bc
-clang -emit-llvm -S main.c -o main.ll
+$ clang -emit-llvm -c main.c -o main.bc
+$ clang -emit-llvm -S main.c -o main.ll
 ```
 
 LLVM还有一些其他工具，就不举例了，可以查看LLVM项目路径下`/src/tools/`中查看。
@@ -891,36 +903,243 @@ $ clang++ -O2 -emit-llvm main.cpp -c -o main.bc
 
 # 查看文件类型
 $ file main.bc
-main.bc: LLVM bitcode
+main.bc: LLVM bitcode, wrapper
 ```
 
 >   **和上面命令的不同点在于，这里多了个`-emit-llvm`，表示生成和LLVM相关的代码；**
 
+<red>**对于 LLVM 来说，我们是可以直接通过 `lli` 命令进行解释执行的（这一点就完全类似于 Java 的 JIT）！**</font>
 
+例如：
 
+```bash
+# 解释执行 BitCode
+$ lli main.bc 
+hello                                                                                                                      
 
+# 解释执行中间代码
+$ lli main.ll
+hello
+```
 
+<red>**可以看出来，LLVM在这一点上非常的强大！**</font>
 
+<br/>
+
+除此之外，我们可以通过 `llc` 命令将中间代码编译为 汇编或者 `.obj` 文件：
+
+```bash
+# 编译为汇编
+$ llc -filetype=asm main.bc -O0 -o main.s
+
+# 编译为obj文件
+$ llc -filetype=obj main.bc -O2 -o main.o
+```
+
+或者也可以直接通过 `clang` 命令实现：
+
+```bash
+$ clang++ -O2 -c main.bc -o main.bc.o
+
+$ file main.bc.o 
+main.bc.o: Mach-O 64-bit object arm64
+```
+
+对比两种方式：
+
+```bash
+$ md5 main.o main.bc.o 
+MD5 (main.o) = bb22786da7050949a4e20bd69fe6b2c3
+MD5 (main.bc.o) = bb22786da7050949a4e20bd69fe6b2c3
+```
+
+**可以发现：通过 BitCode 获取到的Obj代码和直接编译出来的Obj代码是一模一样的！**
+
+**因此只需要得到 BitCode 文件就可以编译出一样的目标文件！**
+
+>   **LLVM 中的 BitCode 的本质是什么？**
+>
+>   通过LLVM官方对 BitCode 的描述，可以知道 BitCode 是一种以位为单位存取的二进制文件，它可以存在于包装结构中，如上一节中看到`LLVM bitcode, wrapper x86_64`，也可以存在于`Object`文件中，例如`Mach-O`文件等；
+>
+>   **对于`Mach-O`文件并且必定存在于名为`__LLVM`或者`__bitcode`的section中，因此我们可以根据这两个字段来判断生成的Mach-O文件是否包含BitCode；**
+>
+>   更多关于 BitCode：
+>
+>   -   https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/
+
+最后，我们可以编译并生成二进制可执行文件：
+
+```bash
+$ clang++ -O2 main.o -o main
+
+$ ./main
+hello
+```
+
+<br/>
+
+### **Clang工具链编译完整步骤**
+
+上面展示了 Clang+LLVM 的基本用法，下面总结一下整个Clang工具链涉及到的整个编译过程：
+
+首先，通过 `-E` 查看 Clang 在预处理步骤做了什么：
+
+```bash
+$ clang++ -E main.cpp
+```
+
+>   **这个过程的处理包括宏的替换，头文件的导入，以及类似 `#if` 的处理；**
+
+在预处理完成后就会进行词法分析，这里会把代码切成一个个 Token，比如：大小括号，等于号还有字符串等：
+
+```bash
+$ clang++ -fmodules -fsyntax-only -Xclang -dump-tokens main.cpp
+```
+
+然后是语法分析，验证语法是否正确，然后将所有节点组成抽象语法树 AST：
+
+```bash
+$ clang++ -fmodules -fsyntax-only -Xclang -ast-dump main.cpp
+```
+
+完成这些步骤后，就可以开始 IR 中间代码的生成了！
+
+CodeGen 会负责将语法树自顶向下遍历逐步翻译成 LLVM IR，IR 是编译过程的前端的输出后端的输入：
+
+```bash
+$ clang++ -S -emit-llvm main.cpp -o main.ll
+```
+
+<red>**这里 LLVM 会去做些优化工作，在编译设置里也可以设置优化级别 `-01`，`-03`，`-0s`，还可以写些自己的 Pass！**</font>
+
+```bash
+$ clang++ -O3 -S -emit-llvm main.cpp -o main.ll
+```
+
+接下来，生成汇编：
+
+```bash
+$ clang++ -S main.cpp -o main.s
+```
+
+随后，生成目标文件：
+
+```bash
+$ clang++ -fmodules -c main.cpp -o main.o
+```
+
+最后，生成可执行文件：
+
+```bash
+$ clang++ main.o -o main
+```
+
+执行：
+
+```bash
+$ ./main
+hello
+```
 
 <br/>
 
 ### **Clang常用命令**
 
+#### **基本命令**
 
+经过上面的一些例子，我们可以看到 Clang + LLVM 的基本用法，这里总结如下：
 
+```bash
+# 直接生成可执行文件
+$ clang++ main.cpp -o main
 
+# 只生成预处理文件
+$ clang++ -E main.cpp -o main.i
 
+# 只生成汇编文件
+$ clang++ -S main.cpp -o main.s
 
+# 生成LLVM IR中间代码 .ll 文件(可视化字节码文件)
+$ clang++ -O2 -emit-llvm main.cpp -S -o main.ll
 
+# 生成 LLVM 的中间表示 BitCode 文件
+$ clang++ -O2 -emit-llvm main.cpp -c -o main.bc
 
+# 解释执行 BitCode 文件
+$ lli main.bc 
 
+# 解释执行中间代码
+$ lli main.ll
 
+# 将 .ll 文件转化为 .bc 文件（汇编）
+$ llvm-as main.ll -o main.bc
+
+# 将 .bc 文件转化为 .ll 文件（反汇编）
+$ llvm-dis main.bc -o main.ll
+
+# 将LLVM字节码编译为汇编
+$ llc -filetype=asm main.bc -O2 -o main.s
+
+# 将LLVM字节码编译为obj文件
+$ llc -filetype=obj main.bc -O2 -o main.o
+
+# 使用Clang++ 将.bc或.ll文件转化为obj代码
+$ clang++ -O2 -c main.bc -o main.o
+
+# 将目标文件编译为二进制文件
+$ clang++ -O2 main.o -o main
+```
+
+<br/>
+
+#### **其他常用命令**
+
+除了上面非常常用的命令之外，Clang 还包括了一些其他命令；
+
+查看编译源文件需要的几个不同的阶段：
+
+```bash
+$ clang++ -ccc-print-phases main.cpp
++- 0: input, "main.cpp", c++
++- 1: preprocessor, {0}, c++-cpp-output
++- 2: compiler, {1}, ir
++- 3: backend, {2}, assembler
++- 4: assembler, {3}, object
++- 5: linker, {4}, image
+6: bind-arch, "arm64", {5}, image
+```
+
+查看操作内部命令：
+
+```bash
+$ clang -### main.cpp -o main 
+Apple clang version 13.1.6 (clang-1316.0.21.2.3)
+Target: arm64-apple-darwin21.4.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+ "/Library/Developer/CommandLineTools/usr/bin/clang" "-cc1" "-triple" "arm64-apple-macosx12.0.0" "-Wundef-prefix=TARGET_OS_" "-Wdeprecated-objc-isa-usage" "-Werror=deprecated-objc-isa-usage" "-Werror=implicit-function-declaration" "-emit-obj" "-mrelax-all" "--mrelax-relocations" "-disable-free" "-disable-llvm-verifier" "-discard-value-names" "-main-file-name" "main.cpp" "-mrelocation-model" "pic" "-pic-level" "2" "-mframe-pointer=non-leaf" "-fno-strict-return" "-fno-rounding-math" "-munwind-tables" "-target-sdk-version=12.3" "-fvisibility-inlines-hidden-static-local-var" "-target-cpu" "apple-m1" "-target-feature" "+v8.5a" "-target-feature" "+fp-armv8" "-target-feature" "+neon" "-target-feature" "+crc" "-target-feature" "+crypto" "-target-feature" "+dotprod" "-target-feature" "+fp16fml" "-target-feature" "+ras" "-target-feature" "+lse" "-target-feature" "+rdm" "-target-feature" "+rcpc" "-target-feature" "+zcm" "-target-feature" "+zcz" "-target-feature" "+fullfp16" "-target-feature" "+sm4" "-target-feature" "+sha3" "-target-feature" "+sha2" "-target-feature" "+aes" "-target-abi" "darwinpcs" "-fallow-half-arguments-and-returns" "-debugger-tuning=lldb" "-target-linker-version" "762" "-resource-dir" "/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6" "-isysroot" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk" "-I/usr/local/include" "-stdlib=libc++" "-internal-isystem" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1" "-internal-isystem" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include" "-internal-isystem" "/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/include" "-internal-externc-isystem" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" "-internal-externc-isystem" "/Library/Developer/CommandLineTools/usr/include" "-Wno-reorder-init-list" "-Wno-implicit-int-float-conversion" "-Wno-c99-designator" "-Wno-final-dtor-non-final-class" "-Wno-extra-semi-stmt" "-Wno-misleading-indentation" "-Wno-quoted-include-in-framework-header" "-Wno-implicit-fallthrough" "-Wno-enum-enum-conversion" "-Wno-enum-float-conversion" "-Wno-elaborated-enum-base" "-Wno-reserved-identifier" "-Wno-gnu-folding-constant" "-Wno-objc-load-method" "-fdeprecated-macro" "-fdebug-compilation-dir=/Users/kylinkzhang/self-workspace/test" "-ferror-limit" "19" "-stack-protector" "1" "-fstack-check" "-mdarwin-stkchk-strong-link" "-fblocks" "-fencode-extended-block-signature" "-fregister-global-dtors-with-atexit" "-fgnuc-version=4.2.1" "-fno-cxx-modules" "-fcxx-exceptions" "-fexceptions" "-fmax-type-align=16" "-fcommon" "-fcolor-diagnostics" "-clang-vendor-feature=+messageToSelfInClassMethodIdReturnType" "-clang-vendor-feature=+disableInferNewAvailabilityFromInit" "-clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation" "-fno-odr-hash-protocols" "-clang-vendor-feature=+enableAggressiveVLAFolding" "-clang-vendor-feature=+revert09abecef7bbf" "-clang-vendor-feature=+thisNoAlignAttr" "-clang-vendor-feature=+thisNoNullAttr" "-mllvm" "-disable-aligned-alloc-awareness=1" "-D__GCC_HAVE_DWARF2_CFI_ASM=1" "-o" "/var/folders/4y/s025lnc52lv68jjnzmt1pwgc0000gn/T/main-ee04e5.o" "-x" "c++" "main.cpp"
+ "/Library/Developer/CommandLineTools/usr/bin/ld" "-demangle" "-lto_library" "/Library/Developer/CommandLineTools/usr/lib/libLTO.dylib" "-no_deduplicate" "-dynamic" "-arch" "arm64" "-platform_version" "macos" "12.0.0" "12.3" "-syslibroot" "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk" "-o" "main" "-L/usr/local/lib" "/var/folders/4y/s025lnc52lv68jjnzmt1pwgc0000gn/T/main-ee04e5.o" "-lSystem" "/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/lib/darwin/libclang_rt.osx.a"
+```
+
+更多内容见官方文档：
+
+-   https://clang.llvm.org/
 
 <br/>
 
 ### **Clang+LLVM多语言混合编译**
 
 
+
+
+
+
+
+
+
+<br/>
+
+## **总结**
 
 
 
@@ -948,5 +1167,8 @@ main.bc: LLVM bitcode
 -   https://www.zhihu.com/question/20235742
 -   https://llvm.liuxfe.com/post/2190
 -   https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/
+-   https://www.jianshu.com/p/42cb026ce541
+-   https://www.jianshu.com/p/e4cbcd764783
+-   https://yupeng.fun/2020/01/11/clang-llvm/
 
 <br/>
