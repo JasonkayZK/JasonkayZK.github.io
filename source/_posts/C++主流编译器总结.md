@@ -155,47 +155,560 @@ g++ main.cpp -o main
 
 如下面这个文件：
 
-执行文件
+main.cpp
+
+```c++
+#include<iostream>
+
+int main(int arg, char **args) {
+    printf("arg number: %d\n", arg);
+}
+```
+
+编译后执行：
+
+```bash
+$ ./main 
+arg number: 1
+```
 
 
 
+如果对于多个文件，则需要首先编译为 `.obj` 文件，随后进行链接；
 
-
-
-
-
-
-
+>   想要理解GCC编译器的完整的编译过程，可以阅读：
+>
+>   -   [Journey of a C Program to Linux Executable in 4 Stages](https://www.thegeekstuff.com/2011/10/c-program-to-an-executable/)
 
 <br/>
 
-### **G++优化级别**
+### **GCC编译过程**
 
+<red>**GCC/G++ 在执行编译工作的时候，总共需要4步：**</font>
 
+-   <red>**预处理，生成 `.i` 的文件（预处理器cpp），此时对应的参数是 `-E`；**</font>
+-   <red>**将预处理后的文件转换成汇编语言，生成文件`.s`（编译器egcs），对应的参数是 `-S`；**</font>
+-   <red>**由汇编代码变为目标代码（机器代码）生成 `.o` 的文件（汇编器as），对应的参数是 `-c`；**</font>
+-   <red>**连接目标代码，分配实际的内存地址并生成可执行程序（链接器ld），无参数；**</font>
 
+即：一个C/C++文件要经过预处理(preprocessing)、编译(compilation)、汇编(assembly)、和连接(linking)才能变成可执行文件；
 
+下面分别来看；
 
+#### **预处理**
 
+只生成预处理代码的命令如下：
 
+```bash
+g++ -E main.cpp -o main.i
+```
 
+`-E` 的作用是让 GCC 在预处理结束后停止编译；
 
+<red>**预处理阶段主要处理 `include和define` 等；**</font>
 
+<red>**它把 `#include` 包含进来的 `.h文件` 插入到 `#include` 所在的位置，把源程序中使用到的用 `#define` 定义的宏用实际的字符串代替；**</font>
+
+>   **只是做简单的字符串替换，这么看来这一步还是很简单的；**
+>
+>   **想必了解了这些，你也知道为什么需要避免同一个头文件 include 两次了吧！**
 
 <br/>
 
-### **G++常用命令**
+#### **编译阶段**
 
+编译阶段命令如下：
 
+```bash
+g++ -S main.i -o main.s
+```
 
+`-S` 的作用是编译后结束，编译生成了汇编文件；
 
+<red>**在这个阶段中，GCC 首先要检查代码的规范性、是否有语法错误等；**</font>
 
+<red>**以确定代码的实际要做的工作，在检查无误后，GCC 把代码翻译成汇编语言；**</font>
 
+<br/>
 
+#### **汇编阶段**
 
+汇编阶段命令如下：
 
+```bash
+g++ -c main.s -o main.o
+```
 
+<red>**汇编阶段把 `.s`文件翻译成二进制机器指令文件`.o`，这个阶段接收 `.c` 、`.i`、`.s` 的文件都没有问题；**</font>
 
+<br/>
 
+#### **链接阶段**
+
+链接阶段命令如下：
+
+```bash
+g++ -o main main.s
+```
+
+**链接阶段，链接的是函数库；**
+
+在 `main.cpp` 中并没有定义 `printf` 的函数实现，且在预编译中包含进的 `stdio.h` 中也只有该函数的声明；
+
+而系统把这些函数实现都被做到名为`libc.so`的动态库；
+
+**函数库一般分为静态库和动态库两种：**
+
+-   <red>**静态库是指编译链接时，把库文件的代码全部加入到可执行文件中，因此生成的文件比较大，但在运行时也就不再需要库文件了；Linux中后缀名为 `.a`；**</font>
+-   <red>**动态库与之相反，在编译链接时并没有把库文件的代码加入到可执行文件中，而是在程序执行时由运行时链接文件加载库；Linux中后缀名为 `.so`，如前面所述的 `libc.so` 就是动态库；**</font>
+-   <red>**GCC 在编译时默认使用动态库；**</font>
+
+**静态库节省时间：不需要再进行动态链接，需要调用的代码直接就在代码内部；**
+
+**动态库节省空间：如果一个动态库被两个程序调用，那么这个动态库只需要一份在内存中；**
+
+<br/>
+
+### **GCC优化级别**
+
+GCC 编译器也有自己的一套优化级别，在编译时指定优化级别是由 `-O` 参数指定的；
+
+>   **这个选项控制所有的优化等级；**
+>
+>   **使用优化选项会使编译过程耗费更多的时间，并且占用更多的内存，尤其是在提高优化等级的时候；**
+
+例如：
+
+```bash
+g++ -O3 main.cpp -o main
+```
+
+下面来看优化等级：
+
+GCC 中指定优化级别的参数有：
+
+| **优化级别** | **说明**                                                     |
+| ------------ | ------------------------------------------------------------ |
+| `-O0`        | 关闭所有优化选项，也是CFLAGS 或 CXXFLAGS中没有设置-O等级时的默认等级；<br />这样就不会优化代码； |
+| `-O1`        | 最基本的优化等级；编译器会在不花费太多编译时间、同时也会试图生成更快更小的代码；<br />这些优化是非常基础的，但一般这些任务肯定能顺利完成。 |
+| `-O2`        | `-O1` 的进阶；这是推荐的优化等级，除非你有特殊的需求；`-O2` 会比 `-O1` 启用多一些标记；<br />设置了`-O2`后，编译器会试图提高代码性能而不会增大体积和大量占用的编译时间； |
+| `-O3`        | **最高最危险的优化等级**；用这个选项会延长编译代码的时间，并且在使用 `GCC4.x` 的系统里不应全局启用！<br />自从3.x版本以来GCC的行为已经有了极大地改变：在3.x，`-O3`生成的代码也只是比`-O2`快一点点而已，而`GCC4.x`中还未必更快；<br />用`-O3`来编译所有的软件包将产生更大体积更耗内存的二进制文件，大大增加编译失败的机会或不可预知的程序行为（包括错误），这样做将得不偿失；**在gcc 4.x.中使用-O3是不推荐的；** |
+| `-Og`        | 参数 `-Og` 是在 `-O1` 的基础上，去掉了那些影响调试的优化，所以如果最终是为了调试程序，可以使用这个参数；<br />不过光有这个参数也是不行的，这个参数只是告诉编译器，编译后的代码不要影响调试，但调试信息的生成还是靠 `-g` 参数的； |
+| `-Os`        | 参数 `-Os` 是在 `-O2` 的基础上，去掉了那些会导致最终可执行程序增大的优化，如果想要更小的可执行程序，可选择这个参数； |
+| `-Ofast`     | **参数 `-Ofast` 是在 `-O3` 的基础上，添加了一些非常规优化，这些优化是通过打破一些国际标准（比如一些数学函数的实现标准）来实现的，所以一般不推荐使用该参数；** |
+
+其他一些需要注意的是：
+
+-   **在编译时，如果没有指定上面的任何优化参数，则默认为 `-O0`，即没有优化；**
+-   **参数 `-O1`、`-O2`、`-O3` 中，随着数字变大，代码的优化程度也越高，不过这在某种意义上来说，也是以牺牲程序的编译速度、编译内存占用以及可调试性为代价的；**
+
+>   如果想知道上面的优化参数具体做了哪些优化，可以使用 `gcc -Q --help=optimizers` 命令来查询，比如下面是查询 -O3 参数开启了哪些优化：
+>
+>   ```bash
+>   $ g++ -Q --help=optimizers -O3
+>     ...
+>     -fassociative-math              [disabled]
+>     -fassume-phsa                   [enabled]
+>     ...
+>   ```
+
+>   **相关扩展：是否优化程度越高，生成的代码就越好？**
+>
+>   答案是：否；
+>
+>   **要记住一句话：过犹不及；**
+>
+>   **更高级别的优化是使用了大量的编译器 track 实现的，这些优化可能有些是不符合标准的，从而会造成一些奇奇怪怪的问题；**
+>
+>   **通常情况下我们使用 `-O2` 级别已经可以了；**
+
+>   GCC优化文档：
+>
+>   -   https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#Optimize-Options
+
+<br/>
+
+### **G++常用命令参数**
+
+#### **指定编译输出的名字`-o`**
+
+G++ 编译器最常用的使用格式是：
+
+```bash
+g++ main.cpp
+```
+
+上面的命令执行完整的编译过程，并且生成一个`a.out`文件；
+
+使用参数`-o`, 可以指定输出的文件名：
+
+```bash
+g++ main.cpp -o main
+```
+
+上面的命令会产生输出文件`main`；
+
+<br/>
+
+#### **通过`-Wall`参数启用所有警告**
+
+这个参数可以启用所有警告：
+
+main.cpp
+
+```c++
+#include<stdio.h>
+
+int main(void) {
+   int i;
+   printf("\n The Geek Stuff [%d]\n", i);
+   return 0;
+}
+```
+
+上面的代码编译时，会出现 `未初始化的i` 类似的警告；
+
+```bash
+$ g++ -Wall main.cpp -o main
+main.c: In function ‘main’:
+main.c:6:10: warning: ‘i’ is used uninitialized in this function [-Wuninitialized]
+```
+
+>   **`-w` 则是不产生任何告警！**
+
+<br/>
+
+#### **使用`-g`参数产生调试信息**
+
+在开发阶段，必要的调试信息是必须的：
+
+```bash
+$ g++ -g main.cpp -o main
+```
+
+<br/>
+
+#### **使用`-E`参数只产生预处理输出**
+
+`-E` 参数是产生预处理阶段的输出：
+
+```bash
+$ g++ -E main.cpp > main.i
+```
+
+G++ 命令将结果输出在`stdout`中，所以你可以把它重定向到任意的文件中；
+
+在上面的例子中，重定向到`main.i`文件中；
+
+<br/>
+
+#### **使用`-S`参数只产生汇编代码**
+
+`-S` 参数产生汇编级别的代码；
+
+```bash
+g++ -S main.cpp > main.s
+```
+
+文件`main.s`包含汇编代码；
+
+<br/>
+
+#### **使用 `-c` 参数只产生编译的代码**
+
+`-C`参数只产生编译的代码(没有链接link)。
+
+```
+g++ -c main.cpp
+```
+
+上面的代码产生`main.o`，包含机器级别的代码或者编译的代码；
+
+<br/>
+
+#### **使用`-save-temps`参数产生所有的中间步骤的文件**
+
+通过 `-save-temps` 这个参数，所有中间阶段的文件都会存储在当前文件夹中，注意它也会产生可执行文件；
+
+```bash
+$ g++ -save-temps main.cpp
+
+$ ls
+a.out  main.c  main.i  main.o  main.s
+```
+
+从例子中我们可以看到各个中间文件以及可执行文件；
+
+<br/>
+
+#### **使用`-l`参数链接共享库**
+
+`-l`可以用作链接共享库，例如：
+
+```bash
+g++ -Wall main.cpp -o main -lCPPfile
+```
+
+上面的代码会链接 `libCPPfile.so`，产生可执行文件 `main`；
+
+>   **需要注意的是：**
+>
+>   <red>**链接库文件名称是：去掉 `lib前缀` 和 `.so后缀` 的部分；**</font>
+>
+>   如：
+>
+>   -   `libev.so` 就是 `-lev`；
+>   -   `libace.so` 就是 `-lace`；
+
+<br/>
+
+#### **使用`-fPIC`产生位置无关的代码**
+
+<red>**当产生共享库的时候，应该创建位置无关的代码，这会让共享库使用任意的地址而不是固定的地址，要实现这个功能，需要使用`-fPIC`参数；**</font>
+
+下面的例子产生`libMain.so`动态库：
+
+```bash
+$ g++ -c -Wall -Werror -fPIC main.cpp
+$ g++ -shared -o libMain.so main.o
+```
+
+注意：
+
+-   产生共享库的时候使用了`-fPIC`参数；
+-   `-shared`产生共享库；
+
+<br/>
+
+#### **使用`-v`打印所有的执行命令**
+
+参数`-v`提供详细的信息，打印出G++编译一个文件的时候所有的步骤；
+
+例如：
+
+```bash
+$ g++ -Wall -v main.cpp -o main
+
+Using built-in specs.
+COLLECT_GCC=gcc
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/i686-linux-gnu/4.6/lto-wrapper
+Target: i686-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu/Linaro 4.6.3-1ubuntu5' --with-bugurl=file:///usr/share/doc/gcc-4.6/README.Bugs --enable-languages=c,c++,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.6 --enable-shared --enable-linker-build-id --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.6 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --enable-plugin --enable-objc-gc --enable-targets=all --disable-werror --with-arch-32=i686 --with-tune=generic --enable-checking=release --build=i686-linux-gnu --host=i686-linux-gnu --target=i686-linux-gnu
+Thread model: posix
+gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)
+...
+...
+...
+```
+
+这样我们可以看到所有的细节；
+
+<br/>
+
+#### **使用`-funsigned-char`将char解释为符号的char**
+
+通过这个参数， `char` 类型被看作为 `unsigned char` 类型；
+
+例如：
+
+```c++
+#include<stdio.h>
+
+int main() {
+  char c = -10;
+  // Print the string
+   printf("\n The Geek Stuff [%d]\n", c);
+   return 0;
+}
+```
+
+上面的代码通过这个参数编译后，输出结果为：
+
+```bash
+$ g++ -Wall -funsigned-char main.cpp -o main
+$ ./main
+
+ The Geek Stuff [246]
+```
+
+可以看到char是无符号的字节；
+
+<br/>
+
+#### **使用`-fsigned-char`将char解释为有符号的char**
+
+和上面的功能相反， 使用这个参数， char类型被看作是有符号的：
+
+```bash
+$ g++ -Wall -fsigned-char main.cpp -o main
+$ ./main
+
+ The Geek Stuff [-10]
+```
+
+结果输出为负数；
+
+<br/>
+
+#### **使用`-D`参数可以使用编译时的宏**
+
+参数`D`可以用作定义编译时的宏，例如：
+
+```c++
+#include<stdio.h>
+
+int main(void) {
+#ifdef MY_MACRO
+  printf("\n Macro defined \n");
+#endif
+  char c = -10;
+  printf("\n The Geek Stuff [%d]\n", c);
+  return 0;
+}
+```
+
+`-D` 可以用作从命令行定义宏`MY_MACRO`：
+
+```bash
+$ g++ -Wall -DMY_MACRO main.cpp -o main
+$ ./main
+
+ Macro defined 
+
+ The Geek Stuff [-10]
+```
+
+可以看到宏被定义了，并打印出了结果；
+
+<br/>
+
+#### **使用`-Werror`将警告升级为错误**
+
+通过这个参数，GCC 会将所有的警告转换成错误，例如：
+
+```c++
+#include<stdio.h>
+
+int main() {
+  char c;
+  printf("\n The Geek Stuff [%d]\n", c);
+  return 0;
+}
+```
+
+上面的代码编译的时候会有一个 `uninitialized` 警告， `-Werror`会把这个警告升级成错误：
+
+```bash
+main.cpp: In function ‘int main()’:
+main.cpp:5:9: error: ‘c’ is used uninitialized in this function [-Werror=uninitialized]
+   printf("\n The Geek Stuff [%d]\n", c);
+   ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1plus: all warnings being treated as errors
+```
+
+<br/>
+
+#### **使用`@`参数从文件中读取参数**
+
+GCC 参数可以从文件中读取，通过`@`后跟文件名的方式提供， 多个参数可以使用空格区隔，例如：
+
+文件 `opt_file` 包含编译参数：
+
+```bash
+$ cat opt_file 
+-Wall -omain
+```
+
+使用`@`参数：
+
+```bash
+$ g++ main.cpp @opt_file
+main.c: In function ‘main’:
+main.c:6:11: warning: ‘i’ is used uninitialized in this function [-Wuninitialized]
+
+$ ls main
+main
+```
+
+输出结果表明参数的确从文件中读取了，并且正确的应用到编译过程中；
+
+<br/>
+
+#### **使用参数`-I`指定头文件的文件夹**
+
+`-I` 参数指定了 Include 头文件的搜索路径；
+
+当有此选项时，优先搜索此路径下的头文件，然后按照 `#include` 后面是 `""` 还是 `<>` 来决定是优先在当前目录搜索还是优先在系统目录搜索；
+
+>   默认头文件的路径为：`当前目录./` 和 `系统目录：/usr/include 和/usr/local/include`；
+
+```bash
+$ g++ -I /home/jasonkayzk/include input-file.cpp
+```
+
+`-I-` 参数则是取消前一个参数功能，一般用在`-Idir`之后；
+
+<br/>
+
+#### **使用参数`-std`指定支持的c++/c的标准**
+
+```bash
+$ g++ -std=c++14 main.cpp
+```
+
+标准如 `c++11, c++14, c90, c89`等；
+
+<br/>
+
+#### **使用`-L`指定链接库的搜索路径**
+
+`-L` 参数用来指定链接库文件的搜索路径；
+
+>   **默认链接库的搜索路径为`/lib`和`/usr/lib`；**
+
+<br/>
+
+#### **使用`-static`生成静态链接的文件**
+
+静态编译文件是指，把动态库的函数和其它依赖都编译进最终文件；
+
+例如：
+
+```bash
+$ g++ main.cpp -static -o main -lpthread
+```
+
+>   此选项将禁止使用动态库；
+>
+>   所以，编译出来的东西，一般都很大，但是不需要什么动态连接库，就可以运行；
+
+<br/>
+
+#### **使用`-static-libstdc++`静态链接libstdc++**
+
+如果没有使用`-static`，默认使用 `libstdc++` 共享库，而 `-static-libstdc++` 可以指定使用 `libstdc++` 静态库；
+
+<br/>
+
+#### **使用`-M`生成文件关联的信息**
+
+```bash
+$ g++ -M main.cpp
+
+main.o: main.cpp /usr/include/stdc-predef.h /usr/include/stdio.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h \
+ /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+```
+
+>   全部参数文档：
+>
+>   -   https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
 
 <br/>
 
@@ -213,7 +726,199 @@ g++ main.cpp -o main
 >
 >   **甚至 Clang 之前都只是 LLVM 的一个子项目：[Clang](https://clang.llvm.org/)**
 
+下面是一些 Clang 的优点（相比于GCC）：
 
+-   编译速度更快：在某些平台上，Clang的编译速度要明显快于 GCC；
+-   占用内存更小：Clang生成的AST所占用的内存通常是GCC的五分之一左右；
+-   **模块化的设计：Clang采用基于库的模块化设计，更易于IDE的集成及其他用途的重用；**
+-   **诊断信息可读性强**：在编译过程中，Clang会创建并保留大量详细的元数据 (metadata)，这将更有利于调试和错误报告（**想一想GCC非人类的报错提示？**）；
+-   设计更清晰简单，容易理解，易于扩展加强；
+-   与代码基础较为古老的GCC相比，学习曲线会显得更为平缓；
+-   **Clang 开源协议不是 GPLv3；**
+-   **大部分命令都兼容G++**
+
+>   说个题外话，Clang 和 LLVM 的工具模块化的确不错：
+>
+>   ```bash
+>   $ clang-
+>   clang-5.0 clang-check clang-cl clang-cpp clang-format clang-import-test clang-offload-bundler clang-rename clang-tblgen
+>   
+>   $ llvm-
+>   llvm-ar          llvm-bcanalyzer  llvm-diff        llvm-dwarfdump   llvm-link        llvm-mcmarkup    llvm-objdump     llvm-readobj     llvm-size        llvm-symbolizer  
+>   llvm-as          llvm-cov         llvm-dis         llvm-extract     llvm-mc          llvm-nm          llvm-ranlib      llvm-rtdyld      llvm-stress      llvm-tblgen
+>   ```
+
+Clang的一些不足：
+
+-   需要支持更多语言：GCC 除了支持 C/C++/Objective-C，还支持Fortran/Pascal/Java/Ada/Go等其他语言；Clang目前基本上只支持C/C++/Objective-C/Objective-C++这四种语言；
+-   需要加强对C++的支持：Clang对C++标准的支持依然落后于 GCC，Clang还需要加强对C++ 提供全方位支持；
+-   需要支持更多平台：由于GCC流行的时间比较长，已经被广泛使用，对各种平台的支持也很完备，Clang目前支持的平台有Linux/Windows/Mac OS；
+
+>   **除了Clang ，这里也有一个 Clang++；**
+>
+>   **这两者的区别和 GCC 和 G++ 的区别类似，一个使用的是C的库，另一个使用的是C++的库；**
+
+<br/>
+
+### **LLVM工具介绍**
+
+#### **opt**
+
+这是一个在IR级别做程序优化的工具，输入和输出都是同一类型的LLVM IR，很好理解，做优化不必要修改文件格式；设计编译器的同学会经常性的调用这个工具来验证自己的优化是否正确；
+
+反过来，优化不一定作用于LLVM IR，比如作用于后端的MI，这时opt是不能使用的；
+
+<br/>
+
+#### **llc**
+
+这是微观意义上的LLVM编译器，不同于GCC的编译器，它的输入是LLVM IR，输出是汇编文件或者是目标文件；
+
+通过 `-filetype=asm` 或者 `-filetype=obj` 来指定输出是汇编文件还是目标文件，若生成是目标文件，llc会调用LLVM中的汇编输出的代码库来工作（注意这个汇编器和gcc的汇编器也不同，它输入的是MI，是一种后端的中间表示）；
+
+除此之外，还可以用`-On`来指定优化级别（llc默认优化级别是`-O2`），或者其他一些参数；
+
+```bash
+llc -filetype=asm main.bc -O0 -o main.s
+llc -filetype=obj main.bc -O0 -o main.o
+```
+
+>   **`.bc`文件换成`.ll`文件也可以**
+
+<br/>
+
+#### **llvm-mc**
+
+这是微观意义上的LLVM汇编器，它输入汇编文件，输出目标文件；
+
+同时，它也可以反汇编，指定特殊参数（--disassemble）就行；可以发现，llc和llvm-mc都会调用到输出目标文件的库，也就是`MCObjectStreamer`；
+
+>   关于这个工具，可以查看这个比较老旧的文档来学习：
+>
+>   -   [Intro to the LLVM MC Project](https://link.zhihu.com/?target=http%3A//blog.llvm.org/2010/04/intro-to-llvm-mc-project.html)
+
+<br/>
+
+#### **lli**
+
+这个工具是LLVM IR的解释器，也是一个JIT编译器；
+
+LLVM可以把C语言翻译成LLVM IR，然后解释执行，与Java的那一套类似，这也是最初LLVM编写时的实现（一个虚拟机运行IR）；
+
+<br/>
+
+#### **llvm-link**
+
+它是IR级别的链接器，链接的是IR文件；
+
+这里简单说一下LLVM针对多个源文件编译时的两种目标码输出方式：
+
+1.  第一种是LLVM先通过前端把每个源文件单独翻译成IR级别，然后用llvm-link链接成一个IR，然后再经过优化、后端等步骤生成目标文件，使用llvm-link的同时，可以使用链接时优化（不过需要注意，这种方式同样需要最终调用链接器，将这个目标文件链接成可执行文件）；
+2.  第二种是LLVM通过前端把每个源文件单独翻译后，再单独经过优化、后端等工作，将每个源文件生成目标文件，之后再调用链接器，将所有目标文件链接成可执行文件；
+
+即如下图所示：
+
+![llvm](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static/images/llvm.png)
+
+<br/>
+
+#### **llvm-as**
+
+这是针对LLVM IR的汇编器，虽然名字里带as，实际上不是gcc那个as，它的功能是将`.ll`文件翻译为`.bc`文件，LLVM项目里，`.ll`称为LLVM汇编码，所以llvm-as也就是IR的汇编器了；
+
+<br/>
+
+#### **llvm-dis**
+
+与llvm-as刚好相反，IR的反汇编器，用来将`.bc`文件翻译为`.ll`文件；
+
+<br/>
+
+#### **Clang**
+
+最后，就是我们的Clang了，它是现在 LLVM 项目中一个很重要的前端工具；
+
+Clang能够调用起来整个编译器的流程，即在编译时它会调用上边其他工具调用的库；
+
+Clang通过指定 `-emit-llvm` 参数，可以配合`-S`或`-c`生成`.ll`或`.bc`文件，这样我们就能把Clang的部分和LLVM的后端分离开来独立运行：
+
+```bash
+clang -emit-llvm -c main.c -o main.bc
+clang -emit-llvm -S main.c -o main.ll
+```
+
+LLVM还有一些其他工具，就不举例了，可以查看LLVM项目路径下`/src/tools/`中查看。
+
+<br/>
+
+### **Clang基本使用**
+
+#### **前言**
+
+首先要说明的是，由于Clang兼容GCC的大部分参数；
+
+因此，在GCC下面的那一套，在Clang下也可以玩，例如下面的命令：
+
+```bash
+# 直接生成可执行文件
+$ clang++ main.cpp -o main
+
+# 只生成预处理文件
+$ clang++ -E main.cpp -o main.i
+
+# 只生成汇编文件
+$ clang++ -S main.cpp -o main.s
+```
+
+只是把 `g++` 换成了 `clang++` 仍然是可以玩的；
+
+这里我们探讨的 Clang 的基本使用是使用 Clang 生成 LLVM IR 中间代码，然后使用 LLVM 来编译；
+
+<br/>
+
+#### **使用Clang生成中间代码和可执行文件**
+
+我们可以使用 Clang 命令生成 LLVM IR 中间代码：
+
+```bash
+$ clang++ -O2 -emit-llvm main.cpp -S -o main.ll
+```
+
+也可以直接生成 LLVM 的中间表示 BitCode 文件：
+
+```bash
+$ clang++ -O2 -emit-llvm main.cpp -c -o main.bc
+
+# 查看文件类型
+$ file main.bc
+main.bc: LLVM bitcode
+```
+
+>   **和上面命令的不同点在于，这里多了个`-emit-llvm`，表示生成和LLVM相关的代码；**
+
+
+
+
+
+
+
+<br/>
+
+### **Clang常用命令**
+
+
+
+
+
+
+
+
+
+
+
+<br/>
+
+### **Clang+LLVM多语言混合编译**
 
 
 
@@ -237,8 +942,11 @@ g++ main.cpp -o main
 
 -   https://www.zhihu.com/question/445921363
 -   https://www.zhihu.com/question/20940822
+-   https://zhuanlan.zhihu.com/p/196785332
+-   https://www.cnblogs.com/kid-kid/p/12616788.html
 -   https://www.cnblogs.com/webor2006/p/9946061.html
-
-
+-   https://www.zhihu.com/question/20235742
+-   https://llvm.liuxfe.com/post/2190
+-   https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/
 
 <br/>
