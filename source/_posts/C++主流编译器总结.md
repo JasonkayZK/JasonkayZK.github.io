@@ -1127,31 +1127,11 @@ InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 
 <br/>
 
-### **Clang+LLVM多语言混合编译**
+## **尾声**
 
+本文走马观花的介绍了目前主流的一些编译器，以及其基本用法；
 
-
-
-
-
-
-
-
-<br/>
-
-## **总结**
-
-
-
-
-
-
-
-
-
-
-
-
+希望对大家学习C++有所帮助！
 
 <br/>
 
