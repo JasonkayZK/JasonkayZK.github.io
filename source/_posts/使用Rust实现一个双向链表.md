@@ -2136,7 +2136,7 @@ println!("NAN == NAN ? {}", std::f64::NAN == std::f64::NAN);
 
 打印的结果是：
 
-```text
+```
 NAN == NAN ? false
 ```
 
