@@ -28,6 +28,8 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2022-06-26 博客点赞、实时热榜功能恢复（[Tencent SCF](https://cloud.tencent.com/product/scf)下线）！**</font>
+*   **2022-06-25 博客PV突破25W！**
 *   **2022-03-12 博客PV突破20W、UV突破13W！**
 *   **2022-01-01 大家新年快乐啊！新的一年希望能把之前的坑填上，不拖更！**
 *   2021-10-31 <font color="#ff0000">**原[畅所欲言](/chat/)页面代码保留；**</font>开源地址：[JasonkayZK/web-chat](https://github.com/JasonkayZK/web-chat)

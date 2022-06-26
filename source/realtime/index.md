@@ -20,11 +20,12 @@ cover: https://img.paulzzh.tech/touhou/random?99
 **技术支持：**
 
 - **实时代码统计：**[Wakatime](https://wakatime.com/)
-- **实时文章热榜：**MongoDB + [Tencent SCF](https://cloud.tencent.com/product/scf)
-- **实时应用热榜：**[ManicTime](https://www.manictime.com/) + [ManicTime Server](https://manictime.uservoice.com/knowledgebase/articles/686154-what-is-manictime-server) + [Tencent SCF](https://cloud.tencent.com/product/scf)
+- **实时文章热榜：**MongoDB + ~~[Tencent SCF](https://cloud.tencent.com/product/scf)~~
+- **实时应用热榜：**[ManicTime](https://www.manictime.com/) + [ManicTime Server](https://manictime.uservoice.com/knowledgebase/articles/686154-what-is-manictime-server) + ~~[Tencent SCF](https://cloud.tencent.com/product/scf)~~
 
 **更多说明：**
 
+-   **2022年6月26日，由于 [Tencent SCF](https://cloud.tencent.com/product/scf) 开始收费，云函数下线，改用后端接口服务；**
 -   [使用Wakatime记录你的Coding数据](https://jasonkayzk.github.io/2020/08/28/使用Wakatime记录你的Coding数据/)
 
 <br/>
