@@ -30,6 +30,38 @@ description: 最近做的项目用到了ES，这里总结一下；
 
 ## **基本概念**
 
+Elasticsearch概述：
+
+ES 是一个基于 Lucene 的搜索服务器，它提供了一个分布式多用户能力的搜索引擎，且ES支持 Restful Web风格的url访问；ES是基于Java开发的开源搜索引擎，设计用于云计算；此外，ES还提供了数据聚合分析功能，但在数据分析方面，ES 的时效性不是很理想，在企业应用中一般还是用于搜索；ES自2016年起已经超过Solr等，称为排名第一的搜索引擎应用；
+
+ElasticSearch 中有几个基本概念：
+
+-   索引(index)；
+-   类型(type)；
+-   文档(document)；
+-   映射(mapping)等；
+
+我们将这几个概念与传统的关系型数据库中的库、表、行、列等概念进行对比，如下表：
+
+| **RDBMS**          | **ES**        |
+| ------------------ | ------------- |
+| 数据库（Database） | 索引（Index） |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+|                    |               |
+
+
+
+
+
+
+
 ### **建表（索引）**
 
 
@@ -190,6 +222,7 @@ curl -X PUT "10.10.10.10:9200/_template/template_log" -H 'Content-Type: applicat
 
 参考文章：
 
+-   https://blog.51cto.com/u_14286115/3328651
 -   https://www.jianshu.com/p/438018379339
 -   [es number_of_shards和number_of_replicas](https://www.cnblogs.com/mikeluwen/p/8031813.html)
 
