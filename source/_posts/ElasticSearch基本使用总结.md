@@ -38,6 +38,15 @@ Elasticsearch概述：
 
 ES 是一个基于 Lucene 的搜索服务器，它提供了一个分布式多用户能力的搜索引擎，且ES支持 Restful Web风格的url访问；ES是基于Java开发的开源搜索引擎，设计用于云计算；此外，ES还提供了数据聚合分析功能，但在数据分析方面，ES 的时效性不是很理想，在企业应用中一般还是用于搜索；ES自2016年起已经超过Solr等，称为排名第一的搜索引擎应用；
 
+ES的特性：速度快、易扩展、弹性、灵活、操作简单、多语言客户端、X-Pack、hadoop/spark强强联手、开箱即用；
+
+-   分布式：横向扩展非常灵活；
+-   全文检索：基于lucene的强大的全文检索能力；
+-   近实时搜索和分析：数据进入ES，可达到近实时搜索，还可进行聚合分析；
+-   高可用：容错机制，自动发现新的或失败的节点，重组和重新平衡数据；
+-   模式自由：ES的动态mapping机制可以自动检测数据的结构和类型，创建索引并使数据可搜索；
+-   RESTful API：JSON + HTTP；
+
 ElasticSearch 中有几个基本概念：
 
 -   索引(index)；
@@ -58,7 +67,7 @@ ElasticSearch 中有几个基本概念：
 | SQL                    | 查询DSL                                        |
 | SELECT * FROM table    | GET /index/_search {}                          |
 | UPDATE table SET       | PUT  /index {}                                 |
-| DELETE                 | DELETE  /index                                 |
+| DELETE                 | DELETE  /index {}                              |
 
 **这里需要特别注意的是：**
 
@@ -80,44 +89,59 @@ ElasticSearch 中有几个基本概念：
 
 ### **类型（type）**
 
-ES中，一个索引可以存储多个用于不同用途的对象，可以通过类型来区分索引中的不同对象，对应关系型数据库中表的概念。但是在ES6.0开始，类型的概念被废弃，ES7中将它完全删除。删除type的原因：
+在 ES 中，**一个索引可以存储多个用于不同用途的对象，可以通过类型来区分索引中的不同对象，对应关系型数据库中表的概念；但是在ES 6.0开始，类型的概念被废弃，ES7中将它完全删除；**
 
-我们一直认为ES中的“index”类似于关系型数据库的“database”，而“type”相当于一个数据表。ES的开发者们认为这是一个糟糕的认识。例如：关系型数据库中两个数据表示是独立的，即使他们里面有相同名称的列也不影响使用，但ES中不是这样的。
+删除type的原因：
 
-我们都知道elasticsearch是基于Lucene开发的搜索引擎，而ES中不同type下名称相同的filed最终在Lucene中的处理方式是一样的。举个例子，两个不同type下的两个user_name，在ES同一个索引下其实被认为是同一个filed，你必须在两个不同的type中定义相同的filed映射。否则，不同type中的相同字段名称就会在处理中出现冲突的情况，导致Lucene处理效率下降。
+我们一直认为 ES 中的 `index` 类似于关系型数据库的 `database`，而 `type` 相当于一个数据表；但是，ES的开发者们认为这是一个糟糕的认识；例如：
 
-去掉type能够使数据存储在独立的index中，这样即使有相同的字段名称也不会出现冲突，就像ElasticSearch出现的第一句话一样“你知道的，为了搜索····”，去掉type就是为了提高ES处理数据的效率。
+<red>**关系型数据库中两个数据表示是独立的，即使他们里面有相同名称的列也不影响使用，但ES中不是这样的：ES 中不同 type 下名称相同的 field 最终在 Lucene 中的处理方式是一样的！**</font>
 
-除此之外，在同一个索引的不同type下存储字段数不一样的实体会导致存储中出现稀疏数据，影响Lucene压缩文档的能力，导致ES查询效率的降低；
+<red>**举个例子：两个不同 type 下的两个 user_name，在 ES 同一个索引下其实被认为是同一个 field，你必须在两个不同的 type 中定义相同的field映射；否则，不同type中的相同字段名称就会在处理中出现冲突的情况，导致Lucene处理效率下降！**</font>
+
+<red>**去掉 type 能够使数据存储在独立的 index 中，这样即使有相同的字段名称也不会出现冲突，就像ElasticSearch出现的第一句话一样“你知道的，为了搜索····”，去掉type就是为了提高ES处理数据的效率；**</font>
+
+<red>**除此之外，在同一个索引的不同 type 下存储字段数不一样的实体会导致存储中出现稀疏数据，影响Lucene压缩文档的能力，导致ES查询效率的降低；**</font>
 
 <br/>
 
 ### **文档（document）**
 
-存储在ES中的主要实体叫文档，可以理解为关系型数据库中表的一行数据记录。每个文档由多个字段（field）组成。区别于关系型数据库的是，ES是一个非结构化的数据库，每个文档可以有不同的字段，并且有一个唯一标识；
+**存储在ES中的主要实体被称为：文档，可以理解为关系型数据库中表的一行数据记录，每个文档由多个字段（field）组成；**
+
+<red>**区别于关系型数据库的是，ES是一个非结构化的数据库，每个文档可以有不同的字段，并且有一个唯一标识；**</font>
 
 <br/>
 
 ### **映射（mapping）**
 
-mapping是对索引库中的索引字段及其数据类型进行定义，类似于关系型数据库中的表结构。ES默认动态创建索引和索引类型的mapping，这就像是关系型数据中的，无需定义表机构，更不用指定字段的数据类型。当然也可以手动指定mapping类型；
+**mapping是对索引库中的索引字段及其数据类型进行定义，类似于关系型数据库中的表结构；**
+
+<red>**ES默认动态创建索引和索引类型的mapping，这有点类似于 MongoDB，无需定义表结构，更不用指定字段的数据类型，表的结构是动态的非常灵活（当然也可以手动指定mapping类型）；**</font>
 
 <br/>
 
 ### **分片（shard）**
 
-如果我们的索引数据量很大，超过硬件存放单个文件的限制，就会影响查询请求的速度，Es引入了分片技术。一个分片本身就是一个完成的搜索引擎，文档存储在分片中，而分片会被分配到集群中的各个节点中，随着集群的扩大和缩小，ES会自动的将分片在节点之间进行迁移，以保证集群能保持一种平衡。
+如果我们的索引数据量很大，超过硬件存放单个文件的限制，就会影响查询请求的速度；
+
+ES 引入了分片技术：一个分片本身是一个最小的工作单元，承载**部分数据**，文档存储在分片中，而分片会被分配到集群中的各个节点中，随着集群的扩大和缩小，ES会自动的将分片在节点之间进行迁移，以保证集群能保持一种平衡；
 
 分片有以下特点：
 
-ES的一个索引可以包含多个分片（shard）；
-每一个分片（shard）都是一个最小的工作单元，承载部分数据；
-每个shard都是一个lucene实例，有完整的简历索引和处理请求的能力；
-增减节点时，shard会自动在nodes中负载均衡；
-一个文档只能完整的存放在一个shard上
-一个索引中含有shard的数量，默认值为5，在索引创建后这个值是不能被更改的。
-优点：水平分割和扩展我们存放的内容索引；分发和并行跨碎片操作提高性能/吞吐量；
-每一个shard关联的副本分片（replica shard）的数量，默认值为1，这个设置在任何时候都可以修改。
+-   一个索引可以包含多个分片（shard）；
+-   每一个分片（shard）都是一个最小的工作单元，承载**部分数据**；
+-   **每个shard都是一个lucene实例，有完整的简历索引和处理请求的能力；**
+-   **增减节点时，shard会自动在nodes中负载均衡；**
+-   **一个文档只能完整的存放在一个shard上；**
+-   <red>**一个索引中含有shard的数量，默认值为5，在索引创建后这个值是不能被更改的；**</font>
+
+优点：
+
+-   **水平分割和扩展我们存放的内容索引；**
+-   **分发和并行跨碎片操作提高性能/吞吐量；**
+
+每一个shard关联的副本分片（replica shard）的数量，默认值为1，这个设置在任何时候都可以修改；
 
 <br/>
 
@@ -125,18 +149,8 @@ ES的一个索引可以包含多个分片（shard）；
 
 副本（replica shard）就是shard的冗余备份，它的主要作用：
 
-冗余备份，防止数据丢失；
-shard异常时负责容错和负载均衡；
-ES的特性：
-速度快、易扩展、弹性、灵活、操作简单、多语言客户端、X-Pack、hadoop/spark强强联手、开箱即用。
-
-分布式：横向扩展非常灵活
-全文检索：基于lucene的强大的全文检索能力；
-近实时搜索和分析：数据进入ES，可达到近实时搜索，还可进行聚合分析
-高可用：容错机制，自动发现新的或失败的节点，重组和重新平衡数据
-模式自由：ES的动态mapping机制可以自动检测数据的结构和类型，创建索引并使数据可搜索。
-
-RESTful API：JSON + HTTP
+-   冗余备份，防止数据丢失；
+-   shard异常时负责容错和负载均衡；
 
 <br/>
 
@@ -144,86 +158,515 @@ RESTful API：JSON + HTTP
 
 #### **analyzer和search_analyzer的区别**
 
+**分析器主要有两种情况会被使用：**
 
+-   <red>**第一种是插入文档时，将text类型的字段做分词然后插入倒排索引；**</font>
+-   <red>**第二种就是在查询时，先对要查询的text类型的输入做分词，再去倒排索引搜索；**</font>
 
-分析器主要有两种情况会被使用：
-第一种是插入文档时，将text类型的字段做分词然后插入倒排索引，
-第二种就是在查询时，先对要查询的text类型的输入做分词，再去倒排索引搜索
+<red>**如果想要让 索引 和 查询 时使用不同的分词器，ElasticSearch也是能支持的，只需要在字段上加 search_analyzer参数；**</font>
 
-如果想要让 索引 和 查询 时使用不同的分词器，ElasticSearch也是能支持的，只需要在字段上加上search_analyzer参数
+<red>**在索引时，只会去看字段有没有定义analyzer，有定义的话就用定义的，没定义就用ES预设的；**</font>
 
-在索引时，只会去看字段有没有定义analyzer，有定义的话就用定义的，没定义就用ES预设的
-
-在查询时，会先去看字段有没有定义search_analyzer，如果没有定义，就去看有没有analyzer，再没有定义，才会去使用ES预设的
+<red>**在查询时，会先去看字段有没有定义search_analyzer，如果没有定义，就去看有没有analyzer，再没有定义，才会去使用ES预设的；**</font>
 
 <br/>
 
 #### **es number_of_shards和number_of_replicas的区别**
 
-number_of_replicas 是数据备份数，如果只有一台机器，设置为0
+`number_of_replicas` 是**数据备份数**，如果只有一台机器，可以设置为 0；
 
-number_of_shards 是数据分片数，默认为5，有时候设置为3
+`number_of_shards` 是**数据分片数**，默认为 5；
 
-可以在线改所有配置的参数，number_of_shards不可以在线改
+<br/>
+
+## **ES的基本操作**
+
+在 ES 中的所有操作都是可以使用 Restful 风格的请求来操作；
+
+例如：
 
 ```bash
-curl -XPUT '10.0.120.39:9200/_settings' -d ' { "index" : { "number_of_replicas" : 0 } }'
+curl -u username:passwd -XPUT -H "Content-Type: application/json" "http://127.0.0.1:9200/abc" -d "{}"
 ```
 
-如果要所有的配置都生效，修改配置文件：
+同时，在 Kibana 中也提供了相关工具：DevTools；
 
-```bash
-index.number_of_shards: 3
-index.number_of_replicas: 0
+在 Kibana 中可以直接简化上面的操作：
+
+```
+PUT /abc {}
 ```
 
-如果每次生成索引的时候没生效，就要注意是否有索引模板了，索引模板生成的时候已经制定了参数
+下面的操作都会在 Kibana 中操作，相信你也能轻松的转为 curl 命令的风格；
 
-上面命令在elasticsearch 6.x 用不了了，修改如下：
+<br/>
 
-```bash
-curl -X PUT "10.10.10.10:9200/filebeat*/_settings" -H 'Content-Type: application/json' -d'
+### **索引（表）操作**
+
+#### **建索引（表）**
+
+ES 的表结构是非常灵活的，最简单的建表语句可以是下面这样的：
+
+```
+PUT /abc
+```
+
+调用之后返回：
+
+```json
 {
-    "index" : {
-        "number_of_replicas" : 0
-    }
+  "acknowledged" : true,
+  "shards_acknowledged" : true,
+  "index" : "abc"
 }
-'
 ```
 
- 要对后面新的index有效，要创建一个默认模板（模板很重要，模板可以为所欲为）：
+即表示建表完成！
 
-```bash
-curl -X PUT "10.10.10.10:9200/_template/template_log" -H 'Content-Type: application/json' -d'
+当然，建表语句也可以非常复杂；
+
+例如，下面是一个保存文章的索引：
+
+```json
+PUT /passage
 {
-    "index_patterns" : ["filebeat*"],
-    "order" : 0,
-    "settings" : {
-        "number_of_replicas" : 0
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "title_analyzer": {
+            "type": "custom",
+            "use_smart": "false",
+            "tokenizer": "ik_max_word",
+            "filter": [
+              "jt_tfr",
+              "lowercase"
+            ]
+          },
+          "content_analyzer": {
+            "type": "custom",
+            "use_smart": "true",
+            "tokenizer": "ik_smart",
+            "filter": [
+              "jt_tfr",
+              "lowercase"
+            ]
+          }
+        },
+        "filter": {
+          "jt_tfr": {
+            "type": "stop",
+            "stopwords": [
+              " ",
+              "！",
+              "，",
+              "：",
+              "；"
+            ]
+          }
+        }
+      }
     }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "analyzer": "title_analyzer",
+        "type": "text"
+      },
+      "content": {
+        "analyzer": "content_analyzer",
+        "type": "text"
+      }
+    }
+  }
 }
-'
+```
+
+索引包括了：
+
+-   三个映射：title、content；
+-   两个分析器：title_analyzer、content_analyzer；
+-   一个过滤器：jt_tfr；
+
+<br/>
+
+#### **删索引**
+
+删除索引也是非常简单，由于 Restful 风格良好的表达，我们只需要将 `PUT` 改为 `DELETE` 即可！
+
+```
+DELETE /abc
+```
+
+返回如下：
+
+```json
+{
+  "acknowledged" : true
+}
 ```
 
 <br/>
 
-### **建表（索引）**
+#### **修改索引**
 
+修改索引在之前的文章中写过了：
 
+-   [ES修改索引结构](/2022/06/22/ES修改索引结构/)
 
+具体步骤如下：
 
-
-
-
-
-
-
+-   新建索引；
+-   复制数据（reindex）；
+-   确认数据；
+-   删除旧别名；
+-   删除旧索引；
+-   创建别名（aliases）；
 
 <br/>
 
-### **增删改查**
+### **文档操作**
 
+文档操作主要包括了  Index、Create、Read、Update、Delete 这五种操作；
 
+总结如下表所示：
+
+| 操作   | 实例                                                         |
+| ------ | ------------------------------------------------------------ |
+| Index  | `PUT my_index/_doc/1 {}`                                     |
+| Create | `PUT my_index/_create/1 {}`<br />`POST my_index/_doc {}` 不指定Id，自动生成； |
+| Read   | `GET my_index/_doc/1`                                        |
+| Update | `POST my_index/_update/1 {"doc": {...}}`                     |
+| Delete | `DELETE my_index/_doc/1`                                     |
+
+请求首先都是提供一个 HTTP 的 method，后面是索引名字，在 7.0 之后所以的 Type 都用 `_doc` 表示，后面是文档 id；
+
+下面分别来看；
+
+#### **新增文档**
+
+Create 支持两种方式：
+
+-   **指定文档Id创建文档；**
+-   **自动生成文档Id；**
+
+>   **自己指定文档 id创建文档，需要考虑 id 的均衡性，避免产生分配不均衡的问题；**
+>
+>   **ES 的 hash 函数会确保文档 id 被均匀分配到不同的分片；**
+
+下面指定Id新增了一个文档：
+
+```json
+PUT /passage/_doc/1
+{
+  "title": "测试",
+  "content": "这是一个测试内容"
+}
+```
+
+返回响应：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 0,
+  "_primary_term" : 1
+}
+```
+
+其中 `_version` 每一次操作，都会 + 1，它是一个锁的机制，当并行修改文档的时候，更新的版本号比文档当前的版本号小时就会报错，不允许做修改；
+
+也可以用下面的方式创建文档：
+
+```json
+PUT /passage/_create/2
+{
+  "title": "测试2",
+  "content": "这是一个测试内容2",
+  "comment": "这是一个评论2"
+}
+```
+
+效果是一样的；
+
+<red>**需要注意的是：这里的 `comment` 字段在我们创建索引的时候是不存在的！**</font>
+
+<red>**在ES创建文档时，如果索引中不存在，ES 会自动创建对应的 index 和 type！**</font>
+
+也可以用不指定 id 创建文档的方式：
+
+```json
+POST /passage/_doc 
+{
+  "title": "自增测试",
+  "content": "这是一个自增测试内容"
+}
+```
+
+响应：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "4cyVqYEBPqU3ER3DXk4l",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 4,
+  "_primary_term" : 1
+}
+```
+
+Index操作相比 Create，区别在于：
+
+<red>**如果文档不存在，就索引新的文档，否则现有文档就会被删除，新的文档被索引，版本信息 `_version` + 1；**</font>
+
+<br/>
+
+#### **查询文档**
+
+Get 方法比较简单：只需要 `Get 索引名称/_doc/文档 id`，就可以知道文档的具体信息了；
+
+例如：
+
+```
+GET /passage/_doc/2
+```
+
+返回结果如下：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "2",
+  "_version" : 3,
+  "_seq_no" : 3,
+  "_primary_term" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "测试2",
+    "content" : "这是一个测试内容2",
+    "comment" : "这是一个评论2"
+  }
+}
+```
+
+其中 `_index` 为索引，`_type` 为类型，`_id` 为文档 id，`_version` 为版本信息，`_source` 存储了文档的完整原始数据；
+
+当查询的文档 id 不存在时，会返回 HTTP 404，且 `found` 为 `false`，具体如下：
+
+```
+GET /passage/_doc/3
+```
+
+返回结果如下：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "3",
+  "found" : false
+}
+```
+
+<br/>
+
+#### **更新文档**
+
+Update 方法采用 HTTP POST，在请求体中必须指明 doc，在把具体文档提供在 HTTP 的 body 里；
+
+并且，<red>**Update 和 Index 方法不同，Update 方法不会删除原来的文档，而是实现真正的数据更新！**</font>
+
+比如在原来的文档 Id 为 1 的文档上增加字段，具体请求如下：
+
+```json
+POST /passage/_update/1
+{
+  "doc": {
+    "title": "测试",
+    "content": "这是一个测试内容",
+    "comment": "这是一个评论"
+  }
+}
+```
+
+结果如下：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 2,
+  "result" : "updated",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 5,
+  "_primary_term" : 1
+}
+
+```
+
+执行后，版本信息 `_version` + 1；
+
+再去查询下该文档：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 2,
+  "_seq_no" : 5,
+  "_primary_term" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "测试",
+    "content" : "这是一个测试内容",
+    "comment" : "这是一个评论"
+  }
+}
+```
+
+可以看到，新增字段已经成功了；
+
+<br/>
+
+#### **删除文档**
+
+DELETE 方法也很简单，`DELETE 索引名称/_doc/文档id` 就可以了：
+
+```json
+DELETE /passage/_doc/1
+```
+
+返回值如下：
+
+```json
+{
+  "_index" : "passage",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 3,
+  "result" : "deleted",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 6,
+  "_primary_term" : 1
+}
+```
+
+<br/>
+
+### **Bulk API**
+
+在一个 REST 请求中，重新建立网络连接是十分损耗性能的，因此 ES 提供 Bulk API，支持在一次 API 调用中，对不同的索引进行操作，从而减少网络传输开销，提升写入速率；
+
+ES 支持 `Index`、`Create`、`Update`、`Delete` 四种类型操作，可以在 URI 中指定索引，也可以在请求的方法体中进行；
+
+同时多条操作中：<red>**如果其中有一条失败，也不会影响其他的操作，并且返回的结果包括每一条操作执行的结果；**</font>
+
+比如下面的请求：
+
+```json
+POST /_bulk
+{"index":{"_index":"passage","_id":"2"}}
+{"comment":"bulk api"}
+{"delete":{"_index":"passage","_id":"1"}}
+{"update":{"_index":"passage","_id":"2"}}
+{"doc":{"title":"bulk"}}
+```
+
+执行命令后，结果如下：
+
+```json
+{
+  "took" : 4,
+  "errors" : false,
+  "items" : [
+    {
+      "index" : {
+        "_index" : "passage",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_version" : 6,
+        "result" : "updated",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 10,
+        "_primary_term" : 1,
+        "status" : 200
+      }
+    },
+    {
+      "delete" : {
+        "_index" : "passage",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_version" : 2,
+        "result" : "deleted",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 11,
+        "_primary_term" : 1,
+        "status" : 200
+      }
+    },
+    {
+      "update" : {
+        "_index" : "passage",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_version" : 7,
+        "result" : "updated",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 12,
+        "_primary_term" : 1,
+        "status" : 200
+      }
+    }
+  ]
+}
+```
+
+`took` 表示消耗了 4 毫秒，`errors` 为 `false` 说明没问题；
+
+如果，`errors` 为 `true` 则表示在这些操作中错误发生；
+
+在使用 Bulk API 的时候，当 `errors` 为 `true` 时，需要把错误的操作修改掉，防止存到 ES 的数据有缺失；
 
 
 
