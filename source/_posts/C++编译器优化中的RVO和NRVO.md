@@ -586,6 +586,6 @@ Constructor calls / Copy constructor calls = 0
 文章参考：
 
 -   https://www.yhspy.com/2019/09/01/C-%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E4%B9%8B-RVO-%E4%B8%8E-NRVO/
--   https://docs.microsoft.com/en-us/previous-versions/ms364057(v=vs.80)?redirectedfrom=MSDN
+-   https://docs.microsoft.com/en-us/previous-versions/ms36405
 
 <br/>
