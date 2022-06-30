@@ -95,13 +95,13 @@ ElasticSearch 中有几个基本概念：
 
 我们一直认为 ES 中的 `index` 类似于关系型数据库的 `database`，而 `type` 相当于一个数据表；但是，ES的开发者们认为这是一个糟糕的认识；例如：
 
-<red>**关系型数据库中两个数据表示是独立的，即使他们里面有相同名称的列也不影响使用，但ES中不是这样的：ES 中不同 type 下名称相同的 field 最终在 Lucene 中的处理方式是一样的！**</font>
+<font color="#f00">**关系型数据库中两个数据表示是独立的，即使他们里面有相同名称的列也不影响使用，但ES中不是这样的：ES 中不同 type 下名称相同的 field 最终在 Lucene 中的处理方式是一样的！**</font>
 
-<red>**举个例子：两个不同 type 下的两个 user_name，在 ES 同一个索引下其实被认为是同一个 field，你必须在两个不同的 type 中定义相同的field映射；否则，不同type中的相同字段名称就会在处理中出现冲突的情况，导致Lucene处理效率下降！**</font>
+<font color="#f00">**举个例子：两个不同 type 下的两个 user_name，在 ES 同一个索引下其实被认为是同一个 field，你必须在两个不同的 type 中定义相同的field映射；否则，不同type中的相同字段名称就会在处理中出现冲突的情况，导致Lucene处理效率下降！**</font>
 
-<red>**去掉 type 能够使数据存储在独立的 index 中，这样即使有相同的字段名称也不会出现冲突，就像ElasticSearch出现的第一句话一样“你知道的，为了搜索····”，去掉type就是为了提高ES处理数据的效率；**</font>
+<font color="#f00">**去掉 type 能够使数据存储在独立的 index 中，这样即使有相同的字段名称也不会出现冲突，就像ElasticSearch出现的第一句话一样“你知道的，为了搜索····”，去掉type就是为了提高ES处理数据的效率；**</font>
 
-<red>**除此之外，在同一个索引的不同 type 下存储字段数不一样的实体会导致存储中出现稀疏数据，影响Lucene压缩文档的能力，导致ES查询效率的降低；**</font>
+<font color="#f00">**除此之外，在同一个索引的不同 type 下存储字段数不一样的实体会导致存储中出现稀疏数据，影响Lucene压缩文档的能力，导致ES查询效率的降低；**</font>
 
 <br/>
 
@@ -109,7 +109,7 @@ ElasticSearch 中有几个基本概念：
 
 **存储在ES中的主要实体被称为：文档，可以理解为关系型数据库中表的一行数据记录，每个文档由多个字段（field）组成；**
 
-<red>**区别于关系型数据库的是，ES是一个非结构化的数据库，每个文档可以有不同的字段，并且有一个唯一标识；**</font>
+<font color="#f00">**区别于关系型数据库的是，ES是一个非结构化的数据库，每个文档可以有不同的字段，并且有一个唯一标识；**</font>
 
 <br/>
 
@@ -117,7 +117,7 @@ ElasticSearch 中有几个基本概念：
 
 **mapping是对索引库中的索引字段及其数据类型进行定义，类似于关系型数据库中的表结构；**
 
-<red>**ES默认动态创建索引和索引类型的mapping，这有点类似于 MongoDB，无需定义表结构，更不用指定字段的数据类型，表的结构是动态的非常灵活（当然也可以手动指定mapping类型）；**</font>
+<font color="#f00">**ES默认动态创建索引和索引类型的mapping，这有点类似于 MongoDB，无需定义表结构，更不用指定字段的数据类型，表的结构是动态的非常灵活（当然也可以手动指定mapping类型）；**</font>
 
 <br/>
 
@@ -134,7 +134,7 @@ ES 引入了分片技术：一个分片本身是一个最小的工作单元，�
 -   **每个shard都是一个lucene实例，有完整的简历索引和处理请求的能力；**
 -   **增减节点时，shard会自动在nodes中负载均衡；**
 -   **一个文档只能完整的存放在一个shard上；**
--   <red>**一个索引中含有shard的数量，默认值为5，在索引创建后这个值是不能被更改的；**</font>
+-   <font color="#f00">**一个索引中含有shard的数量，默认值为5，在索引创建后这个值是不能被更改的；**</font>
 
 优点：
 
@@ -160,14 +160,14 @@ ES 引入了分片技术：一个分片本身是一个最小的工作单元，�
 
 **分析器主要有两种情况会被使用：**
 
--   <red>**第一种是插入文档时，将text类型的字段做分词然后插入倒排索引；**</font>
--   <red>**第二种就是在查询时，先对要查询的text类型的输入做分词，再去倒排索引搜索；**</font>
+-   <font color="#f00">**第一种是插入文档时，将text类型的字段做分词然后插入倒排索引；**</font>
+-   <font color="#f00">**第二种就是在查询时，先对要查询的text类型的输入做分词，再去倒排索引搜索；**</font>
 
-<red>**如果想要让 索引 和 查询 时使用不同的分词器，ElasticSearch也是能支持的，只需要在字段上加 search_analyzer参数；**</font>
+<font color="#f00">**如果想要让 索引 和 查询 时使用不同的分词器，ElasticSearch也是能支持的，只需要在字段上加 search_analyzer参数；**</font>
 
-<red>**在索引时，只会去看字段有没有定义analyzer，有定义的话就用定义的，没定义就用ES预设的；**</font>
+<font color="#f00">**在索引时，只会去看字段有没有定义analyzer，有定义的话就用定义的，没定义就用ES预设的；**</font>
 
-<red>**在查询时，会先去看字段有没有定义search_analyzer，如果没有定义，就去看有没有analyzer，再没有定义，才会去使用ES预设的；**</font>
+<font color="#f00">**在查询时，会先去看字段有没有定义search_analyzer，如果没有定义，就去看有没有analyzer，再没有定义，才会去使用ES预设的；**</font>
 
 <br/>
 
@@ -399,9 +399,9 @@ PUT /passage/_create/2
 
 效果是一样的；
 
-<red>**需要注意的是：这里的 `comment` 字段在我们创建索引的时候是不存在的！**</font>
+<font color="#f00">**需要注意的是：这里的 `comment` 字段在我们创建索引的时候是不存在的！**</font>
 
-<red>**在ES创建文档时，如果索引中不存在，ES 会自动创建对应的 index 和 type！**</font>
+<font color="#f00">**在ES创建文档时，如果索引中不存在，ES 会自动创建对应的 index 和 type！**</font>
 
 也可以用不指定 id 创建文档的方式：
 
@@ -434,7 +434,7 @@ POST /passage/_doc
 
 Index操作相比 Create，区别在于：
 
-<red>**如果文档不存在，就索引新的文档，否则现有文档就会被删除，新的文档被索引，版本信息 `_version` + 1；**</font>
+<font color="#f00">**如果文档不存在，就索引新的文档，否则现有文档就会被删除，新的文档被索引，版本信息 `_version` + 1；**</font>
 
 <br/>
 
@@ -492,7 +492,7 @@ GET /passage/_doc/3
 
 Update 方法采用 HTTP POST，在请求体中必须指明 doc，在把具体文档提供在 HTTP 的 body 里；
 
-并且，<red>**Update 和 Index 方法不同，Update 方法不会删除原来的文档，而是实现真正的数据更新！**</font>
+并且，<font color="#f00">**Update 和 Index 方法不同，Update 方法不会删除原来的文档，而是实现真正的数据更新！**</font>
 
 比如在原来的文档 Id 为 1 的文档上增加字段，具体请求如下：
 
@@ -587,7 +587,7 @@ DELETE /passage/_doc/1
 
 ES 支持 `Index`、`Create`、`Update`、`Delete` 四种类型操作，可以在 URI 中指定索引，也可以在请求的方法体中进行；
 
-同时多条操作中：<red>**如果其中有一条失败，也不会影响其他的操作，并且返回的结果包括每一条操作执行的结果；**</font>
+同时多条操作中：<font color="#f00">**如果其中有一条失败，也不会影响其他的操作，并且返回的结果包括每一条操作执行的结果；**</font>
 
 比如下面的请求：
 
@@ -808,12 +808,12 @@ GET /_search
 
 前面我们写的查询语句例子就是一个boolean查询，在 boolean 查询中有几个关键词：
 
-| **关键词**               | **描述**                                         |
-| :----------------------- | :----------------------------------------------- |
-| <red>**must**</font>     | <red>**必须满足的条件，而且会计算分数；**</font> |
-| <red>**filter**</font>   | <red>**必须满足的条件，不会计算分数；**</font>   |
-| <red>**should**</font>   | <red>**可以满足的条件，会计算分数；**</font>     |
-| <red>**must_not**</font> | <red>**必须不满足的条件，不会计算分数；**</font> |
+| **关键词**                             | **描述**                                                     |
+| :------------------------------------- | :----------------------------------------------------------- |
+| <font color="#f00">**must**</font>     | <font color="#f00">**必须满足的条件，而且会计算分数；**</font> |
+| <font color="#f00">**filter**</font>   | <font color="#f00">**必须满足的条件，不会计算分数；**</font> |
+| <font color="#f00">**should**</font>   | <font color="#f00">**可以满足的条件，会计算分数；**</font>   |
+| <font color="#f00">**must_not**</font> | <font color="#f00">**必须不满足的条件，不会计算分数；**</font> |
 
 我们看看下面的查询语句：
 
@@ -851,7 +851,7 @@ POST _search
 -   `must`是必须满足的条件，上面的例子中`must`里只写了一个条件，如果是多个条件，那么里边的所有条件必须全部满足，才能被查出来；
 -   而对于`should`，在例子中 `should` 列出了两个条件，并不是说这两个条件必须全部满足，到底需要满足几个条件可以看下面的关键字`minimum_should_match`（最小`should`匹配数，在这里设置的是1），也就是说，`should`里的条件只要满足1个，就算匹配成功；
 
->   <red>**在boolean查询中，如果存在一个`should`条件，而没有`filter`和`must`条件，那么`minimum_should_match`的默认值是1，其他情况默认值是0；**</font>
+>   <font color="#f00">**在boolean查询中，如果存在一个`should`条件，而没有`filter`和`must`条件，那么`minimum_should_match`的默认值是1，其他情况默认值是0；**</font>
 
 <br/>
 
@@ -998,9 +998,9 @@ PUT /passage
 
 可以看到，数据全部被查询出来了，和我们的预期是一样的；
 
->   <red>**text类型的查询都是基于分词后的词条查询的，例如"abcd"分词后"ab,cd"如果term查询"bc"就查不到；**</font>
+>   <font color="#f00">**text类型的查询都是基于分词后的词条查询的，例如"abcd"分词后"ab,cd"如果term查询"bc"就查不到；**</font>
 
-<red>**需要注意的是 `_score`字段：它们的分数是不一样的，我们的查询条件是 `自动测试`，所以既包含`自动`又包含`测试`的数据分数高，我们看到分数到了0.86，而另外2条数据只匹配了`测试`，所以分数只有0.17，0.14；**</font>
+<font color="#f00">**需要注意的是 `_score`字段：它们的分数是不一样的，我们的查询条件是 `自动测试`，所以既包含`自动`又包含`测试`的数据分数高，我们看到分数到了0.86，而另外2条数据只匹配了`测试`，所以分数只有0.17，0.14；**</font>
 
 <br/>
 
@@ -1246,7 +1246,7 @@ GET /_search
 
 function_score 会在 `主查询query结束后` 对每一个匹配的文档进行一系列的 `重新打分` 操作，能够对多个字段一起进行综合评估，并且能够使用 filter 将结果划分为多个子集，并为每个子集使用不同的加强函数；
 
-<red>**需要注意的是：`不论我们怎么自定义打分，都不会改变原始query的匹配行为`，我们自定义打分，都是在原始 query 查询结束后，对每一个匹配的文档进行重新算分；**</font>
+<font color="#f00">**需要注意的是：`不论我们怎么自定义打分，都不会改变原始query的匹配行为`，我们自定义打分，都是在原始 query 查询结束后，对每一个匹配的文档进行重新算分；**</font>
 
 最终结果的 `_score`，即 `result_score` 的计算过程如下：
 
@@ -2071,59 +2071,380 @@ GET /_search
 
 <br/>
 
-#### **ik_max_word和ik_smart的区别**
+#### **补充知识：ik_max_word和ik_smart的区别**
 
+IK分词器有两种分词模式：ik_max_word和ik_smart模式；
 
+-   ik_max_word：会将文本做最细粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为“中华人民共和国、中华人民、中华、华人、人民共和国、人民、共和国、大会堂、大会、会堂等一系列词语；
+-   ik_smart：会做最粗粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为中华人民共和国、人民大会堂；
 
+<font color="#f00">**两种分词器使用的最佳实践是：索引时用ik_max_word，在搜索时用ik_smart；**</font>
 
+<font color="#f00">**即：索引时最大化的将文章内容分词，搜索时更精确的搜索到想要的结果；**</font>
 
+举个例子：
 
+如果用户输入“苹果手机”，此时用户的想法是想搜索出“苹果手机”的商品，而不是苹果其它的商品，也就是商品信息中必须只有`苹果手机`这个词；
 
+如果此时使用 ik_smart 和 ik_max_word 都会将苹果手机拆分为苹果和手机两个词，那些只包括“苹果”这个词的信息也被搜索出来了，而目标是搜索只包含`苹果手机`这个词的信息；
 
+我们可以将`苹果手机`添加到自定义词库；
 
+此后，因为`苹果手机`是一个词，所以ik_smart就不再细粒度分了；
 
+因此，可以在索引时使用 ik_max_word，在搜索时用ik_smart；
+
+<br/>
+
+#### **分词索引配置**
+
+在本文开头的例子，建立的 `passage` 索引就使用了这两种分析器；
+
+如下所示：
+
+```json
+PUT /x
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "title_analyzer": {
+            "type": "custom",
+            "use_smart": "false",
+            "tokenizer": "ik_max_word"
+          },
+          "content_analyzer": {
+            "type": "custom",
+            "use_smart": "true",
+            "tokenizer": "ik_smart"
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "analyzer": "title_analyzer",
+        "type": "text"
+      },
+      "content": {
+        "analyzer": "content_analyzer",
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+在上面的例子中，我们分别为索引 `x` 中的 `title` 和 `content` 字段配置了 `ik_max_word` 和 `ik_smart` 分析器；
+
+至于分词的效果，前面已经看到了，这里不再重复展示；
 
 <br/>
 
 ### **配置同义词**
 
+除了分词之外，有时候我们还需要配置同义词，例如：`中国` 和 `China`，当用户输入 `China` 的时候，也可以搜索到 包含 `中国` 的内容；
 
+关于如何配置同义词，下面是官方文档：
 
+-   https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analysis-synonym-tokenfilter.html
+-   https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analyzer.html
 
+这里简单说一下，大概分为三步：
 
+-   创建同义词词库；
+-   重启ES加载词库（不支持热更新）；
+-   **创建索引时指定同义词 filter；**
 
+下面分别来看；
+
+#### **一、创建同义词词库**
+
+找到 ES 安装目录，创建 `config/analysis/synonym.txt`，该文件用于创建同义词词库；
+
+<font color="#f00">**一行一个同义词，一定要是UTF-8格式！**</font>
+
+**其中：**
+
+-   <font color="#f00">**`AA,BB=>CC` 这种写法会将 AA 与 BB 都映射到 CC，然后只对CC进行索引；**</font>
+-   <font color="#f00">**而 `AA,BB` 这种当文档中存在AA时，不仅仅会索引AA还会索引BB；**</font>
+
+<font color="#f00">**如果文件中一个词存在于多行，那么对应的近义词会累计，如：**</font>
+
+```
+苹果,苹果手机
+苹果,苹果电脑
+```
+
+此时“苹果”对应的近义词是“苹果手机”、“苹果电脑”，但如果是输入“苹果手机”，那么近义词只有“苹果”；
+
+将以下字段写入`synonym.txt`：
+
+```
+西红柿,番茄=>圣女果
+中国,China
+```
+
+<br/>
+
+#### **二、重启ES加载词库（不支持热更新）**
+
+重启elasticsearch，加载同义词词库；
+
+对于Docker来说就很容易了，只需要重启ES容器即可！
+
+<br/>
+
+#### **三、创建索引时指定同义词 filter**
+
+创建索引和映射，my_analyzer 为自定义分词器，my_synonym 为自定义过滤器：
+
+```json
+PUT /synonym_test
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "my_analyzer": {
+            "type": "custom",
+            "use_smart": "true",
+            "tokenizer": "ik_smart",
+            "filter": [
+              "my_synonym"
+            ]
+          }
+        },
+        "filter": {
+          "my_synonym": {
+            "type": "synonym",
+            "synonyms_path": "analysis/synonym.txt"
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "analyzer": "my_analyzer",
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+其中 `synonyms_path` 指定第一步配置的索引文件路径；
+
+>   **最重要的步骤：mappings 需要指定字段来使用同义词的filter，若未指定将使用默认的filter，搜索时将对同义词不生效！**
+
+<br/>
+
+#### **测试**
+
+创建一个测试文档：
+
+```json
+POST /synonym_test/_doc/1
+{
+  "title": "我喜欢吃中国的圣女果"
+}
+```
+
+测试 `AA,BB=>CC`：
+
+```json
+GET /synonym_test/_search
+{
+    "query":{
+      "match": {
+        "title": "番茄"
+      } 
+    }
+}
+
+GET /synonym_test/_search
+{
+    "query":{
+      "match": {
+        "title": "西红柿"
+      } 
+    }
+}
+```
+
+以上两个搜索语句都能通过 **番茄** 和 **西红柿** 将 **圣女果** 搜索出来；
+
+再来测试一下 `AA,BB`：
+
+```json
+GET /synonym_test/_search
+{
+    "query":{
+      "match": {
+        "title": "中国"
+      } 
+    }
+}
+
+GET /synonym_test/_search
+{
+    "query":{
+      "match": {
+        "title": "China"
+      } 
+    }
+}
+```
+
+以上两个搜索语句也都能查询到！
 
 <br/>
 
 ### **增加Stopwords**
 
+在搜索的时候，我们还有另一种场景：有些文字或者词语没有什么实际的意义，比如：`的`、`嗯`等等；
 
+这些词如果没有排除掉，用户在搜索时也会影响我们的匹配得分；
 
+此时，我们可以配置 `Stopwords` 来跳过对这些词的匹配；
 
+下面的这个 Github 开源库提供了一些常用的 Stopwords：
 
+-   https://dgithub.com/goto456/stopwords
 
+我们来动手配一下 Stopwords 看看效果；
+
+<br/>
+
+#### **为索引配置Stopwords**
+
+Stopwords 的配置方式和同义词类似；
+
+这里也可以采用另一种方式，即：在创建索引的时候提供 Stopwords 数组；
+
+这样可以避免重启ES；
+
+索引配置如下：
+
+```json
+PUT /stopword_test
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "my_analyzer": {
+            "type": "custom",
+            "use_smart": "true",
+            "tokenizer": "ik_smart",
+            "filter": [
+              "my_stopwords"
+            ]
+          }
+        },
+        "filter": {
+          "my_stopwords": {
+            "type": "stop",
+            "stopwords": [
+              "的",
+              "深圳"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "analyzer": "my_analyzer",
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+下面进行测试；
+
+<br/>
+
+#### **测试**
+
+向索引添加文档：
+
+```json
+POST /stopword_test/_doc/1
+{
+  "title": "深圳的夏天很热"
+}
+```
+
+尝试搜索关键字：
+
+```json
+GET /stopword_test/_doc/_search
+{
+    "query":{
+      "match": {
+        "title": "深圳"
+      } 
+    }
+}
+
+GET /stopword_test/_doc/_search
+{
+    "query":{
+      "match": {
+        "title": "的"
+      } 
+    }
+}
+```
+
+都查不到文档，说明 Stopwords 已生效！
+
+而查询 `夏天`：
+
+```json
+GET /stopword_test/_doc/_search
+{
+    "query":{
+      "match": {
+        "title": "夏天"
+      } 
+    }
+}
+```
+
+可以查到；
 
 <br/>
 
 ### **配置大小写不敏感**
 
-如果要实现大小写的模糊查询，则首先必须要自定义 `analysis`；
+有时候，我们也需要在查询时忽略大小写；此时，我们只需要使用 `lowercase` 过滤器即可：
 
 在自定义的 `analysis` 里面：
 
--   如果是针对 keyword 类型的字段， analysis 要定义成 normalizer；
--   对于text类型，则需要为analyzer；
+-   如果是针对 `keyword` 类型的字段， analysis 要定义成 `normalizer`；
+-   对于 `text` 类型，则需要为analyzer；
 
-如下演示的是`normalizer`类型的定义：
+如下演示的是 `normalizer` 类型的定义：
 
-```
+```json
+PUT /case_insensitive_test
 {
   "settings": {
     "analysis": {
       "normalizer": {
         "self_normalizer": {
           "type": "custom",
-          "char_filter": [],
           "filter": [
             "lowercase",
             "asciifolding"
@@ -2132,10 +2453,10 @@ GET /_search
       }
     }
   },
-  "mappings":{
-    "properties":{
-      "field_1":{
-        "type":"keyword",
+  "mappings": {
+    "properties": {
+      "content": {
+        "type": "keyword",
         "normalizer": "self_normalizer"
       }
     }
@@ -2143,154 +2464,84 @@ GET /_search
 }
 ```
 
->   此时向ES中新增几条数据：
+向ES中新增数据：
 
-```
+```json
+POST /case_insensitive_test/_doc/1
 {
-	"took": 6,
-	"timed_out": false,
-	"_shards": {
-		"total": 1,
-		"successful": 1,
-		"skipped": 0,
-		"failed": 0
-	},
-	"hits": {
-		"total": {
-			"value": 4,
-			"relation": "eq"
-		},
-		"max_score": 1.0,
-		"hits": [
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "2",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "abc"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "1",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "ABC"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "3",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "aBC"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "4",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "Abc"
-				}
-			}
-		]
-	}
+  "content": "abc"
+}
+POST /case_insensitive_test/_doc/2
+{
+  "content": "aBC"
+}
+POST /case_insensitive_test/_doc/3
+{
+  "content": "Abc"
 }
 ```
 
-可以看到此时的对于`field_1`，在Es中的值大小写都有的，此时进行模糊查询：
+此时的对于`content`，在ES中的值大小写都有的，此时进行查询：
 
-```
+```json
+GET /case_insensitive_test/_search
 {
-  "query": {
-    "bool": {
-      "must": [
-        {
-          "bool": {
-            "must": [
-              {
-                "wildcard": {
-                  "field_1": {
-                    "value": "*a*",
-                    "boost": 1
-                  }
-                }
-              }
-            ],
-            "adjust_pure_negative": true,
-            "boost": 1
-          }
-        }
-      ],
-      "adjust_pure_negative": true,
-      "boost": 1
+    "query":{
+      "match": {
+        "content": "abc"
+      } 
     }
-  }
 }
 ```
 
->   返回值
+三个都是可以查到的，并且分数完全相同：
 
-```
+```json
 {
-	"took": 9,
-	"timed_out": false,
-	"_shards": {
-		"total": 1,
-		"successful": 1,
-		"skipped": 0,
-		"failed": 0
-	},
-	"hits": {
-		"total": {
-			"value": 4,
-			"relation": "eq"
-		},
-		"max_score": 1.0,
-		"hits": [
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "2",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "abc"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "1",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "ABC"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "3",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "aBC"
-				}
-			},
-			{
-				"_index": "test_ascii",
-				"_type": "_doc",
-				"_id": "4",
-				"_score": 1.0,
-				"_source": {
-					"field_1": "Abc"
-				}
-			}
-		]
-	}
+  "took" : 0,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 3,
+      "relation" : "eq"
+    },
+    "max_score" : 0.13353139,
+    "hits" : [
+      {
+        "_index" : "case_insensitive_test",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_score" : 0.13353139,
+        "_source" : {
+          "content" : "abc"
+        }
+      },
+      {
+        "_index" : "case_insensitive_test",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 0.13353139,
+        "_source" : {
+          "content" : "aBC"
+        }
+      },
+      {
+        "_index" : "case_insensitive_test",
+        "_type" : "_doc",
+        "_id" : "3",
+        "_score" : 0.13353139,
+        "_source" : {
+          "content" : "Abc"
+        }
+      }
+    ]
+  }
 }
 ```
 
@@ -2315,6 +2566,9 @@ GET /_search
 -   https://hlog.cc/archives/29/
 -   [ES 自定义打分 Function score query](https://segmentfault.com/a/1190000037700644)
 -   https://zhuanlan.zhihu.com/p/52543633
+-   https://www.jianshu.com/p/893d35d53356
+-   https://www.jianshu.com/p/60f986726ef3
+-   https://elasticsearch.cn/question/29
 -   https://cloud.tencent.com/developer/article/1764235
 -   https://www.jianshu.com/p/f668d847f18d
 -   [es number_of_shards和number_of_replicas](https://www.cnblogs.com/mikeluwen/p/8031813.html)
