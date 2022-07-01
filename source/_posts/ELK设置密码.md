@@ -1,7 +1,7 @@
 ---
 title: ELK设置密码
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?1'
+cover: 'https://img.paulzzh.tech/touhou/random?55'
 date: 2022-07-01 13:30:07
 categories: [ElasticSearch]
 tags: [ElasticSearch]
