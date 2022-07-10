@@ -28,6 +28,7 @@ cover: https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/about.jp
 ## **Blog更新历史**
 
 
+*   2022-07-10 移除**简历投递**
 *   <font color="#ff0000">**2022-06-26 博客点赞、实时热榜功能恢复（[Tencent SCF](https://cloud.tencent.com/product/scf)下线）！**</font>
 *   **2022-06-25 博客PV突破25W！**
 *   **2022-03-12 博客PV突破20W、UV突破13W！**
