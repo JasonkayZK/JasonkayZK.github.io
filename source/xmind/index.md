@@ -23,7 +23,7 @@ layout: false
 <script src="https://cdn.jsdelivr.net/npm/janvas"></script>
 <script src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/component/思维导图/xmind.js"></script>
  <!-- 站内通知 -->
-  <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <link href='https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/component/思维导图/css/default.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/component/思维导图/css/notification.css">
