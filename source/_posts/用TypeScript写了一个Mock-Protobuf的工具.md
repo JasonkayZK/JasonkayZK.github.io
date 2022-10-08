@@ -369,7 +369,7 @@ $ tree
 
 上面的命令将不会 Mock  `demo.*` 和 `google.protobuf.*` 下的 Message！
 
-<red>**注意：当你同时使用  `include` and `exclude` 两个过滤器，`exclude` 会永远首先生效！**</font>
+<font color="#f00">**注意：当你同时使用  `include` and `exclude` 两个过滤器，`exclude` 会永远首先生效！**</font>
 
 例如：
 
@@ -541,19 +541,1012 @@ tsconfig.json
 
 在 src 目录下分为了两个目录：
 
+```bash
+$ tree
+.
+├── commands
+│   ├── generate.ts
+│   ├── options.ts
+│   └── serve.ts
+├── index.ts
+└── libs
+    ├── configs.ts
+    ├── filter.ts
+    ├── mock.ts
+    └── server.ts
 
+2 directories, 8 files
+```
 
+-   index.ts 为执行入口；
+-   commands 目录下存放子命令相关内容；
+-   libs 目录下存放子命令实现相关内容；
 
+<br/>
 
+#### **命令行入口**
 
+命令行入口为 index.ts：
 
+index.ts
 
+```typescript
+#!/usr/bin/env node
+const path = require('path');
+const fs = require('fs');
+const {Command} = require('commander');
+const {DirOption, IncludeOption, ExcludeOption, PortOption, OutputPathOption, ConfigOption} = require('./commands/options')
+const generate = require('./commands/generate');
+const serve = require('./commands/serve');
 
+const program = new Command();
 
+let config = {};
+// 配置文件如果存在则读取
+if (fs.existsSync(path.resolve("mock-protobuf.config-demo.json"))) {
+    config = path.resolve("mock-protobuf.config-demo.json");
+}
+
+program
+    .name("mock-protobuf")
+    .version("v1.1.1", "-v, --version")
+    .description("A tool to mock protobuf");
+
+program.command('s').alias('serve')
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(PortOption)
+    .addOption(ConfigOption)
+    .action(serve).description("Create a mock server for the given protobuf");
+
+program.command('g').alias('generate')
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(OutputPathOption)
+    .action(generate).description("Generate mock data for the given protobuf");
+
+program.parse();
+```
+
+**代码首行 `#!/usr/bin/env node` 表示这是一个 node-cli 入口，这个是必须要加的！**
+
+随后，解析配置文件、然后注册每个命令；
+
+最后调用：`program.parse()`，解析命令行参数；
+
+<br/>
+
+#### **各个子命令入口**
+
+commands 目录下存放了每个子命令、以及命令行参数的文件；
+
+首先，由于某些命令行参数会被复用，因此在 options.ts 中定义了所有的命令行参数：
+
+options.ts
+
+```typescript
+import {Option} from "commander";
+
+let DirOption = new Option('-d, --dir <string>', 'the directory of the protobuf files').default('.');
+
+let PortOption = new Option('-p, --port <number>', 'the port for the mock server').default(3333).env('PB_MOCK_PORT');
+
+let IncludeOption = new Option('-i, --include <string>',
+    'include the specific protobuf interfaces, multiple packages split by ",", ' +
+    'such as: "packageName.serviceName.methodName"').default('');
+
+let ExcludeOption = new Option('-e, --exclude <string>',
+    'exclude the specific protobuf interfaces, multiple packages split by ",", ' +
+    'such as: "packageName.serviceName.methodName"').default('');
+
+let OutputPathOption = new Option('-o, --output <string>', 'output path for result').default('');
+
+let ConfigOption = new Option('-c, --config <string>', 'the config file path').default('mock-protobuf.config.json');
+
+module.exports = {DirOption, PortOption, IncludeOption, ExcludeOption, OutputPathOption, ConfigOption: ConfigOption};
+```
+
+这些参数和上面的功能介绍中一一对应；
+
+随后是两个子命令的定义，对应上文中的 generate 和 serve：
+
+generate.ts
+
+```typescript
+import {getMockTpl, loadProtobufDefinition} from "../libs/mock";
+import mockjs from "mockjs";
+import fs from 'fs-extra';
+import path from "path";
+import {
+    filterProtobufDefinitions,
+    getProtobufFiltersFromOptions, ProtobufMessage,
+} from "../libs/filter";
+
+interface GenerateCmdOptions {
+
+    dir: string;
+
+    include?: string | undefined;
+
+    exclude?: string | undefined;
+
+    output: string;
+}
+
+module.exports = (options: GenerateCmdOptions) => {
+    // Step 1: Load protobuf definitions
+    let pkgDefinition = loadProtobufDefinition(options.dir);
+
+    // Step 2: Filter if necessary
+    let [filteredMessages, _] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(options.include, options.exclude));
+
+    // Step 3: Generate each messages
+    filteredMessages.forEach((v: ProtobufMessage[]) => {
+        // Step 3.2: Generate mocked protobuf message data
+        for (let protobufMessage of v) {
+            let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+            let mockData = mockjs.mock(mockTpl);
+            processMockData(options.output, protobufMessage, mockData);
+        }
+    });
+}
+
+function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + ".json"), mockedMessageData, err => {
+        if (err) return console.error(err)
+    })
+}
+```
+
+serve.ts
+
+```typescript
+import {createServer, parse_response_value_from_config} from "../libs/server";
+
+interface ServeCmdOptions {
+
+    dir: string;
+
+    include: string;
+
+    exclude: string;
+
+    port: number | undefined;
+
+    config: string;
+}
+
+module.exports = function (options: ServeCmdOptions) {
+    createServer(options.dir, {
+        include: options.include,
+        exclude: options.exclude,
+        /*
+          The param data is result of mock.js
+          https://github.com/nuysoft/Mock
+        */
+        /**
+         * Hack mock rules of template
+         * @param key protobuf message key
+         * @param type protobuf message key type (eg. string/int32/bool...)
+         * @param random
+         */
+        responseHandlerMap: parse_response_value_from_config(options.config),
+        hackMockTpl: (key, type, random) => {
+            key = key.toLowerCase();
+            const keyTypeHas = (k: string, t: string) =>
+                type === t && key.indexOf(k) > -1;
+            if (keyTypeHas('icon', 'string')) return '@image';
+            else if (keyTypeHas('name', 'string')) return '@name';
+            return '';
+        }
+    }).then(server => server.start(options.port));
+}
+```
+
+**两个子命令都只是 export 了入口函数，用于在 index.ts 入口文件中注册子命令；**
+
+**同时，两个子命令主要都是调用在 libs 中定义的函数，来完成各自的功能；**
+
+下面来看各子命令的实现；
+
+<br/>
+
+#### **Generate子命令**
+
+##### **Generate命令入口**
+
+让我们自信看看 Generate 入口文件：
+
+generate.ts
+
+```typescript
+interface GenerateCmdOptions {
+
+    dir: string;
+
+    include?: string | undefined;
+
+    exclude?: string | undefined;
+
+    output: string;
+}
+
+module.exports = (options: GenerateCmdOptions) => {
+    // Step 1: Load protobuf definitions
+    let pkgDefinition = loadProtobufDefinition(options.dir);
+
+    // Step 2: Filter if necessary
+    let [filteredMessages, _] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(options.include, options.exclude));
+
+    // Step 3: Generate each messages
+    filteredMessages.forEach((v: ProtobufMessage[]) => {
+        // Step 3.2: Generate mocked protobuf message data
+        for (let protobufMessage of v) {
+            let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+            let mockData = mockjs.mock(mockTpl);
+            processMockData(options.output, protobufMessage, mockData);
+        }
+    });
+}
+
+function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + ".json"), mockedMessageData, err => {
+        if (err) return console.error(err)
+    })
+}
+```
+
+首先，GenerateCmdOptions 接口定义了 Generate 命令所需要的命令行参数；
+
+这些参数在命令行入口中可以被传递进来：
+
+index.ts
+
+```typescript
+program.command('g').alias('generate')
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(OutputPathOption)
+    .action(generate).description("Generate mock data for the given protobuf");
+```
+
+<br/>
+
+##### **加载Protobuf文件**
+
+在 generate 命令中，首先通过 loadProtobufDefinition 函数加载指定目录下的 protobuf 文件：
+
+libs/mock.ts
+
+```typescript
+export function loadProtobufDefinition(repository: string) {
+    const absFilePaths = path.posix.join(repository, '**/*.proto');
+
+    // Load all protobuf files under the repository
+    const protoPaths = globby.sync([absFilePaths]);
+
+    // Process each protobuf files, and solve semantic analysis errors caused by compatible annotations
+    shell.sed('-i', /\/\*\/\//g, '/* //', protoPaths);
+    return protoPaths.map(protoPaths => {
+        const root = new protobuf.Root();
+        return root.loadSync(protoPaths, {keepCase: true, alternateCommentMode: false, preferTrailingComment: false});
+    });
+}
+```
+
+上面的 loadProtobufDefinition 函数逻辑非常简单，首先查找所有的 proto 文件，随后加载；
+
+其中使用 `shell.sed('-i', /\/\*\/\//g, '/* //', protoPaths);` 替换掉了文件中的注释行；
+
+>   **protobuf.js 库对于某些含有注释的文件解析支持不够好！**
+
+<br/>
+
+##### **过滤Protobuf定义**
+
+首先，调用 getProtobufFiltersFromOptions 函数根据命令行参数创建过滤条件：
+
+随后调用 filterProtobufDefinitions 函数，过滤那些来自命令行 `-i` 和 `-e` 指定的 protobuf 定义；
+
+libs/filter.ts
+
+```typescript
+export type ProtobufMessageFilter = RegExp[];
+
+export function getProtobufFiltersFromOptions(includes?: string | undefined, excludes?: string | undefined):
+    [ProtobufMessageFilter | undefined, ProtobufMessageFilter | undefined] {
+
+    return [
+        includes === undefined || includes.length === 0 ? undefined :
+            includes.split(',').map(regExpStr => new RegExp(getRegExpString(regExpStr.trim()))),
+        excludes === undefined || excludes.length === 0 ? undefined :
+            excludes.split(',').map(regExpStr => new RegExp(getRegExpString(regExpStr.trim()))),
+    ];
+}
+
+function getRegExpString(regExpStr: string): string {
+    // Using prefix match for filters
+    regExpStr = regExpStr.replace('\.', "\\.");
+    return `^${regExpStr}`;
+}
+```
+
+可以看到，getProtobufFiltersFromOptions 函数根据命令行传递的过滤条件生成了对应的 RegExp 数组，用于匹配路径；
+
+filterProtobufDefinitions 函数：
+
+libs/filter.ts
+
+```typescript
+export interface ProtobufMessage {
+    data: ReflectionObject,
+    packageName: string;
+    serviceName: string;
+    messageName: string;
+}
+
+// Filter the protobuf definitions
+export function filterProtobufDefinitions(
+    pbDefinitions: protobuf.Root[],
+    includeFilters: ProtobufMessageFilter | undefined,
+    excludeFilters: ProtobufMessageFilter | undefined,
+): [Map<string, ProtobufMessage[]>, Map<string, ProtobufMessage[]>, Map<string, ProtobufMessage[]>] {
+
+    let retMessageMaps = new Map<string, ProtobufMessage[]>();
+    let retServiceMaps = new Map<string, ProtobufMessage[]>();
+    let retMethodMaps = new Map<string, ProtobufMessage[]>();
+    let repeatedSet = new Set<string>();
+    for (let pbDefinition of pbDefinitions) {
+        if (pbDefinition instanceof Namespace) {
+            handleNamespace(pbDefinition.name, pbDefinition as Namespace,
+                includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+        }
+    }
+
+    return [retMessageMaps, retServiceMaps, retMethodMaps];
+}
+
+function handleNamespace(namespace: string, pbDefinition: Namespace,
+                         includeFilters: ProtobufMessageFilter | undefined,
+                         excludeFilters: ProtobufMessageFilter | undefined,
+                         retMessageMaps: Map<string, ProtobufMessage[]>,
+                         retServiceMaps: Map<string, ProtobufMessage[]>,
+                         retMethodMaps: Map<string, ProtobufMessage[]>,
+                         repeatedSet: Set<string>) {
+
+    for (let i = 0; i < pbDefinition.nestedArray.length; i++) {
+        let item = pbDefinition.nestedArray[i];
+
+        if (item instanceof Type) {
+            pushItem(namespace, "", "Type", item, includeFilters, excludeFilters, retMessageMaps, repeatedSet);
+        } else if (item instanceof Service) {
+            pushItem(namespace, item.name, "Service", item, includeFilters, excludeFilters, retServiceMaps, repeatedSet);
+            for (let method of item.methodsArray) {
+                pushItem(namespace, item.name, "Method", method, includeFilters, excludeFilters, retMethodMaps, repeatedSet);
+            }
+        } else if (item instanceof Namespace) {
+            handleNamespace(namespace === "" ? item.name : namespace + "." + item.name, item,
+                includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+        }
+    }
+
+    return retMessageMaps;
+}
+
+function pushItem(namespace: string, serviceName: string, itemType: string, item: ReflectionObject,
+                  includeFilters: ProtobufMessageFilter | undefined,
+                  excludeFilters: ProtobufMessageFilter | undefined,
+                  retMap: Map<string, ProtobufMessage[]>,
+                  repeatedSet: Set<string>) {
+
+    if (namespace !== "" && filterProtobuf(namespace + `.${item.name}`, includeFilters, excludeFilters)) {
+        return;
+    }
+
+    let repeatStr = generateRepeatStr(namespace, serviceName, itemType, item.name);
+    if (repeatedSet.has(repeatStr)) { // duplicate
+        return;
+    } else {
+        repeatedSet.add(repeatStr);
+    }
+
+    if (retMap.has(namespace)) {
+        retMap.get(namespace)!.push({
+            data: item,
+            packageName: namespace,
+            serviceName: serviceName,
+            messageName: item.name
+        });
+    } else {
+        retMap.set(namespace, [{data: item, packageName: namespace, serviceName: serviceName, messageName: item.name}]);
+    }
+}
+
+export function filterProtobuf(namespace: string, includeFilters: ProtobufMessageFilter | undefined,
+                               excludeFilters: ProtobufMessageFilter | undefined): boolean {
+
+    // Process for exclude filters first
+    if (excludeFilters !== undefined) {
+        if (matchFilters(namespace, excludeFilters)) {
+            return true;
+        }
+    }
+
+    // Process for include filters
+    if (includeFilters !== undefined) {
+        if (!matchFilters(namespace, includeFilters)) {
+            return true;
+        }
+    }
+
+    // Namespace has been not filtered, we pick it!
+    return false;
+}
+
+function matchFilters(namespace: string, filters: ProtobufMessageFilter): boolean {
+
+    return filters.some((filter) => filter.test(namespace));
+}
+```
+
+在函数 filterProtobufDefinitions 中，主要是遍历 Proto 的定义，然后根据过滤条件过滤出最终的 Message、Service、Method 定义；
+
+在其中定义的 repeatedSet 用于防止某些递归定义的 Protobuf，例如：
+
+```protobuf
+message BasicResponse {
+  int32 status = 1;
+  string message = 2;
+  BasicResponse resp = 3;
+}
+```
+
+在函数 filterProtobufDefinitions 中主要是调用 handleNamespace 来处理所有的 Protobuf 定义；
+
+主要是区分为不同的 Protobuf 类型：
+
+```typescript
+for (let i = 0; i < pbDefinition.nestedArray.length; i++) {
+  let item = pbDefinition.nestedArray[i];
+
+  if (item instanceof Type) {
+    pushItem(namespace, "", "Type", item, includeFilters, excludeFilters, retMessageMaps, repeatedSet);
+  } else if (item instanceof Service) {
+    pushItem(namespace, item.name, "Service", item, includeFilters, excludeFilters, retServiceMaps, repeatedSet);
+    for (let method of item.methodsArray) {
+      pushItem(namespace, item.name, "Method", method, includeFilters, excludeFilters, retMethodMaps, repeatedSet);
+    }
+  } else if (item instanceof Namespace) {
+    handleNamespace(namespace === "" ? item.name : namespace + "." + item.name, item,
+                    includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+  }
+}
+```
+
+如果在 Proto 中的类型是 Namespace，那么我们还需要继续的递归调用 handleNamespace，来往下层继续搜索；
+
+而 pushItem 函数用于将不同的 Proto 定义加入到结果集中：
+
+```typescript
+function pushItem(namespace: string, serviceName: string, itemType: string, item: ReflectionObject,
+                  includeFilters: ProtobufMessageFilter | undefined,
+                  excludeFilters: ProtobufMessageFilter | undefined,
+                  retMap: Map<string, ProtobufMessage[]>,
+                  repeatedSet: Set<string>) {
+
+    if (namespace !== "" && filterProtobuf(namespace + `.${item.name}`, includeFilters, excludeFilters)) {
+        return;
+    }
+
+    let repeatStr = generateRepeatStr(namespace, serviceName, itemType, item.name);
+    if (repeatedSet.has(repeatStr)) { // duplicate
+        return;
+    } else {
+        repeatedSet.add(repeatStr);
+    }
+
+    if (retMap.has(namespace)) {
+        retMap.get(namespace)!.push({
+            data: item,
+            packageName: namespace,
+            serviceName: serviceName,
+            messageName: item.name
+        });
+    } else {
+        retMap.set(namespace, [{data: item, packageName: namespace, serviceName: serviceName, messageName: item.name}]);
+    }
+}
+```
+
+在 pushItem 函数中，首先通过 Filters 对当前的 Proto 定义进行过滤，如果不满足条件，则直接返回；
+
+而过滤的逻辑非常简单：首先判断是否是排除的，如果是，则直接过滤掉，否则判断是否是包含的；
+
+```typescript
+export function filterProtobuf(namespace: string, includeFilters: ProtobufMessageFilter | undefined,
+                               excludeFilters: ProtobufMessageFilter | undefined): boolean {
+
+    // Process for exclude filters first
+    if (excludeFilters !== undefined) {
+        if (matchFilters(namespace, excludeFilters)) {
+            return true;
+        }
+    }
+
+    // Process for include filters
+    if (includeFilters !== undefined) {
+        if (!matchFilters(namespace, includeFilters)) {
+            return true;
+        }
+    }
+
+    // Namespace has been not filtered, we pick it!
+    return false;
+}
+```
+
+这也满足了上面说介绍的：当你同时使用  `include` and `exclude` 两个过滤器，`exclude` 会永远首先生效！
+
+随后，pushItem 函数调用 generateRepeatStr 创建去重字符串防止多次递归遍历同一个定义；
+
+最后将定义加入到返回值 Map 中；
+
+至此，过滤并获取 Protobuf 定义完成！
+
+<br/>
+
+##### **创建Mock数据**
+
+最后，使用上面获取的 Protobuf 定义生成 Mock 数据：
+
+```typescript
+// Step 3: Generate each messages
+filteredMessages.forEach((v: ProtobufMessage[]) => {
+  // Step 3.2: Generate mocked protobuf message data
+  for (let protobufMessage of v) {
+    let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+    let mockData = mockjs.mock(mockTpl);
+    processMockData(options.output, protobufMessage, mockData);
+  }
+});
+```
+
+循环中首先通过 getMockTpl 获取到 Mock 对应 Protobuf 定义需要的模版，随后调用 mockjs.mock 生成 Mock 数据，最后调用 processMockData 保存 Mock 结果；
+
+获取 Mock 模版的代码如下：
+
+libs/mock.ts
+
+```typescript
+const TYPES: { [key: string]: string } = {
+    double: '@float',
+    float: '@float',
+    int32: '@integer',
+    int64: '@string("1234567890", 1, 20)',
+    uint32: '@natural',
+    uint64: '@string("1234567890", 1, 20)',
+    sint32: '@integer',
+    sint64: '@string("1234567890", 1, 20)',
+    fixed32: '@natural',
+    fixed64: '@string("1234567890", 1, 20)',
+    sfixed32: '@integer',
+    sfixed64: '@string("1234567890", 1, 20)',
+    bool: '@boolean',
+    string: '@sentence(1, 5)',
+    bytes: '@sentence(1, 5)',
+};
+
+export function getService(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    serviceName: string,
+): Root | null | undefined {
+    return pbDefinitions.find(pd => {
+        try {
+            pd.lookupService(`${packageName}.${serviceName}`);
+            return true;
+        } catch {
+            return false;
+        }
+    });
+}
+
+export function getMethod(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    serviceName: string,
+    methodName: string
+): Method | null | undefined {
+    const service = getService(pbDefinitions, packageName, serviceName);
+    return service?.lookup(methodName) as Method;
+}
+
+export function getMessage(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    messageName: string
+): protobuf.Type | undefined {
+    return pbDefinitions
+        .find(pd => {
+            try {
+                pd.lookupType(`${packageName}.${messageName}`);
+                return true;
+            } catch {
+                return false;
+            }
+        })
+        ?.lookupType(`${packageName}.${messageName}`);
+}
+
+export function getMockTpl(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    messageType: string,
+    mockMemo: Map<string, any>, // mockMemo to avoid recursive struct
+    hackMockTpl?: (
+        key: string,
+        type: string,
+        random: MockjsRandom
+    ) => string | (() => string),
+) {
+    const messageTypeSplit = messageType.split('.');
+    if (messageTypeSplit.length) {
+        messageType = messageTypeSplit.pop()!;
+        packageName = messageTypeSplit.join('.');
+    }
+    const message = getMessage(pbDefinitions, packageName, messageType);
+    const fields = message?.fields || {};
+    const keys = Object.keys(fields);
+    const tpl: { [key: string]: any } = {};
+    keys.forEach(key => {
+        const val = fields[key];
+        const {repeated, type} = val;
+        const mockTpl =
+            (hackMockTpl && hackMockTpl(key, type, Random)) || TYPES[type];
+        key = `${key}${repeated ? '|0-10' : ''}`;
+
+        let mockKey = `${packageName}.${messageType}.${key}`;
+
+        if (mockMemo.has(mockKey)) {
+            return;
+        }
+
+        mockMemo.set(mockKey, tpl); // memorize the key
+        if (mockTpl) {
+            tpl[key] = repeated ? [mockTpl] : mockTpl;
+        } else {
+            const recursiveMockTpl = getMockTpl(
+                pbDefinitions,
+                packageName,
+                type,
+                mockMemo,
+                hackMockTpl
+            );
+            tpl[key] = repeated ? [recursiveMockTpl] : recursiveMockTpl;
+        }
+    });
+    return tpl;
+}
+```
+
+主要是对当前的 Protobuf 定义，递归的 Mock 包含的每一个字段；
+
+同时，这里也使用到了 mockMemo 这个 Map 防止无限递归；
+
+最后，通过 processMockData 函数处理 Mock 后的结果：
+
+```typescript
+function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + ".json"), mockedMessageData, err => {
+        if (err) return console.error(err)
+    })
+}
+```
+
+如果：
+
+-   没有指定输出文件，则将 Mock 的数据打印在控制台来直接 Copy；
+-   指定了输出文件，则根据 Namespace 创建对应的目录，并保存 Mock 结果；
+
+<br/>
+
+#### **Serve子命令**
+
+##### **Serve子命令入口**
+
+Serve 子命令复用了上面大量的函数，这里来看下具体的实现；
+
+类似的，首先是定义接收命令行参数的接口：
+
+commands/serve.ts
+
+```typescript
+interface ServeCmdOptions {
+
+    dir: string;
+
+    include: string;
+
+    exclude: string;
+
+    port: number | undefined;
+
+    config: string;
+}
+
+module.exports = function (options: ServeCmdOptions) {
+    createServer(options.dir, {
+        include: options.include,
+        exclude: options.exclude,
+        /*
+          The param data is result of mock.js
+          https://github.com/nuysoft/Mock
+        */
+        /**
+         * Hack mock rules of template
+         * @param key protobuf message key
+         * @param type protobuf message key type (eg. string/int32/bool...)
+         * @param random
+         */
+        responseHandlerMap: parse_response_value_from_config(options.config),
+        hackMockTpl: (key, type, random) => {
+            key = key.toLowerCase();
+            const keyTypeHas = (k: string, t: string) =>
+                type === t && key.indexOf(k) > -1;
+            if (keyTypeHas('icon', 'string')) return '@image';
+            else if (keyTypeHas('name', 'string')) return '@name';
+            return '';
+        }
+    }).then(server => server.start(options.port));
+}
+```
+
+随后调用 createServer 创建 Mock 的服务，并在创建完成后在指定的端口启动 Server；
+
+<br/>
+
+##### **创建Server**
+
+创建Server的核心是要：**根据 Protobuf 的定义，Mock 相应 Method 的返回值以及请求路径；**
+
+而关于 Mock 返回值，在上面 Generate 子命令中，我们已经实现了！
+
+下面首先来看 createServer 的实现：
+
+```typescript
+export const createServer = async (protobufRepoPath: string, options: MockHandlerOptions) => {
+    const server = restify.createServer();
+
+    // CORS
+    server.use((req: Request, res: Response, next: Next) => {
+        res.header("Access-Control-Allow-Credentials", true);
+        res.header("Access-Control-Allow-Origin", req.headers.origin);
+        next();
+    });
+
+    // HANDLER
+    const handlersMap = generateMockHandlersMap(protobufRepoPath, options);
+
+    // API ROUTES
+    server.opts("*", (req, res, next) => {
+        res.header(
+            "Access-Control-Allow-Methods",
+            req.headers["access-control-request-methods"],
+        );
+        res.header(
+            "Access-Control-Allow-Headers",
+            req.headers["access-control-request-headers"],
+        );
+        res.end();
+        next();
+    });
+    handlersMap.forEach((handler, routePath) => {
+        console.log(`Handling routePath: ${routePath}`)
+        server.get(routePath, handler);
+        server.post(routePath, handler);
+    })
+
+    return {
+        start: (port: number = 3333) =>
+            server.listen(port, () =>
+                console.log("%s listening at %s", server.name, server.url),
+            ),
+    };
+};
+```
+
+通过 `restify.createServer()` 我们可以创建一个 Server，同时配置允许跨域的 header；
+
+随后通过 generateMockHandlersMap 函数获取 routePath => Handler 的 Map；
+
+然后注册各个方法，最后返回启动 Server 的函数；
+
+下面重点来看获取 Handler 的函数 generateMockHandlersMap；
+
+<br/>
+
+##### **获取各个Handler**
+
+获取各个 Handler 的方法和 Generate 子命令中的实现类似：
+
+libs/server.ts
+
+```typescript
+interface MockHandlerOptions {
+    include: string,
+    exclude: string,
+    responseHandlerMap?: Map<string, ResponseHandler>;
+    hackMockTpl?: (
+        key: string,
+        type: string,
+        random: MockjsRandom,
+    ) => string | (() => string);
+}
+
+type ResponseHandler = (resp: restify.Response, data: any) => void;
+
+function generateMockHandlersMap(
+    repository: string,
+    options: MockHandlerOptions,
+): Map<string, RequestHandlerType> {
+    const {include, exclude, responseHandlerMap, hackMockTpl} = options;
+
+    // Step 1: Load protobuf definitions
+    const pkgDefinition = loadProtobufDefinition(repository);
+
+    // Step 2: Filter if necessary
+    let [_, __, filteredMethodsMap] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(include, exclude));
+
+    // Step 3: Bind methods to the mock server handler
+    let retHandlersMap: Map<string, RequestHandlerType> = new Map;
+    filteredMethodsMap.forEach((v: ProtobufMessage[]) => {
+
+        // Step 3.1: Generate each handler from protobuf method data
+        for (let protobufMethod of v) {
+            // console.log(`protobufMethod: ${protobufMethod}`);
+            let methodFullName = `${protobufMethod.packageName}.${protobufMethod.data.name}`;
+
+            let handler = (req: Request, res: Response, next: Next) => {
+                const method = getMethod(
+                    pkgDefinition,
+                    protobufMethod.packageName,
+                    protobufMethod.serviceName,
+                    protobufMethod.data.name,
+                );
+                const responseType = method?.responseType || "";
+                const tpl = getMockTpl(
+                    pkgDefinition,
+                    protobufMethod.packageName,
+                    responseType,
+                    new Map(),
+                    hackMockTpl,
+                );
+                const mockData = mockjs.mock(tpl);
+
+                let customHandler = responseHandlerMap?.get(methodFullName);
+                if (customHandler !== undefined) { // CustomHandler response handler
+                    customHandler(res, mockData);
+                } else { // We mock it
+                    // console.log(mockData);
+                    res.json(mockData)
+                }
+
+                next();
+            };
+            retHandlersMap.set(getRouthPath(protobufMethod.packageName,
+                protobufMethod.serviceName,
+                <Method>protobufMethod.data), handler);
+        }
+    });
+
+    return retHandlersMap;
+}
+
+function getRouthPath(packageName: string, serviceName: string, method: Method): string {
+
+    let parsedRouthPath = getRouthPathFromOptions(method);
+    if (parsedRouthPath === "") {
+        parsedRouthPath = `/${packageName.replace('.', '/')}` +
+            `/${serviceName.replace('.', '/')}` +
+            `${method.name}`;
+    }
+    return parsedRouthPath;
+}
+
+function getRouthPathFromOptions(method: Method): string {
+
+    for (let reqType of ["get", "post"]) {
+        let option = method.getOption(`(google.api.http).${reqType}`);
+        if (option !== undefined) {
+            return <string>option;
+        }
+    }
+    return "";
+}
+```
+
+在 generateMockHandlersMap 函数中，首先也是惊喜 Protobuf 定义的加载解析以及过滤操作；
+
+随后遍历过滤之后的 MethodMap：为每个 Method Mock 请求参数，并获取请求路径；
+
+这里需要注意的是：
+
+如果 responseHandlerMap 中已经存在了自定义的响应，那么我们直接用这个即可：
+
+```typescript
+let customHandler = responseHandlerMap?.get(methodFullName);
+if (customHandler !== undefined) { // CustomHandler response handler
+  customHandler(res, mockData);
+} else { // We mock it
+  res.json(mockData)
+}
+```
+
+同时，getRouthPath 函数用于获取请求路径：
+
+```bash
+function getRouthPath(packageName: string, serviceName: string, method: Method): string {
+
+    let parsedRouthPath = getRouthPathFromOptions(method);
+    if (parsedRouthPath === "") {
+        parsedRouthPath = `/${packageName.replace('.', '/')}` +
+            `/${serviceName.replace('.', '/')}` +
+            `${method.name}`;
+    }
+    return parsedRouthPath;
+}
+
+function getRouthPathFromOptions(method: Method): string {
+
+    for (let reqType of ["get", "post"]) {
+        let option = method.getOption(`(google.api.http).${reqType}`);
+        if (option !== undefined) {
+            return <string>option;
+        }
+    }
+    return "";
+}
+```
+
+如果存在通过 `google.api.http` 定义的请求路径，那么我们用这个路径，否则，我们用 Protobuf 的包名来生成路径；
+
+这一点和我们上面提到的功能是一致的！
 
 <br/>
 
 ### **NPM上发布**
+
+代码写完，并且测试 OK 了之后，可以发布到 NPM 仓库；
 
 把包发布在 NPM 上非常简单；
 
