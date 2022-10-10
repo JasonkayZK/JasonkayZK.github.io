@@ -363,7 +363,35 @@ Worker 写出数据时，先写出到临时文件（Write），最终确认没�
 
 ## **代码实现**
 
+代码的实现主要分为三个部分，并且实验已经提供好了对应的文件：
 
+-   Master 与 Worker 间的 RPC 通信，对应 mr/rpc.go 文件；
+-   Master 调度逻辑，对应 mr/master.go 文件；
+-   Worker 计算逻辑，对应 mr/worker.go 文件；
+
+下面我们一个一个来看；
+
+### **RPC通信**
+
+
+
+
+
+
+
+<br/>
+
+### **Master调度**
+
+
+
+
+
+
+
+<br/>
+
+### **Worker计算**
 
 
 
