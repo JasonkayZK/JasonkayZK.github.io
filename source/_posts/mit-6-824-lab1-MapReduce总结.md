@@ -373,15 +373,136 @@ Worker 写出数据时，先写出到临时文件（Write），最终确认没�
 
 ### **RPC通信**
 
+RPC 通信主要是用来：
 
+-   **Query**：Worker 请求 Master 获取 Map 或 Reduce 任务；
+-   **Commit**：Worker 向 Master 确认上一个任务已经完成；
 
+在实现时，因为上面两个步骤可以合并为一个步骤，因此，可以用一个 RPC 调用完成上面两个事情；
 
+**即：在 Query 下一个任务的时候，Commit 上一个任务；**
 
+**特别的：**
 
+-   **在 Query 第一个任务的时候，没有上一个任务，所以不需要 Commit；**
+-   **存在 Query 任务的时候，不存在任务的可能，此时可以 Commit 上一个任务，但是不会返回下一个任务；**
+
+RPC 的请求与相应结构体定义如下：
+
+src/mr/rpc.go
+
+```go
+// TaskTypeOpt The MapReduce task type
+type TaskTypeOpt string
+
+const (
+	TaskTypeMap      TaskTypeOpt = "Map"
+	TaskTypeReduce   TaskTypeOpt = "Reduce"
+	TaskTypeFinished TaskTypeOpt = "Finished"
+)
+
+// TaskInfo The MapReduce task
+type TaskInfo struct {
+	Id       string
+	Type     TaskTypeOpt
+	Index    int
+	File     string
+	WorkerId string
+	Deadline time.Time
+}
+
+// AckAndQueryNewTaskRequest RPC request for Workers to query a task after finished previously task
+type AckAndQueryNewTaskRequest struct {
+	// The finished previous task index (if it has finished task)
+	PreviousTaskIndex int
+	TaskType          TaskTypeOpt
+	WorkerId          string
+}
+
+// AckAndQueryNewTaskResponse RPC response for Workers to query a task
+type AckAndQueryNewTaskResponse struct {
+	// The task id(filename) for Map or Reduce to yield results(if there has)
+	Task            *TaskInfo
+	MapWorkerCnt    int
+	ReduceWorkerCnt int
+}
+```
+
+首先定义了 `TaskTypeOpt` 类型，标志任务的类型，包括三种：
+
+-   **`"Map"`：Map 任务；**
+-   **`"Reduce"`：Reduce 任务；**
+-   **`"Finished"`：任务已完成，提示 Worker 可以退出；**
+
+`TaskInfo` 表示一个任务实体，包括：
+
+-   **Id：任务的Id；**
+-   **Type：任务的类型；**
+-   **Index：任务的序号，表示是第几个任务；**
+-   **File：任务需要处理的文件；**
+-   **WorkerId：目前执行该任务的 Worker 的Id；**
+-   **Deadline：任务的结束时间（本实验为10秒钟）；**
+
+我们 RPC 的名称为 `AckAndQueryNewTask`，包括 Request 和 Response 两个部分；
+
+`AckAndQueryNewTaskRequest` 包括：
+
+-   `PreviousTaskIndex`：上一个执行完成任务的索引，用于 Commit 上一个任务；
+-   `TaskType`：上一个执行完成任务的类型，用于 Commit 上一个任务；
+-   `WorkerId`：上一个执行完成任务的 WorkerId（本 WorkerId），用于 Master 校验到底是哪个 Worker 执行任务（Failover 策略）；
+
+`AckAndQueryNewTaskResponse` 包括：
+
+-   **Task**：`*TaskInfo` 类型，新申请的任务，如果不存在可调度的任务，则返回 nil；
+-   **MapWorkerCnt：**分配执行 Map 的 Worker 数，用于生成临时文件；
+-   **ReduceWorkerCnt：**分配执行 Reduce 的 Worker 数，用于生成临时文件；
 
 <br/>
 
 ### **Master调度**
+
+Master 主要是完成下面几个功能：
+
+-   **实现 `AckAndQueryNewTask` 方法，实现任务的分配、上一个任务的 Commit；**
+-   **实现各个任务状态之间的切换：Map => Reduce => Finished；**
+-   **定时轮询各个任务的执行情况，抛弃超时的任务并重新分配；**
+
+因此，Master 需要维护下面的信息：
+
+-   **配置信息**：
+    -   MAP Worker 数量；
+    -   Reduce Worker 数量；
+-   **调度任务信息**：
+    -   当前所处阶段，是 MAP、REDUCE、Finished；
+    -   所有仍未完成的 Task 及其所属的 Worker 和 Deadline，可以使用 Map 配合 TaskId 实现；
+    -   所有仍未分配的 Task 池，用于响应 Worker 申请任务及 Failover 时的重新分配，可以使用 Channel 实现；
+
+下面是 Master 结构的定义：
+
+src/mr/master.go
+
+```go
+type Master struct {
+	// Use lock to avoid data race
+	lock sync.RWMutex
+
+	// The phase of all tasks
+	status TaskTypeOpt
+
+	// The count of the workers
+	mapCnt    int
+	reduceCnt int
+
+	// All tasks
+	tasks map[string]*TaskInfo
+	// All ongoing tasks
+	availableTasks chan *TaskInfo
+}
+```
+
+
+
+
 
 
 
@@ -424,6 +545,5 @@ Worker 写出数据时，先写出到临时文件（Write），最终确认没�
 视频学习地址：
 
 -   https://www.bilibili.com/video/BV1R7411t71W/
-
 
 <br/>
