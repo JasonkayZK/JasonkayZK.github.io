@@ -45,13 +45,135 @@ description: 最近开始重新学习 mit-6.824，目前把Lab1做完了，在�
 
 ## **MapReduce简介**
 
+### **MapReduce 编程模型**
+
+总的来讲，Google MapReduce 所执行的分布式计算会以一组键值对作为输入，输出另一组键值对，用户则通过编写 Map 函数和 Reduce 函数来指定所要进行的计算。
+
+由用户编写的Map 函数将被应用在每一个输入键值对上，并输出若干键值对作为中间结果。之后，MapReduce 框架则会将与同一个键 II 相关联的值都传递到同一次 Reduce 函数调用中。
+
+同样由用户编写的 Reduce 函数以键 II 以及与该键相关联的值的集合作为参数，对传入的值进行合并并输出合并后的值的集合。
+
+形式化地说，由用户提供的 Map 函数和 Reduce 函数应有如下类型：
+
+```
+map(k1,v1) → list(k2,v2) 
+
+reduce(k2,list(v2)) → list(v2)
+```
+
+值得注意的是，在实际的实现中 MapReduce 框架使用 `Iterator` 来代表作为输入的集合，主要是为了避免集合过大，无法被完整地放入到内存中；
+
+作为案例，我们考虑这样一个问题：给定大量的文档，计算其中每个单词出现的次数（Word Count）；
+
+用户通常需要提供形如如下伪代码的代码来完成计算：
+
+```python
+map(String key, String value):
+  // key: document name
+  // value: document contents
+  for each word w in value:
+    EmitIntermediate(w, “1”);
 
 
+reduce(String key, Iterator values):
+  // key: a word
+  // values: a list of counts
+  int result = 0;
+  for each v in values:
+    result += ParseInt(v);
+  Emit(AsString(result));
+```
 
+<br/>
 
+### **函数式编程模型**
 
+了解函数式编程范式的读者不难发现：MapReduce 所采用的编程模型源自于函数式编程里的 Map 函数和 Reduce 函数。后起之秀 Spark 同样采用了类似的编程模型；
 
+使用函数式编程模型的好处在于这种编程模型本身就对并行执行有良好的支持，这使得底层系统能够轻易地将大数据量的计算并行化，同时由用户函数所提供的确定性也使得底层系统能够将函数重新执行作为提供容错性的主要手段；
 
+### **MapReduce计算执行过程**
+
+每一轮 MapReduce 的大致过程如下图所示：
+
+![mapreduce_architecture.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/mapreduce_architecture.png)
+
+首先，用户通过 MapReduce 客户端指定 Map 函数和 Reduce 函数，以及此次 MapReduce 计算的配置，包括中间结果键值对的 Partition 数量 RR 以及用于切分中间结果的哈希函数 hash；
+
+用户开始 MapReduce 计算后，整个 MapReduce 计算的流程可总结如下：
+
+1.  作为输入的文件会被分为 M 个 Split，每个 Split 的大小通常在 16~64 MB 之间；
+2.  如此，整个 MapReduce 计算包含 M 个Map 任务和 R 个 Reduce 任务。Master 结点会从空闲的 Worker 结点中进行选取并为其分配 Map 任务和 Reduce 任务；
+3.  收到 Map 任务的 Worker 们（又称 Mapper）开始读入自己对应的 Split，将读入的内容解析为输入键值对并调用由用户定义的 Map 函数；由 Map 函数产生的中间结果键值对会被暂时存放在缓冲内存区中；
+4.  在 Map 阶段进行的同时，Mapper 们周期性地将放置在缓冲区中的中间结果存入到自己的本地磁盘中，同时根据用户指定的 Partition 函数（默认为 `hash(key) % R`）将产生的中间结果分为RR 个部分。任务完成时，Mapper 便会将中间结果在其本地磁盘上的存放位置报告给 Master；
+5.  Mapper 上报的中间结果存放位置会被 Master 转发给 Reducer；当 Reducer 接收到这些信息后便会通过 RPC 读取存储在 Mapper 本地磁盘上属于对应 Partition 的中间结果；在读取完毕后，Reducer 会对读取到的数据进行排序以令拥有相同键的键值对能够连续分布；
+6.  之后，Reducer 会为每个键收集与其关联的值的集合，并以之调用用户定义的 Reduce 函数。Reduce 函数的结果会被放入到对应的 Reduce Partition 结果文件；
+
+实际上，在一个 MapReduce 集群中，Master 会记录每一个 Map 和 Reduce 任务的当前完成状态，以及所分配的 Worker；除此之外，Master 还负责将 Mapper 产生的中间结果文件的位置和大小转发给 Reducer；
+
+**值得注意的是，每次 MapReduce 任务执行时，M 和 R 的值都应比集群中的 Worker 数量要高得多，以达成集群内负载均衡的效果；**
+
+<br/>
+
+### **MapReduce容错机制**
+
+由于 Google MapReduce 很大程度上利用了由 Google File System 提供的分布式原子文件读写操作，所以 MapReduce 集群的容错机制实现相比之下便简洁很多，也主要集中在任务意外中断的恢复上；
+
+#### **Worker失效**
+
+在 MapReduce 集群中，Master 会周期地向每一个 Worker 发送 Ping 信号：如果某个 Worker 在一段时间内没有响应，Master 就会认为这个 Worker 已经不可用；
+
+任何分配给该 Worker 的 Map 任务，无论是正在运行还是已经完成，都需要由 Master 重新分配给其他 Worker，因为该 Worker 不可用也意味着存储在该 Worker 本地磁盘上的中间结果也不可用了；
+
+Master 也会将这次重试通知给所有 Reducer，没能从原本的 Mapper 上完整获取中间结果的 Reducer 便会开始从新的 Mapper 上获取数据；
+
+如果有 Reduce 任务分配给该 Worker，Master 则会选取其中尚未完成的 Reduce 任务分配给其他 Worker；
+
+鉴于 Google MapReduce 的结果是存储在 Google File System 上的，已完成的 Reduce 任务的结果的可用性由 Google File System 提供，因此 MapReduce Master 只需要处理未完成的 Reduce 任务即可；
+
+<br/>
+
+#### **Master失效**
+
+**整个 MapReduce 集群中只会有一个 Master 结点，因此 Master 失效的情况并不多见；**
+
+Master 结点在运行时会周期性地将集群的当前状态作为保存点（Checkpoint）写入到磁盘中；
+
+Master 进程终止后，重新启动的 Master 进程即可利用存储在磁盘中的数据恢复到上一次保存点的状态；
+
+<br/>
+
+#### **落后的Worker**
+
+如果集群中有**某个 Worker 花了特别长的时间来完成最后的几个 Map 或 Reduce 任务，整个 MapReduce 计算任务的耗时就会因此被拖长，这样的 Worker 也就成了落后者（Straggler）！**
+
+<font color="#f00">**MapReduce 在整个计算完成到一定程度时就会将剩余的任务进行备份，即同时将其分配给其他空闲 Worker 来执行，并在其中一个 Worker 完成后将该任务视作已完成；**</font>
+
+<br/>
+
+### **其他优化**
+
+在高可用的基础上，Google MapReduce 系统现有的实现同样采取了一些优化方式来提高系统运行的整体效率；
+
+#### **数据本地性**
+
+在 Google 内部所使用的计算环境中，机器间的网络带宽是比较稀缺的资源，需要尽量减少在机器间过多地进行不必要的数据传输；
+
+Google MapReduce 采用 Google File System 来保存输入和结果数据，因此 Master 在分配 Map 任务时会从 Google File System 中读取各个 Block 的位置信息，并尽量将对应的 Map 任务分配到持有该 Block 的 Replica 的机器上；
+
+如果无法将任务分配至该机器，Master 也会利用 Google File System 提供的机架拓扑信息将任务分配到较近的机器上；
+
+<br/>
+
+#### **Combiner**
+
+在某些情形下，用户所定义的 Map 任务可能会产生大量重复的中间结果键，同时用户所定义的 Reduce 函数本身也是满足交换律和结合律的；
+
+在这种情况下，Google MapReduce 系统允许用户声明在 Mapper 上执行的 Combiner 函数：Mapper 会使用由自己输出的 R 个中间结果 Partition 调用 Combiner 函数以对中间结果进行局部合并，减少 Mapper 和 Reducer 间需要传输的数据量；
+
+>   以上内容转自：
+>
+>   -   https://mr-dai.github.io/mapreduce_summary/
 
 <br/>
 
@@ -322,7 +444,7 @@ $ go run mrworker.go wc.so
 -   有的时候 worker 需要等待，比如：只有在所有的 Map 任务都完成，才能开启 Reduce 任务；一个实现方案是：worker 定期轮询 master 去索要任务的时候来询问；另一个实现方案是由 master 节点来定期轮询是否所有的任务都已经完成；
 -   master 节点无法区分一个 worker 节点到底是挂掉了，还是执行了一个任务太长时间；最好的做法是master等待一段时间后，放弃那些执行时间过长（本实验中为10s）的 worker，认为他们已经挂了，并重新分配任务；
 -   可以使用 `mrapps/crash.go` 测试节点挂掉后的恢复，他的 Map、Reduce 函数会随机直接退出（模拟 worker 节点在被分配任务后挂掉）；
--   <red>**为了保证没有 worker 节点能够看到由于节点崩溃而写入一半的最终产出文件，在 MapReduce 论文中提出了，先创建临时文件，并且在全部写入完成后，重命名的方法（很赞！）；你也应当使用这种方法；**</font>
+-   <font color="#f00">**为了保证没有 worker 节点能够看到由于节点崩溃而写入一半的最终产出文件，在 MapReduce 论文中提出了，先创建临时文件，并且在全部写入完成后，重命名的方法（很赞！）；你也应当使用这种方法；**</font>
 
 通过上面的任务，我们可以总结出：
 
@@ -773,7 +895,7 @@ func (m *Master) handlePreviousTask(req *AckAndQueryNewTaskRequest) error {
 
 如果当前任务已经不属于当前提交任务的 Worker，那么我们直接忽略掉即可！
 
->   <red>**这里就避免了由于 Fallover 处理而导致的多个 Worker 同时处理同一个 Task 并提交的问题！**</font>
+>   <font color="#f00">**这里就避免了由于 Fallover 处理而导致的多个 Worker 同时处理同一个 Task 并提交的问题！**</font>
 
 否则，这是一个我们需要处理的 Commit，那么我们从 `taskFinishHandlerMap` 中获取到不同类型的任务对应的 Handler 进行处理；
 
@@ -937,7 +1059,7 @@ func (m *Master) checkWorkers() {
 
 主要是遍历 tasks 中的任务，如果发现超时的（`time.Now().After(task.Deadline)`），则将其 `WorkerId` 置为空，并放入 availableTasks Channel 中重新分配任务；
 
->   <red>**这里其实是可以进行优化的，即：使用小根堆从 `Deadline` 最早的一个任务进行遍历来减少开销；**</font>
+>   <font color="#f00">**这里其实是可以进行优化的，即：使用小根堆从 `Deadline` 最早的一个任务进行遍历来减少开销；**</font>
 
 <br/>
 
@@ -983,33 +1105,361 @@ Worker 的实现就比较简单了，主要是一个死循环，不断地向 Mas
     -   向 Master 提交任务；
 -   Master 返回 Finished Task，表示所有任务都已经完成，直接退出循环，结束 Worker 进程；
 
+下面先来看 Worker 初始化的代码；
 
+<br/>
 
+#### **初始化Worker**
 
+在 `main/mrworker.go` 中调用 `Worker` 函数对 Worker 进行初始化，代码如下：
 
+src/mr/worker.go
 
+```go
+// main/mrworker.go calls this function.
+func Worker(mapFunc func(string, string) []KeyValue,
+	reduceFunc func(string, []string) string) {
 
+	// Done Your worker implementation here.
+	workerId := generateWorkerId()
+	infof("Worker %v started!\n", workerId)
 
+	// Fire the worker to receive tasks
+	var previousTaskType TaskTypeOpt
+	var previousTaskIndex int
+	var taskErr error
+	for {
+		// Step 1: Query Task & Ack the last task
+		req := AckAndQueryNewTaskRequest{
+			WorkerId:          workerId,
+			PreviousTaskIndex: previousTaskIndex,
+			TaskType:          previousTaskType,
+		}
+		resp := AckAndQueryNewTaskResponse{}
+		succeed := call("Master.AckAndQueryNewTask", &req, &resp)
+		if !succeed {
+			errorf("Failed to call AckAndQueryNewTask, retry 1 second later")
+			time.Sleep(time.Second)
+			continue
+		}
+		infof("Call AckAndQueryNewTaskResponse success! req: %v, resp: %v", &req, &resp)
 
+		// Extra Step: Job finished, exit
+		if resp.Task.Type == TaskTypeFinished {
+			// Job finished, exit
+			infof("Received job finish signal from master, exit")
+			break
+		}
 
+		// Step 2: handle the queried task
+		if resp.Task.Type == TaskTypeMap {
+			taskErr = handleMapTask(&resp, workerId, mapFunc)
+			if taskErr != nil {
+				errorf("Failed to handleMapTask: %v, err: %v", resp.Task, taskErr)
+				continue
+			}
+		} else if resp.Task.Type == TaskTypeReduce {
+			taskErr = handleReduceTask(&resp, workerId, reduceFunc)
+			if taskErr != nil {
+				errorf("Failed to handleReduceTask: %v, err: %v", resp.Task, taskErr)
+				continue
+			}
+		} else {
+			errorf("No handler to handle task: %v", resp.Task)
+			continue
+		}
 
+		// Step 3: save finished task info, ack for the next iteration
+		previousTaskType = resp.Task.Type
+		previousTaskIndex = resp.Task.Index
+		infof("Finished task: %v on worker: %s\n", resp.Task, workerId)
+	}
 
+	infof("Worker %v finished!\n", workerId)
+}
+
+// Use pid as the workerId(standalone type)
+func generateWorkerId() string {
+	return strconv.Itoa(os.Getpid())
+}
+```
+
+代码首先通过 `generateWorkerId` 将当前Worker的 PID 作为 WorkerId（便于Debug排查问题）；
+
+随后，进入 for 循环中，首先调用 RPC 获取任务；
+
+>   **这里需要注意的是，首次调用时，`previousTaskIndex`、`previousTaskType` 都为空，所以不会提交任务；**
+
+在获取到任务之后进行判断：
+
+-   如果是 `Finished` 类型的任务，则直接退出；
+-   如果是 `Map` 或 `Reduce` 类型的任务，则分别调用不同的处理函数进行处理；
+
+最后，如果成功处理了任务，则将本次的任务信息赋值给 `previousTaskIndex`、`previousTaskType`，在下一个 for 循环开始后，会对 Task 进行 Commit；
+
+下面来看 Map、Reduce任务的处理；
+
+<br/>
+
+#### **处理Map任务**
+
+和实验提供的顺序执行的 MapReduce 实现类似，这里的 Map 任务也是读取 Task 指定的文件，调用 Map 函数，并输出临时的中间结果文件；
+
+和之前不同的是，这里需要根据 Reduce 任务的个数对输出进行分桶操作，而即使对应的 Key 在哪个 Bucket 的函数，实验也已经提供了：`ihash`；
+
+Map 任务处理代码如下：
+
+src/mr/worker.go
+
+```go
+// The map-type task handler for worker
+func handleMapTask(resp *AckAndQueryNewTaskResponse,
+	workerId string, mapFunc func(string, string) []KeyValue) error {
+
+	// Step 1: Read task file
+	taskFile, err := os.Open(resp.Task.File)
+	if err != nil {
+		errorf("Failed to open map input file %s: %v", resp.Task.File, err)
+		return err
+	}
+	content, err := ioutil.ReadAll(taskFile)
+	if err != nil {
+		errorf("Failed to read map input file %s: %v", resp.Task.File, err)
+		return err
+	}
+
+	// Step 2: Use MapFunc to yield intermediate results
+	// Key: FileName, Value: FileContent
+	// Then Hash the key by ihash func, and push result into different buckets
+	mapResults := mapFunc(resp.Task.File, string(content))
+	hashedKva := make(map[int][]KeyValue)
+	for _, kv := range mapResults {
+		hashed := ihash(kv.Key) % resp.ReduceWorkerCnt
+		hashedKva[hashed] = append(hashedKva[hashed], kv)
+	}
+
+	// Step 3: Writes all intermediate results into intermediate files
+	for idx := 0; idx < resp.ReduceWorkerCnt; idx++ {
+		tmpFileName := tmpMapOutFile(workerId, resp.Task.Index, idx)
+		intermediateFile, _ := os.Create(tmpFileName)
+		for _, kv := range hashedKva[idx] {
+			// The intermediate file format is: ${key}\t${value}\n
+			_, err = fmt.Fprintf(intermediateFile, "%v\t%v\n", kv.Key, kv.Value)
+			if err != nil {
+				errorf("Write intermediate file: %s failed, err: %v", intermediateFile, err)
+				intermediateFile.Close()
+				return err
+			}
+		}
+		intermediateFile.Close()
+	}
+
+	infof("Worker[%s] writes intermediate files success, task: %v", workerId, resp.Task)
+
+	return nil
+}
+
+// use ihash(key) % NReduce to choose the reducer
+// task number for each KeyValue emitted by Map.
+func ihash(key string) int {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(key))
+	return int(h.Sum32() & 0x7fffffff)
+}
+```
+
+代码首先从 Task 指定的文件中读取内容；
+
+随后调用 APP 中提供的 `mapFunc`，并将得到的 Key 值进行 `ihash(kv.Key) % resp.ReduceWorkerCnt` 后，放入到对应的 hashedKva 桶中；
+
+最后，分桶写入到了不同的临时文件中！
+
+<br/>
+
+#### **处理Reduce任务**
+
+Reduce 任务的实现也与顺序执行的 MapReduce 实现类似，代码如下：
+
+src/mr/worker.go
+
+```go
+// The reduce-type task handler for worker
+func handleReduceTask(resp *AckAndQueryNewTaskResponse,
+	workerId string, reduceFunc func(string, []string) string) error {
+
+	// Step 1: Read the corresponding file
+	var lines []string
+	for mi := 0; mi < resp.MapWorkerCnt; mi++ {
+		inputFile := finalMapOutFile(mi, resp.Task.Index)
+		file, err := os.Open(inputFile)
+		if err != nil {
+			errorf("Failed to open map output file %s: %v", inputFile, err)
+			return err
+		}
+		content, err := ioutil.ReadAll(file)
+		if err != nil {
+			errorf("Failed to read map output file %s: %v", inputFile, err)
+			return err
+		}
+		lines = append(lines, strings.Split(string(content), "\n")...)
+	}
+
+	// Step 2: Format the lines
+	var mapResults []KeyValue
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		mapResults = append(mapResults, KeyValue{
+			Key:   parts[0],
+			Value: parts[1],
+		})
+	}
+
+	// Step 3: Sort the results
+	sort.Sort(ByKey(mapResults))
+
+	// Step 4: Write the results(Just as the mrsequential.go do!)
+	tmpFileName := tmpReduceOutFile(workerId, resp.Task.Index)
+	tmpFile, _ := os.Create(tmpFileName)
+	defer tmpFile.Close()
+
+	// Step 5: Call Reduce on each distinct key in mapResults[], and write the intermediate result.
+	i := 0
+	for i < len(mapResults) {
+		// Step 5.1: Find the same key in mapResults
+		j := i + 1
+		for j < len(mapResults) && mapResults[j].Key == mapResults[i].Key {
+			j++
+		}
+		var values []string
+		for k := i; k < j; k++ {
+			values = append(values, mapResults[k].Value)
+		}
+
+		// Step 5.2: Call reduceFunc
+		output := reduceFunc(mapResults[i].Key, values)
+
+		// Step 5.3: Save the yield reduce results to intermediate files.
+		_, _ = fmt.Fprintf(tmpFile, "%v %v\n", mapResults[i].Key, output)
+
+		i = j
+	}
+
+	return nil
+}
+```
+
+由于执行 Reduce 任务时，所有的 Map 任务一定都是被 Commit 过的；
+
+因此，我们可以找到所有 Map 任务最终 Commit 生成的文件并读取内容到 `mapResults []KeyValue` 中；
+
+随后，根据论文的内容，我们对结果进行排序，并对相同的 Key 进行归并；
+
+最后，和上面一样，我们将 Reduce 的结果输出到临时的文件；
+
+至此，Reduce 任务结束！
 
 <br/>
 
 ## **测试验证**
 
+开发完成后，我们来进行测试；
 
+直接在 `src/main` 目录下执行 `./test-mr.sh` 即可测试；
 
+>   **别忘了打开 `RACE=-race`！**
 
+通过最后的输出可以看到，所有的用例都通过了！
 
+```
+*** Starting wc test.
+--- wc test: PASS
+*** Starting indexer test.
+--- indexer test: PASS
+*** Starting map parallelism test.
+--- map parallelism test: PASS
+*** Starting reduce parallelism test.
+--- reduce parallelism test: PASS
+*** Starting crash test.
+--- crash test: PASS
+*** PASSED ALL TESTS
+```
 
+同时输出了大量 INFO 级别的日志：
 
+```
+2022/10/12 22:21:11 [INFO]master server started: &{{{0 0} 0 0 0 0} Map 8 10 map[Map-0:0xc000078180 Map-1:0xc0000781e0 Map-2:0xc000078240 Map-3:0xc0000782a0 Map-4:0xc000078300 Map-5:0xc000078360 Map-6:0xc0000783c0 Map-7:0xc000078420] 0xc000078120}
+2022/10/12 22:21:11 [INFO]current task phase: Map, res task count: 8
+2022/10/12 22:21:12 [INFO]Worker 58334 started!
 
+2022/10/12 22:21:12 [INFO]Worker 58333 started!
 
+2022/10/12 22:21:12 [INFO]Worker 58335 started!
 
+2022/10/12 22:21:12 [INFO]Assign task &{Map-0 Map 0 ../pg-being_ernest.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58333
+2022/10/12 22:21:12 [INFO]Assign task &{Map-1 Map 1 ../pg-dorian_gray.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58334
+2022/10/12 22:21:12 [INFO]Assign task &{Map-2 Map 2 ../pg-frankenstein.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58335
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0  58334}, resp: &{0xc000114ae0 8 10}
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0  58333}, resp: &{0xc0001329c0 8 10}
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0  58335}, resp: &{0xc000076720 8 10}
+2022/10/12 22:21:12 [INFO]current task phase: Map, res task count: 5
+2022/10/12 22:21:13 [INFO]Worker[58333] writes intermediate files success, task: &{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST} on worker: 58333
 
+2022/10/12 22:21:13 [INFO]Mark task [&{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST m=+11.002276209}] finished on worker 58333
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58333, taskIdx: 0
+2022/10/12 22:21:13 [INFO]Assign task &{Map-3 Map 3 ../pg-grimm.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58333
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0 Map 58333}, resp: &{0xc000076360 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58335] writes intermediate files success, task: &{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST} on worker: 58335
 
+2022/10/12 22:21:13 [INFO]Mark task [&{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST m=+11.002569001}] finished on worker 58335
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58335, taskIdx: 2
+2022/10/12 22:21:13 [INFO]Assign task &{Map-4 Map 4 ../pg-huckleberry_finn.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58335
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &{2 Map 58335}, resp: &{0xc0000ba7e0 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58334] writes intermediate files success, task: &{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST} on worker: 58334
+
+2022/10/12 22:21:13 [INFO]Mark task [&{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST m=+11.002462043}] finished on worker 58334
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58334, taskIdx: 1
+2022/10/12 22:21:13 [INFO]Assign task &{Map-5 Map 5 ../pg-metamorphosis.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58334
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &{1 Map 58334}, resp: &{0xc000098420 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58334] writes intermediate files success, task: &{Map-5 Map 5 ../pg-metamorphosis.txt 58334 2022-10-12 22:21:23.568509 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &{Map-5 Map 5 ../pg-metamorphosis.txt 58334 2022-10-12 22:21:23.568509 +0800 CST} on worker: 58334
+
+......
+
+2022/10/12 22:22:25 [INFO]Call AckAndQueryNewTaskResponse success! req: &{2 Reduce 58551}, resp: &{0xc000188240 0 0}
+2022/10/12 22:22:25 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:25 [INFO]Worker 58551 finished!
+
+2022/10/12 22:22:26 [INFO]current task phase: Finished, res task count: 0
+2022/10/12 22:22:26 [INFO]Worker 58818 started!
+
+2022/10/12 22:22:26 [INFO]Worker 58817 started!
+
+2022/10/12 22:22:26 [INFO]Worker 58820 started!
+
+2022/10/12 22:22:26 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0  58818}, resp: &{0xc00007a720 0 0}
+2022/10/12 22:22:26 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:26 [INFO]Worker 58818 finished!
+
+2022/10/12 22:22:26 [INFO]Call AckAndQueryNewTaskResponse success! req: &{0  58817}, resp: &{0xc00013aae0 0 0}
+2022/10/12 22:22:26 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:26 [INFO]Worker 58817 finished!
+```
+
+从日志也可以看出，最终 Master 和 Worker 都成功的退出了！
+
+<br/>
+
+## **后记**
+
+上面就是 Lab1 的基本实现了，在开发过程中的一个小技巧就是，**大量打印日志**，便于排查问题；
+
+同时，在写代码之前，要提前规划好代码，组织好逻辑之后再动手，效率反而高很多！
 
 <br/>
 
@@ -1022,3 +1472,4 @@ Worker 的实现就比较简单了，主要是一个死循环，不断地向 Mas
 -   https://www.bilibili.com/video/BV1R7411t71W/
 
 <br/>
+
