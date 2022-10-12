@@ -461,6 +461,8 @@ type AckAndQueryNewTaskResponse struct {
 
 ### **Master调度**
 
+#### **Master结构体**
+
 Master 主要是完成下面几个功能：
 
 -   **实现 `AckAndQueryNewTask` 方法，实现任务的分配、上一个任务的 Commit；**
@@ -500,19 +502,492 @@ type Master struct {
 }
 ```
 
+其中：
 
+-   lock 读写锁用于防止 Master 内部的状态出现 Data Race；
+-   status 记录了当前 Job 的任务状态；
+-   mapCnt、reduceCnt 记录了当前 Map、Reduce 的数量；
+-   tasks 记录了当前**所有正在执行、可分配**的任务；
+-   availableTasks 记录了**当前可以被分配**的任务；
 
+<br/>
 
+#### **Master初始化及启动**
 
+当创建一个 Master 后主要需要做以下几个事情：
 
+-   基于指定的输入文件生成 MAP Task 到：可用 Task 池 availableTasks 以及 tasks 中；
+-   处理 Worker 的 Task 申请 RPC，从池中分配一个可用的 Task 给 Worker 并响应；
+-   处理 Worker 的 Task 完成通知，完成 Task 最终的结果数据 Commit；
+-   在 MAP Task 全部完成后，切换至 REDUCE 阶段，生成 REDUCE Task 到可用 Task 池；
+-   在 REDUCE Task 全部完成后，标记 MR 作业已完成，退出；
+-   周期轮询正在运行的 Task，如果发现 Task 运行时长超出 Deadline 后重新分配其到新的 Worker 上运行；
 
+Master 的初始化主要是在 `src/main/mrmaster.go` 中通过调用 `MakeMaster` 函数实现的；
 
+下面来看：
 
+src/mr/master.go
 
+```go
+// MakeMaster create a Master.
+// main/mrmaster.go calls this function.
+// nReduce is the number of reduce tasks to use.
+func MakeMaster(files []string, nReduce int) *Master {
+
+	// Step 1: Create master
+	m := &Master{
+		status:         TaskTypeMap,
+		mapCnt:         len(files),
+		reduceCnt:      nReduce,
+		tasks:          make(map[string]*TaskInfo),
+		availableTasks: make(chan *TaskInfo, max(len(files), nReduce)),
+	}
+
+	// Step 2: Store the data
+	for idx, file := range files {
+		task := &TaskInfo{
+			Id:    generateTaskId(TaskTypeMap, idx),
+			Type:  TaskTypeMap,
+			Index: idx,
+			File:  file,
+		}
+		m.tasks[task.Id] = task  // Store the tasks
+		m.availableTasks <- task // Send the task to the channel
+	}
+
+	// Step 3: Start master server
+	m.server()
+	infof("master server started: %v", m)
+
+	// Step 4: Start workers heartbeats checker
+	go func() {
+		for {
+			time.Sleep(500 * time.Millisecond)
+			m.checkWorkers()
+		}
+	}()
+
+	return m
+}
+```
+
+代码首先初始化了 Master 的各个属性，将最初状态设置为 Map 类型的 Task；
+
+随后，遍历输入的文件，为每个文件创建 Task，并存入 tasks 和 availableTasks 中；
+
+这里生成 TaskId 的函数非常简单：
+
+src/mr/rpc.go
+
+```go
+// generateTaskId Generate TaskId for the given task
+//  The id follows the format: "taskType-taskIndex"
+func generateTaskId(taskType TaskTypeOpt, index int) string {
+	return fmt.Sprintf("%s-%d", taskType, index)
+}
+```
+
+随后，启动 RPC Server：
+
+src/mr/master.go
+
+```go
+// start a thread that listens for RPCs from worker.go
+func (m *Master) server() {
+	_ = rpc.Register(m)
+	rpc.HandleHTTP()
+	//l, e := net.Listen("tcp", ":1234")
+	sockname := masterSock()
+	_ = os.Remove(sockname)
+	l, e := net.Listen("unix", sockname)
+	if e != nil {
+		log.Fatal("listen error:", e)
+	}
+	go http.Serve(l, nil)
+}
+```
+
+这里只是使用实验提供的方法，并未进行修改；
+
+最后，在一个新开的协程中调用 checkWorkers 轮询我们的任务（后文会讲）；
+
+至此，我们的 Master 创建并初始化完毕，会在 `src/main/mrmaster.go` 中调用 `Done` 方法等待退出：
+
+src/main/mrmaster.go
+
+```go
+m := mr.MakeMaster(os.Args[1:], 10)
+for m.Done() == false {
+    time.Sleep(time.Second)
+}
+```
+
+因此，我们只需要在 Master 处理完所有任务后，在 Done 中返回 true 即可！
+
+<br/>
+
+#### **Task的获取与分配**
+
+Task的获取与分配主要是通过 RPC 方法 `AckAndQueryNewTask` 实现的：
+
+src/mr/master.go
+
+```go
+func (m *Master) AckAndQueryNewTask(req *AckAndQueryNewTaskRequest,
+	resp *AckAndQueryNewTaskResponse) error {
+
+	// Step 1: Mark previous task finished if necessary
+	if req.TaskType != "" {
+		err := m.handlePreviousTask(req)
+		if err != nil {
+			errorf("handlePreviousTask err: %v", err)
+			return err
+		}
+	}
+
+	// Step 2: Get the next task
+	task, ok := <-m.availableTasks
+	if !ok { // Channel closed: no available tasks
+		m.lock.RLock()
+		defer m.lock.RUnlock()
+		retTask := &TaskInfo{}
+		if m.status == TaskTypeFinished {
+			retTask.Type = TaskTypeFinished
+		}
+		resp.Task = retTask
+		return nil
+	}
+
+	// Step 3: Assign the task to the worker
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	infof("Assign task %v to worker %s", task, req.WorkerId)
+	task.WorkerId = req.WorkerId
+	task.Deadline = time.Now().Add(10 * time.Second)
+	m.tasks[generateTaskId(task.Type, task.Index)] = task
+
+	// Step 4: Handle response
+	resp.Task = &TaskInfo{
+		Id:       task.Id,
+		Type:     task.Type,
+		Index:    task.Index,
+		File:     task.File,
+		WorkerId: task.WorkerId,
+		Deadline: task.Deadline,
+	}
+	resp.MapWorkerCnt = m.mapCnt
+	resp.ReduceWorkerCnt = m.reduceCnt
+
+	return nil
+}
+```
+
+正如我们前面所讲的，当 Worker 发送一个新的 Task 请求时，会提交上一次的任务；
+
+因此代码首先判断了是否存在上一个任务，如果存在上一个任务，则调用 `handlePreviousTask` 首先处理上一个任务（见后文）；
+
+随后通过 `<-m.availableTasks` 获取下一个任务；这里需要注意：
+
+-   **如果 Channel 未关闭，并且没有下一个任务，则会在此阻塞等待下一个任务；**
+-   **如果 Channel 已经关闭，则 ok 会是 false，**
+
+>   对上面有疑问的可以参考这个简单的例子：
+>
+>   -   https://go.dev/play/p/YUbEDF2XaCG
+
+因此，如果 Channel 已经关闭，并且当前的任务状态为 `Finished` 我们只需要给 Worker 发送任务已经完成的任务响应即可！
+
+否则，如果我们获取到了任务，那么我们需要设置：
+
+-   执行这个任务的 WorkerId；
+-   任务的超时时间 Deadline；
+
+并将它写入我们的 tasks 中用于跟踪任务状态；
+
+最后，响应我们的 Worker 即可！
+
+<br/>
+
+#### **处理前一个提交的Task**
+
+前面说到，在 RPC 的第一步，如果存在前一个提交的任务，则会调用 `handlePreviousTask` 处理上一个任务；
+
+下面我们来看这里：
+
+src/mr/master.go
+
+```go
+var (
+	taskFinishHandlerMap = map[TaskTypeOpt]func(workerId string, taskIdx, reduceCnt int) error{
+		TaskTypeMap:    handleFinishedMapTask,
+		TaskTypeReduce: handleFinishedReduceTask,
+	}
+)
+
+// handle the previous finished task
+func (m *Master) handlePreviousTask(req *AckAndQueryNewTaskRequest) error {
+
+	previousTaskId := generateTaskId(req.TaskType, req.PreviousTaskIndex)
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	taskInfo, exists := m.tasks[previousTaskId]
+	if exists {
+		if taskInfo.WorkerId == req.WorkerId { // This task belongs to the worker
+			infof("Mark task [%v] finished on worker %s", taskInfo, req.WorkerId)
+
+			// Step 1: Handle the previous finished task
+			handler, handlerExists := taskFinishHandlerMap[taskInfo.Type]
+			if !handlerExists || handler == nil {
+				return fmt.Errorf("handler not found for task: %v", taskInfo)
+			}
+			err := handler(req.WorkerId, req.PreviousTaskIndex, m.reduceCnt)
+			if err != nil {
+				errorf("Failed to handle previous task: %v", err)
+				return err
+			}
+			delete(m.tasks, previousTaskId)
+
+			// Step 2: Transit job phase if necessary
+			if len(m.tasks) <= 0 {
+				m.transit()
+			}
+			return nil
+		} else { // The task is no longer belongs to this worker
+			infof("Task %v is no longer belongs to this worker", taskInfo)
+			return nil
+		}
+	} else { // Previous task not found in task map(worker retry ack maybe)!
+		warnf("[Warn] Previous task: %v not found in map", taskInfo)
+		return nil
+	}
+}
+```
+
+首先创建上一个任务的Id：previousTaskId，这也是我们 Map 中的 Key；
+
+随后，从 Map 中取出这个 Task（如果不存在，则无需处理了！）；
+
+接下来校验这个任务是否属于当前提交任务的 Worker（`taskInfo.WorkerId == req.WorkerId`）：
+
+如果当前任务已经不属于当前提交任务的 Worker，那么我们直接忽略掉即可！
+
+>   <red>**这里就避免了由于 Fallover 处理而导致的多个 Worker 同时处理同一个 Task 并提交的问题！**</font>
+
+否则，这是一个我们需要处理的 Commit，那么我们从 `taskFinishHandlerMap` 中获取到不同类型的任务对应的 Handler 进行处理；
+
+当处理成功后，我们从 tasks 中去掉这个任务；
+
+并且如果当前所有的任务都已处理完成，那么调用 `transit` 来推进整个 Job 的状态；
+
+<br/>
+
+#### **处理Map和Reduce类型任务的Handler**
+
+对于不同的任务类型的处理函数是通过下面的 Map 中获取的：
+
+src/mr/master.go
+
+```go
+var (
+	taskFinishHandlerMap = map[TaskTypeOpt]func(workerId string, taskIdx, reduceCnt int) error{
+		TaskTypeMap:    handleFinishedMapTask,
+		TaskTypeReduce: handleFinishedReduceTask,
+	}
+)
+```
+
+这两个函数的实现如下：
+
+src/mr/master.go
+
+```go
+// The map-type task finished handler
+func handleFinishedMapTask(workerId string, taskIdx, reduceCnt int) error {
+	// Mark the task's temporary file to final file(Rename)
+	for reduceIdx := 0; reduceIdx < reduceCnt; reduceIdx++ {
+		tmpMapFileName := tmpMapOutFile(workerId, taskIdx, reduceIdx)
+		finalMapOutFileName := finalMapOutFile(taskIdx, reduceIdx)
+		err := os.Rename(tmpMapFileName, finalMapOutFileName)
+		if err != nil {
+			errorf("Failed to mark map output file `%s` as final: %e", tmpMapFileName, err)
+			return err
+		}
+	}
+
+	infof("handleFinishedMapTask success: workerId: %s, taskIdx: %d", workerId, taskIdx)
+
+	return nil
+}
+
+// The reduce-type task finished handler
+func handleFinishedReduceTask(workerId string, taskIdx, _ int) error {
+	// Mark the task's temporary file to final file(Rename)
+	tmpReduceFileName := tmpReduceOutFile(workerId, taskIdx)
+	finalReduceOutFileName := finalReduceOutFile(taskIdx)
+	err := os.Rename(tmpReduceFileName, finalReduceOutFileName)
+	if err != nil {
+		errorf("Failed to mark reduce output file `%s` as final: %v", tmpReduceFileName, err)
+		return err
+	}
+
+	infof("handleFinishedReduceTask success: workerId: %s, taskIdx: %d, finalReduceOutFileName: %s",
+		workerId, taskIdx, finalReduceOutFileName)
+
+	return nil
+}
+
+// The temporary file that map-type task yield
+func tmpMapOutFile(workerId string, taskIdx, reduceIdx int) string {
+	return fmt.Sprintf("mr-map-%s-%d-%d", workerId, taskIdx, reduceIdx)
+}
+
+// The final file that map-type task yield(for reduce)
+func finalMapOutFile(taskIdx, reduceIdx int) string {
+	return fmt.Sprintf("mr-map-%d-%d", taskIdx, reduceIdx)
+}
+
+// The temporary file that reduce-type task yield
+func tmpReduceOutFile(workerId string, reduceIdx int) string {
+	return fmt.Sprintf("mr-reduce-%s-%d", workerId, reduceIdx)
+}
+
+// The final file that reduce-type task yield(the MapReduce task yield)
+func finalReduceOutFile(taskIndex int) string {
+	return fmt.Sprintf("mr-out-%d", taskIndex)
+}
+```
+
+两个函数的内容基本上是一样的：
+
+**都是首先通过任务 Id 获取到对应输出的临时文件，然后将其重命名为对应任务的最终产出文件**！
+
+**这和我们最开始的分析是一致的！**
+
+<br/>
+
+#### **Job任务状态切换transit**
+
+在前面的 RPC 调用中，如果发现某个类型（Map、Reduce）当前的任务全部完成，则会调用 `transit` 函数切换当前 Job 的状态，代码如下：
+
+src/mr/master.go
+
+```go
+// Transit the job phase (from Map to Reduce)
+func (m *Master) transit() {
+
+	if m.status == TaskTypeMap {
+		// All map-type tasks finished, change to reduce phase
+		infof("All map-type tasks finished. Transit to REDUCE stage!")
+		m.status = TaskTypeReduce
+
+		// Yield Reduce Tasks
+		for reduceIdx := 0; reduceIdx < m.reduceCnt; reduceIdx++ {
+			task := &TaskInfo{
+				Type:  TaskTypeReduce,
+				Index: reduceIdx,
+			}
+			m.tasks[generateTaskId(task.Type, task.Index)] = task
+			m.availableTasks <- task
+		}
+	} else if m.status == TaskTypeReduce {
+		// All reduce-type tasks finished, ready to exit
+		infof("All reduce-type tasks finished. Prepare to exit!")
+		// Close channel
+		close(m.availableTasks)
+		// Mark status to TaskTypeFinished for job completion
+		m.status = TaskTypeFinished
+	}
+}
+```
+
+逻辑如下：
+
+-   **如果 Map 任务全部执行完成，则将状态切换为 Reduce，并且重新创建 Reduce 的任务；**
+-   **如果 Reduce 任务全部完成，则将状态切换为 Finished，并且关闭 availableTasks Channel；**
+
+<br/>
+
+#### **Worker状态轮询**
+
+前面在创建并初始化 Master 的时候说到，初始化 Master 后，会单独起一个协程去轮询 Worker 的状态，用于清理那些超时的 Worker；
+
+这里来看这个 `checkWorkers` 函数：
+
+src/mr/master.go
+
+```go
+// Check all workers heartbeats
+func (m *Master) checkWorkers() {
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	for _, task := range m.tasks {
+		if task.WorkerId != "" && time.Now().After(task.Deadline) {
+			infof(
+				"Found timed-out task：%v, previously running on worker %s. Prepare to re-assign...",
+				task, task.WorkerId)
+			task.WorkerId = ""
+			m.availableTasks <- task
+		}
+	}
+}
+```
+
+主要是遍历 tasks 中的任务，如果发现超时的（`time.Now().After(task.Deadline)`），则将其 `WorkerId` 置为空，并放入 availableTasks Channel 中重新分配任务；
+
+>   <red>**这里其实是可以进行优化的，即：使用小根堆从 `Deadline` 最早的一个任务进行遍历来减少开销；**</font>
+
+<br/>
+
+#### **全部任务执行结束退出Done**
+
+最后，当全部任务结束后，Master 的状态会变为：`Finished`；
+
+因此，我们只需要判断我们 Master 当前的状态是否为 `Finished` 即可：
+
+src/mr/master.go
+
+```go
+// main/mrmaster.go calls Done() periodically to find out
+// if the entire job has finished.
+func (m *Master) Done() bool {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	
+    taskPhase := m.status
+	infof("current task phase: %s, res task count: %d", taskPhase, len(m.availableTasks))
+
+	// All tasks have finished
+	return taskPhase == TaskTypeFinished
+}
+```
 
 <br/>
 
 ### **Worker计算**
+
+Worker 的实现就比较简单了，主要是一个死循环，不断地向 Master 调用 AckAndQueryNewTask：
+
+-   Master 返回 MAP Task，则：
+    -   读取对应输入文件的内容；
+    -   传递至 APP 指定的 Map 函数，得到对应的中间结果；
+    -   按中间结果 Key 的 Hash 值进行分桶，保存至中间结果文件；
+    -   向 Master 提交任务；
+-   Master 返回 REDUCE Task，则：
+    -   读取所有属于该 REDUCE Task 的中间结果文件数据；
+    -   对所有中间结果进行排序，并按 Key 值进行排序归并；
+    -   传递归并后的数据至 APP 指定的 REDUCE 函数，得到最终结果；
+    -   写出到中间结果文件；
+    -   向 Master 提交任务；
+-   Master 返回 Finished Task，表示所有任务都已经完成，直接退出循环，结束 Worker 进程；
+
+
+
+
+
+
 
 
 
