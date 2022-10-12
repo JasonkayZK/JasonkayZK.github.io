@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?10'
 date: 2022-10-08 23:34:40
 categories: 课程
-tags: [课程，分布式]
+tags: [课程, 分布式]
 description: 最近开始重新学习 mit-6.824，目前把Lab1做完了，在这里总结一下；源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～
 ---
 
