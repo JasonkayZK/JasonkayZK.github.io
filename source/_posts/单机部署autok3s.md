@@ -175,6 +175,106 @@ k3d-my-k3s-agent-1    Ready    <none>                 10m   v1.21.7+k3s1
 
 <br/>
 
+## **测试K3s集群**
+
+前面说了那么多，最后当然是要真正部署一个应用来测试我们的 K3s 集群了！
+
+这里选用了 busybox 镜像，这是一个包含了许多最常用linux命令和工具的软件镜像；
+
+首先我们创建一个 yaml 配置文件：
+
+busybox-deploy.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - name: busybox
+        image: busybox:1.35.0
+        args:
+        - /bin/sh
+        - -c
+        - sleep 10; touch /tmp/healthy; sleep 60
+        readinessProbe: # 就绪探针
+          exec:
+            command:
+            - cat
+            - /tmp/healthy
+          initialDelaySeconds: 10 # 10s之后开始第一次探测
+          periodSeconds: 5 # 第一次探测之后每隔5s探测一次
+```
+
+上面在 namespace 为 demo 的命名空间：
+
+-   指定了 `busybox` Deployment；
+-   使用镜像 `busybox:1.35.0`；
+-   创建 `replicas: 3` 个副本；
+-   初始化指令：`/bin/sh -c "sleep 10; touch /tmp/healthy; sleep 60"`；
+-   健康检查：`cat /tmp/healthy`，服务启动 10s之后开始第一次探测，第一次探测之后每隔5s探测一次；
+
+上面用到了新的 namespace，我们先创建：
+
+```bash
+$ kubectl create ns demo
+namespace/demo created
+
+$ kubectl get ns -A
+NAME              STATUS   AGE
+default           Active   5h50m
+kube-system       Active   5h50m
+kube-public       Active   5h50m
+kube-node-lease   Active   5h50m
+demo              Active   12s
+```
+
+namespace 创建成功；
+
+下面部署我们的服务：
+
+```bash
+$ kubectl apply -f busybox-deploy.yaml 
+deployment.apps/busybox created
+
+$ kubectl get po -n demo -w
+NAME                       READY   STATUS              RESTARTS   AGE
+busybox-74574b56f4-dnz4k   0/1     ContainerCreating   0          1s
+busybox-74574b56f4-k6t6w   0/1     ContainerCreating   0          1s
+busybox-74574b56f4-2xqnq   0/1     ContainerCreating   0          1s
+busybox-74574b56f4-dnz4k   0/1     Running             0          3s
+busybox-74574b56f4-k6t6w   0/1     Running             0          4s
+busybox-74574b56f4-2xqnq   0/1     Running             0          8s
+busybox-74574b56f4-dnz4k   1/1     Running             0          15s
+busybox-74574b56f4-k6t6w   1/1     Running             0          15s
+busybox-74574b56f4-2xqnq   1/1     Running             0          20s
+```
+
+可以看到，我们服务的 3个副本很快就已经部署成功了！
+
+```bash
+$ kubectl get po -n demo -owide
+NAME                       READY   STATUS    RESTARTS   AGE   IP          NODE                  NOMINATED NODE   READINESS GATES
+busybox-74574b56f4-dnz4k   1/1     Running   0          96s   10.42.3.6   k3d-my-k3s-agent-0    <none>           <none>
+busybox-74574b56f4-k6t6w   1/1     Running   0          96s   10.42.0.5   k3d-my-k3s-server-0   <none>           <none>
+busybox-74574b56f4-2xqnq   1/1     Running   0          96s   10.42.1.4   k3d-my-k3s-agent-2    <none>           <none>
+```
+
+并且，由于 K3s 默认的 master 节点也可以部署，因此有一个 pod 被部署到了 master 节点（`busybox-74574b56f4-k6t6w`）；
+
+<br/>
+
 ## **总结**
 
 相比于使用 k3s 单个部署，AutoK3s 提供了更方便的工具可以直接部署整个 K3s 集群！
