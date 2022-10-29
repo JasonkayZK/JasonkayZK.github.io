@@ -248,11 +248,11 @@ Go 程序执行被抽象为一组 goroutine 的执行，以及一个抽象映射
 >
 >   在现代 CPU 架构中，基本上都会存在多级的 CPU Cache 来缓存，这样避免了所有的操作都要去访问内存空间，但是也导致了一个显然的问题：
 >
->   <red>**由于CPU存在多个核，某个核中的数据可能不会立即刷入到内存中，这就导致了如果其他CPU核心去内存中取值，取到的是旧的值，而非 CPU Cache 中的值！**</font>
+>   <font color="#f00">**由于CPU存在多个核，某个核中的数据可能不会立即刷入到内存中，这就导致了如果其他CPU核心去内存中取值，取到的是旧的值，而非 CPU Cache 中的值！**</font>
 >
->   <red>**Go 中的同步原语，如：lock、channel、atomic 都保证了 Cache 中的值能够在多个 goroutine 中可见（刷入内存中），这也是上面的内容讲的；**</font>
+>   <font color="#f00">**Go 中的同步原语，如：lock、channel、atomic 都保证了 Cache 中的值能够在多个 goroutine 中可见（刷入内存中），这也是上面的内容讲的；**</font>
 >
->   <red>**对于 Java、C++ 等语言，还提供了类似 `volatile` 的关键字，保证变量直接被刷入内存，以确保对其他线程的可用性；**</font>
+>   <font color="#f00">**对于 Java、C++ 等语言，还提供了类似 `volatile` 的关键字，保证变量直接被刷入内存，以确保对其他线程的可用性；**</font>
 >
 >   <br/>
 >
@@ -593,97 +593,608 @@ func TestDemo3(t *testing.T) {
 
 ### **Locks**
 
+>   The `sync` package implements two lock data types, `sync.Mutex` and `sync.RWMutex`.
+>
+>   For any `sync.Mutex` or `sync.RWMutex` variable `l` and *n* < *m*, call *n* of `l.Unlock()` is synchronized before call *m* of `l.Lock()` returns.
+>
+>   This program:
+>
+>   is guaranteed to print `"hello, world"`. The first call to `l.Unlock()` (in `f`) is synchronized before the second call to `l.Lock()` (in `main`) returns, which is sequenced before the `print`.
 
+`sync` 包提供了两种锁类型：`sync.Mutex` 和 `sync.RWMutex`；
 
+对于 `sync.Mutex` 或 `sync.RWMutex` 类型的变量 `l`，并且 *n* < *m*，n 次调用 `l.Unlock()` 会在 m 次调用 `l.Lock()` 返回之前被同步；
 
+来看下面的例子：
 
+locks/demo1_test.go
 
+```go
+var l sync.Mutex
+var a string
 
+func f() {
+	a = "hello, world"
+	l.Unlock()
+}
 
+func TestDemo1(t *testing.T) {
+	l.Lock()
+	go f()
+	l.Lock()
+	print(a)
+}
+```
+
+代码保证能够打印出：`"hello, world"`，首次在 `f()` 中调用 `l.Unlock()` 被第二次在 main 函数中调用的 `l.Lock()` 所同步，因此保证了（变量的赋值）顺序一定在 `print` 之前；
+
+>   For any call to `l.RLock` on a `sync.RWMutex` variable `l`, there is an *n* such that the *n*th call to `l.Unlock` is synchronized before the return from `l.RLock`, and the matching call to `l.RUnlock` is synchronized before the return from call *n*+1 to `l.Lock`.
+>
+>   A successful call to `l.TryLock` (or `l.TryRLock`) is equivalent to a call to `l.Lock` (or `l.RLock`). An unsuccessful call has no synchronizing effect at all. As far as the memory model is concerned, `l.TryLock` (or `l.TryRLock`) may be considered to be able to return false even when the mutex *l* is unlocked.
+
+对于任意调用 `l.RLock` 的 `sync.RWMutex` 类型的变量 `l`，存在一个 *n*，使得第 n 次调用 `l.Unlock` 在 `l.RLock` 返回之前被同步，并且 `l.RUnlock` 在 `l.Lock` 被 n+1 次调用返回之前被同步；
+
+一个成功的调用 `l.TryLock` (或者 `l.TryRLock`) 和调用 `l.Lock` (或者 `l.RLock`) 的结果是一致的；但是，一个不成功的调用，不会产生任何同步的效果；
+
+就内存模型（的定义）来说，即使 Mutex 已经被解锁了，`l.TryLock` (或者 `l.TryRLock`) 也有可能返回 false（即获取锁失败！）；
 
 <br/>
 
 ### **Once**
 
+>   The `sync` package provides a safe mechanism for initialization in the presence of multiple goroutines through the use of the `Once` type. Multiple threads can execute `once.Do(f)` for a particular `f`, but only one will run `f()`, and the other calls block until `f()` has returned.
+>
+>   The completion of a single call of `f()` from `once.Do(f)` is synchronized before the return of any call of `once.Do(f)`.
+>
+>   In this program:
+>
+>   calling `twoprint` will call `setup` exactly once. The `setup` function will complete before either call of `print`. The result will be that `"hello, world"` will be printed twice.
 
+`sync` 包提供了一种安全的机制，可以通过使用 `Once` 类型在多个 goroutines 并发执行的的情况下进行初始化；
 
+**多个线程可以对函数 `f` 执行 `once.Do(f)`，但是只有一个线程能够执行 `f()`，而其他线程在调用时会被阻塞，直到（上一个调用） `f()` （的线程）返回；**
 
+来看下面的例子：
 
+once/main.go
 
+```go
+var a string
+var once sync.Once
 
+func setup() {
+	a = "hello, world"
+	fmt.Println("a has been setup")
+}
 
+func doPrint() {
+	once.Do(setup)
+	fmt.Println(a)
+}
 
+func twoPrint() {
+	go doPrint()
+	go doPrint()
+}
 
+func main() {
 
+	twoPrint()
 
+	<-time.After(1 * time.Second)
+}
+```
+
+调用 `twoPrint` 后会且仅会调用 `setup` 函数一次；此后任意一个 `doPrint` 的调用，`setup` 函数 都会立即完成！
+
+因此，上面的代码会打印 `"a has been setup"` 一次，`"hello, world"` 两次：
+
+```
+a has been setup
+hello, world
+hello, world
+```
 
 <br/>
 
 ### **Atomic Values**
 
+>   The APIs in the [`sync/atomic`](https://go.dev/pkg/sync/atomic/) package are collectively “atomic operations” that can be used to synchronize the execution of different goroutines. If the effect of an atomic operation *A* is observed by atomic operation *B*, then *A* is synchronized before *B*. All the atomic operations executed in a program behave as though executed in some sequentially consistent order.
+>
+>   The preceding definition has the same semantics as C++’s sequentially consistent atomics and Java’s `volatile` variables.
 
+在 [`sync/atomic`](https://go.dev/pkg/sync/atomic/) 包中的 API 提供了 `原子操作` 的集合，可以用于在多个 goroutine 之间同步执行（变量的可观测性）；如果一个原子性操作 `A` 能够被另一个原子性操作 `B` 观测到，则说明操作A在操作B之前进行了同步；一个程序中执行的所有原子操作，都会以某种顺序一致的顺序依次执行；
 
+上面的定义和 C++ 中顺序一致原子定义以及 Java 中 `volatile` 类型的变量的语义是一致的！
 
+来看下面的例子：
+
+atomic/main.go
+
+```go
+func main() {
+
+	var ops uint64 = 0
+
+	for i := 0; i < 50; i++ {
+		go func() {
+			atomic.AddUint64(&ops, 1)
+		}()
+	}
+
+	time.Sleep(time.Second)
+
+	opsFinal := atomic.LoadUint64(&ops)
+	fmt.Println("ops:", opsFinal)
+}
+```
+
+atomic 原子操作主要用于并发环境下，无须加锁对整数进行安全的加减、比较、读取操作；
+
+因此上面的代码能够准确无误的输出：
+
+```
+ops: 50
+```
 
 <br/>
 
 ### **Finalizers**
 
+>   The [`runtime`](https://go.dev/pkg/runtime/) package provides a `SetFinalizer` function that adds a finalizer to be called when a particular object is no longer reachable by the program. A call to `SetFinalizer(x, f)` is synchronized before the finalization call `f(x)`.
 
+[`runtime`](https://go.dev/pkg/runtime/) 提供了 `SetFinalizer` 函数来为某个特定的对象定义终结器（`finalizer`），当这个对象在程序中不可达之后调用；
 
+同时调用 `SetFinalizer(x, f)` 一定在调用 `f(x)` 之前被同步；
 
+来看例子：
 
+finalizer/main.go
 
+```go
+type Foo struct {
+	a int
+}
+
+func main() {
+	for i := 0; i < 3; i++ {
+		f := NewFoo(i)
+		println(f.a)
+	}
+
+	runtime.GC()
+
+	time.Sleep(time.Second)
+}
+
+//go:noinline
+func NewFoo(i int) *Foo {
+	f := &Foo{a: rand.Intn(50)}
+	runtime.SetFinalizer(f, func(f *Foo) {
+		fmt.Println(`foo ` + strconv.Itoa(i) + ` has been garbage collected`)
+	})
+
+	return f
+}
+```
+
+需要注意的是，Finalizer 无法保证被调用，即：
+
+**在程序无法获取到一个 obj 所指向的对象后的任意时刻，finalizer 被调度运行，且无法保证 finalizer 运行在程序退出之前；**
+
+>   更多内容，见：
+>
+>   -   https://studygolang.com/articles/23461
 
 <br/>
 
 ### **Additional Mechanisms**
 
+>   The `sync` package provides additional synchronization abstractions, including [condition variables](https://go.dev/pkg/sync/#Cond), [lock-free maps](https://go.dev/pkg/sync/#Map), [allocation pools](https://go.dev/pkg/sync/#Pool), and [wait groups](https://go.dev/pkg/sync/#WaitGroup). The documentation for each of these specifies the guarantees it makes concerning synchronization.
+>
+>   Other packages that provide synchronization abstractions should document the guarantees they make too.
 
+`sync` 包还提供了更多关于同步操作的抽象，包括：[condition variables](https://go.dev/pkg/sync/#Cond), [lock-free maps](https://go.dev/pkg/sync/#Map), [allocation pools](https://go.dev/pkg/sync/#Pool), [wait groups](https://go.dev/pkg/sync/#WaitGroup) 等等；对应的每个文档都详细说明了它在同步方面的作用；
 
-
-
-
-
-
-
-
+其他提供同步抽象的包也应该为他们在线程同步中的作用提供文档；
 
 <br/>
 
 ## **不正确的同步（Incorrect synchronization）**
 
+>   Programs with races are incorrect and can exhibit non-sequentially consistent executions. In particular, note that a read *r* may observe the value written by any write *w* that executes concurrently with *r*. Even if this occurs, it does not imply that reads happening after *r* will observe writes that happened before *w*.
+>
+>   In this program:
+>
+>   it can happen that `g` prints `2` and then `0`.
+>
+>   This fact invalidates a few common idioms.
 
+含有 data race 的程序会导致不正确性，并且他们的执行顺序也表现的非顺序一致；尤其是，在并发读写操作的时候，一个读操作 *r* 可能也可能没有读到另外一个并发的写操作 *w* 写入的值；
 
+即使读操作 *r* 读到了写入的新值，也不能说明写操作 *w* 一定先于读操作 *r* 发生；
 
+来看下面的例子：
 
+incorrect-synchronization/demo1_test.go
 
+```go
+var a, b int
 
+func f() {
+	a = 1
+	b = 2
+}
 
+func g() {
+	print(b)
+	print(a)
+}
 
+func TestDemo1(t *testing.T) {
+	go f()
+	g()
+}
+```
 
+上面的代码有时可能会输出：`2` 然后输出 `0`！
+
+这个事实可能会颠覆我们的认知；
+
+>   Double-checked locking is an attempt to avoid the overhead of synchronization. For example, the `twoprint` program might be incorrectly written as:
+>
+>   but there is no guarantee that, in `doprint`, observing the write to `done` implies observing the write to `a`. This version can (incorrectly) print an empty string instead of `"hello, world"`.
+
+双重检查锁是为了避免代码同步开销；
+
+例如，一个不正确的  `twoprint` 的实现：
+
+incorrect-synchronization/demo2_test.go
+
+```go
+var a2 string
+var done bool
+var once sync.Once
+
+func setup() {
+	a2 = "hello, world"
+	done = true
+}
+
+func doprint() {
+	if !done {
+		once.Do(setup)
+	}
+	print(a2)
+}
+
+func twoprint() {
+	go doprint()
+	go doprint()
+}
+
+func TestDemo2(t *testing.T) {
+	twoprint()
+}
+```
+
+上面的 `doprint` 函数不能保证，在观察到 `done` 的同时，观察到 `a` 的写入；
+
+因此，上面的代码可能会出现输出了空字符串而非  `"hello, world"` 的情况！
+
+>   Another incorrect idiom is busy waiting for a value, as in:
+>
+>   As before, there is no guarantee that, in `main`, observing the write to `done` implies observing the write to `a`, so this program could print an empty string too. Worse, there is no guarantee that the write to `done` will ever be observed by `main`, since there are no synchronization events between the two threads. The loop in `main` is not guaranteed to finish.
+
+另一个不正确的常见认知是，忙于等待一个值；
+
+例如：
+
+incorrect-synchronization/demo3_test.go
+
+```go
+var a3 string
+var done3 bool
+
+func setup3() {
+	a3 = "hello, world"
+	done3 = true
+}
+
+func TestDemo3(t *testing.T) {
+	go setup3()
+	for !done3 {
+	}
+	print(a3)
+}
+```
+
+和前面的例子类似，这里的 main 函数也无法保证在观察到 `done` 的同时，观察到 `a` 的写入，因此这段代码也有可能打印出空字符串；
+
+更坏的是，他甚至不能保证对变量 `done` 的写入能够在 main 中观测到，毕竟两个线程之间没有任何的同步机制；
+
+因此有可能在 main 中的 for 循环永远不会停止！
+
+>   There are subtler variants on this theme, such as this program.
+>
+>   Even if `main` observes `g != nil` and exits its loop, there is no guarantee that it will observe the initialized value for `g.msg`.
+>
+>   In all these examples, the solution is the same: use explicit synchronization.
+
+这个里还有另外一个比较微妙的变体，来看下面的代码：
+
+incorrect-synchronization/demo4_test.go
+
+```go
+type T struct {
+	msg string
+}
+
+var g4 *T
+
+func setup4() {
+	t := new(T)
+	t.msg = "hello, world"
+	g4 = t
+}
+
+func TestDemo4(t *testing.T) {
+	go setup4()
+	for g4 == nil {
+	}
+	print(g4.msg)
+}
+```
+
+即使在 main 函数中观察到了 `g != nil` 并退出了循环，这也不能保证 main 函数能够观测到在 `g` 中被初始化的值  `g.msg`！
+
+>   **这里可以参考前面说到的超过一个机器字长的同步；**
+
+在上面所有的例子中，解决方法都是一样的：显式的使用同步机制；
 
 <br/>
 
-## **无法编译的错误（Incorrect compilation）**
+## **编译相关的错误（Incorrect compilation）**
 
+>   The Go memory model restricts compiler optimizations as much as it does Go programs. Some compiler optimizations that would be valid in single-threaded programs are not valid in all Go programs. In particular, a compiler must not introduce writes that do not exist in the original program, it must not allow a single read to observe multiple values, and it must not allow a single write to write multiple values.
+>
+>   All the following examples assume that `*p` and `*q` refer to memory locations accessible to multiple goroutines.
+>
+>   Not introducing data races into race-free programs means not moving writes out of conditional statements in which they appear. For example, a compiler must not invert the conditional in this program:
+>
+>   ```
+>   *p = 1
+>   if cond {
+>   	*p = 2
+>   }
+>   ```
+>
+>   That is, the compiler must not rewrite the program into this one:
+>
+>   ```
+>   *p = 2
+>   if !cond {
+>   	*p = 1
+>   }
+>   ```
+>
+>   If `cond` is false and another goroutine is reading `*p`, then in the original program, the other goroutine can only observe any prior value of `*p` and `1`. In the rewritten program, the other goroutine can observe `2`, which was previously impossible.
 
+Go 的内存模型严格限制了它能为 Go 程序所做的优化；有一些能够在单线程下进行的编译优化，在 Go 程序中并非是合法的；尤其是，编译器不能在原程序中引入原本不存在的写操作，也不能允许单个读操作观察到多个不同的值，并且他必须禁止单次写入可写入多个值；
 
+在下面所有的例子中，都假设 ``*p` 和 `*q` 在多个 goroutine 中指向的内存地址；
 
+不导致 data race 表示，不要将写操作从他们之前的条件语句块中移出；
 
+例如，编译器不能够转换下面的代码：
 
+```go
+*p = 1
+if cond {
+	*p = 2
+}
+```
 
+即，不能重写为下面的代码：
 
+```go
+*p = 2
+if !cond {
+	*p = 1
+}
+```
 
+如果 `cond` 是 false，并且另一个goroutine正在读取 `*p`；
 
+那么在之前的代码中，另一个 goroutine 只能观察到 `*p` 为 1；而在重写后的代码中，其他goroutin可以观察到 2，这在转换之前不可能的！
+
+>   Not introducing data races also means not assuming that loops terminate. For example, a compiler must in general not move the accesses to `*p` or `*q` ahead of the loop in this program:
+>
+>   ```
+>   n := 0
+>   for e := list; e != nil; e = e.next {
+>   	n++
+>   }
+>   i := *p
+>   *q = 1
+>   ```
+>
+>   If `list` pointed to a cyclic list, then the original program would never access `*p` or `*q`, but the rewritten program would. (Moving `*p` ahead would be safe if the compiler can prove `*p` will not panic; moving `*q` ahead would also require the compiler proving that no other goroutine can access `*q`.)
+
+不导致 data race 还说明了，不假设循环会终止；
+
+例如，编译器不能将  `*p` or `*q` 提出到循环之前：
+
+```go
+n := 0
+for e := list; e != nil; e = e.next {
+	n++
+}
+i := *p
+*q = 1
+```
+
+如果 `list` 是一个循环列表，那么在转换之前的程序是无法访问到  `*p` 和 `*q` 的，但是转换之后的代码就会了！
+
+（能够将 `*p` 安全提前的前提条件是编译器能够保证 `*p` 不会引发 panic；能够将  `*q`  提前的前提条件是编译器能够保证没有其他的 goroutine 会访问  `*q` 的内存地址）；
+
+>   Not introducing data races also means not assuming that called functions always return or are free of synchronization operations. For example, a compiler must not move the accesses to `*p` or `*q` ahead of the function call in this program (at least not without direct knowledge of the precise behavior of `f`):
+>
+>   ```
+>   f()
+>   i := *p
+>   *q = 1
+>   ```
+>
+>   If the call never returned, then once again the original program would never access `*p` or `*q`, but the rewritten program would. And if the call contained synchronizing operations, then the original program could establish happens before edges preceding the accesses to `*p` and `*q`, but the rewritten program would not.
+
+不导致 data race 还说明了，不能假设所有的函数调用都能正常返回，或者假设（函数内）无同步操作；
+
+例如下面的代码：
+
+```go
+f()
+i := *p
+*q = 1
+```
+
+编译器不能将  `*p` or `*q` 移动到函数调用之前（至少在不了解函数 `f` 的行为的时候）；
+
+如果函数调用永远也不返回，那么之前的代码是无法访问  `*p` 或者 `*q` 的，但是重写之后的代码就会访问；
+
+并且，如果函数中存在同步操作，那么之前的代码会在访问 `*p` 或者 `*q` 之前建立 happen-before 隔离，而重写之后的代码就不会；
+
+>   Not allowing a single read to observe multiple values means not reloading local variables from shared memory. For example, a compiler must not discard `i` and reload it a second time from `*p` in this program:
+>
+>   ```
+>   i := *p
+>   if i < 0 || i >= len(funcs) {
+>   	panic("invalid function index")
+>   }
+>   ... complex code ...
+>   // compiler must NOT reload i = *p here
+>   funcs[i]()
+>   ```
+>
+>   If the complex code needs many registers, a compiler for single-threaded programs could discard `i` without saving a copy and then reload `i = *p` just before `funcs[i]()`. A Go compiler must not, because the value of `*p` may have changed. (Instead, the compiler could spill `i` to the stack.)
+
+不允许单个读操作读取到多个值表示：不从共享内存中重新加载局部变量；
+
+例如下面的代码：
+
+```go
+i := *p
+if i < 0 || i >= len(funcs) {
+	panic("invalid function index")
+}
+... complex code ...
+// compiler must NOT reload i = *p here
+funcs[i]()
+```
+
+编译器不能将原 `i` 值丢弃，并且重新从 `*p` 中读取新的值！
+
+如果一些复杂的代码需要许多寄存器，则有一些编译器在优化单线程的程序时，会在调用  `funcs[i]()` 之前，先丢弃 `i` 并且不保存他的值，而且再次使用  `i = *p` 重新写入新值；
+
+而 Go 编译器不允许这么做，因为 `*p` 的值可能会变（取而代之，编译器会将 `i` 写入到函数栈上）；
+
+>   Not allowing a single write to write multiple values also means not using the memory where a local variable will be written as temporary storage before the write. For example, a compiler must not use `*p` as temporary storage in this program:
+>
+>   ```
+>   *p = i + *p/2
+>   ```
+>
+>   That is, it must not rewrite the program into this one:
+>
+>   ```
+>   *p /= 2
+>   *p += i
+>   ```
+>
+>   If `i` and `*p` start equal to 2, the original code does `*p = 3`, so a racing thread can read only 2 or 3 from `*p`. The rewritten code does `*p = 1` and then `*p = 3`, allowing a racing thread to read 1 as well.
+
+不允许单个写操作多次写入也表示：不是使用 local 变量将被写入的内存作为写入前的临时存储；
+
+例如下面的例子：
+
+```go
+*p = i + *p/2
+```
+
+编译器不能将  `*p`  作为临时计算结果值的存储区域；
+
+也即，编译器不能将代码重写为这样：
+
+```go
+*p /= 2
+*p += i
+```
+
+如果 `i` 和 `*p` 最初都为 2，则最初的代码会将 `*p` 赋值为 3，因此具有 data race 的代码可能会从 `*p` 读取到 2 或者 3；
+
+而重写后的代码可能会从 `*p` 中读取到 1 或者 3！
+
+>   Note that all these optimizations are permitted in C/C++ compilers: a Go compiler sharing a back end with a C/C++ compiler must take care to disable optimizations that are invalid for Go.
+>
+>   Note that the prohibition on introducing data races does not apply if the compiler can prove that the races do not affect correct execution on the target platform. For example, on essentially all CPUs, it is valid to rewrite
+>
+>   ```
+>   n := 0
+>   for i := 0; i < m; i++ {
+>   	n += *shared
+>   }
+>   ```
+>
+>   into:
+>
+>   ```
+>   n := 0
+>   local := *shared
+>   for i := 0; i < m; i++ {
+>   	n += local
+>   }
+>   ```
+>
+>   provided it can be proved that `*shared` will not fault on access, because the potential added read will not affect any existing concurrent reads or writes. On the other hand, the rewrite would not be valid in a source-to-source translator.
+
+需要注意的是，上面提到的所有优化在 C/C++ 的编译器中都是被允许的；因此，一个与 C/C++ 编译器共享后端的 Go编译器的实现必须要注意禁用掉在 Go 中被禁止的优化！
+
+同时要注意，如果编译器能够保证 data race 不会影响到目标平台执行的正确性，则上述禁止引入 data race 的规定就可以不适用；
+
+例如：在基本上所有的CPU上，下面的重写是可以的：
+
+```go
+n := 0
+for i := 0; i < m; i++ {
+	n += *shared
+}
+```
+
+重写后：
+
+```go
+n := 0
+local := *shared
+for i := 0; i < m; i++ {
+	n += local
+}
+```
+
+前提是可以证明 `*shared` 不会在访问时出错，因为添加读操作不会影响到任何原有的并发读或写；
+
+另一方面，重写在源到源转换器（source-to-source translator）中无效；
 
 <br/>
 
 ## **总结**
 
+>   Go programmers writing data-race-free programs can rely on sequentially consistent execution of those programs, just as in essentially all other modern programming languages.
+>
+>   When it comes to programs with races, both programmers and compilers should remember the advice: don't be clever.
 
+Go 的开发者可以依靠前文中所说的顺序一致执行来编写 data-race-free 的代码，这个其他现代编程语言是一样的；
 
-
+当遇到了 data race，开发者和编译器都应当听取这个建议：不要自作聪明（`don't be clever.`）
 
 <br/>
 
