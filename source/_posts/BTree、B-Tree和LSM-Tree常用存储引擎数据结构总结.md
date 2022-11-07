@@ -477,23 +477,206 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 在 MySQL 5.6 之前的版本，只有写和读两种 Latch，被称为 X Latch 和 S Latch；
 
-![image-20221106204408365](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221106204408365.png)
+##### **MySQL 5.6 之前的版本**
 
+###### **B+Tree并发读取**
 
+对于读的过程，首先要在整个索引上添加 Index S Latch；
 
+![image-20221107195254918](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107195254918.png)
 
+再从上至下找到要读的叶子节点的 Page，然后上叶子节点的 Page S Latch；
 
+这时就可以释放 Index S Latch了；
 
+![image-20221107195810041](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107195810041.png)
 
+然后进行查询并返回结果，最后释放叶子节点中的 Page S Latch，完成整个读操作；
 
+<br/>
 
+###### **B+Tree乐观写**
 
+写的过程就有些复杂了；
 
+![image-20221107201558241](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107201558241.png)
 
+**首先进行乐观的写入，即：假设写入操作不会引起索引结构的变更（不触发 SMO 操作）；**
 
+要先上整个索引的 Index S Latch，再从上至下找到要修改的叶子节点的 Page，此过程和上面的读取步骤相同！
 
+接下来判断叶子节点是否安全，即：写入操作是否会触发分裂或者合并；
 
+如果叶子节点 Page 安全，就上 Page X Latch，并释放 Index S Latch，然后再修改数据即可；
 
+![image-20221107201854133](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107201854133.png)
+
+上面就完成了乐观写入的过程；
+
+<br/>
+
+###### **B+Tree SMO悲观写入**
+
+如果叶子节点 Page 不安全，那么就要重新进行悲观写入；
+
+释放一开始上的 Index S Latch，重新上 Index X Latch，阻塞对整颗 B+Tree 的所有操作；
+
+![image-20221107202325092](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107202325092.png)
+
+然后重新搜索，并找到要发生结构变化的节点，上 Page X Latch，再修改树结构，此时可以释放 Index X Latch；
+
+完成悲观写入过程；
+
+>   **上 Index X Latch 的原因是：**
+>
+>   **有可能 SMO 操作会逐级向上传递，直到根节点！**
+
+<br/>
+
+##### **MySQL 5.7之后的版本**
+
+从前面的分析可以看出来，上面加锁的缺点非常明显：
+
+**在触发 SMO 操作过程时，由于会持有 Index X Latch 锁住整棵树；此时所有操作都无法进行，包括读操作；**
+
+因此，在 MySQL 5.7、8.0 版本中，针对 SMO 操作会阻塞读的问题，引入了 SX Latch；
+
+SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但是和 S Latch 不冲突（可以理解为类似RWLock）；
+
+|          | S Latch | SX Latch | X Latch |
+| -------- | ------- | -------- | ------- |
+| S Latch  | 兼容    | 兼容     | 不兼容  |
+| SX Latch | 兼容    | 不兼容   | 不兼容  |
+| X Latch  | 不兼容  | 不兼容   | 不兼容  |
+
+下面来看一下引入 SX Latch 之后的并发控制方案；
+
+<br/>
+
+###### **B+Tree并发读取**
+
+对于读操作而言：
+
+![image-20221107203703637](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107203703637.png)
+
+对于读操作而言：
+
+相比于 MySQL 5.6 之前，这时读步骤主要加上了对查找路径上节点的锁；
+
+这时因为：
+
+在引入了 SX Latch 之后，发生 SMO 操作的时候，读操作也可以进行；
+
+此时为了保证读取的时候查找路径上的非叶子节点不会被 SMO 操作改变，因此就需要对路径上的节点也加上 S Latch；
+
+>   **主要注意的是：**
+>
+>   <red>**Index 级别和 Page 级别是两种不同对象的 Latch，因此哪怕有 Index 上的 X Latch 或者 SX Latch，也不会阻塞 Page 上的 S Latch！**</font>
+
+<br/>
+
+###### **B+Tree乐观写**
+
+写的过程和上面类似，一样是先进行乐观写；
+
+由于此时假设只会修改叶子节点，因此，乐观写的查找过程和读操作一致：
+
+**添加整个索引的 Index S Latch 和读取路径上节点的 Page S Latch 即可！**
+
+![image-20221107205012042](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205012042.png)
+
+接下来判断叶子节点是否安全，如果叶子节点 Page 安全，则上 Page X Latch，同时释放索引和路径上的 S Latch；
+
+![image-20221107205128838](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205128838.png)
+
+然后再修改即可；
+
+<br/>
+
+###### **B+Tree悲观写**
+
+但是如果叶子节点的 Page 不安全，这需要重新进行悲观写入；
+
+释放一开始上的所有 S Latch，这时我们上 **Index SX Latch**，然后重新搜索，找到要发生结构变化的节点；
+
+上 Page X Latch，再修改树结构，此时就可以释放 Index SX Latch 和路径上的 Page X Latch；
+
+![image-20221107205557977](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205557977.png)
+
+随后即可完成对叶子节点的修改，返回结果，并释放叶子节点的 Page X Latch；
+
+最终完成悲观写入！
+
+>   上面就是 MySQL 对 B+Tree 并发控制机制的发展；
+>
+>   **当然，对 B+Tree 并发控制的研究和方案原因不止上面介绍的内容，这里只是为了说明 B+Tree 并发控制的痛点；**
+
+<br/>
+
+#### **B-Link Tree并发控制优化**
+
+补充了上面的内容，我们可以知道，B+Tree 的问题在于：
+
+<red>**其自上而下的搜索过程决定了加锁过程也必须是自上而下的！**</font>
+
+<red>**哪怕只对一个小小的叶子节点做读写操作，也都必须首先对根节点上 Latch！**</font>
+
+<red>**并且，一旦触发 SMO 操作，就需要对整个树进行加锁！**</font>
+
+B-Link Tree 相比于 B+Tree 主要做了三点优化：
+
+-   1、非叶子节点也都有指向右兄弟节点的指针；
+-   2、分裂模式上，采用和 B*Tree 类似的做法，即：**将当前层数据向兄弟节点中迁移；**
+-   3、每个节点都增加一个 High Key 值，记录当前节点的最大 Key；
+
+B-Link Tree 结构如下图：
+
+![image-20221107211034348](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107211034348.png)
+
+其中加下划线的 Key 为 High Key；
+
+在前面提到，B+Tree 中一个严重的问题就是，在读写过程中都需要对整棵树、或一层层向下的加 Latch，从而造成 SMO 操作会阻塞其他操作；
+
+而 B-Link Tree 通过对分裂和查找过程的调整，避免了这一点！
+
+下图就是 B-Link Tree 树节点分裂的过程；
+
+![image-20221107223644115](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107223644115.png)
+
+可以看到，上面的操作继承了 B*Tree 的思路：
+
+先将老节点的数据拷贝到新节点，然后建立同一层节点的连接关系，最后再建立从父节点指向新节点的连接关系（**此顺序非常重要！**）；
+
+那么上面的分裂过程是如何避免整棵树上的锁的呢？
+
+<red>**可以通过指向右兄弟节点的指针和 High Key 实现！**</font>
+
+如下图，当节点 y 分裂为 y 和 y+ 两个节点后，在 B+Tree 中就必须要提前锁住他们的父节点 x；
+
+![image-20221107224509181](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107224509181.png)
+
+而 B-Link Tree 可以先不锁 x，这时查找 15，顺着 x 找到节点 y，在节点 y 中未能找到 15，但判断 15 大于其中记录的 high key，于是顺着指针就可以找到其右兄弟节点 y+，仍能找到正确的结果；
+
+因此，<red>**B-Link Tree 中的 SMO 操作可以自底向上加锁，而不必像 B+Tree 那样自顶向下加锁！从而避免了 B+Tree 中并发控制瓶颈；**</font>
+
+上面就是 B-Link Tree 的基本思路；
+
+但是在实现 B-Link Tree 时需要考虑的还有很多：
+
+-   删除操作需要单独设计；
+-   原论文中对于一些原子化的假定也不符合现状；
+
+但是 B-Link Tree 仍是一种非常优秀的存储结构，很大程度上突破了 B+Tree 的性能瓶颈；
+
+>   <red>**PostgreSQL 的 BTree 类型索引就是基于 B-Link Tree 实现的！**</font>
+
+下面再来看一看最近比较新的一些 BTree 变种，这些变种很大程度上都采用了和 LSM Tree 类似的思想；
+
+<br/>
+
+### **CoW BTree**
+
+CoW BTree 也称写时复制 BTree，CoW BTree 采用 Copy-on-Write 技术来保证并发操作时的数据完整性，从而避免使用 Latch；
 
 
 
@@ -505,11 +688,17 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 <br/>
 
+### 
+
+
+
+
+
+
+
+<br/>
+
 ## **深入了解LSM-Tree及其变种**
-
-
-
-
 
 
 
