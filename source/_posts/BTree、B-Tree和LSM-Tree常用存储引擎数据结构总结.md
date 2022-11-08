@@ -678,17 +678,174 @@ B-Link Tree 结构如下图：
 
 CoW BTree 也称写时复制 BTree，CoW BTree 采用 Copy-on-Write 技术来保证并发操作时的数据完整性，从而避免使用 Latch；
 
+>   写入时复制（英语：Copy-on-write，简称COW）是一种计算机程序设计领域的优化策略；
+>
+>   其核心思想是：
+>
+>   如果有多个调用者（callers）同时请求相同资源（如内存或磁盘上的数据存储），他们会共同获取相同的指针指向相同的资源，直到某个调用者试图修改资源的内容时，系统才会真正复制一份专用副本（private copy）给该调用者，而其他调用者所见到的最初的资源仍然保持不变，这过程对其他的调用者都是透明的（transparently）；
+>
+>   此作法主要的优点是如果调用者没有修改该资源，就不会有副本（private copy）被建立，因此多个调用者只是读取操作时可以共享同一份资源；
 
+当某个页要被修改时，就先复制整个页的内容，然后在复制出来的页上进行修改；
 
+当然，复制产生的新页要替换旧页，此时父节点指向这个页的指针就要变化了；CoW BTree 的做法也非常的粗暴：
 
+**直接将父节点也复制并修改一份！**
 
+接下来再复制并修改父节点的父节点，直到根节点！
 
+![image-20221108130239675](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108130239675.png)
 
+CoW BTree 的修改逻辑如上图所示：
 
+<red>**对于叶子节点的修改会产生一个全新的根节点（即：一个全新的树）！**</font>
+
+<red>**CoW BTree 在很大程度上具有 Out-of-place update 的特性，因为已经写入的页是不变的，所以 CoW BTree 可以像 LSM Tree 那样，完全不依赖 Latch 实现并发控制！**</font>
+
+**但是，为了达成这一点，CoW BTree 付出的代价也是非常巨大的：为了修改一个小小的数据，就要重新复制多个页，带来巨大的写放大！**
+
+也正是因为上面的问题，因此 CoW BTree 也一直没能成为主流；
+
+但是 CoW BTree 的思路却很重要！后续的许多变种都对其进行了借鉴和改良；
 
 <br/>
 
-### 
+### **Lazy BTree（惰性BTree）**
+
+惰性 BTree 相比于上面提到的 CoW BTree 更进一步，为每个页都设置了一个更新缓冲区；
+
+这样，更新的内容就放在了更新缓冲区中；
+
+读取时，将原始页中的内容和更新缓冲区进行合并，来返回正确的数据；
+
+![image-20221108131401353](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108131401353.png)
+
+惰性 BTree 和 LSM Tree 极为相似，甚至可以说，惰性 BTree 中的每一个页就像一个小型的 LSM Tree！
+
+而更新缓冲区就像 MemTable，当更新缓冲区达到一定程度，就压缩到页中，类似于一个小的 Compaction 的过程！
+
+惰性 BTree 同样避免了 Latch 机制，同时没有 CoW BTree 那么大的写放大代价，因此具有良好的性能；
+
+>   <red>**MongoDB 的默认存储引擎 WiredTiger就是使用的这种存储结构！**</font>
+
+<br/>
+
+### **Lazy-Adaptive Tree（惰性自适应BTree）**
+
+惰性 BTree 还有一个分支：Lazy-Adaptive Tree（LA Tree）；
+
+整体思路和 Lazy BTree 一致，只是将更新缓冲区中的对象变为子树，用来进一步减少写放大；
+
+如下图所示：
+
+![image-20221108132652431](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108132652431.png)
+
+<br/>
+
+### **Bw Tree**
+
+随着新硬件（如：SSD存储）技术的发展，其硬件实现原来越有利于 LSM Tree；
+
+因此，BTree 方面自然也会对新硬件做出适应性的改造，如：CoW BTree 和 Lazy BTree，都在相当程度上具有和 LSM Tree 类似的特性了；
+
+本小节所介绍的 BwTree 是在这一方向上更进一步的一种 BTree 变种，甚至在很大程度上比 LSM Tree 都更近了一步！
+
+![image-20221108133356080](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108133356080.png)
+
+BwTree 整体分为三层，从上而下分别是：
+
+-   BwTree 索引层；
+-   缓冲层；
+-   存储层；
+
+对于最上层的 BwTree 索引层，可以理解为一个逻辑上的类 BTree 结构，对外提供操作这个索引结构的 API，但其实现是完全无 Latch 的；
+
+最底层的 Flash Layer 使用了 Log Structure Store 来与固态硬盘交互，管理物理数据结构；
+
+>   **Log Structure Store：**
+>
+>   **利用 Append，即日志追加形式来实现的文件系统；其更符合 SSD 特性；**
+>
+>   原理类似于 LSM Tree；
+
+对于缓冲层，他将索引层和存储层连接起来，通过一个映射表 Mapping Table，记录逻辑页号到物理指针的映射，来实现了无锁追加的特性；
+
+来看下面的例子；
+
+![image-20221108134235088](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108134235088.png)
+
+和 Lazy BTree 类似，**BwTree 对每个节点的修改也是不直接修改页，而是生成一个 Delta Record 的结构，记录本次修改的情况，如果再有修改就再生成一个；**
+
+因此，许多个 Delta Record 和页一起，组成了一个类似链表的数据结构（Delta 链表）；
+
+在查找时：
+
+从新 Delta Record 向旧 Delta Record 至数据页查找，找到符合条件的结果就返回；
+
+>   **这里和 LSM Tree 的查找过程非常类似！**
+
+但是这里存在两个问题：
+
+-   如何确保并发情况下，生成 Delta Record 的安全性（两个操作要同时生成 Delta Record）；
+-   发生数据结构的修改，如：分裂、合并节点如何操作；
+
+<br/>
+
+#### **并发情况下，生成 Delta Record**
+
+对于第一个问题，BwTree 通过刚刚所说的映射表 Mapping Table，记录从逻辑页号到 Delta 链表头的指针；
+
+如果要新增 Delta Record 就要修改 Mapping Table 中的 Value；
+
+这样，BwTree 将修改 Delta Record 的操作，转变为了修改 Mapping Table 的操作，再通过 CAS 操作实现对 Mapping Table 的修改，从而将整个过程原子化，以实现不依赖 Latch 的并发控制；
+
+>   **CAS操作：**
+>
+>   **直接修改值的 CPU 指令，是一个CPU层面的原子指令；**
+
+**因此，调整 Delta 链表的操作就变得简单了：**
+
+<red>**如果要修改一页中某一行的值，首先生成 Delta Record 结构，为其赋值，并让他指向原 Delta 链表头；**</font>
+
+<red>**随后，在 Mapping Table 中通过 CAS 操作将页号映射至这个 Delta Record；**</font>
+
+<red>**这样，整个修改操作就完成了！**</font>
+
+如上图（a）；
+
+<br/>
+
+<red>**如果 Delta 链表过长，则需要将他们固化到页中，操作也大同小异：**</font>
+
+<red>**首先生成一个新的页，将 Delta 链表加上原有 Page 中的所有结果合并到新的页中；**</font>
+
+<red>**随后在 Mapping Table 中通过 CAS 操作将页号映射到这个新页即可！**</font>
+
+如上图（b）；
+
+<br/>
+
+生成的新页不需要修改原来其父节点指向它的指针吗？
+
+<red>**实际上，BwTree 中的指针可以是逻辑指针：父节点记录子节点的逻辑页号，就可以找到子节点了！**</font>
+
+<red>**因此，只要不修改页号，父节点就不用改变；**</font>
+
+<red>**所以，虽然我们替换了页，但是由于有映射表的存在，逻辑页号并没有变化，所以父节点也不用变化；**</font>
+
+<br/>
+
+#### **树结构修改**
+
+![image-20221108140231109](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108140231109.png)
+
+
+
+
+
+
+
+
 
 
 
