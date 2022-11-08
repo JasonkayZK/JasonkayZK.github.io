@@ -60,11 +60,11 @@ ssh-keygen -t rsa -C <你的邮箱>
 
 所以在Gitee你的个人设置中创建一个Gitee令牌(私人令牌)：
 
-![gitee_token_1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/gitee_token_1.png)
+![gitee_token_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee_token_1.png)
 
 这里选择所有权限即可：
 
-![gitee_token_2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/gitee_token_2.png)
+![gitee_token_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee_token_2.png)
 
 创建完成后要记号这个token的内容，他只显示一次；(忘记了也没关系，重新创建一个即可)
 

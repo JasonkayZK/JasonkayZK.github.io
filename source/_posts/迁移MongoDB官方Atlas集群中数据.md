@@ -32,7 +32,7 @@ mongodump和mongorestore是MongoDB数据库自带的备份恢复工具；
 >
 >   如下图：
 >
->   ![mongodb_iplist.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/mongodb_iplist.png)
+>   ![mongodb_iplist.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/mongodb_iplist.png)
 >
 >   **通常为0.0.0.0/0：表示允许所有IP远程登录**
 

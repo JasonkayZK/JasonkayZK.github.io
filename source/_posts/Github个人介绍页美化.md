@@ -32,7 +32,7 @@ description: 其实很早之前Github出了一个新彩蛋，会自动将你仓�
 
 最近折腾了一下个人页面仓库，通过 Github Actions 自动每天去跑我的博客和WakaTime动态，然后写入到 README 里面去，最终的效果大概是这个样子：
 
-![github_homepage](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/github_homepage.png)
+![github_homepage](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/github_homepage.png)
 
 <br/>
 

@@ -224,7 +224,7 @@ kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   7m54s
 
 并且通过Portainer也可以查看到服务容器都已经起来了：
 
-![minikube.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/minikube.png)
+![minikube.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/minikube.png)
 
 接下来我们拉取一个服务测试一下；
 
@@ -293,7 +293,7 @@ http://192.168.24.88:31375
 
 在本地使用浏览器打开，显示：
 
-![echo_server.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/echo_server.png)
+![echo_server.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/echo_server.png)
 
 大功告成！
 

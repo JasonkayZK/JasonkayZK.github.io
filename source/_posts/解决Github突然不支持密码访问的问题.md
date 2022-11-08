@@ -52,7 +52,7 @@ description: 今天提交代码到Github的时候，突然发现不能提交了�
 
 查看是否存在 `git:https://github.com`凭据，不存在则创建：
 
-![github_token_1](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/github_token_1.png)
+![github_token_1](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/github_token_1.png)
 
 用户名为你Github的用户名，密码修改为刚刚创建的个人Token！
 

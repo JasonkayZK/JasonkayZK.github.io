@@ -469,11 +469,11 @@ cover: https://img.paulzzh.tech/touhou/random?2
 
 **Alipay:**
 
-![alipay](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/alipay.jpg)
+![alipay](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wechat.jpg)
+![wechat](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/wechat.jpg)
 
 <br/>
 

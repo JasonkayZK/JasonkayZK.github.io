@@ -32,7 +32,7 @@ description: 之前就看到github上面的一个叫万物皆可RSS(RSSHub)的�
 
 如下图是我的一个在Inoreader中的RSS订阅订阅内容:
 
-![RSS订阅](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/rss_sample.png)
+![RSS订阅](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/rss_sample.png)
 
 <br/>
 
@@ -134,13 +134,13 @@ RSS 会将网站内容转化为文本格式，这样一来，那怕你的网站�
 
 通过网站左侧的leftside-bar下方可以找到`statistics`:
 
-![RSS使用](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/rss_use.png)
+![RSS使用](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/rss_use.png)
 
 <br/>
 
 点击即出现了:
 
-![RSS管理](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/rss_statistics.png)
+![RSS管理](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/rss_statistics.png)
 
 <br/>
 

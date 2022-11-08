@@ -38,7 +38,7 @@ Okular是KDE开发的一款跨平台的PDF阅读器，之前在Linux下一直用
 
 如下图：
 
-![okular_1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/okular_1.png)
+![okular_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/okular_1.png)
 
 **② 配置DRM选项**
 

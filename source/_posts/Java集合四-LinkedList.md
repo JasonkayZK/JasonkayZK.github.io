@@ -150,7 +150,7 @@ public class LinkedList<E>
 
 **LinkedList与Collection关系如图：**
 
-![LinkedList与Collection关系图.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/LinkedList与Collection关系图.jpg)
+![LinkedList与Collection关系图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/LinkedList与Collection关系图.jpg)
 
 ><br/>
 >

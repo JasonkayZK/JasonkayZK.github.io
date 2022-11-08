@@ -450,7 +450,7 @@ ELO 算法是 Facemash 的核心，他主要用来计算两个玩家在对局结
 
 这个算法的公式如下所示：
 
-![elo_1.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/elo_1.jpg)
+![elo_1.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/elo_1.jpg)
 
 -   Ea 就是玩家 `a`的期望胜率；
 -   Rb、Ra是玩家`b`与玩家`a`的`Rank`分数；

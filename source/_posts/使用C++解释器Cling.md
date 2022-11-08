@@ -230,7 +230,7 @@ jupyter-kernelspec install [--user] cling-cpp11
 
 重启后，进入JupyterLab的效果如下图：
 
-![](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/jupyter_lab_1.png)
+![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/jupyter_lab_1.png)
 
 会出现对应C++的选项；
 
@@ -238,7 +238,7 @@ jupyter-kernelspec install [--user] cling-cpp11
 
 如，下面是一个测试C++中 Constructor 和 Destructor 特性的代码：
 
-![](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/jupyter_lab_cling.png)
+![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/jupyter_lab_cling.png)
 
 可以看到，代码已经成功的被执行了！
 

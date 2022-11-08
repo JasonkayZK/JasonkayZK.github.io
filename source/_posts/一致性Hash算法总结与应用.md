@@ -32,13 +32,13 @@ description: 一致性Hash算法是解决分布式缓存等问题的一种算法
 
 这样，对key进行hash后的结果对3取模，得到的结果一定是0、1或者2，正好对应服务器`node0`、`node1`、`node2`，存取数据直接找对应的服务器即可，简单粗暴，完全可以解决上述的问题；
 
-![consistent-hash-1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-1.png)
+![consistent-hash-1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-1.png)
 
 取模算法虽然使用简单，但对机器数量取模，在集群扩容和收缩时却有一定的局限性：**因为在生产环境中根据业务量的大小，调整服务器数量是常有的事；**
 
 **而服务器数量N发生变化后`hash（key）% N`计算的结果也会随之变化！**
 
-![consistent-hash-2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-2.png)
+![consistent-hash-2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-2.png)
 
 **比如：一个服务器节点挂了，计算公式从`hash（key）% 3`变成了`hash（key）% 2`，结果会发生变化，此时想要访问一个key，这个key的缓存位置大概率会发生改变，那么之前缓存key的数据也会失去作用与意义；**
 
@@ -66,7 +66,7 @@ description: 一致性Hash算法是解决分布式缓存等问题的一种算法
 
 我们可以将这`2^32`个值抽象成一个圆环⭕️，圆环的正上方的点代表0，顺时针排列，以此类推：1、2、3…直到`2^32-1`，而这个由2的32次方个点组成的圆环统称为`hash环`；
 
-![consistent-hash-3.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-3.jpg)
+![consistent-hash-3.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-3.jpg)
 
 <br/>
 
@@ -78,7 +78,7 @@ description: 一致性Hash算法是解决分布式缓存等问题的一种算法
 
 **而这个整数映射在hash环上的位置代表了一个服务器，依次将`node0`、`node1`、`node2`三个缓存服务器映射到hash环上；**
 
-![consistent-hash-4.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-4.png)
+![consistent-hash-4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-4.png)
 
 <br/>
 
@@ -96,7 +96,7 @@ description: 一致性Hash算法是解决分布式缓存等问题的一种算法
 
 首先，使用哈希函数计算这个对象的 hash 值，值的范围是 [0, 2^32-1]：
 
-![consistent-hash-5.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-5.jpg)
+![consistent-hash-5.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-5.jpg)
 
 图中对象的映射关系如下：
 
@@ -107,7 +107,7 @@ hash(o3) = k3; hash(o4) = k4;
 
 同时 3 台缓存服务器，分别为 CS1、CS2 和 CS3：
 
-![consistent-hash-6.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-6.jpg)
+![consistent-hash-6.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-6.jpg)
 
 则可知，各对象和服务器的映射关系如下：
 
@@ -120,7 +120,7 @@ K3 => CS1
 
 即：
 
-![consistent-hash-7.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-7.jpg)
+![consistent-hash-7.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-7.jpg)
 
 以上便是一致性Hash的工作原理；
 
@@ -136,7 +136,7 @@ K3 => CS1
 
 假设 CS3 服务器出现故障导致服务下线，这时原本存储于 CS3 服务器的对象 o4，需要被重新分配至 CS2 服务器，其它对象仍存储在原有的机器上：
 
-![consistent-hash-8.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-8.jpg)
+![consistent-hash-8.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-8.jpg)
 
 **此时受影响的数据只有 CS2 和 CS3 服务器之间的部分数据！**
 
@@ -146,7 +146,7 @@ K3 => CS1
 
 假如业务量激增，我们需要增加一台服务器 CS4，经过同样的 hash 运算，该服务器最终落于 t1 和 t2 服务器之间，具体如下图所示：
 
-![consistent-hash-9.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-9.jpg)
+![consistent-hash-9.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-9.jpg)
 
 此时，只有 t1 和 t2 服务器之间的部分对象需要重新分配；
 
@@ -168,7 +168,7 @@ K3 => CS1
 
 如下图被缓存的对象大部分缓存在`node-4`服务器上，导致其他节点资源浪费，系统压力大部分集中在`node-4`节点上，这样的集群是非常不健康的：
 
-![consistent-hash-11.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-11.png)
+![consistent-hash-11.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-11.png)
 
 同时，还有另一个问题：
 
@@ -184,7 +184,7 @@ K3 => CS1
 
 如下图所示：
 
-![consistent-hash-10.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-10.jpg)
+![consistent-hash-10.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-10.jpg)
 
 在图中：o1 和 o2 表示对象，v1 ~ v6 表示虚拟服务器，s1 ~ s3 表示实际的物理服务器；
 
@@ -965,11 +965,11 @@ Response from host localhost:8082: hello: 032452345
 
 开启debug，并注册单个缓存服务器后，查看 Consistent 中的值：
 
-![consistent-hash-debug-1.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-debug-1.jpg)
+![consistent-hash-debug-1.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-debug-1.jpg)
 
 注册三个缓存服务器后，查看 Consistent 中的值：
 
-![consistent-hash-debug-2.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-debug-2.jpg)
+![consistent-hash-debug-2.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-debug-2.jpg)
 
 从debug中的变量，我们就可以很清楚的看到注册不同数量的服务器时，一致性Hash上服务器的动态变化！
 
@@ -1013,7 +1013,7 @@ Google 在2017年提出了： **含有负载边界值的一致性Hash算法；**
 
 例如下面的图：
 
-![consistent-hash-12.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/consistent-hash-12.png)
+![consistent-hash-12.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/consistent-hash-12.png)
 
 使用哈希函数将 6 个球和 3 个桶分配给 Hash环 上的随机位置，假设每个桶的容量设置为 2，按 ID 值的递增顺序分配球；
 

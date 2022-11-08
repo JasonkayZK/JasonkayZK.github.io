@@ -17,7 +17,7 @@ tags: [Java基础, 面试总结, 集合]
 
 首先，我们看看Map架构:
 
-![Map架构.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/Map架构.jpg)
+![Map架构.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Map架构.jpg)
 
 如上图：
 

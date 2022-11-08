@@ -52,6 +52,6 @@ Postman测试代码的一个常用工具；
 
 选择请求右侧的`code`即可，如下图：
 
-![postman_to_code.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/postman_to_code.png)
+![postman_to_code.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_to_code.png)
 
 <br/>

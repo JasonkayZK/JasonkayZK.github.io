@@ -808,7 +808,7 @@ kubernetes-dashboard-7448ffc97b-gpsv5        1/1     Running   1          19h
 
 出现下面的界面：
 
-![k8s_dashboard.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/k8s_dashboard.png)
+![k8s_dashboard.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/k8s_dashboard.png)
 
 说明Dashboard部署成功；
 
@@ -861,7 +861,7 @@ token:      eyJhbGciOiJSUzI1NiIsImtpZCI6Inpvc2Y0dmREN3p1SU5GWUhuWWVNek92NDJzX2JF
 
 登录后的界面和下面的类似（但是你应该是没有Nginx服务的）；
 
-![k8s_dashboard.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/k8s_dashboard_2.png)
+![k8s_dashboard.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/k8s_dashboard_2.png)
 
 <br/>
 
@@ -930,7 +930,7 @@ Commercial support is available at
 
 同时，我们也可以在面板上看到Nginx的服务：
 
-![k8s_dashboard_nginx.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/k8s_dashboard_nginx.png)
+![k8s_dashboard_nginx.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/k8s_dashboard_nginx.png)
 
 至此，我们的K8S已经安装成功了，接下来就愉快的玩耍吧！
 

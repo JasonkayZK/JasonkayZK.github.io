@@ -30,7 +30,7 @@ description: 之前配的主机没有音箱，今天在小众软件上发现了�
 
 首先，在Android机上安装一个名叫[wireless speaker for android](https://d.appinn.com/wireless-speaker-for-android/)的App：
 
-![wifiaudio_1.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wifiaudio_1.jpg)
+![wifiaudio_1.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/wifiaudio_1.jpg)
 
 安装后只需保证其后台运行即可，它会在 Windows 客户端启动后由Windows发起连接；
 
@@ -47,7 +47,7 @@ description: 之前配的主机没有音箱，今天在小众软件上发现了�
 
 运行 **WiFiAudio** **Server** 后，需要填入手机的 IP 地址，一般在手机的设置页面、网络、Wi-Fi 中都可以看到，填入地址后，点击 Start（可以勾选`High Quality Audio`，即高质量音频）：
 
-![wifiaudio_2.jpg](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/wifiaudio_2.jpg)
+![wifiaudio_2.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/wifiaudio_2.jpg)
 
 然后在Windows界面和手机界面最下方都能看到已连接了，并且在Android端会显示电脑的 IP 地址和已接收的数据包个数；
 

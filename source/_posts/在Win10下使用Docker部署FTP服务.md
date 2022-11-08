@@ -81,7 +81,7 @@ docker run -d -v f:\ftp_file:/home/vsftpd
 
 可以使用FileZilla直接访问, 如下图:
 
-![ftp1.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/ftp1.png)
+![ftp1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/ftp1.png)
 
 当然也可以使用浏览器直接访问: url为:
 
@@ -93,7 +93,7 @@ ftp://username:password@hostname:port
 
 如下图:
 
-![ftp2.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/ftp2.png)
+![ftp2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/ftp2.png)
 
 <br/>
 

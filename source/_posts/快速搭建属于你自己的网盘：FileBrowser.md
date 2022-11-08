@@ -65,7 +65,7 @@ CONTAINER ID   IMAGE                             COMMAND          CREATED       
 
 登陆后的界面如下：
 
-![file_browser.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/file_browser.png)
+![file_browser.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/file_browser.png)
 
 网盘支持中文、文件分享、多用户、视频在线播放等等，还是很不错的！
 

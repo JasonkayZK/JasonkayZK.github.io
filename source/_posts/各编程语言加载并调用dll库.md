@@ -167,7 +167,7 @@ $ python run_dll.py
 
 首先看下JNI调用C/C++的过程，注意写程序时自下而上，调用时自上而下：
 
-![JNI.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/JNI.png)
+![JNI.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/JNI.png)
 
 如果已有一个编译好的.dll/.so文件，如果使用JNI技术调用，我们需要：**首先使用C语言另外写一个.dll/.so共享库，使用SUN规定的数据结构替代C语言的数据结构，调用已有的 dll/so中公布的函数，然后再在Java中载入这个库dll/so，最后编写Java native函数作为链接库中函数的代理；**
 
@@ -179,7 +179,7 @@ JNA(Java Native Access)是一个开源的Java框架，是Sun公司推出的一�
 
 如果要和上图做个比较，那么JNA调用C/C++的过程大致如下：
 
-![JNA.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/JNA.png)
+![JNA.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/JNA.png)
 
 可以看到步骤减少了很多，最重要的是：**我们不需要重写我们的动态链接库文件，而是有直接调用的API，大大简化了我们的工作量；**
 
@@ -215,7 +215,7 @@ void printf(const char *format, [argument]);
 
 这就是**类型映射（Type Mappings）**，JNA官方给出的默认类型映射表如下：
 
-![jna_mapping.png](https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static@master/images/jna_mapping.png)
+![jna_mapping.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/jna_mapping.png)
 
 还有很多其它的类型映射，需要的请到JNA官网查看；
 
