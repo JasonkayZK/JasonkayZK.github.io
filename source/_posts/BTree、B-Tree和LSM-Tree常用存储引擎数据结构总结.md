@@ -32,13 +32,13 @@ BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用�
 
 同时，由于存储模块和其他模块耦合较少，因此可以将其抽象为一个专用的数据库组件，即：**存储引擎**；
 
-![image-20221105121651187](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105121651187.png)
+![image-20221105121651187](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-1.png)
 
 目前，很多数据库都支持可插拔的存储引擎，例如：MySQL支持：InnoDB、MyISAM、Memory、基于RocksDB的MyRocks等；
 
 **对于存储而言，最重要的就是数据存储的结构（也即，数据结构！）；**
 
-<red>**内存、缓存、读写流程的任何设计都是建立在存储结构的基础之上的！因此，存储结构和存储引擎的特性和性能关系非常密切！**</font>
+<font color="#f00">**内存、缓存、读写流程的任何设计都是建立在存储结构的基础之上的！因此，存储结构和存储引擎的特性和性能关系非常密切！**</font>
 
 相比于存储引擎而言，目前的存储结构并不是很多：
 
@@ -56,7 +56,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 由于存储引擎是基于文件系统的，因此存储引擎是将一条条数据转换为具体的文件进行存储；
 
-![image-20221105122636705](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105122636705.png)
+![image-20221105122636705](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-2.png)
 
 >   **很多数据库的 /data 目录下就存储有数据文件；**
 
@@ -79,7 +79,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 <br/>
 
-![image-20221105122751344](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105122751344.png)
+![image-20221105122751344](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-3.png)
 
 **索引组织表：**
 
@@ -100,19 +100,19 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 目前主流的存储引擎基本都没有使用哈希组织表；
 
-<red>**堆组织表因为数据的插入是无序的，而索引组织表需要根据索引的顺序插入数据，因此通常情况下：**</font>
+<font color="#f00">**堆组织表因为数据的插入是无序的，而索引组织表需要根据索引的顺序插入数据，因此通常情况下：**</font>
 
-<red>**堆组织表的写入性能强于索引组织表，读取性能弱于索引组织表；**</font>
+<font color="#f00">**堆组织表的写入性能强于索引组织表，读取性能弱于索引组织表；**</font>
 
-<red>**但是，`数据文件`的组织形式对于性能的影响还是比较小的，因为大多数都使用的是B树索引；**</font>
+<font color="#f00">**但是，`数据文件`的组织形式对于性能的影响还是比较小的，因为大多数都使用的是B树索引；**</font>
 
-<red>**而索引作为读写数据的主要入口，`索引文件的组织形式`对于存储引擎的性能关系更加密切！**</font>
+<font color="#f00">**而索引作为读写数据的主要入口，`索引文件的组织形式`对于存储引擎的性能关系更加密切！**</font>
 
 例如：
 
 将索引文件的组织形式从 BTree 换为 LSM-Tree，则性能差异会非常大！
 
-<red>**因此，通常情况下要重点关注的其实是：`索引文件的组织形式`！**</font>
+<font color="#f00">**因此，通常情况下要重点关注的其实是：`索引文件的组织形式`！**</font>
 
 <br/>
 
@@ -125,7 +125,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 如下图所示；
 
-![image-20221105131721712](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105131721712.png)
+![image-20221105131721712](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-4.png)
 
 <br/>
 
@@ -183,7 +183,7 @@ BTree 作为 In-place update 模式的存储结构，在早期机械硬盘结构
 
 我们有那么多的数据结构，例如：数组、链表、Hash表等，为什么 BTree 或 LSM-Tree 能够作为存储结构呢？
 
-![image-20221105160429281](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105160429281.png)
+![image-20221105160429281](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-5.png)
 
 但是大部分都不适合作为磁盘上的存储结构，这需要考虑一下存储结构需要具有的特性：
 
@@ -211,7 +211,7 @@ BTree 作为 In-place update 模式的存储结构，在早期机械硬盘结构
 
 如下图所示：
 
-![image-20221105172421905](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105172421905.png)
+![image-20221105172421905](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-6.png)
 
 BTree 是一个以页为单位组织的；
 
@@ -229,7 +229,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 所以，如果我们想要保证出现 SMO 操作时读写安全的话，就需要对有可能受到 SMO 操作影响的一整条链上所有节点加锁，如下图所示；
 
-![image-20221105194306300](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105194306300.png)
+![image-20221105194306300](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-7.png)
 
 **总之，虽然 BTree 有一定的并发能力，但是由于 SMO 的存在使得 BTree 的性能并不高，勉强满足并发要求，但是有很大的优化空间；**
 
@@ -241,7 +241,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 假设都以锁机制来控制并发，上面两种机制对应的锁分别称为：Lock 和 Latch；
 
-![image-20221105200353910](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105200353910.png)
+![image-20221105200353910](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-8.png)
 
 其中：
 
@@ -256,15 +256,15 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 此时，为了防止在事务进行提交之前，存在其他别的事务读到这行修改后未提交的数据，此时需要对数据增加 Lock；
 
-![image-20221105195251773](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105195251773.png)
+![image-20221105195251773](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-10.png)
 
-<red>**虽然 Latch 锁掉整个页数据，而 Lock 仅仅锁掉单行数据；**</font>
+<font color="#f00">**虽然 Latch 锁掉整个页数据，而 Lock 仅仅锁掉单行数据；**</font>
 
-<red>**但是一旦完成了对这行数据的修改，那么 Latch 锁就可以释放，而 Lock 锁需要等到整个事务提交之后才能够释放！**</font>
+<font color="#f00">**但是一旦完成了对这行数据的修改，那么 Latch 锁就可以释放，而 Lock 锁需要等到整个事务提交之后才能够释放！**</font>
 
-<red>**在数据修改完成到事务提交的这段时间，Lock 就可以发挥作用了！**</font>
+<font color="#f00">**在数据修改完成到事务提交的这段时间，Lock 就可以发挥作用了！**</font>
 
-<red>**因此，在对数据库进行操作时，实际上是存在 Latch 和 Lock 两种锁共同生效的！但是对于用户而言，只能感觉到 Lock 锁（即，事务锁）；**</font>
+<font color="#f00">**因此，在对数据库进行操作时，实际上是存在 Latch 和 Lock 两种锁共同生效的！但是对于用户而言，只能感觉到 Lock 锁（即，事务锁）；**</font>
 
 <br/>
 
@@ -272,7 +272,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 虽然 Latch 的持续时间很短，但是他也会严重影响数据库性能！
 
-![image-20221105200444258](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105200444258.png)
+![image-20221105200444258](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-11.png)
 
 如上图所示为 PolarDB 在优化 InnoDB B+Tree 的 Latch 结构前后的性能对比：蓝色为原 InnoDB、绿色为优化后；
 
@@ -299,7 +299,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 例如，最出名的 B+Tree 在非叶子节点中仅保留指针（在 BTree 中非叶子结点也存储了行数据），所有的数据都存放在叶子节点，间接减少了树的高度；
 
-![image-20221105210958977](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105210958977.png)
+![image-20221105210958977](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-12.png)
 
 并且这样还可以区分开索引段和数据段，有助于全表扫描时的顺序IO；
 
@@ -317,7 +317,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 下面来讲解一下 LSM-Tree 在上面两个特性上的表现；
 
-![image-20221105212603574](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105212603574.png)
+![image-20221105212603574](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-13.png)
 
 对于 LSM-Tree 的结构而言：
 
@@ -332,7 +332,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 下面来看读取操作：
 
-![image-20221105213608874](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105213608874.png)
+![image-20221105213608874](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-14.png)
 
 读取的时候需要注意：
 
@@ -346,7 +346,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 LSM-Tree 的结构特性和 BTree 截然不同：
 
-![image-20221105214352955](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105214352955.png)
+![image-20221105214352955](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-15.png)
 
 由于其 Out-of-place 的特点：所以在正常插入到内存时，完全不会改变历史数据的结构，即：没有 SMO 过程；
 
@@ -361,11 +361,11 @@ LSM-Tree 的结构特性和 BTree 截然不同：
 -   依靠 Compaction 操作整理 LSM-Tree 的结构，减少读 IO 的次数；
 -   使用 Bloom Filter 对数据进行过滤；
 
->   <red>**实际上 Compaction 操作就可以看作为 LSM-Tree 的 SMO 操作！**</font>
+>   <font color="#f00">**实际上 Compaction 操作就可以看作为 LSM-Tree 的 SMO 操作！**</font>
 >
->   <red>**在 Compaction 期间，不仅会占用大量资源，并且还会造成缓冲丢失、写停顿（write stall）等问题，减少并发能力；**</font>
+>   <font color="#f00">**在 Compaction 期间，不仅会占用大量资源，并且还会造成缓冲丢失、写停顿（write stall）等问题，减少并发能力；**</font>
 >
->   <red>**因此，对 LSM-Tree 优化的关键点就落在 Compaction 操作上；**</font>
+>   <font color="#f00">**因此，对 LSM-Tree 优化的关键点就落在 Compaction 操作上；**</font>
 
 <br/>
 
@@ -379,11 +379,11 @@ LSM-Tree 的结构特性和 BTree 截然不同：
 
 虽然存在其他因素干扰其并发能力，但是由于所有的写入都是追加操作，因此无需采用基于 Latch 的机制进行并发控制；
 
-![image-20221105215805839](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105215805839.png)
+![image-20221105215805839](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-16.png)
 
 由于现在多核处理器的发展，NUMA 模式逐渐成为主流，多核处理器在面对 Latch 的频繁获取和释放时都会损耗很多性能；
 
-![image-20221105220406902](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221105220406902.png)
+![image-20221105220406902](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-17.png)
 
 可以简单理解：
 
@@ -418,7 +418,7 @@ CPU 中每个核都有独立的一块存储区域，而读取或者写入的过�
 
 下图是原始 BTree 的结构：
 
-![image-20221106093506935](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221106093506935.png)
+![image-20221106093506935](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-19.png)
 
 可以注意到：在 BTree 中，每个数据只存储一份；
 
@@ -435,7 +435,7 @@ BTree 早期有两个变种：
 
 相比于 BTree，B+Tree 的数据按照键值大小顺序存放在同一层的叶子节点中（和上面 BTree 中在非叶子节点也存放数据不同），各个叶子节点按照指针连接，组成一个双向链表；
 
-![image-20221106202131787](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221106202131787.png)
+![image-20221106202131787](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-20.png)
 
 因此，对于 B+Tree 而言，其非叶子节点仅仅作为查找路径的判断依据，一个 key 值可能在 B+Tree 中存在两份（仅 Key 值）！
 
@@ -447,7 +447,7 @@ B+Tree 的结构解决了 BTree 中中序遍历扫描的痛点，在一定程度
 
 B*Tree 是 BTree 的另一个变种，其最关键的一点是将节点的最低空间利用率从 BTree 和 B+Tree 的 1/2 提高到了 2/3，并由此改变了节点数据满时的处理逻辑；
 
-![image-20221106202655090](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221106202655090.png)
+![image-20221106202655090](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-21.png)
 
 我们知道，BTree 和 B+Tree 的空间利用率为 1/2，即：**当他们的叶子节点满而分裂时，默认状态下会分裂为两个各占一半数据的节点；**
 
@@ -455,7 +455,7 @@ B*Tree 是 BTree 的另一个变种，其最关键的一点是将节点的最低
 
 >   **上面选取《The Ubiquitous B-Tree》论文对 B*Tree 的解释；**
 
-<red>**B*Tree 的思想主要是：将当前节点和兄弟节点相关联；**</font>
+<font color="#f00">**B*Tree 的思想主要是：将当前节点和兄弟节点相关联；**</font>
 
 B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提升读性能有一定的帮助，但这种模式增加了写入操作的复制度；
 
@@ -483,13 +483,13 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 对于读的过程，首先要在整个索引上添加 Index S Latch；
 
-![image-20221107195254918](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107195254918.png)
+![image-20221107195254918](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-9.png)
 
 再从上至下找到要读的叶子节点的 Page，然后上叶子节点的 Page S Latch；
 
 这时就可以释放 Index S Latch了；
 
-![image-20221107195810041](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107195810041.png)
+![image-20221107195810041](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-18.png)
 
 然后进行查询并返回结果，最后释放叶子节点中的 Page S Latch，完成整个读操作；
 
@@ -499,7 +499,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 写的过程就有些复杂了；
 
-![image-20221107201558241](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107201558241.png)
+![image-20221107201558241](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-22.png)
 
 **首先进行乐观的写入，即：假设写入操作不会引起索引结构的变更（不触发 SMO 操作）；**
 
@@ -509,7 +509,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 如果叶子节点 Page 安全，就上 Page X Latch，并释放 Index S Latch，然后再修改数据即可；
 
-![image-20221107201854133](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107201854133.png)
+![image-20221107201854133](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-23.png)
 
 上面就完成了乐观写入的过程；
 
@@ -521,7 +521,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 释放一开始上的 Index S Latch，重新上 Index X Latch，阻塞对整颗 B+Tree 的所有操作；
 
-![image-20221107202325092](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107202325092.png)
+![image-20221107202325092](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-24.png)
 
 然后重新搜索，并找到要发生结构变化的节点，上 Page X Latch，再修改树结构，此时可以释放 Index X Latch；
 
@@ -557,7 +557,7 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 对于读操作而言：
 
-![image-20221107203703637](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107203703637.png)
+![image-20221107203703637](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-25.png)
 
 对于读操作而言：
 
@@ -571,7 +571,7 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 >   **主要注意的是：**
 >
->   <red>**Index 级别和 Page 级别是两种不同对象的 Latch，因此哪怕有 Index 上的 X Latch 或者 SX Latch，也不会阻塞 Page 上的 S Latch！**</font>
+>   <font color="#f00">**Index 级别和 Page 级别是两种不同对象的 Latch，因此哪怕有 Index 上的 X Latch 或者 SX Latch，也不会阻塞 Page 上的 S Latch！**</font>
 
 <br/>
 
@@ -583,11 +583,11 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 **添加整个索引的 Index S Latch 和读取路径上节点的 Page S Latch 即可！**
 
-![image-20221107205012042](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205012042.png)
+![image-20221107205012042](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-26.png)
 
 接下来判断叶子节点是否安全，如果叶子节点 Page 安全，则上 Page X Latch，同时释放索引和路径上的 S Latch；
 
-![image-20221107205128838](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205128838.png)
+![image-20221107205128838](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-27.png)
 
 然后再修改即可；
 
@@ -601,7 +601,7 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 上 Page X Latch，再修改树结构，此时就可以释放 Index SX Latch 和路径上的 Page X Latch；
 
-![image-20221107205557977](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107205557977.png)
+![image-20221107205557977](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-28.png)
 
 随后即可完成对叶子节点的修改，返回结果，并释放叶子节点的 Page X Latch；
 
@@ -617,11 +617,11 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 补充了上面的内容，我们可以知道，B+Tree 的问题在于：
 
-<red>**其自上而下的搜索过程决定了加锁过程也必须是自上而下的！**</font>
+<font color="#f00">**其自上而下的搜索过程决定了加锁过程也必须是自上而下的！**</font>
 
-<red>**哪怕只对一个小小的叶子节点做读写操作，也都必须首先对根节点上 Latch！**</font>
+<font color="#f00">**哪怕只对一个小小的叶子节点做读写操作，也都必须首先对根节点上 Latch！**</font>
 
-<red>**并且，一旦触发 SMO 操作，就需要对整个树进行加锁！**</font>
+<font color="#f00">**并且，一旦触发 SMO 操作，就需要对整个树进行加锁！**</font>
 
 B-Link Tree 相比于 B+Tree 主要做了三点优化：
 
@@ -631,7 +631,7 @@ B-Link Tree 相比于 B+Tree 主要做了三点优化：
 
 B-Link Tree 结构如下图：
 
-![image-20221107211034348](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107211034348.png)
+![image-20221107211034348](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-29.png)
 
 其中加下划线的 Key 为 High Key；
 
@@ -641,7 +641,7 @@ B-Link Tree 结构如下图：
 
 下图就是 B-Link Tree 树节点分裂的过程；
 
-![image-20221107223644115](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107223644115.png)
+![image-20221107223644115](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-30.png)
 
 可以看到，上面的操作继承了 B*Tree 的思路：
 
@@ -649,15 +649,15 @@ B-Link Tree 结构如下图：
 
 那么上面的分裂过程是如何避免整棵树上的锁的呢？
 
-<red>**可以通过指向右兄弟节点的指针和 High Key 实现！**</font>
+<font color="#f00">**可以通过指向右兄弟节点的指针和 High Key 实现！**</font>
 
 如下图，当节点 y 分裂为 y 和 y+ 两个节点后，在 B+Tree 中就必须要提前锁住他们的父节点 x；
 
-![image-20221107224509181](BTree%E3%80%81B-Tree%E5%92%8CLSM-Tree%E5%B8%B8%E7%94%A8%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%BB%93.assets/image-20221107224509181.png)
+![image-20221107224509181](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-31.png)
 
 而 B-Link Tree 可以先不锁 x，这时查找 15，顺着 x 找到节点 y，在节点 y 中未能找到 15，但判断 15 大于其中记录的 high key，于是顺着指针就可以找到其右兄弟节点 y+，仍能找到正确的结果；
 
-因此，<red>**B-Link Tree 中的 SMO 操作可以自底向上加锁，而不必像 B+Tree 那样自顶向下加锁！从而避免了 B+Tree 中并发控制瓶颈；**</font>
+因此，<font color="#f00">**B-Link Tree 中的 SMO 操作可以自底向上加锁，而不必像 B+Tree 那样自顶向下加锁！从而避免了 B+Tree 中并发控制瓶颈；**</font>
 
 上面就是 B-Link Tree 的基本思路；
 
@@ -668,7 +668,7 @@ B-Link Tree 结构如下图：
 
 但是 B-Link Tree 仍是一种非常优秀的存储结构，很大程度上突破了 B+Tree 的性能瓶颈；
 
->   <red>**PostgreSQL 的 BTree 类型索引就是基于 B-Link Tree 实现的！**</font>
+>   <font color="#f00">**PostgreSQL 的 BTree 类型索引就是基于 B-Link Tree 实现的！**</font>
 
 下面再来看一看最近比较新的一些 BTree 变种，这些变种很大程度上都采用了和 LSM Tree 类似的思想；
 
@@ -694,13 +694,13 @@ CoW BTree 也称写时复制 BTree，CoW BTree 采用 Copy-on-Write 技术来保
 
 接下来再复制并修改父节点的父节点，直到根节点！
 
-![image-20221108130239675](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108130239675.png)
+![image-20221108130239675](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-32.png)
 
 CoW BTree 的修改逻辑如上图所示：
 
-<red>**对于叶子节点的修改会产生一个全新的根节点（即：一个全新的树）！**</font>
+<font color="#f00">**对于叶子节点的修改会产生一个全新的根节点（即：一个全新的树）！**</font>
 
-<red>**CoW BTree 在很大程度上具有 Out-of-place update 的特性，因为已经写入的页是不变的，所以 CoW BTree 可以像 LSM Tree 那样，完全不依赖 Latch 实现并发控制！**</font>
+<font color="#f00">**CoW BTree 在很大程度上具有 Out-of-place update 的特性，因为已经写入的页是不变的，所以 CoW BTree 可以像 LSM Tree 那样，完全不依赖 Latch 实现并发控制！**</font>
 
 **但是，为了达成这一点，CoW BTree 付出的代价也是非常巨大的：为了修改一个小小的数据，就要重新复制多个页，带来巨大的写放大！**
 
@@ -718,7 +718,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 读取时，将原始页中的内容和更新缓冲区进行合并，来返回正确的数据；
 
-![image-20221108131401353](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108131401353.png)
+![image-20221108131401353](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-33.png)
 
 惰性 BTree 和 LSM Tree 极为相似，甚至可以说，惰性 BTree 中的每一个页就像一个小型的 LSM Tree！
 
@@ -726,7 +726,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 惰性 BTree 同样避免了 Latch 机制，同时没有 CoW BTree 那么大的写放大代价，因此具有良好的性能；
 
->   <red>**MongoDB 的默认存储引擎 WiredTiger就是使用的这种存储结构！**</font>
+>   <font color="#f00">**MongoDB 的默认存储引擎 WiredTiger就是使用的这种存储结构！**</font>
 
 <br/>
 
@@ -738,7 +738,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 如下图所示：
 
-![image-20221108132652431](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108132652431.png)
+![image-20221108132652431](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-34.png)
 
 <br/>
 
@@ -750,7 +750,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 本小节所介绍的 BwTree 是在这一方向上更进一步的一种 BTree 变种，甚至在很大程度上比 LSM Tree 都更近了一步！
 
-![image-20221108133356080](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108133356080.png)
+![image-20221108133356080](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-35.png)
 
 BwTree 整体分为三层，从上而下分别是：
 
@@ -772,7 +772,7 @@ BwTree 整体分为三层，从上而下分别是：
 
 来看下面的例子；
 
-![image-20221108134235088](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108134235088.png)
+![image-20221108134235088](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-36.png)
 
 和 Lazy BTree 类似，**BwTree 对每个节点的修改也是不直接修改页，而是生成一个 Delta Record 的结构，记录本次修改的情况，如果再有修改就再生成一个；**
 
@@ -805,21 +805,21 @@ BwTree 整体分为三层，从上而下分别是：
 
 **因此，调整 Delta 链表的操作就变得简单了：**
 
-<red>**如果要修改一页中某一行的值，首先生成 Delta Record 结构，为其赋值，并让他指向原 Delta 链表头；**</font>
+<font color="#f00">**如果要修改一页中某一行的值，首先生成 Delta Record 结构，为其赋值，并让他指向原 Delta 链表头；**</font>
 
-<red>**随后，在 Mapping Table 中通过 CAS 操作将页号映射至这个 Delta Record；**</font>
+<font color="#f00">**随后，在 Mapping Table 中通过 CAS 操作将页号映射至这个 Delta Record；**</font>
 
-<red>**这样，整个修改操作就完成了！**</font>
+<font color="#f00">**这样，整个修改操作就完成了！**</font>
 
 如上图（a）；
 
 <br/>
 
-<red>**如果 Delta 链表过长，则需要将他们固化到页中，操作也大同小异：**</font>
+<font color="#f00">**如果 Delta 链表过长，则需要将他们固化到页中，操作也大同小异：**</font>
 
-<red>**首先生成一个新的页，将 Delta 链表加上原有 Page 中的所有结果合并到新的页中；**</font>
+<font color="#f00">**首先生成一个新的页，将 Delta 链表加上原有 Page 中的所有结果合并到新的页中；**</font>
 
-<red>**随后在 Mapping Table 中通过 CAS 操作将页号映射到这个新页即可！**</font>
+<font color="#f00">**随后在 Mapping Table 中通过 CAS 操作将页号映射到这个新页即可！**</font>
 
 如上图（b）；
 
@@ -827,39 +827,226 @@ BwTree 整体分为三层，从上而下分别是：
 
 生成的新页不需要修改原来其父节点指向它的指针吗？
 
-<red>**实际上，BwTree 中的指针可以是逻辑指针：父节点记录子节点的逻辑页号，就可以找到子节点了！**</font>
+<font color="#f00">**实际上，BwTree 中的指针可以是逻辑指针：父节点记录子节点的逻辑页号，就可以找到子节点了！**</font>
 
-<red>**因此，只要不修改页号，父节点就不用改变；**</font>
+<font color="#f00">**因此，只要不修改页号，父节点就不用改变；**</font>
 
-<red>**所以，虽然我们替换了页，但是由于有映射表的存在，逻辑页号并没有变化，所以父节点也不用变化；**</font>
+<font color="#f00">**所以，虽然我们替换了页，但是由于有映射表的存在，逻辑页号并没有变化，所以父节点也不用变化；**</font>
 
 <br/>
 
 #### **树结构修改**
 
-![image-20221108140231109](BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结.assets/image-20221108140231109.png)
+##### **页分裂操作**
 
+当新增或删减节点时，BwTree 的做法基本上借鉴了 B-Link Tree 的思路：
 
+采用了一个指向右兄弟节点的指针，来使分裂过程分为 child split 和 parent update 两个步骤，每个步骤都是原子操作，从而实现了原子化的 SMO 操作；
 
+![image-20221108140231109](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-37.png)
 
+上图就是页 P 分裂为 P 和 Q 的过程；
 
+首先（a）步生成页 Q，但这时页 P 仍然是指向原下一个节点 R 的，页 Q 不可达；
 
+（b）步对页 P 增加了一个特殊的 Delta Record，它负责对页 P 和页 Q 两部分的数据进行路由；
 
+（c）步再按照相似的方法调整父节点；
 
+**随着页 P 和父节点的压缩操作，会将 Delta Record 链表合并到页中！**
 
+<br/>
 
+##### **页合并操作**
 
+页合并操作和上面的分裂思路类似，先通过增加一个 remove delta record 来标记要删除的节点；
 
+再通过对其前置节点增加一个 merge delta 标记修改，最后再修改父节点；
 
+![image-20221108200001820](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-38.png)
 
+<br/>
+
+#### **BwTree总结**
+
+从前面的分析可以看到，BwTree 更像是 B-Link Tree 和 LSM Tree 的结合，从而兼具无 Latch 的特性，又在相当程度上拥有 BTree 一族的读优势！
+
+目前，BwTree 在学术界还有不少的探索和关注，但在工业界还未听说有成功的实践；
 
 <br/>
 
 ## **深入了解LSM-Tree及其变种**
 
+### **LSM-Tree概念**
 
+LSM Tree 的概念起源于 1996年的论文《The Log Structure Merge Tree》，此后由 Google Bigtable 第一个商业化实现并于 2006 年发表论文《Bigtable：A distributed strorage system for structured data》；
 
+随后，Google 的两位专家基于 BigTable 的经验实现了 LevelDB，一个单机 LSM Tree 存储引擎，并开源；
 
+>   <font color="#f00">**Chrome 浏览器中的 [IndexedDB](https://en.wikipedia.org/wiki/IndexedDB) 底层实现就是 LevelDB！**</font>
+
+此后，FaceBook 基于 LevelDB 开发了 RocksDB（非常棒的 KV 数据库，非常值得学习！）！
+
+RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类似于关系型数据库中表的概念）、Compaction策略等；
+
+目前，RocksDB 已经成为 LSM Tree 领域的一个事实标准！
+
+>   **包括 TiDB 底层的存储也是使用的RocksDB！**
+
+下图为 RocksDB 的结构图；
+
+![image-20221108201917997](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-39.png)
+
+写入的数据首先要记录 WAL（Write-ahead Log），用来做实时落盘，以实现持久性；
+
+随后，数据有序的写入 Active Memtable 中；同时，<font color="#f00">**Active Memtable 也是这里唯一可变的结构！**</font>
+
+在一个 Active Memtable 写满后，就把它转换为 Immutable Memtable；
+
+<font color="#f00">**上面两类 Memtable 都在内存中，使用的数据结构基本上是跳跃表（也有vector、hash-skiplist等）**</font>
+
+<br/>
+
+#### **Minor Merge**
+
+![image-20221108202159880](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-40.png)
+
+当 Immutable Memtable 达到指定的数量后，就将 Immutable Memtable 落盘到磁盘中的 L0 层；
+
+上面这步操作被称为 minor merge；
+
+![image-20221108203307920](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-41.png)
+
+**通常，对于 minor merge 的 Memtable 不做整理（无 Compaction 过程），直接刷入磁盘；**
+
+因此，L0 层可能会存在重复的数据；
+
+<br/>
+
+#### **Major Merge**
+
+当 L0 层的数据满了之后，就会触发 major merge，也就是关键的 Compaction 操作；
+
+将 L0 层的数据和 L1 层的数据进行合并，全部整理为 `“固定大小的、不可变的数据块”`，称为 SSTable（Sorted String Table），并放在 L1 层；
+
+>    **SSTable 是由 LevelDB 最初实现的一种数据格式，被称为 Sorted String Table（有序字符串表）；**
+>
+>   **一个 SST 通常由两个部分组成：**
+>
+>   -   **索引文件；**
+>   -   **数据文件；**
+>
+>   **其中，数据文件就是要存储的 KV 数据，而索引文件可以是 BTree 或者哈希表；**
+>
+>   <font color="#f00">**（可以将 SST 理解为一个小型的聚簇索引结构，只是这个结构整体是不可变的！）**</font>
+>
+>   ![image-20221108204250443](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-42.png)
+
+这样，除了 L0 层之外的磁盘中的每一层都是由一个个 SST 组成的，这些 SST 之间互不重叠！
+
+<font color="#f00">**SST 的出现结合后文会讲到的的 Bloom Filter，在很大程度上提升了 LSM Tree 的读性能！**</font>
+
+<font color="#f00">**并且，L1 和之后层次间的合并，可以仅合并部分重叠的 SST，使 Compaction 过程更加灵活、效率更高；**</font>
+
+<br/>
+
+#### **一条数据的整体写入过程**
+
+因此，一条数据进入到 LSM Tree 后会：
+
+首先写入 active memtable，然后进入 immutable memtable，接下来被刷入 L0 层，然后随着 Compaction 操作一层层向下；
+
+>   **这也是 LevelDB 的由来，一层一层的；**
+
+这个过程如果碰到了更下层的同 key 数据，那么就会将对方合并；
+
+如果在 Compaction 过程中遇到了从更高层来的同 key 新的数据，那么就会被合并；
+
+<br/>
+
+#### **读操作（Bloom Filter优化）**
+
+从 LSM Tree 中读取的过程就是从上至下层层扫描，直至找到数据；
+
+在查找的过程中，有一个非常关键的优化，可以加速我们对数据的筛选，那就是：**Bloom Filter**！
+
+![image-20221108210258083](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-43.png)
+
+**Bloom Filter 用来筛选一层中是否包含我们要查找的数据；**
+
+<font color="#f00">**注意到，它可能会返回`假阳性`的结果，也就是返回一个 key 在这一层，但是实际查找下来是不存在的！但是一定不会返回假阴性的结果！**</font>
+
+<font color="#f00">**即：如果 Bloom Filter 返回一个 key 不在这一层，那么这个 key 一定是不存在的！**</font>
+
+>   Bloom Filter的原理实际上也很简单：
+>
+>   **就是对每个 key 做 hash 操作，做成一个 bytes 映射数组；**
+>
+>   **然后对要查找的 key 也进行同样的 hash 操作，然后和 bytes 映射数组比对即可；**
+
+通常，如果只有一个 Hash 函数的话，Hash 值重合的概率比较高，误报率较高；
+
+因此，可以设置多个 Hash 函数，这样进来一个 key 的话，只有所有 bytes 映射都命中，才需要真正查询，可以极大程度上降低误报率！
+
+但是如果 Hash 函数过多，Bloom Filter 的代价就会过大，占用的内存也会增多；
+
+因此需要好好协调，这里是一个重要的调参方向；
+
+<br/>
+
+#### **合并策略（Merging Policy）**
+
+上面讲述的是目前主流的 LSM Tree 的实现，本小节来简单介绍一下另一些 LSM Tree 的实现和探索；
+
+![image-20221108213322199](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-44.png)
+
+LevelDB 等一系列 LSM Tree 实现采用的方法都是 Leveling Merge Policy 方法；
+
+如上图（a），Leveling 合并策略就是将相连两层的数据做合并，然后一起写入下面一层；
+
+而除此之外，还有另一种合并策略，就是图（b），Tiering Merge Policy；
+
+**Tiering 合并策略的每一层都有多个重叠的组件，合并时也并非将相连两层合并，而是将一层中所有组件进行合并，并放入下一层；**
+
+相比于 Leveling 合并策略，Tiering 合并策略显而易见的对写入更加友好，但读取的性能会进一步降低：因为每一层也有多个重叠的区域，查找时都是要查找的！
+
+>   **Cassandra 数据库使用的便是 Teiring 合并策略；**
+
+<br/>
+
+#### **LSM-Tree并发控制机制**
+
+总体来讲，LSM Tree 因为其天然的 Out-of-place update 特性，在并发控制方面的问题比 BTree 少很多！
+
+对于 LSM Tree 而言，关注的重点主要在于**会引起结构变更的操作：**
+
+-   **Memtable 落盘；**
+-   **Compaction 过程；**
+
+在早期只有一个 Memtable 的情况下，Memtable 的落盘会造成一段时间的不可写！
+
+目前，区分 active memtable 和 immutable memtable 的设计就能在很大程度上避免 memtable 落盘造成的问题；
+
+<br/>
+
+##### **一些Compaction优化方案**
+
+Compaction 一种都是 LSM Tree 的瓶颈所在：
+
+Compaction 过程中占用大量资源，并调整数据位置，同时会引发缓冲池中数据的大量丢失，影响 LSM Tree 结构的读取性能，严重情况下，还可能会造成写停顿（Write Stall）！
+
+因此，关于 Compaction 的优化一直也是 LSM 领域的关注重点！
+
+使用 Tiering 合并策略是提升综合写性能、减少写放大的一个重要手段；
+
+还有另外一些手段来优化 Compaction：
+
+-   **采用流水线技术**：将读取、合并、写入三个操作以流水线的形式执行，以增强合并操作的资源利用率，减少耗时；
+-   **复用组件**：在合并的过程中识别出不变的部分并保留；
+-   **主动更新Cache**：在 Compaction 结束后主动更新 Cache，或采用机器学习的方式预测回填；
+-   **单独硬件执行Compaction**：把 Compaction 操作 Offload 到例如 FPGA 等额外的硬件上执行；
+
+![image-20221108220304194](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-45.png)
 
 <br/>
 
@@ -868,6 +1055,5 @@ BwTree 整体分为三层，从上而下分别是：
 视频地址：
 
 -   https://www.bilibili.com/video/BV1se4y1U7Dn/
-
 
 <br/>
