@@ -1,5 +1,5 @@
 ---
-crate入口文件title: Rust模块组织结构
+title: Rust模块组织结构
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?88'
 date: 2022-11-19 09:45:43
