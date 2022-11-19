@@ -428,6 +428,7 @@ impl<T, E> Context<T, E> for Result<T, E> where
 
 文档：
 
+-   https://rustwiki.org/zh-CN/rust-by-example/error/multiple_error_types.html
 -   https://doc.rust-lang.org/book/ch09-00-error-handling.html
 -   https://nick.groenen.me/posts/rust-error-handling/
 -   https://docs.rs/thiserror/latest/thiserror/
