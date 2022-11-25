@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?9'
 date: 2022-11-24 17:37:17
 categories: Rust
-tags: [Rust]
+tags: [Rust, 反射]
 description: 反射Reflection意味着程序可以在运行时获得类型的所有详细信息，包括字段方法等，并可以进行替换；例如Java中的Spring框架就大量使用反射；但是在Rust中只有编译期反射，并且主要是通过Any来实现的；本文讲解了Rust中的Any；
 ---
 
@@ -17,6 +17,11 @@ description: 反射Reflection意味着程序可以在运行时获得类型的所
 源码：
 
 -   https://github.com/JasonkayZK/rust-learn/tree/any
+
+系列文章：
+
+-   [《Rust反射之Any》](https://jasonkayzk.github.io/2022/11/24/Rust反射之Any/)
+-   [《Rust反射之过程宏》](https://jasonkayzk.github.io/2022/11/25/Rust反射之过程宏/)
 
 <br/>
 
