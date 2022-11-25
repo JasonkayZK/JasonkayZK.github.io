@@ -1,11 +1,37 @@
-<section class="archive">
-    <ul class="post-archive">
-      <% page.posts.each(function (post) { %>
-        <li class="post-item">
-          <span class="post-date"><%= date(post.date, "YYYY-MM-DD") %></span>
-          <a class="post-title" href="<%- url_for(post.path) %>"><%= post.title %></a>
-        </li>
-      <% }) %>
-    </ul>
-  </section>
-  <%- partial('_partial/paginator') %>
+<section class="nexmoe-archives">
+    <div class="nexmoe-post-cover">
+        <h1><%= page.title %></h1>
+    </div>
+      
+    <article>
+        <% // 参考：https://github.com/SukkaW/hexo-theme-suka/blob/master/layout/_pages/archive.ejs %>
+        <% function buildArchive(posts, year) { %>
+            <h2><%= year %> 共计：<%= posts.length %>篇</h2>
+            <ul>
+            <% posts.sort('date',-1).each(post => { %>
+                <li style="margin: 3px"><span><%= date(post.date, 'MM-DD') %></span>：<a href="<%- url_for(post.path) %>" ><%- post.title %></a></li>
+            <% }) %>
+            </ul>
+            <br/>
+        <% } %>
+
+        <%
+        if (!page.year) {
+            let years = {};
+            let allpost = page.tag ? site.tags.findOne({name: page.tag}).posts : site.posts;
+            allpost.each(post => years[post.date.year()] = null);
+            for (let year of Object.keys(years).sort((a, b) => b - a)) {
+                let posts = allpost.filter(p => p.date.year() == year);
+                buildArchive(posts, year)
+            }
+        } else {
+			let year = page.year;
+			let posts = site.posts.filter(p => p.date.year() == year);
+			buildArchive(posts, year)
+        }
+        %>
+    </article>
+
+    <%- partial('_partial/comment') %>
+      
+</section>
