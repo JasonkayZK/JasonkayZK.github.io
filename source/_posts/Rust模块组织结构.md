@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?88'
 date: 2022-11-19 09:45:43
 categories: Rust
-tags: [Rust]
+tags: [Rust, Cargo]
 description: 本文讲述了Rust中模块的组织形式和约定；
 ---
 

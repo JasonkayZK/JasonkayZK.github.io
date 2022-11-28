@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?43'
 date: 2022-11-23 10:14:05
 categories: Rust
-tags: [Rust]
+tags: [Rust, Cargo]
 description: 用过Rust中Cargo工具的，都会对其赞叹不已；Cargo 不光支持代码格式化、构建、项目管理，还具备良好的可扩展性，同时也支持第三方的插件工具；本文讲述了一些常见的Cargo命令，同时讲述了如何编写一个Cargo扩展插件；
 ---
 

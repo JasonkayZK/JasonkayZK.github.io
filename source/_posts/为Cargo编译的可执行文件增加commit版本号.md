@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?7'
 date: 2022-11-17 17:00:19
 categories: Rust
-tags: [Rust]
+tags: [Rust, Cargo]
 description: 有的时候我们在发布一些Cli工具时，除了明确的版本号之外，还想要添加对应的Git CommitId号；这个功能可以通过 build.rs 脚本实现；
 ---
 
