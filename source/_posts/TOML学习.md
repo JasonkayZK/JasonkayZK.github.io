@@ -94,3 +94,25 @@ color = "gray"
 ```
 
 <br/>
+
+## **Rust中的Cargo配置**
+
+在 Rust 圣经中展示了 Cargo 的配置：
+
+-   https://course.rs/cargo/reference/manifest.html
+
+可以看到 Cargo Target 列表：(查看 [Target 配置](https://course.rs/cargo/reference/cargo-target.html#Target配置) 获取详细设置)
+
+-   [`[lib\]`](https://course.rs/cargo/reference/cargo-target.html#库对象library) — Library target 设置.
+-   [`[[bin\]]`](https://course.rs/cargo/reference/cargo-target.html#二进制对象binaries) — Binary target 设置.
+-   [`[[example\]]`](https://course.rs/cargo/reference/cargo-target.html#示例对象examples) — Example target 设置.
+-   [`[[test\]]`](https://course.rs/cargo/reference/cargo-target.html#测试对象tests) — Test target 设置.
+-   [`[[bench\]]`](https://course.rs/cargo/reference/cargo-target.html#基准性能对象benches) — Benchmark target 设置.
+
+**可以看到，库的定义为表：`[lib]`，而其他配置例如 `[[bin]]` 则为表数组；**
+
+**这是正好对应了Rust中的规定：**
+
+**一个 Crate 中只能定义一个 lib 对象，但是可以在 Cargo.toml 中创建多个 bin、example 对象；**
+
+<br/>
