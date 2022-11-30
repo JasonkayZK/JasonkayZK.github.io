@@ -137,7 +137,7 @@ Cargo.lock
 {% endif %}
 ```
 
-如果是 lib 类型的 crate 则加入此行，否则 bin 类型的 crate 不需要加入 Cargo.lock！
+**如果是 lib 类型的 crate 则在 gitignore 中加入此行，否则 bin 类型的 crate 需要提交 Cargo.lock！**
 
 <br/>
 
