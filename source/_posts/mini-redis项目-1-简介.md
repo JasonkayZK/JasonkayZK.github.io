@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?54'
 date: 2022-12-05 16:43:55
 categories: Rust
-tags: [Rust, Database]
+tags: [Rust, Database, Redis]
 description: 最近看完了tokio，其中tokio官方提供的mini-redis项目非常的好，跟着教程完整的做了一遍，并且对很多地方根据自己的理解重新实现了（比如错误处理、文件组织等）；这里会分多篇文章进行总结，这里是第一篇；
 ---
 
@@ -15,6 +15,11 @@ description: 最近看完了tokio，其中tokio官方提供的mini-redis项目�
 源代码：
 
 -   https://github.com/JasonkayZK/mini-redis
+
+系列文章：
+
+-   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
+-   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
 
 <br/>
 
@@ -408,6 +413,11 @@ pub enum MiniRedisConnectionError {
 源代码：
 
 -   https://github.com/JasonkayZK/mini-redis
+
+系列文章：
+
+-   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
+-   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
 
 参考文章：
 
