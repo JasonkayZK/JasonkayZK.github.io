@@ -1,8 +1,8 @@
 ---
-title: mini-redis项目总结
+title: mini-redis项目-1-简介
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?54'
-date: 2022-12-02 16:43:55
+date: 2022-12-05 16:43:55
 categories: Rust
 tags: [Rust, Database]
 description: 
@@ -14,7 +14,7 @@ description:
 
 <!--more-->
 
-# **mini-redis项目总结**
+# **mini-redis项目-1-简介**
 
 
 
