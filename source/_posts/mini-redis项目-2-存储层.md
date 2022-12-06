@@ -18,6 +18,7 @@ description: 本篇接上一篇《mini-redis项目-1-简介》，讲解mini-redi
 
 -   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
 -   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
+-   [《mini-redis项目-3-连接层》](https://jasonkayzk.github.io/2022/12/06/mini-redis项目-3-连接层/)
 
 <br/>
 
@@ -558,5 +559,6 @@ impl Drop for DbDropGuard {
 
 -   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
 -   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
+-   [《mini-redis项目-3-连接层》](https://jasonkayzk.github.io/2022/12/06/mini-redis项目-3-连接层/)
 
 <br/>

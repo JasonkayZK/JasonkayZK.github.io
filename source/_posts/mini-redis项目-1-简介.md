@@ -20,6 +20,7 @@ description: 最近看完了tokio，其中tokio官方提供的mini-redis项目�
 
 -   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
 -   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
+-   [《mini-redis项目-3-连接层》](https://jasonkayzk.github.io/2022/12/06/mini-redis项目-3-连接层/)
 
 <br/>
 
@@ -167,6 +168,24 @@ OK
 $ cargo run --bin mini-redis-cli get foo    
 "123"
 ```
+
+过期键测试，设置 5s 过期：
+
+```bash
+$ cargo run --bin mini-redis-cli set foo 123 5000
+```
+
+获取：
+
+```bash
+$ cargo run --bin mini-redis-cli get foo
+"123"
+
+$ cargo run --bin mini-redis-cli get foo
+(nil)
+```
+
+5s后，获取不到 key 值了！
 
 <br/>
 
@@ -418,6 +437,7 @@ pub enum MiniRedisConnectionError {
 
 -   [《mini-redis项目-1-简介》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/)
 -   [《mini-redis项目-2-存储层》](https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/)
+-   [《mini-redis项目-3-连接层》](https://jasonkayzk.github.io/2022/12/06/mini-redis项目-3-连接层/)
 
 参考文章：
 
