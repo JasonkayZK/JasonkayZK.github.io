@@ -517,9 +517,14 @@ TEST(LevelDBDemo, Iteration) {
 
 ### **快照（Snapshot）**
 
+快照提供了针对整个 K-V 存储的一致性只读视图（consistent read-only views）；例如，我们熟悉的 MySQL 中各个事务在未提交时，都拥有自己独立的视图（如果配置了对应的事务隔离级别不是脏读），各个事务之间相互独立，即 MVCC；
 
+对于读操作而言：
 
-代码如下：
+-   **如果 `ReadOptions::snapshot` 不为 null 则表示读操作作用在当前 DB 的特定快照版本上；**
+-   **若为 null，则读操作将会作用在当前版本的一个隐式的快照上；**
+
+测试代码如下：
 
 ```c++
 TEST(LevelDBDemo, Snapshot) {
@@ -553,33 +558,197 @@ TEST(LevelDBDemo, Snapshot) {
 }
 ```
 
+首先，我们写入了 k-v 对 `("snapshot-key", "snapshot-value")` ，并创建了对应的视图；
 
+随后，我们更新了 value 变为：`"snapshot-value-updated"`；
 
+然后：
 
+-   当不用 snapshot 查询时，查询结果为 `"snapshot-value-updated"`；
+-   当使用了 snapshot 查询后，查询结果为 Put 之前的值：`"snapshot-value"`；
 
+输出结果如下：
 
+```
+Read with no snapshots: snapshot-value-updated
+Read with snapshot: snapshot-value
+```
+
+<red>**注意，当一个快照不再使用的时候，应该通过 `DB::ReleaseSnapshot` 接口进行释放；**</font>
 
 <br/>
 
 ### **比较器（Comparator）**
 
+#### **创建并使用自定义比较器**
 
+在 LevelDB 中，所有的数据都是顺序存储的，并且默认情况下的比较函数，是按照逐字节字典序比较；
 
+此外，<red>**LevelDB 还允许自定义比较函数，在首次打开数据库时传入！**</font>
 
+自定义比较函数，只需要继承 `leveldb::Comparator` 然后定义相关逻辑即可；
+
+例如：
+
+```c++
+class TwoPartComparator : public leveldb::Comparator {
+  public:
+  // Three-way comparison function:
+  //   if a < b: negative result
+  //   if a > b: positive result
+  //   else: zero result
+  int Compare(const leveldb::Slice& a,
+              const leveldb::Slice& b) const override {
+    long a1, a2, b1, b2;
+    ParseKey(a, &a1, &a2);
+    ParseKey(b, &b1, &b2);
+    if (a1 < b1) return -1;
+    if (a1 > b1) return +1;
+    if (a2 < b2) return -1;
+    if (a2 > b2) return +1;
+    return 0;
+  }
+
+  const char* Name() const override { return "TwoPartComparator"; }
+  void FindShortestSeparator(std::string*,
+                             const leveldb::Slice&) const override {}
+  void FindShortSuccessor(std::string*) const override {}
+
+  private:
+  static void ParseKey(const leveldb::Slice& k, long* x1, long* x2) {
+    std::string parts = k.ToString();
+    auto index = parts.find_first_of(':');
+    *x1 = strtol(parts.substr(0, index).c_str(), nullptr, 10);
+    *x2 = strtol(parts.substr(index + 1, parts.size()).c_str(), nullptr, 10);
+  }
+};
+```
+
+上面的自定义比较函数将一个字符串通过 `:` 拆分为两个整数部分，首先比较前半部分数值的大小，如果前半部分相同，则再比较后半部分数值；
+
+测试代码如下：
+
+```c++
+TEST(LevelDBDemo, Comparator) {
+  leveldb::DB* db;
+  leveldb::Options options;
+  TwoPartComparator cmp;
+  options.create_if_missing = true;
+  options.comparator = &cmp;
+  leveldb::Status status =
+      leveldb::DB::Open(options, "/tmp/comparator-demo", &db);
+  ASSERT_TRUE(status.ok());
+
+  // populate the database
+  leveldb::Slice key1 = "1:3";
+  leveldb::Slice key2 = "2:3";
+  leveldb::Slice key3 = "2:1";
+  leveldb::Slice key4 = "2:100";
+  std::string val1 = "one";
+  std::string val2 = "two";
+  std::string val3 = "three";
+  std::string val4 = "four";
+  db->Put(leveldb::WriteOptions(), key1, val1);
+  db->Put(leveldb::WriteOptions(), key2, val2);
+  db->Put(leveldb::WriteOptions(), key3, val3);
+  db->Put(leveldb::WriteOptions(), key4, val4);
+
+  // iterate the database
+  leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    std::cout << it->key().ToString() << ": " << it->value().ToString()
+              << std::endl;
+  }
+  // 1:3: one
+  // 2:1: three
+  // 2:3: two
+  // 2:100: four
+  delete it;
+
+  // Open a wrong comparator database cause error
+  status = leveldb::DB::Open(options, db_name, &db);
+  ASSERT_FALSE(status.ok());
+  std::cout << "Open a wrong comparator database: " << status.ToString()
+            << std::endl;
+  ASSERT_TRUE(status.IsInvalidArgument());
+
+  delete db;
+}
+```
+
+我们创建了自定义比较器 TwoPartComparator 对象，将其传入 options 中，并使用这个 options 创建了一个新的数据库：`"/tmp/comparator-demo"`；
+
+随后加入了几个 k-v 对，key 值如下：
+
+-   `1:3`；
+-   `2:3`；
+-   `2:1`；
+-   `2:100`；
+
+随后通过迭代器遍历，输出结果如下：
+
+```bash
+1:3: one
+2:1: three
+2:3: two
+2:100: four
+```
+
+如果按照自然顺序，则应当输出：
+
+```
+1:3: one
+2:1: three
+2:100: four
+2:3: two
+```
+
+说明我们的自定义比较器生效；
+
+<br/>
+
+#### **无法为已存在数据库指定比较器**
+
+需要特别注意的是：由于在 LevelDB 中，数据的比较顺序是非常重要的，因此一旦创建了数据库就不能再更改比较顺序了；
+
+如上面的例子中所展示的，这段代码将会报错：
+
+```c++
+// Open a wrong comparator database cause error
+status = leveldb::DB::Open(options, db_name, &db);
+ASSERT_FALSE(status.ok());
+std::cout << "Open a wrong comparator database: " << status.ToString()
+  << std::endl;
+ASSERT_TRUE(status.IsInvalidArgument());
+```
+
+错误内容：
+
+```
+Open a wrong comparator database: Invalid argument: leveldb.BytewiseComparator does not match existing comparator : TwoPartComparator
+```
+
+从而保证了数据的向后兼容性；
+
+<br/>
+
+#### **比较顺序的向后兼容性**
+
+<red>**比较器的 `Name()` 方法返回的结果在创建数据库时会被绑定到数据库上，后续每次打开都会进行检查：如果名称改变，则对 `leveldb::DB::Open` 的调用就会失败；**</font>
+
+**因此，当且仅当在新的 key 格式和比较函数与已有的数据库不兼容而且已有数据不再被需要的时候，才能够修改比较器名称；总而言之，一个数据库只能对应一个比较器，而且比较器由名字唯一确定，一旦修改名称或比较器逻辑，数据库的操作逻辑均会出错！**
+
+如果一定要修改比较逻辑，可以根据预先规划一点点的改进 key 格式（注意，事先的改进规划非常重要）；
+
+比如，你可以先在每个 key 的结尾存储一个版本号（通常一个字节足矣），当需要切换到新的 key 格式的时（例如前面 `TwoPartComparator` 处理的 keys），那么需要做的是：
+
+-   保持相同的比较器名称；
+-   递增新 keys 的版本号；
+-   修改比较器函数以让其通过判断版本号来决定如何进行排序；
 
 <br/>
 
 ### **过滤器（Filter）**
-
-
-
-
-
-<br/>
-
-### **估算某个区间空间大小**
-
-
 
 
 
@@ -591,6 +760,47 @@ TEST(LevelDBDemo, Snapshot) {
 
 ## **其他内容**
 
+### **Slice**
+
+对于迭代器而言，`it->key()` 和 `it->value()` 调用返回的值是 `leveldb::Slice` 类型；
+
+熟悉 Go 的同学应该对 Slice 不陌生：Slice 是一个简单的数据结构，包含一个长度和一个指向外部字节数组的指针，<red>**返回一个 Slice 比直接返回一个 `std::string` 更高效，因为不需要隐式地拷贝大量的 keys 和 values；**</font>
+
+<red>**另外，LevelDB 中的方法不会返回以 `\0` 结尾的 C 风格的字符串，因为 LevelDB 中的 keys 和 values 允许包含 `\0` ；**</font>
+
+C++ 风格的 string 和 C 风格 `\0` 结尾的字符串都可以很容易地转换为一个 Slice：
+
+```c++
+leveldb::Slice s1 = "hello";
+
+std::string str("world");
+leveldb::Slice s2 = str;
+```
+
+一个 Slice 也很容易转换回 C++ 风格的字符串：
+
+```c++
+std::string str = s1.ToString();
+assert(str == std::string("hello"));
+```
+
+但是，在使用 Slice 时要小心：<red>**要由调用者来确保 Slice 指向的外部字节数组的有效性；**</font>
+
+例如，下面的代码就有 bug ：
+
+```c++
+leveldb::Slice slice;
+if (...) {
+  std::string str = ...;
+  slice = str;
+}
+Use(slice);
+```
+
+**当 if 语句结束的时候，str 将会被销毁，Slice 的指向也随之消失，后面再用就会出问题！**
+
+<br/>
+
 ### **并发**
 
 <red>**对于 LevelDB 来说，一个数据库同时只能被一个进程打开：LevelDB 会从操作系统获取一把锁来防止多进程同时打开同一个数据库；**</font>
@@ -601,9 +811,90 @@ TEST(LevelDBDemo, Snapshot) {
 
 <br/>
 
+### **性能调优**
 
+LevelDB 提供了各种运行参数，可以通过修改 `include/leveldb/options.h` 中定义的类型的默认值来对 LevelDB 的性能进行调优；
 
+#### **Block 大小**
 
+LevelDB 把相邻的 keys 组织在同一个 block 中（具体见后续系列文章对 sstable 文件格式的描述），block 是数据在内存和持久化存储之间传输的基本单位；
+
+**默认情况下，未压缩的 block 大小大约为 4KB，而对于：**
+
+-   **经常需要批量扫描大量数据的应用可以把这个值调大；**
+-   **针对只做“单点读”的应用则可以将这个值调小一些；**
+
+**但是，没有证据表明该值小于 1KB 或者大于几个 MB 的时候性能会表现得更好；**
+
+<red>**另外要注意的是：使用较大的 block size，压缩效率会更高效；**</font>
+
+<br/>
+
+#### **关闭压缩**
+
+<red>**每一块 block 在写入持久化存储之前都会被单独压缩；**</font>
+
+**压缩默认是开启的，因为默认的压缩算法非常快，且对于不可压缩的数据会自动关闭压缩功能，极少有场景会需要完全关闭压缩功能，除非基准测试显示关闭压缩会显著改善性能；**
+
+此时可以按照下面的方式关闭压缩功能：
+
+```c++
+leveldb::Options options;
+options.compression = leveldb::kNoCompression;
+... leveldb::DB::Open(options, name, ...) ....
+```
+
+<br/>
+
+#### **缓存**
+
+数据库的内容存储在文件系统中的一组文件中，每个文件都存储了一系列压缩后的 blocks，如果 `options.block_cache` 不是 NULL，则可以缓存经常使用的已解压缩 block 内容：
+
+```c++
+#include "leveldb/cache.h"
+
+leveldb::Options options;
+options.block_cache = leveldb::NewLRUCache(100 * 1048576);  // 100MB cache
+leveldb::DB* db;
+leveldb::DB::Open(options, name, &db);
+... use the db ...
+delete db
+delete options.block_cache;
+```
+
+<red>**注意：在 cache 中保存的是未压缩的数据，因此应该根据应用所需数据大小来设置它的大小**</font>（已压缩数据的缓存工作是由操作系统的 buffer cache 或者用户自定义 `Env` 实现完成）；
+
+<red>**当执行一个大块数据读操作时，应用程序可能想要取消缓存功能：此时，读进来的大块数据就不会导致当前 cache 中的大部分数据被替换出去；**</font>
+
+这种情况下，可以提供一个单独的 iterator 来达到该目的：
+
+```c++
+leveldb::ReadOptions options;
+options.fill_cache = false;
+leveldb::Iterator* it = db->NewIterator(options);
+for (it->SeekToFirst(); it->Valid(); it->Next()) {
+  ...
+}
+```
+
+<br/>
+
+#### **Key 的布局**
+
+前面说过，磁盘传输和缓存的基本单位都是一个 block；而对于 key 的排列而言，相邻的 keys（已排序）总是在同一个 block 中；
+
+因此，应用可以通过将需要一起访问的 keys 放在一起，同时把不经常使用的 keys 放到一个独立的键空间区域来提升性能；
+
+例如，假设我们正基于 LevelDB 来实现一个简单的文件系统，而存储到这个文件系统的数据类型如下：
+
+```rust
+filename -> permission-bits, length, list of file_block_ids
+file_block_id -> data
+```
+
+则可以**给上面表示 filename 的 key 增加一个字符前缀，例如 `'/'`，然后给表示 file_block_id 的 key 增加另一个不同的前缀，例如 `'0'`；**
+
+这样，这些不同用途的 key 就具有了各自独立的键空间，扫描元数据时就不用读取和缓存大块文件内容数据了；
 
 <br/>
 
@@ -617,5 +908,8 @@ TEST(LevelDBDemo, Snapshot) {
 
 -   https://juejin.cn/post/6901257330524946445
 -   https://github.com/google/leveldb/issues/1074
+-   https://leveldb-handbook.readthedocs.io/zh/latest/index.html
+-   https://yuerblog.cc/wp-content/uploads/leveldb%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90.pdf
+-   https://github.com/balloonwj/CppGuide/blob/master/articles/leveldb%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/leveldb%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%901.md
 
 <br/>
