@@ -81,7 +81,7 @@ cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
 >   LeastSq MinimalLeastSq(const std::vector<int64_t>& n,
 >                          const std::vector<double>& time,
 >                          BigOFunc* fitting_curve) {
->   -  double sigma_gn = 0.0;
+>   - double sigma_gn = 0.0;
 >   + //  double sigma_gn = 0.0;
 >     double sigma_gn_squared = 0.0;
 >     double sigma_time = 0.0;
@@ -338,7 +338,7 @@ Put 方法用于写入一个 k-v；
 >
 >   异步写的缺点是：一旦机器崩溃可能会导致最后几个更新操作丢失；
 >
->   <red>**注意：如果仅仅是写进程崩溃（而非机器重启）不会造成任何损失，因为哪怕 sync 标识为 false，在进程退出之前，写操作也已经从进程内存推到了操作系统；**</font>
+>   <font color="#f00">**注意：如果仅仅是写进程崩溃（而非机器重启）不会造成任何损失，因为哪怕 sync 标识为 false，在进程退出之前，写操作也已经从进程内存推到了操作系统；**</font>
 >
 >   异步写通常可以安全使用，比如你要将大量的数据写入数据库，如果丢失了最后几个更新操作，也可以重做整个写过程；
 >
@@ -574,7 +574,7 @@ Read with no snapshots: snapshot-value-updated
 Read with snapshot: snapshot-value
 ```
 
-<red>**注意，当一个快照不再使用的时候，应该通过 `DB::ReleaseSnapshot` 接口进行释放；**</font>
+<font color="#f00">**注意，当一个快照不再使用的时候，应该通过 `DB::ReleaseSnapshot` 接口进行释放；**</font>
 
 <br/>
 
@@ -584,7 +584,7 @@ Read with snapshot: snapshot-value
 
 在 LevelDB 中，所有的数据都是顺序存储的，并且默认情况下的比较函数，是按照逐字节字典序比较；
 
-此外，<red>**LevelDB 还允许自定义比较函数，在首次打开数据库时传入！**</font>
+此外，<font color="#f00">**LevelDB 还允许自定义比较函数，在首次打开数据库时传入！**</font>
 
 自定义比较函数，只需要继承 `leveldb::Comparator` 然后定义相关逻辑即可；
 
@@ -734,7 +734,7 @@ Open a wrong comparator database: Invalid argument: leveldb.BytewiseComparator d
 
 #### **比较顺序的向后兼容性**
 
-<red>**比较器的 `Name()` 方法返回的结果在创建数据库时会被绑定到数据库上，后续每次打开都会进行检查：如果名称改变，则对 `leveldb::DB::Open` 的调用就会失败；**</font>
+<font color="#f00">**比较器的 `Name()` 方法返回的结果在创建数据库时会被绑定到数据库上，后续每次打开都会进行检查：如果名称改变，则对 `leveldb::DB::Open` 的调用就会失败；**</font>
 
 **因此，当且仅当在新的 key 格式和比较函数与已有的数据库不兼容而且已有数据不再被需要的时候，才能够修改比较器名称；总而言之，一个数据库只能对应一个比较器，而且比较器由名字唯一确定，一旦修改名称或比较器逻辑，数据库的操作逻辑均会出错！**
 
@@ -750,11 +750,124 @@ Open a wrong comparator database: Invalid argument: leveldb.BytewiseComparator d
 
 ### **过滤器（Filter）**
 
+考虑到 LevelDB 数据在磁盘上的组织形式，一次 `Get` 调用可能涉及多次磁盘的 IO 操作，因此可以配置 FilterPolicy 来大幅减少磁盘读次数；
 
+例如，启用 BloomFilter：
 
+```c++
+leveldb::Options options;
+// 设置启用基于布隆过滤器的过滤策略
+options.filter_policy = NewBloomFilterPolicy(10);
+leveldb::DB* db;
+// 用该设置打开数据库
+leveldb::DB::Open(options, "/tmp/test_db", &db);
+... use the database ...
+delete db;
+delete options.filter_policy;
+```
 
+上面的代码将一个布隆过滤器的过滤策略与数据库进行了关联，<font color="#f00">**如果数据集无法全部放入内存同时又存在大量随机读的应用应当设置一个过滤器策略！**</font>
 
+>   **基于布隆过滤器的过滤方式依赖于如下事实：**
+>
+>   在内存中保存每个 key 的部分位（在上面例子中是 10 位，因为我们传给 `NewBloomFilterPolicy` 的参数是 10），这个过滤器将会使得 Get() 调用中非必须的磁盘读操作大约减少 100 倍，每个 key 用于过滤器的位数增加将会进一步减少读磁盘次数，当然也会占用更多内存空间；
 
+<br/>
+
+此外，我们也可以自定义过滤器；
+
+需要注意的是：<font color="#f00">**如果你使用的是自定义的比较器，则应该确保你自定义的过滤器策略与你的比较器逻辑上兼容；**</font>
+
+举个例子：如果一个比较器在比较 key 的时候忽略结尾的空格，那么 `NewBloomFilterPolicy` 一定不能与此比较器共存；相反，应该提供一个自定义的过滤器策略，而且它也应该忽略 key 的尾部空格，例如：
+
+```c++
+class CustomFilterPolicy : public leveldb::FilterPolicy {
+  public:
+  explicit CustomFilterPolicy(int i)
+    : builtin_policy_(leveldb::NewBloomFilterPolicy(i)) {}
+  ~CustomFilterPolicy() override { delete builtin_policy_; }
+
+  const char* Name() const override { return "IgnoreTrailingSpacesFilter"; }
+
+  void CreateFilter(const leveldb::Slice* keys, int n,
+                    std::string* dst) const override {
+    // Use builtin bloom filter code after removing trailing spaces
+    std::vector<leveldb::Slice> trimmed(n);
+    int i;
+    for (i = 0; i < n; i++) {
+      trimmed[i] = RemoveTrailingSpaces(keys[i]);
+    }
+    return builtin_policy_->CreateFilter(&trimmed[i], n, dst);
+  }
+
+  bool KeyMayMatch(const leveldb::Slice& key,
+                   const leveldb::Slice& filter) const override {
+    // Use builtin bloom filter code after removing trailing spaces
+    return builtin_policy_->KeyMayMatch(RemoveTrailingSpaces(key), filter);
+  }
+
+  private:
+  static leveldb::Slice RemoveTrailingSpaces(leveldb::Slice s) {
+    std::string str = s.ToString();
+    const auto strBegin = str.find_first_not_of(' ');
+    if (strBegin == std::string::npos) return "";  // no content
+
+    const auto strEnd = str.find_last_not_of(' ');
+    const auto strRange = strEnd - strBegin + 1;
+
+    return str.substr(strBegin, strRange);
+  }
+
+  private:
+  const FilterPolicy* builtin_policy_;
+};
+```
+
+上面的自定义过滤器去除了前后的空格之后，再使用 BloomFilter 进行匹配；
+
+使用如下：
+
+```c++
+TEST(LevelDBDemo, Filter) {
+  leveldb::DB* db;
+  leveldb::Options options;
+  CustomFilterPolicy filter(100);
+  options.create_if_missing = true;
+  options.filter_policy = &filter;
+  leveldb::Status status = leveldb::DB::Open(options, "/tmp/filter-demo", &db);
+  ASSERT_TRUE(status.ok());
+
+  // populate the database
+  leveldb::Slice key1 = "hello";
+  leveldb::Slice key2 = " hello";
+  leveldb::Slice key3 = "hello ";
+  leveldb::Slice key4 = " hello ";
+  std::string val1 = "one";
+  std::string val2 = "two";
+  std::string val3 = "three";
+  std::string val4 = "four";
+  db->Put(leveldb::WriteOptions(), key1, val1);
+  db->Put(leveldb::WriteOptions(), key2, val2);
+  db->Put(leveldb::WriteOptions(), key3, val3);
+  db->Put(leveldb::WriteOptions(), key4, val4);
+
+  // iterate the database
+  leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    std::cout << it->key().ToString() << ": " << it->value().ToString()
+              << std::endl;
+  }
+  // hello: two
+  // hello : four
+  // hello: one
+  // hello : three
+  delete it;
+
+  delete db;
+}
+```
+
+当然也可以提供非基于布隆过滤器的过滤器策略，具体见 `leveldb/filter_policy.h`；
 
 <br/>
 
@@ -764,9 +877,9 @@ Open a wrong comparator database: Invalid argument: leveldb.BytewiseComparator d
 
 对于迭代器而言，`it->key()` 和 `it->value()` 调用返回的值是 `leveldb::Slice` 类型；
 
-熟悉 Go 的同学应该对 Slice 不陌生：Slice 是一个简单的数据结构，包含一个长度和一个指向外部字节数组的指针，<red>**返回一个 Slice 比直接返回一个 `std::string` 更高效，因为不需要隐式地拷贝大量的 keys 和 values；**</font>
+熟悉 Go 的同学应该对 Slice 不陌生：Slice 是一个简单的数据结构，包含一个长度和一个指向外部字节数组的指针，<font color="#f00">**返回一个 Slice 比直接返回一个 `std::string` 更高效，因为不需要隐式地拷贝大量的 keys 和 values；**</font>
 
-<red>**另外，LevelDB 中的方法不会返回以 `\0` 结尾的 C 风格的字符串，因为 LevelDB 中的 keys 和 values 允许包含 `\0` ；**</font>
+<font color="#f00">**另外，LevelDB 中的方法不会返回以 `\0` 结尾的 C 风格的字符串，因为 LevelDB 中的 keys 和 values 允许包含 `\0` ；**</font>
 
 C++ 风格的 string 和 C 风格 `\0` 结尾的字符串都可以很容易地转换为一个 Slice：
 
@@ -784,7 +897,7 @@ std::string str = s1.ToString();
 assert(str == std::string("hello"));
 ```
 
-但是，在使用 Slice 时要小心：<red>**要由调用者来确保 Slice 指向的外部字节数组的有效性；**</font>
+但是，在使用 Slice 时要小心：<font color="#f00">**要由调用者来确保 Slice 指向的外部字节数组的有效性；**</font>
 
 例如，下面的代码就有 bug ：
 
@@ -803,9 +916,9 @@ Use(slice);
 
 ### **并发**
 
-<red>**对于 LevelDB 来说，一个数据库同时只能被一个进程打开：LevelDB 会从操作系统获取一把锁来防止多进程同时打开同一个数据库；**</font>
+<font color="#f00">**对于 LevelDB 来说，一个数据库同时只能被一个进程打开：LevelDB 会从操作系统获取一把锁来防止多进程同时打开同一个数据库；**</font>
 
-<red>在单个进程中，同一个 leveldb::DB 对象则可以被多个并发线程安全地使用，不同的线程可以在**不需要任何外部同步原语**的情况下，写入、获取迭代器或者调用 `Get`（leveldb 实现会确保所需的同步）；</font>
+<font color="#f00">在单个进程中，同一个 leveldb::DB 对象则可以被多个并发线程安全地使用，不同的线程可以在**不需要任何外部同步原语**的情况下，写入、获取迭代器或者调用 `Get`（leveldb 实现会确保所需的同步）；</font>
 
 **但是其它对象，比如 `Iterator` 或者 `WriteBatch` 则需要外部自己提供同步保证，如果两个线程共享此类对象，需要使用自己的锁进行互斥访问；**
 
@@ -826,13 +939,13 @@ LevelDB 把相邻的 keys 组织在同一个 block 中（具体见后续系列�
 
 **但是，没有证据表明该值小于 1KB 或者大于几个 MB 的时候性能会表现得更好；**
 
-<red>**另外要注意的是：使用较大的 block size，压缩效率会更高效；**</font>
+<font color="#f00">**另外要注意的是：使用较大的 block size，压缩效率会更高效；**</font>
 
 <br/>
 
 #### **关闭压缩**
 
-<red>**每一块 block 在写入持久化存储之前都会被单独压缩；**</font>
+<font color="#f00">**每一块 block 在写入持久化存储之前都会被单独压缩；**</font>
 
 **压缩默认是开启的，因为默认的压缩算法非常快，且对于不可压缩的数据会自动关闭压缩功能，极少有场景会需要完全关闭压缩功能，除非基准测试显示关闭压缩会显著改善性能；**
 
@@ -862,9 +975,9 @@ delete db
 delete options.block_cache;
 ```
 
-<red>**注意：在 cache 中保存的是未压缩的数据，因此应该根据应用所需数据大小来设置它的大小**</font>（已压缩数据的缓存工作是由操作系统的 buffer cache 或者用户自定义 `Env` 实现完成）；
+<font color="#f00">**注意：在 cache 中保存的是未压缩的数据，因此应该根据应用所需数据大小来设置它的大小**</font>（已压缩数据的缓存工作是由操作系统的 buffer cache 或者用户自定义 `Env` 实现完成）；
 
-<red>**当执行一个大块数据读操作时，应用程序可能想要取消缓存功能：此时，读进来的大块数据就不会导致当前 cache 中的大部分数据被替换出去；**</font>
+<font color="#f00">**当执行一个大块数据读操作时，应用程序可能想要取消缓存功能：此时，读进来的大块数据就不会导致当前 cache 中的大部分数据被替换出去；**</font>
 
 这种情况下，可以提供一个单独的 iterator 来达到该目的：
 
@@ -895,6 +1008,76 @@ file_block_id -> data
 则可以**给上面表示 filename 的 key 增加一个字符前缀，例如 `'/'`，然后给表示 file_block_id 的 key 增加另一个不同的前缀，例如 `'0'`；**
 
 这样，这些不同用途的 key 就具有了各自独立的键空间，扫描元数据时就不用读取和缓存大块文件内容数据了；
+
+<br/>
+
+### **校验和（Checksum）**
+
+LevelDB 将校验和和它存储在文件系统中的所有数据进行关联，对于这些校验和，有两个独立的控制：
+
+-   `ReadOptions::verify_checksums`：可以设置为 true，以**强制对所有从文件系统读取的数据进行校验；**默认为 false，即不会进行这样的校验；
+-   `Options::paranoid_checks`：在数据库打开之前设置为 true ，以使得**一旦数据库检测到数据损毁则立即报错退出**；该配置默认是关闭，即持久化存储在部分损坏时数据库也能继续使用；
+
+<font color="#f00">**注：如果数据库损坏了（当开启 Options::paranoid_checks 的时候可能就打不开了），`leveldb::RepairDB()` 函数可以用于对尽可能多的数据进行修复；**</font>
+
+<br/>
+
+### **近似空间大小**
+
+`GetApproximateSizes` 方法用于获取一个或多个键区间占据的文件系统近似大小（单位, 字节）；
+
+例如：
+
+```c++
+TEST(LevelDBDemo, GetApproximateSizes) {
+  leveldb::DB* db = init_db(get_options());
+
+  // GetApproximateSizes
+  leveldb::Range ranges[2];
+  ranges[0] = leveldb::Range("a", "c");
+  ranges[1] = leveldb::Range("x", "z");
+  uint64_t sizes[2];
+  db->GetApproximateSizes(ranges, 2, sizes);
+
+  std::cout << "sizes[0]: " << sizes[0] << ", sizes[1]: " << sizes[1]
+            << std::endl;
+
+  delete db;
+}
+```
+
+上述代码结果是，`size[0]` 保存 `[a..c)` 区间对应的文件系统大致字节数。`size[1]` 保存 `[x..z)` 键区间对应的文件系统大致字节数；
+
+<br/>
+
+### **环境变量**
+
+<font color="#f00">**由 LevelDB 发起的全部文件操作以及对应的操作系统调用，最后都会被路由给一个 `leveldb::Env` 对象；**</font>
+
+库使用者也可以提供自己的 Env 实现以达到更好的控制；
+
+比如：如果应用程序想要针对 LevelDB 的文件 IO 引入一个人工延迟以限制 LevelDB 对同一系统中其它应用的影响：
+
+```c++
+// 定制自己的 Env 
+class SlowEnv : public leveldb::Env {
+  ... implementation of the Env interface ...
+};
+
+SlowEnv env;
+leveldb::Options options;
+// 用定制的 Env 打开数据库
+options.env = &env;
+Status s = leveldb::DB::Open(options, ...);
+```
+
+<br/>
+
+### **可移植**
+
+如果某个特定平台提供 `leveldb/port/port.h` 导出的类型/方法/函数实现，那么 LevelDB 可以被移植到该平台上，更多细节见 `leveldb/port/port_example.h`；
+
+另外，新平台可能还需要一个新的默认的 leveldb::Env 实现。具体可参考 `leveldb/util/env_posix.h` 实现；
 
 <br/>
 
