@@ -1,5 +1,5 @@
 ---
-title: 使用Rust实现跳表LruCache
+title: 使用Rust实现链表LruCache
 toc: true
 cover: 'https://img.paulzzh.tech/touhou/random?8'
 date: 2022-12-20 15:06:00
@@ -25,7 +25,7 @@ LRU(Least Recently Used) 是一种使用广泛的缓存数据替换策略，目�
 
 <!--more-->
 
-# **使用Rust实现跳表LruCache**
+# **使用Rust实现链表LruCache**
 
 ## **LRU算法**
 
