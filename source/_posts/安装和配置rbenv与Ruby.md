@@ -12,7 +12,7 @@ description: 本文介绍了如何安装和配置rbenv和Ruby；
 
 源代码：
 
--   https://github.com/rbenv/rbenv
+-   https://github.com/JasonkayZK/ruby-learn
 
 <br/>
 
@@ -293,11 +293,11 @@ eval "$(rbenv init -)"
 
 <br/>
 
-# **附录**
+# **附录 rm -rf `rbenv root`**
 
 源代码：
 
--   https://github.com/rbenv/rbenv
+-   https://github.com/JasonkayZK/ruby-learn
 
 参考文章：
 
