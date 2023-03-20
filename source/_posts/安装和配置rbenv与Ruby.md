@@ -235,7 +235,7 @@ $ rbenv rehash
 
 **通过执行 `rehash` 子命令，可以确保每一次已安装的 Ruby 版本中在 rbenv 目录 shim 能匹配正确的 Ruby 命令；**
 
-<red>**因此，每次你安装了新的 Ruby 版本或者提供命令行命令的 Gem（比如 Rails），都应当执行 `rbenv rehash`！**</font>
+<font color="#f00">**因此，每次你安装了新的 Ruby 版本或者提供命令行命令的 Gem（比如 Rails），都应当执行 `rbenv rehash`！**</font>
 
 ```
 rbenv works by creating a directory of shims, which point to the files used by the Ruby version that’s currently enabled. Through the rehash sub-command, rbenv maintains shims in that directory to match every Ruby command across every installed version of Ruby on your server. Whenever you install a new version of Ruby or a gem that provides commands as Rails does, you should run the following:
