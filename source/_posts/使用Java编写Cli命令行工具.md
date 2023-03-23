@@ -19,6 +19,11 @@ description: 兜兜转转，最近又用回了Java。最近在写mini-redis的Ja
 -   https://github.com/remkop/picocli
 -   https://github.com/JasonkayZK/java-all/tree/main/cli/picocli
 
+系列文章：
+
+-   [《使用Java编写Cli命令行工具》](https://jasonkayzk.github.io/2023/03/20/使用Java编写Cli命令行工具/)
+-   [《GraalVM使用初体验》](https://jasonkayzk.github.io/2023/03/20/GraalVM使用初体验/)
+
 <br/>
 
 <!--more-->
@@ -351,6 +356,11 @@ $ java -jar target/a-checksum-1.0-SNAPSHOT.jar \
 
 -   https://github.com/remkop/picocli
 -   https://github.com/JasonkayZK/java-all/tree/main/cli/picocli
+
+系列文章：
+
+-   [《使用Java编写Cli命令行工具》](https://jasonkayzk.github.io/2023/03/20/使用Java编写Cli命令行工具/)
+-   [《GraalVM使用初体验》](https://jasonkayzk.github.io/2023/03/20/GraalVM使用初体验/)
 
 参考文章：
 
