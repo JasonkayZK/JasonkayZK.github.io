@@ -89,7 +89,7 @@ swagger:
   version: 1.0
   author: Jasonkay
   url: https://github.com/JasonkayZK/EZShare
-  email: 271226192@qq.com
+  email: jasonkayzk@gmail.com
   license: Apache 2.0
   licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.html
   exclude-path: error, /ops/**

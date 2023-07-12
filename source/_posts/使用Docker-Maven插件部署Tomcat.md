@@ -52,7 +52,7 @@ docker pull tomcat:9.0.30-jdk11
                 <configuration>
                     <imageName>image-name</imageName>
                     <baseImage>tomcat:9.0.30-jdk11</baseImage>
-                    <maintainer>Jasonkay 271226192@qq.com</maintainer>
+                    <maintainer>Jasonkay jasonkayzk@gmail.com</maintainer>
                     <resources>
                         <resource>
                             <targetPath>/usr/local/tomcat/webapps</targetPath>

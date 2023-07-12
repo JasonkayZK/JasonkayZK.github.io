@@ -43,7 +43,7 @@ description:  最近写的项目都用到了Swagger生成文档, 所以本篇总
         <developer>
             <name>Jasonkay</name>
             <url>https://github.com/JasonkayZK</url>
-            <email>271226192@qq.com</email>
+            <email>jasonkayzk@gmail.com</email>
         </developer>
     </developers>
 
@@ -207,7 +207,7 @@ public class SwaggerConfig {
         return new ApiInfoBuilder()
             .title("Swagger demo")
             .description("A demo for swagger bind with spring boot")
-            .contact(new Contact("Jasonkay", "https://jasonkayzk.github.io/", "271226192@qq.com"))
+            .contact(new Contact("Jasonkay", "https://jasonkayzk.github.io/", "jasonkayzk@gmail.com"))
             .termsOfServiceUrl("https://jasonkayzk.github.io/")
             .version("1.0")
             .build();

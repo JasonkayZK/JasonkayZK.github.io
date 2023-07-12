@@ -128,7 +128,7 @@ git version 2.15.1
 
 ``` bash
 git config --global user.name "zk"
-git config --global user.email "271226192@qq.com"
+git config --global user.email "jasonkayzk@gmail.com"
 ```
 
 验证配置:
@@ -146,7 +146,7 @@ user.email=root@linuxidc.net
 通过命令:
 
 ```bash
-ssh-keygen -t rsa -C "271226192@qq.com"
+ssh-keygen -t rsa -C "jasonkayzk@gmail.com"
 ```
 
 一路回车即可生成一个key, **当然邮箱填写你自己的!**

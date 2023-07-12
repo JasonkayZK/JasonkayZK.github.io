@@ -122,7 +122,7 @@ package.json中的内容如下所示：
   "description": "A no-login tool to download picture from Weibo",
   "author": {
     "name": "jasonkay",
-    "email": "271226192@qq.com",
+    "email": "jasonkayzk@gmail.com",
     "url": "https://jasonkayzk.github.io/"
   }
 }

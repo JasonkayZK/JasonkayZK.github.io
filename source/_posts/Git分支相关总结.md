@@ -304,13 +304,13 @@ b8eb76a (HEAD -> master, test) HEAD@{2}: commit: commit: test
 ```bash
 zk@jasonkay:~/test$ git log
 commit b8eb76a547ea6e43a5d25bdb3bb603debd861e18 (HEAD -> master)
-Author: zk <271226192@qq.com>
+Author: zk <jasonkayzk@gmail.com>
 Date:   Tue Oct 22 19:35:03 2019 +0800
 
     commit: test
 
 commit 8fc21ae52d87b63a53b43f4ebcf676550fb5d2ae
-Author: zk <271226192@qq.com>
+Author: zk <jasonkayzk@gmail.com>
 Date:   Tue Oct 22 17:31:37 2019 +0800
 
     commit: test_master.txt
@@ -335,13 +335,13 @@ Date:   Tue Oct 22 17:31:37 2019 +0800
 zk@jasonkay:~/test$ git log --graph
 
 * commit b8eb76a547ea6e43a5d25bdb3bb603debd861e18 (HEAD -> master)
-| Author: zk <271226192@qq.com>
+| Author: zk <jasonkayzk@gmail.com>
 | Date:   Tue Oct 22 19:35:03 2019 +0800
 | 
 |     commit: test
 | 
 * commit 8fc21ae52d87b63a53b43f4ebcf676550fb5d2ae
-  Author: zk <271226192@qq.com>
+  Author: zk <jasonkayzk@gmail.com>
   Date:   Tue Oct 22 17:31:37 2019 +0800
   
       commit: test_master.txt
