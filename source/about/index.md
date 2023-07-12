@@ -28,6 +28,7 @@ cover: https://raw.fastgit.org/JasonkayZK/blog_static/master/images/about.jpg
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2023-07-12 网站评论不再依赖LeanCloud，改用utterance！**</font>
 *   <font color="#ff0000">**2022-11-25 增加[文章归档](/archive)页面**</font>
 *   <font color="#ff0000">**2022-09-01 博客UV突破20W、PV突破30W！♥**</font>
 *   <font color="#ff0000">**2022-09-01 博客三周年，感谢大家的支持！🎉🎉🎉**</font>
