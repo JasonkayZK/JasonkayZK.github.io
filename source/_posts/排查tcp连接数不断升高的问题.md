@@ -26,7 +26,7 @@ description: 最近发生了一件“怪事”，我的服务器TCP连接数每�
 
 出现的问题如下，可以看到 TCP 连接数不停的上升；
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/blog_tcp.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/blog_tcp.png)
 
 最开始以为只是 Redis 的连接一直没有释放，后面发现原来是 MongoDB 的连接也一直没有释放！
 

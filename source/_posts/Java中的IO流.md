@@ -61,19 +61,19 @@ Java的IO模型使用Decorator(装饰者)模式，按功能划分Stream，所以
 
 **① InputStream: 字节输入流**
 
-![InputStream.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/InputStream.png)
+![InputStream.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/InputStream.png)
 
 **② OutputStream：字节输出流**
 
-![OutputStream.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/OutputStream.png)
+![OutputStream.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/OutputStream.png)
 
 ③ Reader：字符输入流
 
-![Reader.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Reader.png)
+![Reader.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Reader.png)
 
 ④ Writer：字符输出流
 
-![Writer.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Writer.png)
+![Writer.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Writer.png)
 
 四个基本抽象流的关系如下表:
 
@@ -150,7 +150,7 @@ Java的IO模型使用Decorator(装饰者)模式，按功能划分Stream，所以
 
 整个IO流的结构如下图: 
 
-![整个IO流的结构.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/整个IO流的结构.png)
+![整个IO流的结构.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/整个IO流的结构.png)
 
 <br/>
 
@@ -158,7 +158,7 @@ Java的IO模型使用Decorator(装饰者)模式，按功能划分Stream，所以
 
 **① 输入字节流InputStream**
 
-![InputStream.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/InputStream.png)
+![InputStream.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/InputStream.png)
 
 -   **ByteArrayInputStream：**
 
@@ -214,7 +214,7 @@ Java的IO模型使用Decorator(装饰者)模式，按功能划分Stream，所以
 
 **② 输出字节流OutputStream**
 
-![OutputStream.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/OutputStream.png)
+![OutputStream.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/OutputStream.png)
 
 OutputStream 是**所有的输出字节流的父类**，它是一个抽象类
 
@@ -236,7 +236,7 @@ OutputStream 是**所有的输出字节流的父类**，它是一个抽象类
 
 **③ 字符输入流Reader**
 
-![Reader.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Reader.png)
+![Reader.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Reader.png)
 
 在上面的继承关系图中可以看出：
 
@@ -274,7 +274,7 @@ OutputStream 是**所有的输出字节流的父类**，它是一个抽象类
 
 **④ 字符输出流Writer**
 
-![Writer.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Writer.png)
+![Writer.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Writer.png)
 
 在上面的关系图中可以看出：
 
@@ -404,7 +404,7 @@ BufferedReader, BufferedWriter,BufferedInputStream, BufferedOutputsStream，都�
 
 装饰者中拥有被装饰者的实例，然后有什么具体的装饰我们都另写一个类来继承该装饰者，当我们需要该装饰时，就new出该类来，然后将其被装饰者当作参数传递进去(类似于代理模式)
 
-![装饰者模式.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/装饰者模式.png)
+![装饰者模式.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/装饰者模式.png)
 
 现在来看看一个具体的实例: 我们需要制作一份鸡腿堡，流程是怎样的呢？
 
@@ -416,7 +416,7 @@ BufferedReader, BufferedWriter,BufferedInputStream, BufferedOutputsStream，都�
 
 换一种汉堡，也不需要改源码，什么也不需要, 只要将汉堡传入不同的构造器即可
 
-![装饰者模式2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/装饰者模式2.png)
+![装饰者模式2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/装饰者模式2.png)
 
 <br/>
 

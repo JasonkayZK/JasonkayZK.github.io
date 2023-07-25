@@ -34,7 +34,7 @@ description: 本文为CAP理论学习的开篇，主要是走马观花地总结�
 
 根据定理，分布式系统**只能满足三项中的两项而不可能满足全部三项；**
 
-![cap-1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/cap-1.png)
+![cap-1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cap-1.png)
 
 <br/>
 
@@ -103,7 +103,7 @@ description: 本文为CAP理论学习的开篇，主要是走马观花地总结�
 
 在一写的情况下（W=1）：
 
-![cap-2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/cap-2.png)
+![cap-2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cap-2.png)
 
 由于只要有一个副本写入成功即可返回成功；
 
@@ -115,7 +115,7 @@ description: 本文为CAP理论学习的开篇，主要是走马观花地总结�
 
 在三写的情况下（W=3）：
 
-![cap-3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/cap-3.png)
+![cap-3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cap-3.png)
 
 此方案要求三个副本都要写入成功才可以返回成功；
 

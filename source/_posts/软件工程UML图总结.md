@@ -141,7 +141,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 例如：一个新闻网站的业务用例图如下：
 
-![新闻网站的业务用例.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/新闻网站的业务用例.png)
+![新闻网站的业务用例.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/新闻网站的业务用例.png)
 
 
 
@@ -170,7 +170,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 >   例如：老虎是动物的一种，即有老虎的特性也有动物的共性		
 
-![泛化.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/泛化.png)
+![泛化.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/泛化.png)
 
 
 
@@ -180,7 +180,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 【实现关系】：是一种<font color="#ff0000">类与接口的关系，表示类是接口所有特征和行为的实现</font>
 
-![实现.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/实现.png)
+![实现.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/实现.png)
 
 
 
@@ -197,7 +197,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 【代码体现】：<font color="#ff0000">成员变量</font>
 
-![关联.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/关联.png)
+![关联.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/关联.png)
 
 
 
@@ -213,7 +213,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 【代码体现】: <font color="#ff0000">成员变量</font>
 
-![聚合.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/聚合.png)
+![聚合.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/聚合.png)
 
 
 
@@ -231,7 +231,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 【箭头及指向】：<font color="#ff0000">带实心菱形的实线，菱形指向整体</font>
 
-![组合.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/组合.png)
+![组合.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/组合.png)
 
 
 
@@ -245,7 +245,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 【箭头及指向】：<font color="#ff0000">带箭头的虚线，指向被使用者</font>
 
-![依赖.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/依赖.png)
+![依赖.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/依赖.png)
 
 
 
@@ -255,7 +255,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 如下图: 一个工程中常见的UML类图
 
-![各种类图关系.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/各种类图关系.png)
+![各种类图关系.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/各种类图关系.png)
 
 
 
@@ -271,7 +271,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#ff0000">对象图可以被看作是类图在某一时刻的实例</font>
 
-![对象图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/对象图.jpg)
+![对象图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/对象图.jpg)
 
 
 
@@ -297,7 +297,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 >   它可以用来对业务过程、工作流建模，也可以对用例实现甚至是程序实现来建模
 
-![活动图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/活动图.jpg)
+![活动图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/活动图.jpg)
 
 <br/>
 
@@ -305,7 +305,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#0000ff">泳道表明每个活动是由哪些人或哪些部门负责完成</font>
 
-![带泳道的活动图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/带泳道的活动图.jpg)
+![带泳道的活动图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/带泳道的活动图.jpg)
 
 ##### 5.2 带对象流的活动图
 
@@ -313,7 +313,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#ff0000">对象流用带有箭头的虚线表示</font>
 
-![带对象流的活动图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/带对象流的活动图.jpg)
+![带对象流的活动图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/带对象流的活动图.jpg)
 
 
 
@@ -327,7 +327,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#0000ff">状态图是对[类图](https://baike.baidu.com/item/类图)的补充, 是一种由状态、变迁、事件和活动组成的状态机，用来描述类的对象所有可能的状态以及时间发生时状态的转移条件</font>
 
-![状态图.gif](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/状态图.gif)
+![状态图.gif](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/状态图.gif)
 
 
 
@@ -341,7 +341,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 序列图的主要用途是把用例表达的需求，转化为进一步、更加正式层次的精细表达。用例常常被细化为一个或者更多的序列图。同时序列图更有效地描述如何分配各个类的职责以及各类具有相应职责的原因。
 
-![序列图-时序图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/序列图-时序图.jpg)
+![序列图-时序图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/序列图-时序图.jpg)
 
 <br/>
 
@@ -353,27 +353,27 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#ff0000">生命线名称可带下划线, 当使用下划线时，意味着序列图中的生命线代表一个类的特定实例</font>
 
-![生命线.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/生命线.png)
+![生命线.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/生命线.png)
 
 ##### 7.2 同步消息
 
 同步等待消息
 
-![同步消息.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/同步消息.png)
+![同步消息.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/同步消息.png)
 
 ##### 7.3 异步消息
 
 异步发送消息，不需等待
 
-![异步消息.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/异步消息.png)
+![异步消息.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/异步消息.png)
 
 ##### 7.4 注释
 
-![注释.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/注释.png)
+![注释.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/注释.png)
 
 ##### 7.5 约束
 
-![约束.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/约束.png)
+![约束.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/约束.png)
 
 ##### 7.6 组合
 
@@ -391,7 +391,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 <font color="#ff0000">如果强调时间和顺序，则使用序列图；如果强调上下级关系，则选择协作图；这两种图合称为交互图</font>
 
-![协作图.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/协作图.png)
+![协作图.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/协作图.png)
 
 
 
@@ -403,7 +403,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 其中，<font color="#ff0000">构建图之间的关系表现为依赖关系，定义的类或接口与类之间的关系表现为依赖关系或实现关系</font>
 
-![构件图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/构件图.jpg)
+![构件图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/构件图.jpg)
 
 
 
@@ -419,7 +419,7 @@ UML是在开发阶段，说明、可视化、构建和书写一个[面向对象]
 
 >   例如计算机和设备，以及它们之间是如何连接的。[部署图](https://baike.baidu.com/item/部署图)的使用者是开发人员、系统集成人员和测试人员。
 
-![部署图.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/部署图.jpg)
+![部署图.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/部署图.jpg)
 
 
 
@@ -473,7 +473,7 @@ UML图是软件工程的组成部分，软件工程从宏观的角度保证了�
 
 　　如下图，在软件的各个开发阶段需要的UML图
 
-![UML与软件工程.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/UML与软件工程.png)
+![UML与软件工程.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/UML与软件工程.png)
 
 
 

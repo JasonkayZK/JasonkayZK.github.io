@@ -183,7 +183,7 @@ GET和POST还有一个重大区别:  <font color="#ff0000">GET产生一个TCP数
 
 Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层, 如下图所示
 
-![Servlet架构.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Servlet架构.png)
+![Servlet架构.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Servlet架构.png)
 
 使用 Servlet，可以收集来自网页表单的用户输入，呈现来自数据库或者其他源的记录，还可以动态创建网页
 
@@ -246,7 +246,7 @@ destroy() 方法可以让 Servlet 关闭数据库连接、停止后台线程、�
 -   Servlet 容器在调用 service() 方法之前加载 Servlet
 -   然后 Servlet 容器处理由多个线程产生的多个请求，每个线程执行一个单一的 Servlet 实例的 service() 方法
 
-![Servlet生命周期方案.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Servlet生命周期方案.png)
+![Servlet生命周期方案.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Servlet生命周期方案.png)
 
 <br/>
 

@@ -32,7 +32,7 @@ postman 的 script 主要分成两类，一类是 `Pre-Request Scripts`，在发
 
 Collection/Folder/Request 都可以定义自己的 `Pre-Request Scripts` 和 `Tests`，这些 `Scripts` 执行顺序如下：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script1.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script1.png)
 
 上一级的测试作用于子级所有的请求，也就是说我们可以在 Collection 的 `Test Scripts` 中定义一个测试用例，这会对这个 Collection 下的所有请求都有效，都会验证这个测试是否有效
 
@@ -44,19 +44,19 @@ Collection/Folder/Request 都可以定义自己的 `Pre-Request Scripts` 和 `Te
 
 postman 是基于 nodejs 的，你可以直接使用 `console.log` 来记录一些日志，通过 postman console 来查看，在左上角的菜单 `View` 下有一个 `Show Postman Console`
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script2.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script2.png)
 
 我们在请求的 `Pre-Scripts` 里输出一条日志，然后发送请求
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script3.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script3.png)
 
 这里的 `pm.variables.set("phone","")` 是设置 phone 这一参数为空字符串，由下图可以看出，phone 这一变量在发送请求的时候会被替换成空字符串
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script4.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script4.png)
 
 查看 postman console
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script5.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script5.png)
 
 可以看到我们在上面输出的日志已经输出到 postman console 了；
 
@@ -72,7 +72,7 @@ postman 支持的变量分几个层级，
 -   data(数据文件中的变量值）
 -   local
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/postman_script6.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/postman_script6.png)
 
 变量优化级：
 

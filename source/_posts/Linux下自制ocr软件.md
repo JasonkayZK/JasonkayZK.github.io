@@ -128,7 +128,7 @@ exit
 
 打开系统设置，拉到底部，点击`+`；
 
-![ubuntu_settings.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/ubuntu_settings.png)
+![ubuntu_settings.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ubuntu_settings.png)
 
 创建快捷键：
 
@@ -137,7 +137,7 @@ exit
 
 <font color="#f00">**注意bash后面有一个空格！**</font>
 
-![ubuntu_settings_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/ubuntu_settings_2.png)
+![ubuntu_settings_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ubuntu_settings_2.png)
 
 <br/>
 

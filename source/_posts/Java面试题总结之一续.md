@@ -22,7 +22,7 @@ description: 这些题是前段时间一位同学在阿里云面试的时候，�
 
 在Java中堆被划分为新生代和旧生代，新生代又被进一步划分为Eden和Survivor区，最后Survivor由FromSpace和ToSpace组成，结构图如下所示:
 
-![Java堆内存分代.jpeg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Java堆内存分代.jpeg)
+![Java堆内存分代.jpeg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Java堆内存分代.jpeg)
 
 **新生代**
 
@@ -56,7 +56,7 @@ description: 这些题是前段时间一位同学在阿里云面试的时候，�
 
 标记阶段的任务是标记出所有需要被回收的对象，清除阶段就是回收被标记的对象所占用的空间。具体过程如下图所示：
 
-![标记清除算法.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/标记清除算法.jpg)
+![标记清除算法.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/标记清除算法.jpg)
 
 从图中可以很容易看出标记-清除算法实现起来比较容易，但是有一个比较严重的问题就是容易产生内存碎片，碎片太多可能会导致后续过程中需要为大对象分配空间时无法找到足够的空间而提前触发新的一次垃圾收集动作
 
@@ -66,7 +66,7 @@ description: 这些题是前段时间一位同学在阿里云面试的时候，�
 
 为了解决Mark-Sweep算法的缺陷，Copying算法就被提了出来。它将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用的内存空间一次清理掉，这样一来就不容易出现内存碎片的问题。具体过程如下图所示:
 
-![复制算法.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/复制算法.jpg)
+![复制算法.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/复制算法.jpg)
 
 这种算法虽然实现简单，运行高效且不容易产生内存碎片，但是却对内存空间的使用做出了高昂的代价，因为能够使用的内存缩减到原来的一半。很显然，Copying算法的效率跟存活对象的数目多少有很大的关系，如果存活对象很多，那么Copying算法的效率将会大大降低
 
@@ -76,7 +76,7 @@ description: 这些题是前段时间一位同学在阿里云面试的时候，�
 
 为了解决Copying算法的缺陷，充分利用内存空间，提出了Mark-Compact算法。该算法标记阶段和Mark-Sweep一样，但是在完成标记之后，它不是直接清理可回收对象，而是将存活对象都向一端移动，然后清理掉端边界以外的内存。具体过程如下图所示：
 
-![标记整理算法.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/标记整理算法.jpg)
+![标记整理算法.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/标记整理算法.jpg)
 
 <br/>
 
@@ -165,7 +165,7 @@ ZGC现在还只能在MacOS和Linux使用, 尚在试验中. 与ZGC相关的介绍
 
 回答:如图所示
 
-![主从架构.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/主从架构.jpg)
+![主从架构.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/主从架构.jpg)
 
 主库有一个`log dump`线程，将`binlog`传给从库
 
@@ -582,7 +582,7 @@ upstream nodes {
 
 PTP点对点: 使用queue作为通信载体
 
-![点对点.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/点对点.png)
+![点对点.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/点对点.png)
 
 说明:
 
@@ -592,7 +592,7 @@ PTP点对点: 使用queue作为通信载体
 
 Pub/Sub发布订阅(广播): 使用topic作为通信载体
 
-![发布订阅.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/发布订阅.png)
+![发布订阅.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/发布订阅.png)
 
 说明:
 

@@ -43,7 +43,7 @@ Skiplist是一种数据结构，它允许快速查询一个有序连续元素的
 
 首先，让我们先回顾一下链表：
 
-![img](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//skiplist-1.jpg)
+![img](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-1.jpg)
 
 上图是一个有序链表，在链表中的查找、插入以及删除操作的时间复杂度均为O(N)；
 
@@ -53,7 +53,7 @@ Skiplist是一种数据结构，它允许快速查询一个有序连续元素的
 
 <font color="#f00">**具体的查找方法是：从左上角的节点出发，向右考察每个节点，如果右边节点比目标值小， 则继续向右，否则，进入下一层继续，直到最底层；**</font>
 
-![img](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//skiplist-2.jpg)
+![img](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-2.jpg)
 
 沿着这一思路，再每隔一个节点，搭一条线， 此时，查找一个元素最多需要考察 (n/4)+2 个节点！
 
@@ -61,7 +61,7 @@ Skiplist是一种数据结构，它允许快速查询一个有序连续元素的
 
 直到，没有节点可以继续盖楼；
 
-![img](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//skiplist-3.jpg)
+![img](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-3.jpg)
 
 在 n 足够大的时候，考察次数 `2^−k+k` 近似为 k ，即 log(n)， 所以在这个思路下，查找的时间复杂度，从 O(n) 降低为了 O(logn)；
 
@@ -75,7 +75,7 @@ Skiplist是一种数据结构，它允许快速查询一个有序连续元素的
 
 在实际实现时，跳表的结构更像是下面这样的：
 
-![image-20221219163705827](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//skiplist-4.png)
+![image-20221219163705827](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-4.png)
 
 **跳表中的节点 `Node` 除了存储元素值 `e` 以外，还要存储一个数组 `Node[] next` 来保存索引信息；**
 
@@ -118,7 +118,7 @@ private int generateRandomLevel() {
 
 那时，查找一个元素的时间将退化为 O(n)！
 
-![img](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//skiplist-5.jpg)
+![img](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-5.jpg)
 
 <br/>
 

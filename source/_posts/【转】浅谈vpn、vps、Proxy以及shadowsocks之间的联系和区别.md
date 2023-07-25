@@ -179,7 +179,7 @@ Shdadowsocks最初的版本是由clowwindy使用Python实现的，所以clowwind
 
 而跟进速度最快的就是我上面说的libev版：无论是[SIP007](https://github.com/shadowsocks/shadowsocks-org/issues/42)确认的ADEA Ciphers（一种同时进行认证和加密的算法），还是[SIP003](https://github.com/shadowsocks/shadowsocks-org/issues/28)引进的simple-obfs（tor开发的一种混淆插件），shadowsocks-libev都是最早引入自己软件的；
 
-![shadowsocks_version](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/shadowsocks_version.jpeg)
+![shadowsocks_version](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/shadowsocks_version.jpeg)
 
 上表是我从shadowsocks官网上直接搬下来的，显示了目前各版本的shadowsocks对协议新特性的支持情况；
 

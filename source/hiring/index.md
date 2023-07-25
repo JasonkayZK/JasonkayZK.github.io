@@ -46,7 +46,7 @@ date: 2020-09-26 19:46:49
 
 **Wechat(ID：z271226192)：**
 
- <img src="https://raw.fastgit.org/JasonkayZK/blog_static/master/images/wechat_add.jpg" width = "376" height = "487" alt="wechat_add.jpg" align="center" />
+ <img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/wechat_add.jpg" width = "376" height = "487" alt="wechat_add.jpg" align="center" />
 
 <br/>
 

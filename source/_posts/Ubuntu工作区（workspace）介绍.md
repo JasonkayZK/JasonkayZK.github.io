@@ -47,7 +47,7 @@ sudo apt-get install gnome-tweaks
 
 如下图所示：
 
-![ubuntu_workspace_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/ubuntu_workspace_1.png)
+![ubuntu_workspace_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ubuntu_workspace_1.png)
 
 **要添加工作区，请将窗口从现有工作区拖放到工作区选择器中的空工作区中；现在，此工作空间包含您放置的窗口，并且在其下方将出现一个新的空工作空间；**
 
