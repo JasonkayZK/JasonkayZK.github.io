@@ -32,7 +32,7 @@ BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用�
 
 同时，由于存储模块和其他模块耦合较少，因此可以将其抽象为一个专用的数据库组件，即：**存储引擎**；
 
-![image-20221105121651187](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-1.png)
+![image-20221105121651187](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-1.png)
 
 目前，很多数据库都支持可插拔的存储引擎，例如：MySQL支持：InnoDB、MyISAM、Memory、基于RocksDB的MyRocks等；
 
@@ -56,7 +56,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 由于存储引擎是基于文件系统的，因此存储引擎是将一条条数据转换为具体的文件进行存储；
 
-![image-20221105122636705](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-2.png)
+![image-20221105122636705](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-2.png)
 
 >   **很多数据库的 /data 目录下就存储有数据文件；**
 
@@ -79,7 +79,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 <br/>
 
-![image-20221105122751344](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-3.png)
+![image-20221105122751344](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-3.png)
 
 **索引组织表：**
 
@@ -125,7 +125,7 @@ BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞�
 
 如下图所示；
 
-![image-20221105131721712](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-4.png)
+![image-20221105131721712](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-4.png)
 
 <br/>
 
@@ -183,7 +183,7 @@ BTree 作为 In-place update 模式的存储结构，在早期机械硬盘结构
 
 我们有那么多的数据结构，例如：数组、链表、Hash表等，为什么 BTree 或 LSM-Tree 能够作为存储结构呢？
 
-![image-20221105160429281](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-5.png)
+![image-20221105160429281](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-5.png)
 
 但是大部分都不适合作为磁盘上的存储结构，这需要考虑一下存储结构需要具有的特性：
 
@@ -211,7 +211,7 @@ BTree 作为 In-place update 模式的存储结构，在早期机械硬盘结构
 
 如下图所示：
 
-![image-20221105172421905](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-6.png)
+![image-20221105172421905](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-6.png)
 
 BTree 是一个以页为单位组织的；
 
@@ -229,7 +229,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 所以，如果我们想要保证出现 SMO 操作时读写安全的话，就需要对有可能受到 SMO 操作影响的一整条链上所有节点加锁，如下图所示；
 
-![image-20221105194306300](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-7.png)
+![image-20221105194306300](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-7.png)
 
 **总之，虽然 BTree 有一定的并发能力，但是由于 SMO 的存在使得 BTree 的性能并不高，勉强满足并发要求，但是有很大的优化空间；**
 
@@ -241,7 +241,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 假设都以锁机制来控制并发，上面两种机制对应的锁分别称为：Lock 和 Latch；
 
-![image-20221105200353910](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-8.png)
+![image-20221105200353910](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-8.png)
 
 其中：
 
@@ -256,7 +256,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 此时，为了防止在事务进行提交之前，存在其他别的事务读到这行修改后未提交的数据，此时需要对数据增加 Lock；
 
-![image-20221105195251773](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-10.png)
+![image-20221105195251773](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-10.png)
 
 <font color="#f00">**虽然 Latch 锁掉整个页数据，而 Lock 仅仅锁掉单行数据；**</font>
 
@@ -272,7 +272,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 虽然 Latch 的持续时间很短，但是他也会严重影响数据库性能！
 
-![image-20221105200444258](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-11.png)
+![image-20221105200444258](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-11.png)
 
 如上图所示为 PolarDB 在优化 InnoDB B+Tree 的 Latch 结构前后的性能对比：蓝色为原 InnoDB、绿色为优化后；
 
@@ -299,7 +299,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 例如，最出名的 B+Tree 在非叶子节点中仅保留指针（在 BTree 中非叶子结点也存储了行数据），所有的数据都存放在叶子节点，间接减少了树的高度；
 
-![image-20221105210958977](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-12.png)
+![image-20221105210958977](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-12.png)
 
 并且这样还可以区分开索引段和数据段，有助于全表扫描时的顺序IO；
 
@@ -317,7 +317,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 下面来讲解一下 LSM-Tree 在上面两个特性上的表现；
 
-![image-20221105212603574](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-13.png)
+![image-20221105212603574](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-13.png)
 
 对于 LSM-Tree 的结构而言：
 
@@ -332,7 +332,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 下面来看读取操作：
 
-![image-20221105213608874](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-14.png)
+![image-20221105213608874](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-14.png)
 
 读取的时候需要注意：
 
@@ -346,7 +346,7 @@ SMO 会导致 BTree 的并发能力并不理想；
 
 LSM-Tree 的结构特性和 BTree 截然不同：
 
-![image-20221105214352955](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-15.png)
+![image-20221105214352955](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-15.png)
 
 由于其 Out-of-place 的特点：所以在正常插入到内存时，完全不会改变历史数据的结构，即：没有 SMO 过程；
 
@@ -379,11 +379,11 @@ LSM-Tree 的结构特性和 BTree 截然不同：
 
 虽然存在其他因素干扰其并发能力，但是由于所有的写入都是追加操作，因此无需采用基于 Latch 的机制进行并发控制；
 
-![image-20221105215805839](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-16.png)
+![image-20221105215805839](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-16.png)
 
 由于现在多核处理器的发展，NUMA 模式逐渐成为主流，多核处理器在面对 Latch 的频繁获取和释放时都会损耗很多性能；
 
-![image-20221105220406902](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-17.png)
+![image-20221105220406902](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-17.png)
 
 可以简单理解：
 
@@ -418,7 +418,7 @@ CPU 中每个核都有独立的一块存储区域，而读取或者写入的过�
 
 下图是原始 BTree 的结构：
 
-![image-20221106093506935](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-19.png)
+![image-20221106093506935](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-19.png)
 
 可以注意到：在 BTree 中，每个数据只存储一份；
 
@@ -435,7 +435,7 @@ BTree 早期有两个变种：
 
 相比于 BTree，B+Tree 的数据按照键值大小顺序存放在同一层的叶子节点中（和上面 BTree 中在非叶子节点也存放数据不同），各个叶子节点按照指针连接，组成一个双向链表；
 
-![image-20221106202131787](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-20.png)
+![image-20221106202131787](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-20.png)
 
 因此，对于 B+Tree 而言，其非叶子节点仅仅作为查找路径的判断依据，一个 key 值可能在 B+Tree 中存在两份（仅 Key 值）！
 
@@ -447,7 +447,7 @@ B+Tree 的结构解决了 BTree 中中序遍历扫描的痛点，在一定程度
 
 B*Tree 是 BTree 的另一个变种，其最关键的一点是将节点的最低空间利用率从 BTree 和 B+Tree 的 1/2 提高到了 2/3，并由此改变了节点数据满时的处理逻辑；
 
-![image-20221106202655090](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-21.png)
+![image-20221106202655090](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-21.png)
 
 我们知道，BTree 和 B+Tree 的空间利用率为 1/2，即：**当他们的叶子节点满而分裂时，默认状态下会分裂为两个各占一半数据的节点；**
 
@@ -483,13 +483,13 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 对于读的过程，首先要在整个索引上添加 Index S Latch；
 
-![image-20221107195254918](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-9.png)
+![image-20221107195254918](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-9.png)
 
 再从上至下找到要读的叶子节点的 Page，然后上叶子节点的 Page S Latch；
 
 这时就可以释放 Index S Latch了；
 
-![image-20221107195810041](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-18.png)
+![image-20221107195810041](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-18.png)
 
 然后进行查询并返回结果，最后释放叶子节点中的 Page S Latch，完成整个读操作；
 
@@ -499,7 +499,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 写的过程就有些复杂了；
 
-![image-20221107201558241](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-22.png)
+![image-20221107201558241](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-22.png)
 
 **首先进行乐观的写入，即：假设写入操作不会引起索引结构的变更（不触发 SMO 操作）；**
 
@@ -509,7 +509,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 如果叶子节点 Page 安全，就上 Page X Latch，并释放 Index S Latch，然后再修改数据即可；
 
-![image-20221107201854133](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-23.png)
+![image-20221107201854133](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-23.png)
 
 上面就完成了乐观写入的过程；
 
@@ -521,7 +521,7 @@ B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提�
 
 释放一开始上的 Index S Latch，重新上 Index X Latch，阻塞对整颗 B+Tree 的所有操作；
 
-![image-20221107202325092](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-24.png)
+![image-20221107202325092](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-24.png)
 
 然后重新搜索，并找到要发生结构变化的节点，上 Page X Latch，再修改树结构，此时可以释放 Index X Latch；
 
@@ -557,7 +557,7 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 对于读操作而言：
 
-![image-20221107203703637](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-25.png)
+![image-20221107203703637](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-25.png)
 
 对于读操作而言：
 
@@ -583,11 +583,11 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 **添加整个索引的 Index S Latch 和读取路径上节点的 Page S Latch 即可！**
 
-![image-20221107205012042](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-26.png)
+![image-20221107205012042](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-26.png)
 
 接下来判断叶子节点是否安全，如果叶子节点 Page 安全，则上 Page X Latch，同时释放索引和路径上的 S Latch；
 
-![image-20221107205128838](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-27.png)
+![image-20221107205128838](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-27.png)
 
 然后再修改即可；
 
@@ -601,7 +601,7 @@ SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但
 
 上 Page X Latch，再修改树结构，此时就可以释放 Index SX Latch 和路径上的 Page X Latch；
 
-![image-20221107205557977](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-28.png)
+![image-20221107205557977](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-28.png)
 
 随后即可完成对叶子节点的修改，返回结果，并释放叶子节点的 Page X Latch；
 
@@ -631,7 +631,7 @@ B-Link Tree 相比于 B+Tree 主要做了三点优化：
 
 B-Link Tree 结构如下图：
 
-![image-20221107211034348](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-29.png)
+![image-20221107211034348](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-29.png)
 
 其中加下划线的 Key 为 High Key；
 
@@ -641,7 +641,7 @@ B-Link Tree 结构如下图：
 
 下图就是 B-Link Tree 树节点分裂的过程；
 
-![image-20221107223644115](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-30.png)
+![image-20221107223644115](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-30.png)
 
 可以看到，上面的操作继承了 B*Tree 的思路：
 
@@ -653,7 +653,7 @@ B-Link Tree 结构如下图：
 
 如下图，当节点 y 分裂为 y 和 y+ 两个节点后，在 B+Tree 中就必须要提前锁住他们的父节点 x；
 
-![image-20221107224509181](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-31.png)
+![image-20221107224509181](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-31.png)
 
 而 B-Link Tree 可以先不锁 x，这时查找 15，顺着 x 找到节点 y，在节点 y 中未能找到 15，但判断 15 大于其中记录的 high key，于是顺着指针就可以找到其右兄弟节点 y+，仍能找到正确的结果；
 
@@ -694,7 +694,7 @@ CoW BTree 也称写时复制 BTree，CoW BTree 采用 Copy-on-Write 技术来保
 
 接下来再复制并修改父节点的父节点，直到根节点！
 
-![image-20221108130239675](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-32.png)
+![image-20221108130239675](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-32.png)
 
 CoW BTree 的修改逻辑如上图所示：
 
@@ -718,7 +718,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 读取时，将原始页中的内容和更新缓冲区进行合并，来返回正确的数据；
 
-![image-20221108131401353](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-33.png)
+![image-20221108131401353](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-33.png)
 
 惰性 BTree 和 LSM Tree 极为相似，甚至可以说，惰性 BTree 中的每一个页就像一个小型的 LSM Tree！
 
@@ -738,7 +738,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 如下图所示：
 
-![image-20221108132652431](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-34.png)
+![image-20221108132652431](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-34.png)
 
 <br/>
 
@@ -750,7 +750,7 @@ CoW BTree 的修改逻辑如上图所示：
 
 本小节所介绍的 BwTree 是在这一方向上更进一步的一种 BTree 变种，甚至在很大程度上比 LSM Tree 都更近了一步！
 
-![image-20221108133356080](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-35.png)
+![image-20221108133356080](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-35.png)
 
 BwTree 整体分为三层，从上而下分别是：
 
@@ -772,7 +772,7 @@ BwTree 整体分为三层，从上而下分别是：
 
 来看下面的例子；
 
-![image-20221108134235088](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-36.png)
+![image-20221108134235088](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-36.png)
 
 和 Lazy BTree 类似，**BwTree 对每个节点的修改也是不直接修改页，而是生成一个 Delta Record 的结构，记录本次修改的情况，如果再有修改就再生成一个；**
 
@@ -843,7 +843,7 @@ BwTree 整体分为三层，从上而下分别是：
 
 采用了一个指向右兄弟节点的指针，来使分裂过程分为 child split 和 parent update 两个步骤，每个步骤都是原子操作，从而实现了原子化的 SMO 操作；
 
-![image-20221108140231109](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-37.png)
+![image-20221108140231109](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-37.png)
 
 上图就是页 P 分裂为 P 和 Q 的过程；
 
@@ -863,7 +863,7 @@ BwTree 整体分为三层，从上而下分别是：
 
 再通过对其前置节点增加一个 merge delta 标记修改，最后再修改父节点；
 
-![image-20221108200001820](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-38.png)
+![image-20221108200001820](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-38.png)
 
 <br/>
 
@@ -895,7 +895,7 @@ RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类�
 
 下图为 RocksDB 的结构图；
 
-![image-20221108201917997](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-39.png)
+![image-20221108201917997](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-39.png)
 
 写入的数据首先要记录 WAL（Write-ahead Log），用来做实时落盘，以实现持久性；
 
@@ -909,13 +909,13 @@ RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类�
 
 #### **Minor Merge**
 
-![image-20221108202159880](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-40.png)
+![image-20221108202159880](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-40.png)
 
 当 Immutable Memtable 达到指定的数量后，就将 Immutable Memtable 落盘到磁盘中的 L0 层；
 
 上面这步操作被称为 minor merge；
 
-![image-20221108203307920](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-41.png)
+![image-20221108203307920](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-41.png)
 
 **通常，对于 minor merge 的 Memtable 不做整理（无 Compaction 过程），直接刷入磁盘；**
 
@@ -940,7 +940,7 @@ RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类�
 >
 >   <font color="#f00">**（可以将 SST 理解为一个小型的聚簇索引结构，只是这个结构整体是不可变的！）**</font>
 >
->   ![image-20221108204250443](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-42.png)
+>   ![image-20221108204250443](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-42.png)
 
 这样，除了 L0 层之外的磁盘中的每一层都是由一个个 SST 组成的，这些 SST 之间互不重叠！
 
@@ -970,7 +970,7 @@ RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类�
 
 在查找的过程中，有一个非常关键的优化，可以加速我们对数据的筛选，那就是：**Bloom Filter**！
 
-![image-20221108210258083](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-43.png)
+![image-20221108210258083](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-43.png)
 
 **Bloom Filter 用来筛选一层中是否包含我们要查找的数据；**
 
@@ -998,7 +998,7 @@ RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类�
 
 上面讲述的是目前主流的 LSM Tree 的实现，本小节来简单介绍一下另一些 LSM Tree 的实现和探索；
 
-![image-20221108213322199](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-44.png)
+![image-20221108213322199](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-44.png)
 
 LevelDB 等一系列 LSM Tree 实现采用的方法都是 Leveling Merge Policy 方法；
 
@@ -1046,7 +1046,7 @@ Compaction 过程中占用大量资源，并调整数据位置，同时会引发
 -   **主动更新Cache**：在 Compaction 结束后主动更新 Cache，或采用机器学习的方式预测回填；
 -   **单独硬件执行Compaction**：把 Compaction 操作 Offload 到例如 FPGA 等额外的硬件上执行；
 
-![image-20221108220304194](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/storage-45.png)
+![image-20221108220304194](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-45.png)
 
 <br/>
 

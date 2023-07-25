@@ -146,7 +146,7 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 通过Portainer也可以查看：
 
-![redash_0.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_0.png)
+![redash_0.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_0.png)
 
 >   <font color="#f00">**注意到，因为我们声明了Redash在独立的redash网络中，因此我们的Redash服务不会影响到我们之前的MySQL、Redis等服务！**</font>
 
@@ -158,13 +158,13 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 然后就可以进入主页面了！
 
-![redash_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_1.png)
+![redash_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_1.png)
 
 ### **添加数据源**
 
 点击设置，可以添加对应的数据源：
 
-![redash_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_2.png)
+![redash_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_2.png)
 
 上面是我添加的我在腾讯云服务器上部署的MongoDB的数据源；
 
@@ -178,7 +178,7 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 关于点赞数的统计结果查询如下：
 
-![redash_3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_3.png)
+![redash_3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_3.png)
 
 执行后，可以看到下方的查询结果；
 
@@ -190,7 +190,7 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 可以看到创建完成后的图表结果如下：
 
-![redash_4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_4.png)
+![redash_4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_4.png)
 
 可以看到，创建图表还是相当方便的！
 
@@ -204,7 +204,7 @@ e4e3e50b4da7   portainer/portainer-ce       "/portainer"             5 weeks ago
 
 例如：
 
-![redash_5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/redash_5.png)
+![redash_5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/redash_5.png)
 
 同时可以一键同步所有数据
 

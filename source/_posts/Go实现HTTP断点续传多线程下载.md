@@ -111,7 +111,7 @@ HTTP/1.1 200 OK...Accept-Ranges: bytesContent-Length: 146515
 
 最后，看一个具体的断点续传的例子：
 
-![download.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/download.jpg)
+![download.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/download.jpg)
 
 <BR/>
 

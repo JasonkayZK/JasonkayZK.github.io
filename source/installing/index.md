@@ -1674,6 +1674,6 @@ repositories 中写的是获取 jar 包的顺序：先是本地的 Maven 仓库�
 
 具体见下图：
 
-![gradle_idea.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gradle_idea.png)
+![gradle_idea.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gradle_idea.png)
 
 <br/>

@@ -238,7 +238,7 @@ EXPOSE 80
 
 说了这么多，我们可以用下图来一言以蔽之：
 
-![dockerfile_cmd.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/dockerfile_cmd.png)
+![dockerfile_cmd.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/dockerfile_cmd.png)
 
 
 
@@ -467,7 +467,7 @@ Server starting...
 
 然后通过浏览器访问container内部的ip:port, 如下图:
 
-![container_visit.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/container_visit.png)
+![container_visit.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/container_visit.png)
 
 <br/>
 

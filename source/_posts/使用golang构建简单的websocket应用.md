@@ -319,7 +319,7 @@ func main() {
 
 随后在浏览器中打开index.html即可看到服务端的推送，同时服务端也会打出响应的log：
 
-![websocket_demo.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/websocket_demo.png)
+![websocket_demo.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/websocket_demo.png)
 
 ## 附录
 

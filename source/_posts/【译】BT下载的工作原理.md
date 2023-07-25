@@ -52,7 +52,7 @@ description: 之前有写过几篇关于如何下载、部署Aria2并且进行�
 
 在传统下载中，服务器上传文件，而客户端下载文件。
 
-![bt1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt1.png)
+![bt1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt1.png)
 
 而由于服务器的带宽限制，导致一些热门的文件下载效率变得十分低下，例如：500个人下载同一个文件将使服务器承受巨大压力。这种压力会限制服务器的上传速度，因此客户端无法快速下载文件。
 
@@ -70,13 +70,13 @@ description: 之前有写过几篇关于如何下载、部署Aria2并且进行�
 
 我们知道，BT下载是通过对等网实现的(peer-to-peer，P2P)；而在对等网络中，每个对等点都连接到网络中的每个其他对等点。
 
-![bt2.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt2.svg)
+![bt2.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt2.svg)
 
 
 
 而半中心化的对等网络是：拥有一个或多个权限比其他大多数对等点更高的对等网络。
 
-![bt3.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt3.svg)
+![bt3.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt3.svg)
 
 <br/>
 
@@ -88,17 +88,17 @@ BitTorrent客户端的第一版没有搜索引擎，也没有对等交换，想�
 
 当用户想要共享文件时，他们会将文件做成种子文件(seed their file)。该用户称为做种人(*seeder*)。他们将种子文件上传到交换站点(exchange)（我们稍后再讨论）。想要下载该文件的任何人都将首先下载此种子描述符。
 
-![bt4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt4.png)
+![bt4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt4.png)
 
 我们称呼那些下载用户为对等点(peers)。他们的BT客户端将连接到BT tracker服务器（稍后讨论），并且tracker将向对等点发送种子集群中其他种子和对等点的IP地址列表。此处的集群指的是与某种子相关的所有PC。
 
 种子文件描述符中包含了我们正在下载的文件的tracker服务器和元数据的列表。
 
-![bt5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt5.png)
+![bt5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt5.png)
 
 对等点将会连接到种子对应的IP并下载文件的**一个部分**。
 
-![bt6.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt6.png)
+![bt6.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt6.png)
 
 当对等点完成下载(一个文件分片)后，它们可以充当种子提供者。虽然，可以在下载种子的同时充当种子提供者（这是很常见的）。
 
@@ -232,7 +232,7 @@ BitTorrent使用TCP，一种用于数据包的传输协议。TCP具有一种被�
 
 慢启动是一种平衡TCP网络连接速度的机制。它会逐步增加传输的数据量，直到找到网络的最大承载能力，如下图：
 
-![bt7.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt7.svg)
+![bt7.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt7.svg)
 
 其中，cwdn代表拥塞窗口。
 
@@ -242,7 +242,7 @@ BitTorrent协议会保证将数据细分为更多的子数据块来发送数据�
 
 同时BitTorrent协议始终有一定数量的请求连接（五个），用于子块管道(sub-piece pipe-lined)。当下载一个新的子块时，客户端将发送一个新请求，从而有助于加快速度。
 
-![bt8.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt8.svg)
+![bt8.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt8.svg)
 
 同时子块可以被其他的对等点下载；
 
@@ -259,7 +259,7 @@ BitTorrent协议会保证将数据细分为更多的子数据块来发送数据�
 >
 > Once the BitTorrent client requests a sub-piece of a piece, any  remaining sub-pieces of that piece are requested before any sub-pieces  from other pieces. 
 
-![bt9.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt9.svg)
+![bt9.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt9.svg)
 
 在此图中，就是需要先下载该文件块的其他的所有子块，而不是开始下载另一个文件块。
 
@@ -283,7 +283,7 @@ BitTorrent下载的核心策略就是选择最稀有的文件块(pick the rarest
 
 让我们将其可视化：
 
-![bt10.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt10.svg)
+![bt10.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt10.svg)
 
 虽然图中没有画出，但是各个对等点之间也是是相互连接的。
 
@@ -323,19 +323,19 @@ BitTorrent下载的核心策略就是选择最稀有的文件块(pick the rarest
 
 还记得严格原则(Strict-Policy)吗？BT下载时，总是有数个待处理的子块请求：
 
-![bt11.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt11.svg)
+![bt11.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt11.svg)
 
 假设我们正在从2个对等点下载，而还有另外1个我们未从中下载的对等点。
 
 当请求的对等点缺少相应的子块时，BT协议会将请求广播给集群中所有对等点，而这有助于我们获取文件的最后一块。
 
-![bt12.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt12.svg)
+![bt12.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt12.svg)
 
 如果对等点缺少子块，他们会将消息发送回我们。
 
 一旦一个子块到达，我们将发送一条取消消息，告诉其他对等方忽略我们的请求。
 
-![bt13.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt13.svg)
+![bt13.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt13.svg)
 
 <BR/>
 
@@ -363,7 +363,7 @@ BitTorrent下载的核心策略就是选择最稀有的文件块(pick the rarest
 
 当对等点合作时，他们上传文件；而当对等点不合作时，他们“阻塞”了与其他对等点的连接；而原则就是上传文件块给那些已上传给过我们的对等点；
 
-![bt14.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt14.svg)
+![bt14.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt14.svg)
 
 而阻塞算法最终理想的结果就是：同时进行多个双向连接并最终达到帕累托最优(Pareto Efficiency)
 
@@ -375,7 +375,7 @@ BitTorrent下载的核心策略就是选择最稀有的文件块(pick the rarest
 
 在默认情况下，客户端将仅保留默认的同时上传数量(max_uploads，max_uploads的默认值为4)，而所有对该客户端的其他请求都将标记为“choked”。
 
-![bt15.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt15.png)
+![bt15.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt15.png)
 
 如上图中，种子阻塞了与对等点的连接，因为它已达到其最大上传数量。此后，对等点将保持阻塞状态，直到发送了取消阻塞消息为止。
 
@@ -535,7 +535,7 @@ Tracker知道文件的拥有者以及拥有量。
 
 如果这个被联系的节点知道种子的对等点，他们返回对等点的联系信息响应。否则，被联系的节点必须用他的路由表中最靠近infohash的节点来响应请求种子的信息。
 
-![bt16.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt16.svg)
+![bt16.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt16.svg)
 
 原始节点查询更接近infohash的节点，直到找不到更接近的节点为止。在节点完成搜索后，客户端将自己的对等联系信息(peer contact information)插入到与种子信息最接近的id响应节点上。在未来，其他节点可以很容易地找到我们（原始节点）。
 
@@ -563,7 +563,7 @@ BitTorrent对于这个令牌的实现是：使用IP地址和每5分钟更改一�
 
 并且我们在查询时良好的节点会优先于状态未知的节点。
 
-![bt17.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/bt17.svg)
+![bt17.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt17.svg)
 
 一个路由表覆盖了从0到2^160的整个节点ID空间。我们将路由表细分为“桶(buckets)”，每个桶覆盖部分空间。
 

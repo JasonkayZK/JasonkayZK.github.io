@@ -23,7 +23,7 @@ tags: [Java基础, 面试总结, 集合]
 
 ### 树
 
-![树.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/树.png)
+![树.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/树.png)
 
 上图是一个简单的树形结构，最顶层为一个根节点，向下延伸出树杈和叶子构成一个具有层次关系的集合，例如前端树形插件Ztree
 
@@ -49,7 +49,7 @@ tags: [Java基础, 面试总结, 集合]
 
 平衡二叉树在二叉树的基础上添加了新的限制，即**树的左右高度之差小于等于1**
 
-![平衡二叉树.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/平衡二叉树.png)
+![平衡二叉树.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/平衡二叉树.png)
 
 以7节点为准，左侧高度7到1叶子节点高度为2,7到8的叶子节点高度为2相等，高度差为0,节点4同理左右各两条边高度差为0，节点9左右高度差为1小于等于1，所以上图为一棵标准平衡二叉树
 
@@ -80,27 +80,27 @@ tags: [Java基础, 面试总结, 集合]
 
 AVL树的**增加与删除节点**与普通二叉查找树不同，它是**以旋转使树重新达到平衡。分为右旋（顺时针）与左旋（逆时针）两种操作**
 
-![右旋(顺时针).png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/右旋(顺时针).png)
+![右旋(顺时针).png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/右旋(顺时针).png)
 
 右旋以某个节点为中心上图为15，将17向右沉入其右子节点位置，节点15变为新的根节点，15原右子节点变为17的左子节点
 
-![左旋(逆时针).png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/左旋(逆时针).png)
+![左旋(逆时针).png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/左旋(逆时针).png)
 
 左旋为逆时针，以某个基点为中心例如上图18节点，将17节点其沉入其右子节点的位置，18作为新的根节点其原来的左子节点变为17的右子节点
 
 以上为单纯的旋转，接下来我们看一下添加节点时如何变化
 
-![AVL1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/AVL1.png)
+![AVL1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/AVL1.png)
 
 这是一个AVL树，当我们要添加节点6时如下图
 
-![AVL2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/AVL2.png)
+![AVL2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/AVL2.png)
 
 首先根据普通规则比5大，向右，比8小向左，比7小且7位叶子节点，6被新建到7的左子节点。但是这样8节点下的子树会失去平衡，这时AVL自平衡会开始旋转来使其达到平衡
 
  以7为中心节点，将8沉入其右子节点位置，7变为子树的根节点，如下图
 
-![AVL3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/AVL3.png)
+![AVL3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/AVL3.png)
 
 通过单次旋转就又使树达到了平衡
 
@@ -114,7 +114,7 @@ AVL树的**增加与删除节点**与普通二叉查找树不同，它是**以�
 
 红黑树和AVL树类似，都是**在进行插入和删除操作时通过特定操作保持二叉查找树的平衡**，从而获得较高的查找性能，它可以**在O(log n)时间内做查找，插入和删除**
 
-![红黑树.jpeg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/红黑树.jpeg)
+![红黑树.jpeg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/红黑树.jpeg)
 
 相对于二叉查找树，红黑树又添加了以下限制:
 
@@ -926,7 +926,7 @@ JDK8中的HashMap相对JDK7中的HashMap做了些优化
 
 其实要解决一个问题就够了：对象要放在哪个下标？当然最简单的方法是从0下标开始一个一个挨着往后放
 
-![Rehash1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash1.png)
+![Rehash1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash1.png)
 
 这样就把你们的对象放满整个数组了，一个位置也没有浪费~
 
@@ -938,23 +938,23 @@ JDK8中的HashMap相对JDK7中的HashMap做了些优化
 
 **(较新版本的JDK中 如果链表太长会变成树)**
 
-![Rehash2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash2.png)
+![Rehash2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash2.png)
 
 但是如果现在我们有20个对象呢？？？50个对象呢？？？100个，1000个对象呢？？？
 
 每个槽位需要承受的对象数量会越来越多，如果只是一味地挂对象，而不采取合适的策略确定要加上去的对象到底放在哪个位置的话，很有可能出现下面这种状况
 
-![Rehash3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash3.png)
+![Rehash3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash3.png)
 
  那么当我们查找一个对象的时候可能遇到这种情况，
 
-![Rehash4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash4.png)
+![Rehash4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash4.png)
 
 这样的话，查询时间复杂度为线性, 效率十分低下，我们希望加上去的对象在整个数组上呈均匀分布的趋势，这样就不会出现某个槽承受了很多对象但是有的槽位承受很少对象，甚至只有一个对象的情况
 
 下面是我们希望的结果。
 
-![Rehash5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash5.png)
+![Rehash5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash5.png)
 
  因为要查询的话最多查两次就能查到我们想要的对象了。
 
@@ -988,13 +988,13 @@ java每个对象都有一个叫"hashCode"的标签码 和他对应，当然这�
 
 现在假设我们的 hashCode 是8位的 (实际上是32位的)，比如下面就是一个对象a 的hashCode
 
-![Rehash6.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash6.png)
+![Rehash6.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash6.png)
 
 假如我们的数组大小是16，那么我们要根据hashCode 确定好数组下标，下标的范围是0~15.
 
 该怎么确定呢？我们可以用直接映射的方法
 
-![Rehash7.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash7.png)
+![Rehash7.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash7.png)
 
 我们发现，把hashCode 的二进制码直接映射到数组下标的二进制码上，直接把高位全部置为0
 
@@ -1004,7 +1004,7 @@ java每个对象都有一个叫"hashCode"的标签码 和他对应，当然这�
 
  但是，进一步观察，我们发现，无论高位怎么样，只要低位相同，都会映射到同一个数组下标上:
 
-![Rehash8.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash8.png)
+![Rehash8.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash8.png)
 
 高位有 2 ^ 4 = 16 种情况，这16种情况都会瞄准同一个数组下标，何况实际上我们的hashCode是32位的，这样的话就有 2 ^ (32 - 4) = 2 ^ 28 种冲突
 
@@ -1024,7 +1024,7 @@ java每个对象都有一个叫"hashCode"的标签码 和他对应，当然这�
 
 进行 & 运算:
 
-![Rehash9.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash9.png)
+![Rehash9.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash9.png)
 
 看下面一个例子更明了一点:
 
@@ -1114,7 +1114,7 @@ static final int hash(Object key) {
 
 如果我们直接用这两个未经hash函数处理的hashCode 通过JDK的方法得出下标: 
 
-![Rehash10.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash10.png)
+![Rehash10.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash10.png)
 
  n = 16
 
@@ -1147,7 +1147,7 @@ hash (上面蓝字变量) = hash (hashCode) ------ hash函数对hashCode 再散�
 
 对应过程如下图
 
-![Rehash11.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/Rehash11.png)
+![Rehash11.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Rehash11.png)
 
 正如我们所见，**原本冲突的低四位，把高位的特征传到他们上面后，他们不冲突了**！
 

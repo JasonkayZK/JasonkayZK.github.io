@@ -210,7 +210,7 @@ Creating elk-single_logstash_1      ... done
 
 访问Kibana，结果如下：
 
-![kibana.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/kibana.png)
+![kibana.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/kibana.png)
 
 即这时整个ELK是空的，我们没有数据，也没有为数据创建索引；
 
@@ -241,13 +241,13 @@ docker logs -f elk-single_logstash_1
 
 并且刷新Kibana，可以看到已经解析到了这个索引：
 
-![kibana_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/kibana_2.png)
+![kibana_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/kibana_2.png)
 
 我们创建`test-service-*`的索引，并选择`Time Filter`为`@timestamp`；
 
 随后，进行查询：
 
-![kibana_3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/kibana_3.png)
+![kibana_3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/kibana_3.png)
 
 可见，我们提交的日志的确显示在了Kibana中（忽略另外一条测试日志）；
 

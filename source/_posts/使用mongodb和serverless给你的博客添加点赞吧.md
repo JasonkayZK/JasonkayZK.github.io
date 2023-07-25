@@ -43,13 +43,13 @@ description: 最近，博客上线了点赞功能。使用的是MongoDB+腾讯�
 
 点击中间的`Start free`：
 
-![mongodb_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/mongodb_1.png)
+![mongodb_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mongodb_1.png)
 
 注册账号后就有一个免费的分布式mongoDB可以用了！
 
 mongodb的管理界面如下图所示：
 
-![mongodb_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/mongodb_2.png)
+![mongodb_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mongodb_2.png)
 
 点击Collections即可查看存储的数据；
 
@@ -79,11 +79,11 @@ https://cloud.tencent.com/product/scf
 
 进入控制台之后大概是这个样子的：
 
-![scf_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_1.png)
+![scf_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_1.png)
 
 点击函数服务，进入函数服务页面并点击新建：
 
-![scf_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_2.png)
+![scf_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_2.png)
 
 进入新建页面后，填写一个函数名称，例如：`BlogLike`；
 
@@ -93,13 +93,13 @@ https://cloud.tencent.com/product/scf
 
 最后选择空白函数，并点击下一步创建：
 
-![scf_3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_3.png)
+![scf_3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_3.png)
 
 函数配置全部保持默认，点击完成即可创建函数；
 
 函数创建完成后，腾讯云会提供一个hello-world的示例：
 
-![scf_4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_4.png)
+![scf_4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_4.png)
 
 从示例中可以看出，整个函数的入口是：`index.main_handler`
 
@@ -263,7 +263,7 @@ exports.main_handler = async (event, context) => {
 
 选择提交方式为本地上传文件夹，上传包括上述三个文件的文件夹，最后点击保存即可上传：
 
-![scf_5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_5.png)
+![scf_5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_5.png)
 
 上传后如果没有安装依赖，可以在下方选择在线安装依赖，并保存后即可安装依赖；
 
@@ -273,7 +273,7 @@ exports.main_handler = async (event, context) => {
 
 选择左侧的触发管理，并创建一个API网关触发器，并选择请求方式为POST：
 
-![scf_6.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_6.png)
+![scf_6.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_6.png)
 
 触发器创建完成后，即可处理API的POST请求；
 
@@ -287,7 +287,7 @@ exports.main_handler = async (event, context) => {
 
 返回函数管理中，在下方的测试事件中选择Api Gateway 事件模板，并填写相应的参数进行测试：
 
-![scf_7.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_7.png)
+![scf_7.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_7.png)
 
 以我的一个记录为例，可见成功被执行了！
 
@@ -347,7 +347,7 @@ https://console.cloud.tencent.com/apigateway/
 
 选择你绑定了云函数的服务名称，点击名称进入并勾选支持CORS：
 
-![scf_8.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/scf_8.png)
+![scf_8.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/scf_8.png)
 
 完成后点击发布即可；
 

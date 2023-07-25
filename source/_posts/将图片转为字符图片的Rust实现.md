@@ -24,7 +24,7 @@ description: 最近看了一篇文章可以将图片转换为文字图片，觉�
 
 实现效果如下：
 
-![img](https://raw.fastgit.org/JasonkayZK/img2txt-rs/main/examples//example3.jpg)
+![img](https://raw.gitmirror.com/JasonkayZK/img2txt-rs/main/examples//example3.jpg)
 
 转换后的结果：
 

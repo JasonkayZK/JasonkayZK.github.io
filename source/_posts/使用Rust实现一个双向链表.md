@@ -238,7 +238,7 @@ capture(cat);
 
 综合起来，也就是说：
 
-![rust-double-linked-list-1.svg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/rust-double-linked-list-1.svg)
+![rust-double-linked-list-1.svg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-1.svg)
 
 <br/>
 
@@ -262,7 +262,7 @@ capture(cat);
 
 如下图所示：
 
-![rust-double-linked-list-2.jpg](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/rust-double-linked-list-2.jpg)
+![rust-double-linked-list-2.jpg](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-2.jpg)
 
 这张图中的子类型关系应当是：
 

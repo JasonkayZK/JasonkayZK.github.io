@@ -96,7 +96,7 @@ reduce(String key, Iterator values):
 
 每一轮 MapReduce 的大致过程如下图所示：
 
-![mapreduce_architecture.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/mapreduce_architecture.png)
+![mapreduce_architecture.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mapreduce_architecture.png)
 
 首先，用户通过 MapReduce 客户端指定 Map 函数和 Reduce 函数，以及此次 MapReduce 计算的配置，包括中间结果键值对的 Partition 数量 RR 以及用于切分中间结果的哈希函数 hash；
 

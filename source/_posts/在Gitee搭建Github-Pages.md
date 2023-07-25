@@ -36,11 +36,11 @@ description: 最近发现Gitee里面可以导入Github的仓库，甚至也支�
 
 登录码云，点击右上角的 + 号，选择「新建仓库」，如下图所示：
 
-![gitee1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee1.png)
+![gitee1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gitee1.png)
 
 出现以下界面后，点击「导入已有仓库」：
 
-![gitee2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee2.png)
+![gitee2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gitee2.png)
 
 >   <BR/>
 >
@@ -56,7 +56,7 @@ description: 最近发现Gitee里面可以导入Github的仓库，甚至也支�
 
 在输入框中填写 GitHub Pages 地址：
 
-![gitee3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee3.png)
+![gitee3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gitee3.png)
 
 >   <BR/>
 >
@@ -72,11 +72,11 @@ description: 最近发现Gitee里面可以导入Github的仓库，甚至也支�
 
 在菜单栏找到服务，选择「Gitee Pages」，见下图： 
 
-![gitee4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee4.png)
+![gitee4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gitee4.png)
 
 最后点击「启动」(我这里部署过了，所以是更新)，见下图：
 
-![gitee5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/gitee5.png)
+![gitee5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/gitee5.png)
 
 稍等片刻，即可部署成功！
 

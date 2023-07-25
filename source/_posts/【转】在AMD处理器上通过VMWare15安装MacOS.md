@@ -43,7 +43,7 @@ description: 由于需要用到Mac环境，所以在我的VMWare折腾了一下�
 
 可查看任务管理器中的cpu信息，如下：
 
-![vmware_macos_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_1.png)
+![vmware_macos_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_1.png)
 
 >   若电脑没有开启虚拟化，则需要在BIOS中开启虚拟化；
 >
@@ -57,9 +57,9 @@ description: 由于需要用到Mac环境，所以在我的VMWare折腾了一下�
 -   关闭**Hyper-V功能；**
 -   关闭**Win10安全中心的内存完整性；**
 
-![vmware_macos_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_2.png)
+![vmware_macos_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_2.png)
 
-![vmware_macos_3.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_3.png)
+![vmware_macos_3.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_3.png)
 
 #### **③ 工具准备**
 
@@ -124,63 +124,63 @@ unlocker运行后，一般会自动下载一个文件：（com.vmware.fusion.too
 
 1.新建虚拟机；
 
-![vmware_macos_4.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_4.png)
+![vmware_macos_4.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_4.png)
 
 2.选择自定义（高级）；
 
-![vmware_macos_5.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_5.png)
+![vmware_macos_5.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_5.png)
 
 3.选择虚拟机硬件兼容性，选择默认就好；
 
-![vmware_macos_6.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_6.png)
+![vmware_macos_6.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_6.png)
 
 4.选择我们下载的macOS 10.15.5.cdr，注意选择文件的时候，我们选择“所有文件(*.*)，就能看到我们的cdr镜像了”；
 
-![vmware_macos_7.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_7.png)
+![vmware_macos_7.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_7.png)
 
 5.客户机操作系统，勾选Apple Mac OS X，下拉框选择macOS 10.14，（VMware 15.1.0通过unlocker解锁后最高支持支持macOS 10.14，虽然我们将要安装的是macOS 10.15.5，这里选择macOS 10.14）；
 
-![vmware_macos_8.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_8.png)
+![vmware_macos_8.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_8.png)
 
 6.虚拟机名称和虚拟机路径，这里名称和路径最好选择英文哦（老外的软件对中文适配差）。**虚拟机安装路径最好选择固态硬盘，容量100G以上**
 
-![vmware_macos_9.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_9.png)
+![vmware_macos_9.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_9.png)
 
 7.处理器配置，这里处理器配置选择数量为1，核心数选择4（为了提高安装成功率，先这样选择，后面可以根据需要改）
 
-![vmware_macos_10.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_10.png)
+![vmware_macos_10.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_10.png)
 
 8.虚拟机内存选择，4GB，8GB，16GB都可以（为了提高安装成功率，先这样选择，后面可以根据需要改）
 
-![vmware_macos_11.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_11.png)
+![vmware_macos_11.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_11.png)
 
 9.网络连接，选择网络地址转换"NAT"，（先这样选择，后面可以根据需要改，若是NAT网络无法使虚拟机上网，后面可以更改为其他上网方式直至虚拟机能上网即可）
 
-![vmware_macos_12.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_12.png)
+![vmware_macos_12.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_12.png)
 
 10.I/O控制器，SCSI控制器，选择LSI Logic；
 
-![vmware_macos_13.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_13.png)
+![vmware_macos_13.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_13.png)
 
 11.虚拟磁盘类型选择 SATA；
 
-![vmware_macos_14.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_14.png)
+![vmware_macos_14.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_14.png)
 
 12.磁盘选择创建新虚拟磁盘；
 
-![vmware_macos_15.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_15.png)
+![vmware_macos_15.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_15.png)
 
 13.磁盘大小选择80GB（后面可以根据需要扩容），不勾选立即分配所有磁盘空间（不勾选的话，前面选择的80GB不会立即分配，虚拟机会根据使用情况自动增加），选择将虚拟磁盘存储为单个文件（方便备份，虚拟机苹果还是不稳定的，我们可以在装好macOS后备份一个，后期可以直接打开备份好的macOS）；
 
-![vmware_macos_16.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_16.png)
+![vmware_macos_16.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_16.png)
 
 14.指定磁盘文件，默认就好，下一步；
 
-![vmware_macos_17.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_17.png)
+![vmware_macos_17.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_17.png)
 
 15.选择完成；
 
-![vmware_macos_18.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_18.png)
+![vmware_macos_18.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_18.png)
 
 <br/>
 
@@ -188,31 +188,31 @@ unlocker运行后，一般会自动下载一个文件：（com.vmware.fusion.too
 
 1.虚拟机建好后，我们不要开启虚拟机，还得进行一些设置，选择编辑虚拟机设置；
 
-![vmware_macos_19.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_19.png)
+![vmware_macos_19.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_19.png)
 
 2.处理器，勾选虚拟化Intel VT-x/EPT 或 AMD-V/RVI；
 
-![vmware_macos_20.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_20.png)
+![vmware_macos_20.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_20.png)
 
 3.USB控制器，选择兼容USB2.0，下面两个都勾选（否则在虚拟机中键盘用不了）；
 
-![vmware_macos_21.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_21.png)
+![vmware_macos_21.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_21.png)
 
 4.**在常规-客户机操作系统中我们选择客户机操作系统为Windows 10 x64，目的是为了引导macOS 10.15.x，毕竟VMWare 10.15.1最高只支持macOS 10.14系列；**
 
-![vmware_macos_22.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_22.png)
+![vmware_macos_22.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_22.png)
 
 5.找到刚刚创建的MacOS虚拟机路径，再找到格式为*.vmx的配置文件（我这里是macOS 10.15.5.vmx，用文本编辑器打开 *.vmx这个配置文件；
 
-![vmware_macos_23.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_23.png)
+![vmware_macos_23.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_23.png)
 
 >   **注意：修改.vmx的配置文件，不要用中文标点符号，不要带任何与中文相关的，否则在安装虚拟机时会出现“字典错误”**
 
 6.打开后，**找到** virtualHW.version = “16”， **找到后修改为**virtualHW.version = “10”；
 
-![vmware_macos_24.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_24.png)
+![vmware_macos_24.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_24.png)
 
-![vmware_macos_25.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_25.png)
+![vmware_macos_25.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_25.png)
 
 7.添加下面的内容；
 
@@ -232,7 +232,7 @@ cpuid.1.edx = "0000:1111:1010:1011:1111:1011:1111:1111"
 featureCompat.enable = "FALSE"
 ```
 
-![vmware_macos_26.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_26.png)
+![vmware_macos_26.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_26.png)
 
 **配置文件修改后，文件保存一下；**
 
@@ -248,17 +248,17 @@ featureCompat.enable = "FALSE"
 >
 >   若是前面的步骤有问题，虚拟机一般会提示一些错误，读者可以自行百度，或者留言大家一起解决；
 
-![vmware_macos_27.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_27.png)
+![vmware_macos_27.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_27.png)
 
 2.系统会弹出macOS 实用工具，我们得格式化磁盘了，选择磁盘工具；
 
 （和安装Windows系统一样，安装前得选择分区，格式化~~）
 
-![vmware_macos_28.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_28.png)
+![vmware_macos_28.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_28.png)
 
 3.磁盘工具，选择抹掉（和Windows中的格式化类似）；
 
-![vmware_macos_29.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_29.png)
+![vmware_macos_29.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_29.png)
 
 4.选择抹掉后，会弹出一个对话框，如图；
 
@@ -266,35 +266,35 @@ featureCompat.enable = "FALSE"
 
 待会将键盘切回到真机也是这个步骤哦），这样我们就能给磁盘命名了，**命名完后记得这个步骤反向操作下，不然真机就用不了键盘了；**
 
-![vmware_macos_30.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_30.png)
+![vmware_macos_30.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_30.png)
 
 5.格式：一定要选Mac OS扩展（日志式），方案：GUID分区图；
 
 若是格式选择带有加密的或大小写敏感的，会在后期使用系统的过程中带来诸多不方便。另外对于格式尤其不要选APFS的，APFS会导致安装失败（其实我们虽然选择Mac OS扩展日志式，macOS 10.15.5安装完后系统会自动格式化为APFS），设置完成后选择对话框中的抹掉即可；
 
-![vmware_macos_31.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_31.png)
+![vmware_macos_31.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_31.png)
 
 6.第5步抹掉完成后，关闭对话框，关闭磁盘工具。来到macOS实用工具界面后，选择安装macOS；
 
-![vmware_macos_32.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_32.png)
+![vmware_macos_32.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_32.png)
 
 7.勾选我们格式化后的磁盘后，开始自动安装，自动重启，期间我们耐心等待（接下来是傻瓜式操作，这里不做详细介绍）；
 
-![vmware_macos_33.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_33.png)
+![vmware_macos_33.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_33.png)
 
 8.不出意外，过一会儿，一定会安装失败，安装过程自动走到macOS实用工具界面，**这里我们直接 关闭客户机**。
 
 （还记得吗，一开始我们将虚拟机设置成Windows10 x64来引导系统，现在系统引导成功后需要将引导方式切回macOS，具体请看步骤9）；
 
-![vmware_macos_34.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_34.png)
+![vmware_macos_34.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_34.png)
 
 9.**这一步很关键，编辑虚拟机设置，将启动模式还原为Apple Mac OS X，下拉框macOS 10.14。期间会弹窗警告，我们一直点确定忽略即可**
 
-![vmware_macos_35.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_35.png)
+![vmware_macos_35.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_35.png)
 
 10.步骤9完成后，我们再次点击“启动此虚拟机”，经过如上操作后我们就能顺利安装macOS 10.15了，也是一些傻瓜式操作：点击“继续”、“继续”、“继续”、“继续”、“继续”…可以跳过登录Apple ID，创建账户，设置一个简单的屏幕锁密码，最好用英文哟，然后再点击“继续”、“继续”、“继续”、“继续”、“继续”…
 
-![vmware_macos_36.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_36.png)
+![vmware_macos_36.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_36.png)
 
 <br/>
 
@@ -302,31 +302,31 @@ featureCompat.enable = "FALSE"
 
 1.安装完成后，界面很小，因为还没装一个工具，这里我们选择关机，因为CD/DVD驱动器里是我们的macOS 10.15.5.cdr镜像，要是没有的话，可以跳过这一步；
 
-![vmware_macos_37.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_37.png)
+![vmware_macos_37.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_37.png)
 
 2.**关闭虚拟机后**，编辑虚拟机设置，找到CD/DVD选项，勾选使用物理驱动器；
 
-![vmware_macos_38.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_38.png)
+![vmware_macos_38.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_38.png)
 
 3.设置完成后，再开机，会有个弹框提示，忽略即可，输入完我们刚设置的密码进入系统后我们来安装VMware Tools，如图点击安装VMware Tools；
 
-![vmware_macos_39.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_39.png)
+![vmware_macos_39.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_39.png)
 
 4.过一会桌面会弹出VMware Tools，根据提示安装完即可；
 
-![vmware_macos_40.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_40.png)
+![vmware_macos_40.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_40.png)
 
 5.**安装VMware Tools过程中会有安全提示，根据操作提示，允许即可。一定要允许，这一步很重要，先点击左下角的小黄锁，解锁后才能在这个界面操作；**
 
-![vmware_macos_41.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_41.png)
+![vmware_macos_41.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_41.png)
 
 6.看到VMWare Tools软件提示安装成功完成后，点击重新启动；
 
-![vmware_macos_42.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_42.png)
+![vmware_macos_42.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_42.png)
 
 7.看图，选择全屏icon，看看是否全屏；
 
-![vmware_macos_43.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_43.png)
+![vmware_macos_43.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_43.png)
 
 <br/>
 
@@ -368,9 +368,9 @@ featureCompat.enable = "FALSE"
 
 1.主机设置（我这里是Win 10），新建一个文件夹，如下图中的Shared文件夹。主机设置将要共享的文件夹，右键Shared，选择属性，找到共享，进行共享；
 
-![vmware_macos_44.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_44.png)
+![vmware_macos_44.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_44.png)
 
-![vmware_macos_45.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/vmware_macos_45.png)
+![vmware_macos_45.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/vmware_macos_45.png)
 
 >   虚拟机设置，可以查看：
 >

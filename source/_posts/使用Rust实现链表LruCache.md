@@ -48,7 +48,7 @@ LRU 基于时间局部性进行数据淘汰，它用一个链表来追踪数据�
 -   当一份数据当下被访问了，就将该数据移动到链表的头部，链表从头到尾的顺序，相当于按照最近的访问时间对数据排序；
 -   当需要淘汰数据时，就将链表尾部的数据直接剔除，将需要新加入的数据插入链表的头部；
 
-![img](https://raw.fastgit.org/JasonkayZK/blog_static/master/images//lru.png)
+![img](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//lru.png)
 
 **一个双向链表+HashMap 就可以让 LRU 算法只有 O(1) 的时间复杂度**，非常简单粗暴，下面来看实现；
 

@@ -148,6 +148,6 @@ DOSBox在模拟MS-DOS同时，还增加了一些可用特性，包括虚拟磁�
 
 <font color="#f00">**（图为第三章结尾：当使用MOV命令修改SS寄存器，并进入系统中断并返回后导致的即使未向栈中PUSH数据，仍然具有数据的原因）**</font>
 
-![学习汇编笔记.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/学习汇编笔记.png)
+![学习汇编笔记.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/学习汇编笔记.png)
 
 <br/>

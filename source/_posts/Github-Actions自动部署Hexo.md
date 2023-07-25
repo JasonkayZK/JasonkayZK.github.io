@@ -70,7 +70,7 @@ ssh-keygen -t rsa -b 4096 -C "$(git config user.email)" -f github-deploy-key -N 
 -   `Title` 自定义即可，我添加的是`hexo_deploy_pub`；
 -   `Key` 中添加 `github-deploy-key.pub` 文件中的内容；
 
-![github_deploy_key.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/github_deploy_key.png)
+![github_deploy_key.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/github_deploy_key.png)
 
 >   **注意：**
 >
@@ -84,14 +84,14 @@ ssh-keygen -t rsa -b 4096 -C "$(git config user.email)" -f github-deploy-key -N 
 
 在 GitHub 中博客工程中按照 `Settings -> Secrets -> Add a new secrets` 找到对应的页面，然后进行私钥添加；
 
-![github_secret_key_1.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/github_secret_key_1.png)
+![github_secret_key_1.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/github_secret_key_1.png)
 
 和上一步类似，该页面中：
 
 -   `Name` 自定义即可，这里我使用的是`hexo_deploy_pri`；
 -   `Value` 中添加 `github-deploy-key` 文件中的内容；
 
-![github_secret_key_2.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/github_secret_key_2.png)
+![github_secret_key_2.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/github_secret_key_2.png)
 
 >   <font color="#f00">**注意：切记不要多复制空格!!!**</font>
 

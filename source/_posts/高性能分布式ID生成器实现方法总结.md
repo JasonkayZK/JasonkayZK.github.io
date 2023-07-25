@@ -173,7 +173,7 @@ description: 在复杂分布式系统中，往往需要对大量的数据和消�
 
 下面的动画展示了 ID 缓冲环的三个阶段：ID 初始化加载、ID 消费、ID 消费后填充：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_11.gif)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_11.gif)
 
 具体流程：
 
@@ -188,7 +188,7 @@ description: 在复杂分布式系统中，往往需要对大量的数据和消�
     -   如果 ID 缓冲环内存有 ID 那么就消费一个 ID ；
 -   同时，在消费 ID 缓冲环中的 ID 时，如果发现 ID 缓冲环中存留的 ID 数量少于整个 ID 缓冲环容量的 30% 时触发异步加载填充 ID 缓冲环；
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_12.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_12.png)
 
 <br/>
 
@@ -208,7 +208,7 @@ Snowflake **通常可以使用三种不同的部署方式来部署：**
 
 下图展示的是应用服务器通过引入 jar 包的方式实现获取分布式 ID 的过程：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_1.jpg)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_1.jpg)
 
 每一个使用分布式 ID 的应用服务器节点都会分配一个拓扑网络内唯一的机器号，这个机器号的管理存放在 MySQL 或者 ZooKeeper 上；
 
@@ -224,7 +224,7 @@ Snowflake **通常可以使用三种不同的部署方式来部署：**
 
 如下图所示：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_2.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_2.png)
 
 >   <font color="#f00">**机器号的分配只是分配给下图中的 ID Generator node 节点，应用节点是不需要分配机器号的；**</font>
 
@@ -244,7 +244,7 @@ Snowflake **通常可以使用三种不同的部署方式来部署：**
 
 而在使用直连集群式部署方式时，ID generator node 的服务地址可以配置在应用服务器本地配置文件中，或者配置在配置中心；
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_3.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_3.png)
 
 应用服务器获取到服务地址列表后，需要实现服务直连 ID生成器来获取 ID；
 
@@ -375,7 +375,7 @@ auto-increment-offset = 2
 
 那么整个架构就变成了如下图所示：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_4.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_4.png)
 
 这种架构貌似能够满足性能的需求，但有以下几个缺点：
 
@@ -448,7 +448,7 @@ VALUES ('test_business', 0, 100000);
 
 大致架构如下图所示：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_5.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_5.png)
 
 test_tag在第一台Leaf机器上是 `1~1000` 的号段，当这个号段用完时，会去加载另一个长度为`step=1000`的号段；
 
@@ -496,7 +496,7 @@ Commit
 
 下面的动画展示了双桶缓存初始化、异步加载预备桶和将预备桶切换成当前桶的全过程：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_10.gif)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_10.gif)
 
 -   **初始化当前的缓存桶**：即更新`max = max + step`，然后获取更新后的 max 值；比如：步长是 1000，更新后的 max 值是 1000，那么`桶的高度就是步长即 1000`，`桶 min = max - step + 1 = 1，max = 1000`；
 -   **加载新桶**：当前缓存桶的 ID 剩余不足 20% 的时候（其他条件也可以）可以加载下一个缓存桶，即更新 `max = max + step`，然后获取更新后的 max 值，此时更新后的 max 值是 2000，`min = max - step + 1 = 1001， max = 2000`；
@@ -504,7 +504,7 @@ Commit
 
 具体详细实现如下图所示：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_6.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_6.png)
 
 **优化采用双buffer的方式，Leaf服务内部有两个号段缓存区segment：**
 
@@ -528,7 +528,7 @@ Commit
 
 但是运维成本和精力都会相应的增加，根据实际情况选型即可；
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_7.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_7.png)
 
 同时Leaf服务可以分IDC部署：服务调用的时候，可以配置负载均衡算法优先调用同机房的Leaf服务；只有在该IDC内Leaf服务不可用的时候才会选择其他机房的Leaf服务；
 
@@ -557,7 +557,7 @@ Leaf-Snowflake是按照下面几个步骤启动的：
 2.  如果有注册过直接取回自己的workerID（zk顺序节点生成的int类型ID号），启动服务；
 3.  如果没有注册过，就在该父节点下面创建一个持久顺序节点，创建成功后取回顺序号当做自己的workerID号，启动服务；
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_8.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_8.png)
 
 <br/>
 
@@ -579,7 +579,7 @@ Leaf-Snowflake是按照下面几个步骤启动的：
 
 问题可以通过在ZK中写入自身系统实际来解决，解决方案如下：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/distributed_id_9.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_9.png)
 
 参见上图整个启动流程图，服务启动时首先检查自己是否写过ZooKeeper的leaf_forever节点：
 

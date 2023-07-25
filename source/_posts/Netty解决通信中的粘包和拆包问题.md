@@ -20,15 +20,15 @@ description: 在进行Java NIO学习时，如果客户端连续不断的向服�
 
 1.接收端正常收到两个数据包，即没有发生拆包和粘包的现象，此种情况不在本文的讨论范围内:
 
-![接收端正常收到两个数据包.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/接收端正常收到两个数据包.png)
+![接收端正常收到两个数据包.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/接收端正常收到两个数据包.png)
 
 2.接收端只收到一个数据包，由于TCP是不会出现丢包的，所以这一个数据包中包含了发送端发送的两个数据包的信息，这种现象即为粘包。这种情况由于接收端不知道这两个数据包的界限，所以对于接收端来说很难处理
 
-![接收端只收到一个数据包.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/接收端只收到一个数据包.png)
+![接收端只收到一个数据包.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/接收端只收到一个数据包.png)
 
 3.这种情况有两种表现形式，如下图。接收端收到了两个数据包，但是这两个数据包要么是不完整的，要么就是多出来一块，这种情况即发生了拆包和粘包。这两种情况如果不加特殊处理，对于接收端同样是不好处理的
 
-![两种表现形式.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/两种表现形式.png)
+![两种表现形式.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/两种表现形式.png)
 
 TCP是个“流”协议，没有界限的一串数据。TCP底层并不了解上层业务数据的具体含义，它会根据TCP缓冲区的实际情况进行包的划分，所以在业务上认为，一个完整的包可能会被TCP拆分成多个包进行发送，也有可能把多个小的包封装成一个大的数据包发送，这就是所谓的TCP粘包和拆包问题
 

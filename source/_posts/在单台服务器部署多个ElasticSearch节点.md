@@ -118,7 +118,7 @@ GET /_cluster/health
 
 或者使用kibana打开浏览器进入`Stack Monitoring`中查看, 如下图所示:
 
-![kibana观察集群情况](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/kibana观察集群情况.png)
+![kibana观察集群情况](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/kibana观察集群情况.png)
 
 可以看到的确有两个节点在工作, 集群启动成功!
 

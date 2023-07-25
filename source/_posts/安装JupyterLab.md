@@ -94,7 +94,7 @@ jupyter-lab --allow-root > /root/self-workspace/jupyter-notebook/jupyter.log 2>&
 
 输入密码后即可访问，如下图：
 
-![](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/jupyter_lab_1.png)
+![](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/jupyter_lab_1.png)
 
 <br/>
 

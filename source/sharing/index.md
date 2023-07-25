@@ -67,11 +67,11 @@ cover: https://img.paulzzh.tech/touhou/random?88
 
 **Alipay:**
 
-![alipay](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/alipay.jpg)
+![alipay](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/alipay.jpg)
 
 **WechatPay:**
 
-![wechat](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/wechat.jpg)
+![wechat](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/wechat.jpg)
 
 ## 赞助单
 

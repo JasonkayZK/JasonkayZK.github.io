@@ -75,7 +75,7 @@ tcp://127.0.0.1:22000
 
 最终配置好的结果如下图：
 
-![syncthing.png](https://raw.fastgit.org/JasonkayZK/blog_static/master/images/syncthing.png)
+![syncthing.png](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/syncthing.png)
 
 **此时，任意一台设备上在 sync-files 目录下改变了文件，都会同步到其他所有设备上，非常方便！**
 
