@@ -23,7 +23,8 @@ cover: https://img.paulzzh.tech/touhou/random?5
 | [知更](https://www.wrp.cool/)                | 2021-05-09   |
 | [小海的博客](https://xiaohai-learn.pub/)     | 2022-10-18   |
 | [程序员不秃头!](https://blog.ddddddddd.top/) | 2022-11-17   |
-|                                              |              |
+| [LB's Blog](https://www.itcoca.cn/) | 2023-11-07 |
+
 
 ## 其他
 
