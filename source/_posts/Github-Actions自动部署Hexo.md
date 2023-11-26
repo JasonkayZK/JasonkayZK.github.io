@@ -1,7 +1,7 @@
 ---
 title: Github-Actions自动部署Hexo
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?99'
+cover: 'https://img.paulzzh.com/touhou/random?99'
 date: 2021-05-08 08:25:39
 categories: [Github]
 tags: [技术杂谈, Github]

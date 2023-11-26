@@ -1,7 +1,7 @@
 ---
 title: 解决Ubuntu搜狗输入法无法输入中文的问题
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?66'
+cover: 'https://img.paulzzh.com/touhou/random?66'
 date: 2023-02-20 18:31:41
 categories: 技术杂谈
 tags: [技术杂谈]

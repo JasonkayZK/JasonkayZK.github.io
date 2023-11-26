@@ -1,7 +1,7 @@
 ---
 title: 安装和配置rbenv与Ruby
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?1'
+cover: 'https://img.paulzzh.com/touhou/random?1'
 date: 2023-03-04 16:21:16
 categories: Ruby
 tags: [Ruby, 软件安装与配置]

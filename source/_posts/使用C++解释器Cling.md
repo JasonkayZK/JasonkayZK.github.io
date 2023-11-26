@@ -1,7 +1,7 @@
 ---
 title: 使用C++解释器Cling
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?12'
+cover: 'https://img.paulzzh.com/touhou/random?12'
 date: 2021-11-09 13:24:54
 categories: 软件安装与配置
 tags: [软件安装与配置, Cling, C++]

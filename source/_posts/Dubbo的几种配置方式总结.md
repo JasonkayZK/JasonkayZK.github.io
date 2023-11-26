@@ -1,7 +1,7 @@
 ---
 title: Dubbo的几种配置方式总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2023-03-23 14:02:19
 categories: Dubbo
 tags: [Dubbo]

@@ -1,7 +1,7 @@
 ---
 title: mit-6.824 lab1 MapReduce总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?10'
+cover: 'https://img.paulzzh.com/touhou/random?10'
 date: 2022-10-08 23:34:40
 categories: 课程
 tags: [课程, 分布式]

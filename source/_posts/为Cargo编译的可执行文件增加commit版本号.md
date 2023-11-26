@@ -1,7 +1,7 @@
 ---
 title: 为Cargo编译的可执行文件增加commit版本号
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?7'
+cover: 'https://img.paulzzh.com/touhou/random?7'
 date: 2022-11-17 17:00:19
 categories: Rust
 tags: [Rust, Cargo]

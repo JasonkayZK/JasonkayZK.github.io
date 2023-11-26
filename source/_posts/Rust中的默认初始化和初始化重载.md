@@ -1,7 +1,7 @@
 ---
 title: Rust中的默认初始化和初始化重载
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?37'
+cover: 'https://img.paulzzh.com/touhou/random?37'
 date: 2022-11-19 20:41:26
 categories: Rust
 tags: [Rust]

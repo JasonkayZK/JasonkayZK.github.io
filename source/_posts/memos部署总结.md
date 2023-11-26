@@ -1,7 +1,7 @@
 ---
 title: memos部署总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2023-01-02 14:01:15
 categories: 工具分享
 tags: [工具分享]

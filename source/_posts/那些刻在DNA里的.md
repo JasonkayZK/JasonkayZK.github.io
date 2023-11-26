@@ -1,7 +1,7 @@
 ---
 title: 那些刻在DNA里的
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?54'
+cover: 'https://img.paulzzh.com/touhou/random?54'
 date: 2021-02-17 14:15:18
 categories: 程序人生
 tags: 程序人生

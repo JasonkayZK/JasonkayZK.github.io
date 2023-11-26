@@ -1,7 +1,7 @@
 ---
 title: 使用Nginx代理TCP或UDP
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2022-10-24 14:07:53
 categories: Nginx
 tags: [Nginx]

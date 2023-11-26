@@ -2,7 +2,7 @@
 title: Java中自动拆装箱的陷阱
 toc: true
 date: 2019-12-12 21:16:11
-cover: https://img.paulzzh.tech/touhou/random?2
+cover: https://img.paulzzh.com/touhou/random?2
 categories: Java源码
 tags: [Java源码]
 description: 在看《深入理解Java虚拟机》一书时看到的问题，关于Java编译器在进行解语法糖时对于自动拆装箱做出的行为，有时会造成误解或者歧义，所以在此总结一下

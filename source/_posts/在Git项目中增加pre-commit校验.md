@@ -1,7 +1,7 @@
 ---
 title: 在Git项目中增加pre-commit校验
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2021-10-10 15:50:46
 categories: 技术杂谈
 tags: [技术杂谈, Git]

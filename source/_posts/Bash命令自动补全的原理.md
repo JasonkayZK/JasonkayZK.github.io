@@ -1,7 +1,7 @@
 ---
 title: Bash命令自动补全的原理
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?24'
+cover: 'https://img.paulzzh.com/touhou/random?24'
 date: 2020-12-06 16:21:54
 categories: Linux
 tags: [Linux, 技术杂谈, Bash]

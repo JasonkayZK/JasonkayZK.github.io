@@ -1,7 +1,7 @@
 ---
 title: Rust中的错误处理
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?17'
+cover: 'https://img.paulzzh.com/touhou/random?17'
 date: 2022-11-18 11:19:07
 categories: Rust
 tags: [Rust]

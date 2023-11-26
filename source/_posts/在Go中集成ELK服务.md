@@ -1,7 +1,7 @@
 ---
 title: 在Go中集成ELK服务
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2021-05-16 15:36:54
 categories: Golang
 tags: [Golang, ElasticSearch]

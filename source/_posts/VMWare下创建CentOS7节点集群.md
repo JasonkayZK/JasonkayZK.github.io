@@ -1,7 +1,7 @@
 ---
 title: VMWare下创建CentOS7节点集群
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?12'
+cover: 'https://img.paulzzh.com/touhou/random?12'
 date: 2021-03-13 14:39:40
 categories: [Linux]
 tags: [Linux, CentOS, VMWare]

@@ -2,7 +2,7 @@
 title: Java集合六-Stack
 toc: true
 date: 2019-11-27 10:05:10
-cover: https://img.paulzzh.tech/touhou/random?11
+cover: https://img.paulzzh.com/touhou/random?11
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 description: 本篇总结了Java中的Stack

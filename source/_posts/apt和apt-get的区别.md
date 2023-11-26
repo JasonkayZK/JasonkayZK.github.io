@@ -1,7 +1,7 @@
 ---
 title: apt和apt-get的区别
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?67'
+cover: 'https://img.paulzzh.com/touhou/random?67'
 date: 2021-03-07 15:14:16
 categories: 技术杂谈
 tags: [技术杂谈, apt]

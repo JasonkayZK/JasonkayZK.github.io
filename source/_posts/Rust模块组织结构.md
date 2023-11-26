@@ -1,7 +1,7 @@
 ---
 title: Rust模块组织结构
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?88'
+cover: 'https://img.paulzzh.com/touhou/random?88'
 date: 2022-11-19 09:45:43
 categories: Rust
 tags: [Rust, Cargo]

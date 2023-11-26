@@ -1,7 +1,7 @@
 ---
 title: 在python中使用ssh隧道连接mysql
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2020-11-22 14:37:12
 categories: Python
 tags: [Python, SSH, MySQL]

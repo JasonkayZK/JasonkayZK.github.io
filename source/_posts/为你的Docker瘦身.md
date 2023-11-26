@@ -1,6 +1,6 @@
 ---
 title: 为你的Docker瘦身
-cover: https://img.paulzzh.tech/touhou/random?91
+cover: https://img.paulzzh.com/touhou/random?91
 date: 2020-04-26 19:36:59
 categories: Docker
 tags: [Docker]

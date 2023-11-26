@@ -1,7 +1,7 @@
 ---
 title: 使用gowatch热部署提升你的开发效率
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?14'
+cover: 'https://img.paulzzh.com/touhou/random?14'
 date: 2020-09-23 21:06:47
 categories: Golang
 tags: [Golang]

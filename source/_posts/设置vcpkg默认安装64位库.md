@@ -1,7 +1,7 @@
 ---
 title: 设置vcpkg默认安装64位库
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2022-05-05 13:29:05
 categories: 软件安装与配置
 tags: [vcpkg, 软件安装与配置]

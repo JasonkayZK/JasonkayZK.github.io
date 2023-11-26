@@ -1,7 +1,7 @@
 ---
 title: Docker原理实战-1：Namespace
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?1'
+cover: 'https://img.paulzzh.com/touhou/random?1'
 date: 2021-08-29 20:26:12
 categories: Docker
 tags: [Docker, Linux, Namespace]

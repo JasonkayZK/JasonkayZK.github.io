@@ -1,7 +1,7 @@
 ---
 title: mini-redis项目-5-客户端
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?5'
+cover: 'https://img.paulzzh.com/touhou/random?5'
 date: 2022-12-07 16:20:06
 categories: Rust
 tags: [Rust, Database, Redis]

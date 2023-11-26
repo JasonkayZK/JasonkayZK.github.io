@@ -1,7 +1,7 @@
 ---
 title: Rust中Future执行底层探秘
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?7'
+cover: 'https://img.paulzzh.com/touhou/random?7'
 date: 2022-11-29 10:23:46
 categories: Rust
 tags: [Rust, Async, Future]

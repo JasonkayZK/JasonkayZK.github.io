@@ -1,7 +1,7 @@
 ---
 title: 使用Docker-Compose部署单节点ELK
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?75'
+cover: 'https://img.paulzzh.com/touhou/random?75'
 date: 2021-05-15 10:35:59
 categories: Docker
 tags: [Docker, Docker-Compose, ElasticSearch]

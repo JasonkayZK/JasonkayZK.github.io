@@ -1,7 +1,7 @@
 ---
 title: 使用Docker部署单节点Hadoop
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-06-25 10:14:57
 categories: Docker
 tags: [Docker, Hadoop]

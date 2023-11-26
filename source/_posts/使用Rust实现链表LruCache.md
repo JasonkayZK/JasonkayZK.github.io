@@ -1,7 +1,7 @@
 ---
 title: 使用Rust实现链表LruCache
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?8'
+cover: 'https://img.paulzzh.com/touhou/random?8'
 date: 2022-12-20 15:06:00
 categories: Rust
 tags: [Rust, LruCache]

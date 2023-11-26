@@ -1,7 +1,7 @@
 ---
 title: 在Golang发生Panic后打印出堆栈信息
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-09-26 18:18:06
 categories: Golang
 tags: [Golang, Panic, 日志]

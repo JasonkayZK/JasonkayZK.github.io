@@ -1,7 +1,7 @@
 ---
 title: mini-redis项目-3-连接层
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2022-12-06 00:16:29
 categories: Rust
 tags: [Rust, Database, Redis]

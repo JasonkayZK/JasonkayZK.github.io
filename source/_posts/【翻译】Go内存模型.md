@@ -1,7 +1,7 @@
 ---
 title: 【翻译】Go内存模型
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?99'
+cover: 'https://img.paulzzh.com/touhou/random?99'
 date: 2022-10-26 09:04:49
 categories: Golang
 tags: [Golang]

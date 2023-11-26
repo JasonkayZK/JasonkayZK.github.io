@@ -1,7 +1,7 @@
 ---
 title: yield用法总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2021-04-20 10:06:58
 categories: 技术杂谈
 tags: [技术杂谈]

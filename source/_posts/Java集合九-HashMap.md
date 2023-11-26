@@ -2,7 +2,7 @@
 title: Java集合九-HashMap
 toc: true
 date: 2019-11-27 19:14:09
-cover: https://img.paulzzh.tech/touhou/random?8
+cover: https://img.paulzzh.com/touhou/random?8
 categories: Java源码
 tags: [Java基础, 面试总结, 集合]
 ---

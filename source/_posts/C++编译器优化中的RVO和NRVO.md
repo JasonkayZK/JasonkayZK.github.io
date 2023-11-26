@@ -1,7 +1,7 @@
 ---
 title: C++编译器优化中的RVO和NRVO
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2022-05-11 09:49:54
 categories: C++
 tags: [C++, 编译优化]

@@ -1,7 +1,7 @@
 ---
 title: Cargo命令及其扩展
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?43'
+cover: 'https://img.paulzzh.com/touhou/random?43'
 date: 2022-11-23 10:14:05
 categories: Rust
 tags: [Rust, Cargo]

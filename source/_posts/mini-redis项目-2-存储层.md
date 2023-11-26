@@ -1,7 +1,7 @@
 ---
 title: mini-redis项目-2-存储层
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2022-12-05 19:58:43
 categories: Rust
 tags: [Rust, Database, Redis]

@@ -1,7 +1,7 @@
 ---
 title: 解决Cargo下载过慢的问题
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2022-08-14 22:36:10
 categories: Rust
 tags: [Rust, 软件安装与配置, Cargo]

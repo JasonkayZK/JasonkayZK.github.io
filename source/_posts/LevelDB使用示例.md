@@ -1,7 +1,7 @@
 ---
 title: LevelDB使用示例
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2022-12-09 11:57:24
 categories: 数据库
 tags: [数据库, LevelDB, C++]

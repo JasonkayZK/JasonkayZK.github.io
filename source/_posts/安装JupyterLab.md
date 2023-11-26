@@ -1,7 +1,7 @@
 ---
 title: 安装JupyterLab
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-11-09 12:54:30
 categories: 软件安装与配置
 tags: [软件安装与配置, JupyterLab]

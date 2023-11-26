@@ -1,7 +1,7 @@
 ---
 title: 单机部署k3s
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2022-10-21 23:08:19
 categories: Kubernetes
 tags: [Kubernetes, k3s]

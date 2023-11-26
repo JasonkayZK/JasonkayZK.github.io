@@ -1,7 +1,7 @@
 ---
 title: 单机部署autok3s
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?13'
+cover: 'https://img.paulzzh.com/touhou/random?13'
 date: 2022-10-22 13:20:42
 categories: Kubernetes
 tags: [Kubernetes, autok3s]

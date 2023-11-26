@@ -1,7 +1,7 @@
 ---
 title: C++库之fmt
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2022-05-04 22:07:13
 categories: C++
 tags: [C++, Library]

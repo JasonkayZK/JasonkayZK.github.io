@@ -1,7 +1,7 @@
 ---
 title: 分享一个可以学习并部署高可用Postgres的网站CrunchyData
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?66'
+cover: 'https://img.paulzzh.com/touhou/random?66'
 date: 2022-11-12 14:42:40
 categories: PostgreSQL
 tags: [PostgreSQL, Kubernetes, 软件安装与配置]

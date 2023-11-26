@@ -1,7 +1,7 @@
 ---
 title: WLB看似简单，其实很难！
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2021-08-01 22:30:09
 categories: 程序人生
 tags: [程序人生]

@@ -1,7 +1,7 @@
 ---
 title: MySQL一致性视图的坑
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?18'
+cover: 'https://img.paulzzh.com/touhou/random?18'
 date: 2022-02-11 19:44:22
 categories: 数据库
 tags: [MySQL, 数据库]

@@ -1,7 +1,7 @@
 ---
 title: Docker原理实战-2：Cgroups
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2021-08-29 20:26:44
 categories: Docker
 tags: [Docker, Linux, Cgroups]

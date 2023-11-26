@@ -2,7 +2,7 @@
 title: XML的总结
 toc: true
 date: 2019-12-05 17:22:35
-cover: https://img.paulzzh.tech/touhou/random?9
+cover: https://img.paulzzh.com/touhou/random?9
 categories: 技术杂谈
 tags: XML
 description: 想必大家对XML已经很熟悉了吧. 最近复习的时候, 发现XML远没有自己想的那么简单, 所以就抽出一点时间来总结一下XML中一些常识性的或者冷门的知识

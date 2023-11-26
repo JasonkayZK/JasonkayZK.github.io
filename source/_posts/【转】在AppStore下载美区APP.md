@@ -1,7 +1,7 @@
 ---
 title: 【转】在AppStore下载美区APP
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-03-28 15:44:31
 categories: 工具分享
 tags: [工具分享, 技术杂谈, AppStore]

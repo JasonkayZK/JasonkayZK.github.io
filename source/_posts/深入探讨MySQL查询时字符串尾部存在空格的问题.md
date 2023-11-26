@@ -1,7 +1,7 @@
 ---
 title: 深入探讨MySQL查询时字符串尾部存在空格的问题
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?31'
+cover: 'https://img.paulzzh.com/touhou/random?31'
 date: 2022-02-27 11:06:11
 categories: MySQL
 tags: [MySQL]

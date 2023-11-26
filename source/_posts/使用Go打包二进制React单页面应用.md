@@ -1,7 +1,7 @@
 ---
 title: 使用Go打包二进制React单页面应用
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2021-03-28 20:59:08
 categories: Golang
 tags: [Golang, SPA, React]

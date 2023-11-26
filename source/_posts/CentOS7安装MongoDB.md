@@ -1,7 +1,7 @@
 ---
 title: CentOS7安装MongoDB
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2021-03-10 16:58:31
 categories: 软件安装与配置
 tags: [软件安装与配置, MongoDB]

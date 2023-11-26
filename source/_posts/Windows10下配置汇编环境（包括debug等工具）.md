@@ -1,7 +1,7 @@
 ---
 title: Windows10下配置汇编环境（包括debug等工具）
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?x'
+cover: 'https://img.paulzzh.com/touhou/random?x'
 date: 2021-03-27 20:28:34
 categories: 汇编语言
 tags: [汇编语言, 软件安装与配置]

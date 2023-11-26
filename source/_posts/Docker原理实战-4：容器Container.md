@@ -1,7 +1,7 @@
 ---
 title: Docker原理实战-4：容器Container
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2021-09-05 15:24:47
 categories: Docker
 tags: [Docker, Linux, Container, 容器]

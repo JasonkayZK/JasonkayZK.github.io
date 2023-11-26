@@ -1,7 +1,7 @@
 ---
 title: Go的中国身份证号校验库
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?87'
+cover: 'https://img.paulzzh.com/touhou/random?87'
 date: 2021-02-14 14:57:35
 categories: Golang
 tags: [Golang]

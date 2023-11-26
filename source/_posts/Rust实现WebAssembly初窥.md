@@ -1,7 +1,7 @@
 ---
 title: Rust实现WebAssembly初窥
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?66'
+cover: 'https://img.paulzzh.com/touhou/random?66'
 date: 2021-10-10 13:19:14
 categories: Rust
 tags: [Rust, WebAssembly]

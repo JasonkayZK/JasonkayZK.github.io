@@ -1,7 +1,7 @@
 ---
 title: 排查tcp连接数不断升高的问题
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2022-08-08 21:13:48
 categories: 技术杂谈
 tags: [技术杂谈]

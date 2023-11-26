@@ -1,7 +1,7 @@
 ---
 title: JuiceFS使用总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2022-12-21 10:27:15
 categories: JuiceFS
 tags: [分布式, JuiceFS]

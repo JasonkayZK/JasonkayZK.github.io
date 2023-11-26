@@ -1,7 +1,7 @@
 ---
 title: CN2网络线路总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2021-06-23 14:07:00
 categories: 技术杂谈
 tags: [技术杂谈, 网络线路]

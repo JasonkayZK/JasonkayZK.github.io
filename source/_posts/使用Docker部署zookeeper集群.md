@@ -1,6 +1,6 @@
 ---
 title: 使用Docker部署zookeeper集群
-cover: https://img.paulzzh.tech/touhou/random?99
+cover: https://img.paulzzh.com/touhou/random?99
 date: 2020-04-26 20:07:32
 categories: Docker
 toc: true

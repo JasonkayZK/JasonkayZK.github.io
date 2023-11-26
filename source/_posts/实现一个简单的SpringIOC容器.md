@@ -1,6 +1,6 @@
 ---
 title: 实现一个简单的SpringIOC容器
-cover: https://img.paulzzh.tech/touhou/random?21
+cover: https://img.paulzzh.com/touhou/random?21
 toc: true
 date: 2020-03-02 12:36:42
 categories: Spring

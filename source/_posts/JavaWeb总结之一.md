@@ -2,7 +2,7 @@
 title: JavaWeb总结之一
 toc: true
 date: 2019-11-25 11:21:30
-cover: https://img.paulzzh.tech/touhou/random?22
+cover: https://img.paulzzh.com/touhou/random?22
 categories: 面试总结
 tags: JavaWeb
 description: 本文是Java面试总结中JavaWeb的第一篇

@@ -1,7 +1,7 @@
 ---
 title: Promise中的all、race和any
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?43'
+cover: 'https://img.paulzzh.com/touhou/random?43'
 date: 2021-05-14 11:12:57
 categories: Node.js
 tags: [Node.js, Promise]

@@ -1,7 +1,7 @@
 ---
 title: 在k3s集群上部署ClickHouse集群
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2022-10-25 08:38:34
 categories: ClickHouse
 tags: [ClickHouse, k3s, Kubernetes]

@@ -1,7 +1,7 @@
 ---
 title: Linux输出流重定向
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2021-06-24 14:08:15
 categories: Linux
 tags: [Linux, 技术杂谈, 重定向]

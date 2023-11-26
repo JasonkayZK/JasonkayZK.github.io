@@ -1,7 +1,7 @@
 ---
 title: win10内网穿透实现远程桌面连接
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?20'
+cover: 'https://img.paulzzh.com/touhou/random?20'
 date: 2020-09-02 21:29:11
 categories: 工具分享
 tags: [工具分享, 内网穿透]

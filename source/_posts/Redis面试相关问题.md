@@ -2,7 +2,7 @@
 title: Redis面试相关问题
 toc: true
 date: 2020-02-05 23:28:43
-cover: https://img.paulzzh.tech/touhou/random?3
+cover: https://img.paulzzh.com/touhou/random?3
 categories: Redis
 tags: [Java面试, Redis]
 description: 本篇总结了Redis在面试中经常碰到的一些问题, 以及在项目开发中Redis常见的问题

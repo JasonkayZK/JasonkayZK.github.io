@@ -1,7 +1,7 @@
 ---
 title: What is object slicing?
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2022-05-03 17:42:38
 categories: C++
 tags: [C++]

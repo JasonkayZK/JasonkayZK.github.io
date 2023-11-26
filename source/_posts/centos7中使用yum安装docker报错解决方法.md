@@ -1,7 +1,7 @@
 ---
 title: centos7中使用yum安装docker报错解决方法
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2022-08-14 11:06:41
 categories: 软件安装与配置
 tags: [软件安装与配置, CentOS, Docker]

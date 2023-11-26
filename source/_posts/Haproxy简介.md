@@ -1,7 +1,7 @@
 ---
 title: Haproxy简介
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2023-06-27 12:06:44
 categories: 技术杂谈
 tags: [技术杂谈, HAProxy]

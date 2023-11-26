@@ -1,7 +1,7 @@
 ---
 title: 简单实现C++内存分配跟踪
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2022-11-12 10:27:10
 categories: C++
 tags: [C++, 技术杂谈]

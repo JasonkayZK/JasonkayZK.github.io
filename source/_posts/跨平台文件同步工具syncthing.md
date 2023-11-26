@@ -1,7 +1,7 @@
 ---
 title: 跨平台文件同步工具syncthing
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2022-10-19 21:56:11
 categories: 工具分享
 tags: [工具分享]

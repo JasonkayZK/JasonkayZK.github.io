@@ -1,7 +1,7 @@
 ---
 title: 使用Uber开源的goleak库进行goroutine泄露检测
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?9'
+cover: 'https://img.paulzzh.com/touhou/random?9'
 date: 2021-04-21 15:40:13
 categories: Golang
 tags: [Golang, 技术杂谈, Goroutine]

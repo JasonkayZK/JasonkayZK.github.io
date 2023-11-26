@@ -1,7 +1,7 @@
 ---
 title: Rust从panic中恢复
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2022-11-17 13:49:07
 categories: Rust
 tags: [Rust]

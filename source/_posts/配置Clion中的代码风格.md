@@ -1,7 +1,7 @@
 ---
 title: 配置Clion中的代码风格
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?x'
+cover: 'https://img.paulzzh.com/touhou/random?x'
 date: 2022-07-05 14:13:47
 categories: 软件安装与配置
 tags: [软件安装与配置]

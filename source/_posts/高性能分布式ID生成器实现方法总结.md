@@ -2,7 +2,7 @@
 
 title: 高性能分布式ID生成器实现方法总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?87'
+cover: 'https://img.paulzzh.com/touhou/random?87'
 date: 2021-06-20 21:14:32
 categories: Golang
 tags: [Golang, 分布式, ID生成器]

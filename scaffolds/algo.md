@@ -1,7 +1,7 @@
 ---
 title: {{ title }}
 date: 1996-07-27 00:00:00
-cover: https://img.paulzzh.tech/touhou/random?x
+cover: https://img.paulzzh.com/touhou/random?x
 categories: 算法题目
 toc: true
 tags: 

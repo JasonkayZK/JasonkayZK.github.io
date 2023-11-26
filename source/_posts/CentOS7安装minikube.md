@@ -1,7 +1,7 @@
 ---
 title: CentOS7安装minikube
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?75'
+cover: 'https://img.paulzzh.com/touhou/random?75'
 date: 2021-05-26 22:00:37
 categories: Kubernetes
 tags: [Kubernetes, VMWare, CentOS]

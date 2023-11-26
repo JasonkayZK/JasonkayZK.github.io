@@ -2,7 +2,7 @@
 title: SpringBoot集成Swagger
 toc: true
 date: 2020-01-02 17:08:51
-cover: https://img.paulzzh.tech/touhou/random?12
+cover: https://img.paulzzh.com/touhou/random?12
 categories: Spring
 tags: [Spring Boot, Swagger]
 description:  最近写的项目都用到了Swagger生成文档, 所以本篇总结一下如何在Spring Boot中集成Swagger

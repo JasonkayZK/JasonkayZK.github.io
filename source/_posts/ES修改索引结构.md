@@ -1,7 +1,7 @@
 ---
 title: ES修改索引结构
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2022-06-22 13:23:04
 categories: [ElasticSearch]
 tags: [ElasticSearch]

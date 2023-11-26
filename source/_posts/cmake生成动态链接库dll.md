@@ -1,7 +1,7 @@
 ---
 title: cmake生成动态链接库dll
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2021-01-27 17:35:04
 categories: C++
 tags: [C++, DLL]

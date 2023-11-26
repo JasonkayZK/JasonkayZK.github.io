@@ -1,7 +1,7 @@
 ---
 title: sudo-su和su的区别
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2021-03-25 08:46:25
 categories: Linux
 tags: [技术杂谈, Linux]

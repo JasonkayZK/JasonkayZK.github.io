@@ -1,6 +1,6 @@
 ---
 title: LVS功能配置
-cover: https://img.paulzzh.tech/touhou/random?11
+cover: https://img.paulzzh.com/touhou/random?11
 date: 2020-04-10 11:49:22
 categories: 分布式
 toc: true

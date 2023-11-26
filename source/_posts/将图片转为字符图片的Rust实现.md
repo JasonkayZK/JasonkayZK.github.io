@@ -1,7 +1,7 @@
 ---
 title: 将图片转为字符图片的Rust实现
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?88'
+cover: 'https://img.paulzzh.com/touhou/random?88'
 date: 2022-12-22 11:44:56
 categories: Rust
 tags: [Rust, 技术杂谈]

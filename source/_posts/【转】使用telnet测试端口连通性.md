@@ -1,7 +1,7 @@
 ---
 title: 【转】使用telnet测试端口连通性
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?66'
+cover: 'https://img.paulzzh.com/touhou/random?66'
 date: 2022-12-21 15:03:39
 categories: 技术杂谈
 tags: [技术杂谈, telnet]

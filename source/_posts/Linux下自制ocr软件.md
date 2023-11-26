@@ -1,7 +1,7 @@
 ---
 title: Linux下自制OCR软件
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-05-07 19:48:56
 categories: 软件安装与配置
 tags: [软件安装与配置, 技术杂谈]

@@ -1,7 +1,7 @@
 ---
 title: 使用Java编写Cli命令行工具
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2023-03-20 13:45:36
 categories: Java
 tags: [Java, Cli, picocli, Maven]

@@ -1,7 +1,7 @@
 ---
 title: npm的instal命令总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-02-17 20:21:49
 categories: NPM
 tags: [技术杂谈, NPM]

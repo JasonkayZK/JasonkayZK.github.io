@@ -1,7 +1,7 @@
 ---
 title: 使用纯Go实现的MySQL数据库
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2021-02-15 14:58:46
 categories: Golang
 tags: [Golang]

@@ -1,7 +1,7 @@
 ---
 title: Linux中的/dev/null
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2021-04-17 17:33:26
 categories: Linux
 tags: [Linux, 技术杂谈]

@@ -1,7 +1,7 @@
 ---
 title: Rust中的PhantomType
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2021-10-20 10:40:46
 categories: Rust
 tags: [Rust]

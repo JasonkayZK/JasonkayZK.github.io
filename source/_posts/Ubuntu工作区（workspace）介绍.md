@@ -1,7 +1,7 @@
 ---
 title: Ubuntu工作区（workspace）介绍
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?89'
+cover: 'https://img.paulzzh.com/touhou/random?89'
 date: 2021-05-07 22:10:45
 categories: Linux
 tags: [Linux]

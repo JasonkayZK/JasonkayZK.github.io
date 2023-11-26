@@ -1,7 +1,7 @@
 ---
 title: 10分钟搞懂CAP理论笔记
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?10'
+cover: 'https://img.paulzzh.com/touhou/random?10'
 date: 2022-10-23 13:47:07
 categories: 分布式
 tags: [分布式, CAP]

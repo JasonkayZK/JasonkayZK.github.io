@@ -1,7 +1,7 @@
 ---
 title: mini-redis项目-6-测试与示例
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?6'
+cover: 'https://img.paulzzh.com/touhou/random?6'
 date: 2022-12-07 16:24:38
 categories: Rust
 tags: [Rust, Database, Redis]

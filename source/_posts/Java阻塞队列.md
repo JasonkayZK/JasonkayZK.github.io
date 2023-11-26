@@ -1,6 +1,6 @@
 ---
 title: Java阻塞队列
-cover: https://img.paulzzh.tech/touhou/random?2
+cover: https://img.paulzzh.com/touhou/random?2
 toc: true
 date: 2020-03-10 08:52:53
 categories: 并发编程

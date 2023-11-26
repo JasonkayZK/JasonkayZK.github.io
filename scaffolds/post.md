@@ -2,7 +2,7 @@
 title: {{ title }}
 date: {{ date }}
 toc: true
-cover: https://img.paulzzh.tech/touhou/random?x
+cover: https://img.paulzzh.com/touhou/random?x
 categories: 
 tags: 
 description: 

@@ -1,7 +1,7 @@
 ---
 title: Docker原理实战-3：UnionFS
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2021-08-29 20:27:09
 categories: Docker
 tags: [Docker, Linux, UnionFS, AUFS]

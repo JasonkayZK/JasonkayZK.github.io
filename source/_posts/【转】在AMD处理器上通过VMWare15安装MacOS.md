@@ -1,7 +1,7 @@
 ---
 title: 【转】在AMD处理器上通过VMWare15安装MacOS
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?87'
+cover: 'https://img.paulzzh.com/touhou/random?87'
 date: 2020-12-05 21:37:43
 categories: 软件安装与配置
 tags: [软件安装与配置, VMWare, 虚拟机, 黑苹果, MacOS]

@@ -1,7 +1,7 @@
 ---
 title: 在CentOS7中使用Shadowsocks客户端
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?99'
+cover: 'https://img.paulzzh.com/touhou/random?99'
 date: 2021-05-27 10:35:16
 categories: 软件安装与配置
 tags: [Shadowsocks, 软件安装与配置, CentOS]

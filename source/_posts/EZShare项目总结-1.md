@@ -1,7 +1,7 @@
 ---
 title: EZShare项目总结-1
 date: 2020-01-22 15:35:56
-cover: https://img.paulzzh.tech/touhou/random?2
+cover: https://img.paulzzh.com/touhou/random?2
 categories: 项目总结
 tags: [项目总结]
 toc: true

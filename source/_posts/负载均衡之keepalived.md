@@ -1,6 +1,6 @@
 ---
 title: 负载均衡之keepalived
-cover: https://img.paulzzh.tech/touhou/random?97
+cover: https://img.paulzzh.com/touhou/random?97
 date: 2020-04-12 14:08:31
 categories: 分布式
 toc: true

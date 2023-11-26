@@ -1,7 +1,7 @@
 ---
 title: TOML学习
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2022-11-28 14:31:24
 categories: TOML
 tags: [TOML, 技术杂谈]

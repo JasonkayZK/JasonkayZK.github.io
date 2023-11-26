@@ -1,7 +1,7 @@
 ---
 title: 学习Rust两周后我的一些感想
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-06-16 09:44:24
 categories: Rust
 tags: [Rust, 程序人生]

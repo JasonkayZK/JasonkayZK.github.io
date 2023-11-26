@@ -1,7 +1,7 @@
 ---
 title: 解决Github突然不支持密码访问的问题
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2021-08-15 16:20:28
 categories: Github
 tags: [Github, 技术杂谈]

@@ -1,7 +1,7 @@
 ---
 title: mini-redis项目-4-服务端
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2022-12-06 16:00:59
 categories: Rust
 tags: [Rust, Database, Redis]

@@ -1,7 +1,7 @@
 ---
 title: 配置Ingress处理TLS传输
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-05-31 08:47:34
 categories: Kubernetes
 tags: [Kubernetes, minikube, Ingress]

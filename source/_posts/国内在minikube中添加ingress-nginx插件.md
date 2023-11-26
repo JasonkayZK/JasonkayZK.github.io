@@ -1,7 +1,7 @@
 ---
 title: 国内在minikube中添加ingress-nginx插件
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2021-05-30 19:42:48
 categories: Kubernetes
 tags: [Kubernetes, minikube, Ingress]

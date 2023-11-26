@@ -1,7 +1,7 @@
 ---
 title: C++主流编译器总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2022-05-29 00:23:27
 categories: C++
 tags: [C++, 编译器]

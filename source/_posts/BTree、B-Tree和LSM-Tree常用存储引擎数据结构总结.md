@@ -1,7 +1,7 @@
 ---
 title: BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2022-11-05 11:47:56
 categories: 数据库
 tags: [技术杂谈, 数据库]

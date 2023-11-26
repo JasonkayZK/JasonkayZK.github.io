@@ -1,7 +1,7 @@
 ---
 title: 流量编排系统Easegress初探
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?123'
+cover: 'https://img.paulzzh.com/touhou/random?123'
 date: 2021-06-13 10:06:46
 categories: Golang
 tags: [Golang, Easegress]

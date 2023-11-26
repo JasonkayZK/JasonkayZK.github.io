@@ -1,7 +1,7 @@
 ---
 title: 【转】浅谈vpn、vps、Proxy以及shadowsocks之间的联系和区别
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-03-06 21:05:10
 categories: 技术杂谈
 tags: [技术杂谈, Shadowsocks, VPN]

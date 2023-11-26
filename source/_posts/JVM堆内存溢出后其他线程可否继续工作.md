@@ -2,7 +2,7 @@
 title: JVM堆内存溢出后其他线程可否继续工作
 toc: true
 date: 2019-12-30 10:31:43
-cover: https://img.paulzzh.tech/touhou/random?9
+cover: https://img.paulzzh.com/touhou/random?9
 categories: 技术杂谈
 tags: [面试总结, JVM]
 description: 最近看公众号推送了一个美团的面试题目, JVM堆内存溢出后其他线程可否继续工作, 自己心里想的是应该不可以吧, 毕竟JVM内存模型规定的是所有线程共用同一个堆内存, 结果答案是可以......

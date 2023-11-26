@@ -1,7 +1,7 @@
 ---
 title: 【分享】Epic-Game自动领取Docker镜像
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-09-04 23:15:06
 categories: 工具分享
 tags: [工具分享, 福利分享, Docker]

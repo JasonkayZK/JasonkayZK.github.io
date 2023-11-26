@@ -2,7 +2,7 @@
 title: 'Spring项目配置文件中的xmlns、xmlns:xsi和xsi:schemaLocation理解'
 toc: true
 date: 2019-12-05 16:11:39
-cover: https://img.paulzzh.tech/touhou/random?6
+cover: https://img.paulzzh.com/touhou/random?6
 categories: 技术杂谈
 tags: XML
 description: java开发项目中，经常用到xml配置文件，比如web.xml、applicationContext.xml、pom.xml等。在这些文件中都有xmlns、xmlns-xsi和xsi-schemaLocation配置, 平时在做项目时，遇到这些配置文件，尤其是搭建spring框架时，总是从别处直接拷贝过来，没有深入去理解这些配置信息。最近在搭建项目时，又遇到这些配置文件，打算好好理解这些东西

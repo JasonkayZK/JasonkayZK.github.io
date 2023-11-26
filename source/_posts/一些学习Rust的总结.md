@@ -1,7 +1,7 @@
 ---
 title: 一些学习Rust的总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2022-02-11 10:03:44
 categories: Rust
 tags: [Rust]

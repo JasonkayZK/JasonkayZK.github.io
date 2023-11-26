@@ -1,7 +1,7 @@
 ---
 title: 通过一个例子学习Cargo Features
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2022-11-28 16:45:20
 categories: Rust
 tags: [Rust, Cargo]

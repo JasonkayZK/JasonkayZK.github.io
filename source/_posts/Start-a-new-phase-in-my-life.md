@@ -1,7 +1,7 @@
 ---
 title: Start a new phase in my life
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 1996-07-27 18:39:08
 categories: Life
 tags: [English, Life]

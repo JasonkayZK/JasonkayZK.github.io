@@ -1,7 +1,7 @@
 ---
 title: 一文看懂Go方法中的值接收器和引用接收器
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?54'
+cover: 'https://img.paulzzh.com/touhou/random?54'
 date: 2021-06-28 09:22:22
 categories: Golang
 tags: [Golang]

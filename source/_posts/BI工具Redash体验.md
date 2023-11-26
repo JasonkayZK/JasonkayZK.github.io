@@ -1,7 +1,7 @@
 ---
 title: BI工具Redash体验
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2021-08-15 15:23:05
 categories: Redash
 tags: [Redash, Docker]

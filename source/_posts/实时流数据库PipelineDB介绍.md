@@ -1,7 +1,7 @@
 ---
 title: 实时流数据库PipelineDB介绍
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?65'
+cover: 'https://img.paulzzh.com/touhou/random?65'
 date: 2021-06-16 15:19:07
 categories: PostgreSQL
 tags: [PostgreSQL, PipelineDB, 流式数据库]

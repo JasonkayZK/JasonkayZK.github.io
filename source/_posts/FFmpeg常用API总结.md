@@ -1,7 +1,7 @@
 ---
 title: FFmpeg常用API总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2021-05-22 09:19:39
 categories: [技术杂谈]
 tags: [技术杂谈, FFmpeg]

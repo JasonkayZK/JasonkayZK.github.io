@@ -1,7 +1,7 @@
 ---
 title: Github主页更新了，变得更加酷炫！
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?6'
+cover: 'https://img.paulzzh.com/touhou/random?6'
 date: 2021-03-06 19:37:41
 categories: 技术杂谈
 tags: [技术杂谈, Github]

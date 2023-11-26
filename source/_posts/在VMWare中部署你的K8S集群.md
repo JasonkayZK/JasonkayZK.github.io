@@ -1,7 +1,7 @@
 ---
 title: 在VMWare中部署你的K8S集群
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?76'
+cover: 'https://img.paulzzh.com/touhou/random?76'
 date: 2021-05-16 21:45:31
 categories: Kubernetes
 tags: [Kubernetes, VMWare, CentOS]

@@ -1,6 +1,6 @@
 ---
 title: '算法:包含min函数的栈'
-cover: https://img.paulzzh.tech/touhou/random?29
+cover: https://img.paulzzh.com/touhou/random?29
 categories: 算法题目
 toc: true
 date: 1996-07-27 08:00:00

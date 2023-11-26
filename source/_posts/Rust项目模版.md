@@ -1,7 +1,7 @@
 ---
 title: Rust项目模版
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?5'
+cover: 'https://img.paulzzh.com/touhou/random?5'
 date: 2022-11-30 11:11:51
 categories: Rust
 tags: [Rust]

@@ -1,7 +1,7 @@
 ---
 title: Docker安装Bytebase
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?88'
+cover: 'https://img.paulzzh.com/touhou/random?88'
 date: 2022-10-31 13:46:15
 categories: Docker
 tags: [Docker, Bytebase]

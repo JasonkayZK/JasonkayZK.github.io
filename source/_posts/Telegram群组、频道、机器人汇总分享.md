@@ -1,7 +1,7 @@
 ---
 title: Telegram群组、频道、机器人汇总分享
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-02-14 13:41:13
 categories: 工具分享
 tags: [工具分享]

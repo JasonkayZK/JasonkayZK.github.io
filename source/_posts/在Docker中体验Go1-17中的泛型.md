@@ -1,7 +1,7 @@
 ---
 title: 在Docker中体验Go1.17中的泛型
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2021-07-05 15:30:23
 categories: Golang
 tags: [Golang, Docker]

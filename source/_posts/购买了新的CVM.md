@@ -1,7 +1,7 @@
 ---
 title: 购买了新的CVM
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?43'
+cover: 'https://img.paulzzh.com/touhou/random?43'
 date: 2021-03-10 18:48:29
 categories: 程序人生
 tags: [程序人生, 技术杂谈]

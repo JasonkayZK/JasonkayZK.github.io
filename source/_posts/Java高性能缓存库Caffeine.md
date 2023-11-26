@@ -1,7 +1,7 @@
 ---
 title: Java高性能缓存库Caffeine
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2023-03-28 11:30:08
 categories: Java
 tags: [Java, Caffeine, Cache]

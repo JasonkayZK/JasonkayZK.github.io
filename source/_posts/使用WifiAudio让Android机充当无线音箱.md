@@ -1,7 +1,7 @@
 ---
 title: 使用WifiAudio让Android机充当无线音箱
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2021-02-21 19:42:08
 categories: [工具分享]
 tags: [工具分享, Android]

@@ -1,7 +1,7 @@
 ---
 title: 用TypeScript写了一个Mock Protobuf的工具
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2022-10-07 16:23:20
 categories: TypeScript
 tags: [TypeScript, Protobuf, 工具分享]

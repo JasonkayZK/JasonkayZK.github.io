@@ -1,7 +1,7 @@
 ---
 title: 我决定用 Rust 构建我的下一个开源项目
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2022-10-08 22:58:15
 categories: Rust
 tags: [Rust]

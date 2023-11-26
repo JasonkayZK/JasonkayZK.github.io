@@ -1,7 +1,7 @@
 ---
 title: 使用Go构建GraphQL API
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?56'
+cover: 'https://img.paulzzh.com/touhou/random?56'
 date: 2021-01-21 17:06:57
 categories: Golang
 tags: [Golang, GraphQL]

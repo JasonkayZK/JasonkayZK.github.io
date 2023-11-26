@@ -2,7 +2,7 @@
 title: 在Win10下使用Docker部署FTP服务
 toc: true
 date: 2020-01-10 10:27:18
-cover: https://img.paulzzh.tech/touhou/random?13
+cover: https://img.paulzzh.com/touhou/random?13
 categories: Docker
 tags: [Docker, FTP]
 description: 本篇总结了在win10下面使用Docker来部署vsftpd服务

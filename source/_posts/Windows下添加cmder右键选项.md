@@ -1,6 +1,6 @@
 ---
 title: Windows下添加cmder右键选项
-cover: https://img.paulzzh.tech/touhou/random?21
+cover: https://img.paulzzh.com/touhou/random?21
 date: 2020-05-10 14:19:09
 categories: 软件安装与配置
 toc: true

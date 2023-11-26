@@ -1,7 +1,7 @@
 ---
 title: CentOS设置自启动
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?7'
+cover: 'https://img.paulzzh.com/touhou/random?7'
 date: 2021-06-24 12:32:56
 categories: [Linux]
 tags: [Linux, CentOS, 技术杂谈, 自启动]

@@ -1,7 +1,7 @@
 ---
 title: Rust反射之过程宏
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?1'
+cover: 'https://img.paulzzh.com/touhou/random?1'
 date: 2022-11-25 11:08:40
 categories: Rust
 tags: [Rust, 反射]

@@ -2,7 +2,7 @@
 title: 使用Docker-Maven插件部署Tomcat
 toc: true
 date: 2020-01-14 22:31:51
-cover: https://img.paulzzh.tech/touhou/random?19
+cover: https://img.paulzzh.com/touhou/random?19
 categories: Docker
 tags: [Maven, 项目构建, 项目部署, Tomcat, Docker]
 description: 学习了Docker之后, 在项目部署时是真的香, 不需要破坏宿主本地环境, 能够统一部署, 环境相同, 构建集群也方便. 所以现在即使开发个JSP, 部署在Tomcat也不想在本地下一个Tomcat了

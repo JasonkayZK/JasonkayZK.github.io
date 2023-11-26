@@ -1,7 +1,7 @@
 ---
 title: 使用K8S部署最简单的Go应用
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2021-10-31 16:46:39
 categories: Kubernetes
 tags: [Kubernetes]

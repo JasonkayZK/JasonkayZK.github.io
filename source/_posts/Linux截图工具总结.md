@@ -1,7 +1,7 @@
 ---
 title: Linux截图工具总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?34'
+cover: 'https://img.paulzzh.com/touhou/random?34'
 date: 2021-05-07 21:03:59
 categories: Linux
 tags: [Linux]

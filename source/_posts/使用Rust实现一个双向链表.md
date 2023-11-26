@@ -1,7 +1,7 @@
 ---
 title: 使用Rust实现一个双向链表
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2022-02-20 11:15:16
 categories: Rust
 tags: [Rust, 算法]

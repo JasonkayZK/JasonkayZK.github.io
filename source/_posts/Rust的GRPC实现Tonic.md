@@ -1,7 +1,7 @@
 ---
 title: Rust的GRPC实现Tonic
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2022-12-03 14:19:51
 categories: Rust
 tags: [Rust, GRPC]

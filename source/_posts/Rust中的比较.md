@@ -1,7 +1,7 @@
 ---
 title: Rust中的比较
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?73'
+cover: 'https://img.paulzzh.com/touhou/random?73'
 date: 2022-11-23 13:43:26
 categories: Rust
 tags: [Rust]

@@ -1,7 +1,7 @@
 ---
 title: 【转】Nginx的Header中使用下划线时的一个坑
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?34'
+cover: 'https://img.paulzzh.com/touhou/random?34'
 date: 2021-06-24 15:10:29
 categories: Nginx
 tags: [Nginx, 技术杂谈]

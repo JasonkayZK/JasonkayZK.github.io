@@ -1,7 +1,7 @@
 ---
 title: M1芯片的Mac使用Colima运行Docker
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?41'
+cover: 'https://img.paulzzh.com/touhou/random?41'
 date: 2023-03-17 15:55:00
 categories: Docker
 tags: [Docker, Colima]

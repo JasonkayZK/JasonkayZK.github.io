@@ -1,7 +1,7 @@
 ---
 title: 使用Rust实现布隆过滤器BloomFilter
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?54'
+cover: 'https://img.paulzzh.com/touhou/random?54'
 date: 2022-12-16 14:47:19
 categories: Rust
 tags: [Rust, BloomFilter]

@@ -1,7 +1,7 @@
 ---
 title: 管理Git在本地的远程分支追踪
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?23'
+cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2022-05-11 09:44:15
 categories: Git
 tags: [Git]

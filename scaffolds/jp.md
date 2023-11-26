@@ -1,7 +1,7 @@
 ---
 title: {{ title }}
 date: {{ date }}
-cover: https://img.paulzzh.tech/touhou/random?x
+cover: https://img.paulzzh.com/touhou/random?x
 categories: 日本語
 tags: [日本語]
 toc: true

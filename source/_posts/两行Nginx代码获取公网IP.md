@@ -1,7 +1,7 @@
 ---
 title: 两行Nginx代码获取访问者的公网IP
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2020-11-13 10:38:44
 categories: Nginx
 tags: [Nginx, 技术杂谈]

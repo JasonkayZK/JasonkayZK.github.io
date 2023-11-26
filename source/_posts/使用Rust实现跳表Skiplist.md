@@ -1,7 +1,7 @@
 ---
 title: 使用Rust实现跳表Skiplist
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2022-12-16 22:20:44
 categories: Rust
 tags: [Rust, Skiplist]

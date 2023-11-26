@@ -1,7 +1,7 @@
 ---
 title: Rust反射之Any
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?9'
+cover: 'https://img.paulzzh.com/touhou/random?9'
 date: 2022-11-24 17:37:17
 categories: Rust
 tags: [Rust, 反射]

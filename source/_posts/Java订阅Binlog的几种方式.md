@@ -1,7 +1,7 @@
 ---
 title: Java订阅Binlog的几种方式
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?4'
+cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2023-03-26 15:42:19
 categories: Java
 tags: [Java, MySQL]

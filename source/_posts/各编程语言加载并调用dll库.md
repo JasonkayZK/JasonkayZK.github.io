@@ -1,7 +1,7 @@
 ---
 title: 各编程语言加载并调用dll库
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2021-01-28 09:39:02
 categories: C++
 tags: [C++, DLL, 技术杂谈]

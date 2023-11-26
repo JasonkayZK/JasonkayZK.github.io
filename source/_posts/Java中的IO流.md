@@ -2,7 +2,7 @@
 title: Java中的IO流
 toc: true
 date: 2019-11-25 22:30:49
-cover: https://img.paulzzh.tech/touhou/random?5
+cover: https://img.paulzzh.com/touhou/random?5
 categories: IO基础
 tags: [Java基础]
 description: Java中的IO一直都是我的薄弱项, 本篇总结了Java中的IOStream

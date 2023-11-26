@@ -1,7 +1,7 @@
 ---
 title: 软件发布版本Alpha、Beta、GA、RC等含义总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?77'
+cover: 'https://img.paulzzh.com/touhou/random?77'
 date: 2021-06-27 17:40:54
 categories: 技术杂谈
 tags: [技术杂谈]

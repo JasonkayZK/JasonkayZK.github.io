@@ -1,7 +1,7 @@
 ---
 title: 控制Goroutine数量的方法
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?55'
+cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-10-22 17:49:57
 categories: Golang
 tags: [Golang, Goroutine, 并发编程]

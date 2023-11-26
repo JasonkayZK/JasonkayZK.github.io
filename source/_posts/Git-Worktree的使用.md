@@ -1,6 +1,6 @@
 ---
 title: Git Worktree的使用
-cover: https://img.paulzzh.tech/touhou/random?67
+cover: https://img.paulzzh.com/touhou/random?67
 date: 2020-05-03 17:06:56
 categories: Git
 tags: [Git]

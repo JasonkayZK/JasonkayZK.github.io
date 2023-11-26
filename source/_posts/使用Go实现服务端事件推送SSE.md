@@ -1,7 +1,7 @@
 ---
 title: 使用Go实现服务端事件推送SSE
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?11'
+cover: 'https://img.paulzzh.com/touhou/random?11'
 date: 2021-03-05 11:15:32
 categories: Golang
 tags: [Golang, SSE]

@@ -1,7 +1,7 @@
 ---
 title: 在Go中仅使用MySQL实现高性能分布式ID生成器
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?8'
+cover: 'https://img.paulzzh.com/touhou/random?8'
 date: 2021-06-20 22:14:32
 categories: Golang
 tags: [Golang, 分布式, ID生成器]

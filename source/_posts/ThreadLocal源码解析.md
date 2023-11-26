@@ -2,7 +2,7 @@
 title: ThreadLocal源码解析
 toc: true
 date: 2019-12-26 09:43:58
-cover: https://img.paulzzh.tech/touhou/random?8
+cover: https://img.paulzzh.com/touhou/random?8
 categories: Java源码
 tags: [Java源码, 并发编程, 线性探测法, hash冲突, 哈希表]
 description: 最近总结了一套阿里云的面试题, 其中有一个ThreadLocal和线程池配合使用造成内存泄露的问题. 当时写了答案但是感觉对于ThreadLocal的理解还不是特别深入, 所以想再看一下源码.

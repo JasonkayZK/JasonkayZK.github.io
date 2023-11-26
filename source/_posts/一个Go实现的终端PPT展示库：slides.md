@@ -1,7 +1,7 @@
 ---
 title: 一个Go实现的终端PPT展示库：slides
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?44'
+cover: 'https://img.paulzzh.com/touhou/random?44'
 date: 2021-06-27 18:47:00
 categories: Golang
 tags: [Golang, 技术杂谈]

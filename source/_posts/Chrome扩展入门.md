@@ -1,7 +1,7 @@
 ---
 title: Chrome扩展入门
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?2'
+cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2020-10-23 21:46:58
 categories: Chrome扩展
 tags: [Chrome扩展]

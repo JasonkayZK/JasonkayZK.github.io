@@ -1,7 +1,7 @@
 ---
 title: 使用Github-Actions同步github和gitee仓库
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?22'
+cover: 'https://img.paulzzh.com/touhou/random?22'
 date: 2020-10-23 18:11:08
 categories: Github
 tags: [Github, Gitee, Github-Actions]

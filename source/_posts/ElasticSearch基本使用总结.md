@@ -1,7 +1,7 @@
 ---
 title: ElasticSearch基本使用总结
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?78'
+cover: 'https://img.paulzzh.com/touhou/random?78'
 date: 2022-06-14 13:36:52
 categories: ElasticSearch
 tags: [ElasticSearch]

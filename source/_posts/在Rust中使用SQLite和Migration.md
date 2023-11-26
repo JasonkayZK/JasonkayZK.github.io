@@ -1,7 +1,7 @@
 ---
 title: 在Rust中使用SQLite和Migration
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?21'
+cover: 'https://img.paulzzh.com/touhou/random?21'
 date: 2023-07-11 21:39:16
 categories: Rust
 tags: [Rust, SQLite]

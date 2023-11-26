@@ -1,7 +1,7 @@
 ---
 title: 深入理解C++中的move和forward
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?66'
+cover: 'https://img.paulzzh.com/touhou/random?66'
 date: 2022-05-08 13:44:48
 categories: C++
 tags: [C++]

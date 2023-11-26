@@ -1,7 +1,7 @@
 ---
 title: 快速搭建属于你自己的网盘：FileBrowser
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?89'
+cover: 'https://img.paulzzh.com/touhou/random?89'
 date: 2021-06-25 10:29:40
 categories: 服务自建
 tags: [服务自建, 网盘, Docker]

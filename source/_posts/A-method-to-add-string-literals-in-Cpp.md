@@ -1,7 +1,7 @@
 ---
 title: A method to add string literals in C++
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?3'
+cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2022-04-30 17:01:31
 categories: C++
 tags: [C++, String]

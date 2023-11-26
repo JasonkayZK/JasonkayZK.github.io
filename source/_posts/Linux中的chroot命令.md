@@ -1,7 +1,7 @@
 ---
 title: Linux中的chroot命令
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?7'
+cover: 'https://img.paulzzh.com/touhou/random?7'
 date: 2021-06-26 10:19:22
 categories: Linux
 tags: [Linux, chroot]

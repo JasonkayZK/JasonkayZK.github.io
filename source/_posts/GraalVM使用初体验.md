@@ -1,7 +1,7 @@
 ---
 title: GraalVM使用初体验
 toc: true
-cover: 'https://img.paulzzh.tech/touhou/random?33'
+cover: 'https://img.paulzzh.com/touhou/random?33'
 date: 2023-03-20 20:48:52
 categories: GraalVM
 tags: [GraalVM, Java]
