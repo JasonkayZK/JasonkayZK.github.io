@@ -18,7 +18,7 @@ layout: false
                 style='position:inherit; top:0px; left:0px; width:80%; height:66%; z-index:999;'
                 frameborder='no'
                 scrolling='true'
-                src="https://chat.getloli.com/room/@JasonkayZK?title=JasonkayZK-chatroom">
+                src="https://chat-room-6jyt.onrender.com/room/@JasonkayZK?title=JasonkayZK-chatroom">
             </iframe>
         </div>
         <div style="margin-top: 15pt;text-align: center">
