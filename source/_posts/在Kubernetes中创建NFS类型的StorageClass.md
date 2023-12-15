@@ -212,7 +212,9 @@ nfs-pv-my-storage                          75Gi       RWX            Retain     
 
 即部署完成；
 
-下一篇文章将会讲述如何使用我们创建的 StorageClass 部署 StatefulSet！
+下一篇文章将会讲述如何使用我们创建的 StorageClass 部署 StatefulSet：
+
+-   [《在Kubernetes中部署Zookeeper和Kafka》](https://jasonkayzk.github.io/2023/12/15/在Kubernetes中部署Zookeeper和Kafka/)
 
 <br/>
 
