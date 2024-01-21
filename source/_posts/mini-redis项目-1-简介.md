@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?54'
 date: 2022-12-05 16:43:55
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 最近看完了tokio，其中tokio官方提供的mini-redis项目非常的好，跟着教程完整的做了一遍，并且对很多地方根据自己的理解重新实现了（比如错误处理、文件组织等）；这里会分多篇文章进行总结，这里是第一篇；
 ---
 

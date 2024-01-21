@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?3'
 date: 2022-12-06 00:16:29
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 上一篇文章讲解了mini-redis数据存储层的实现，这一篇在这个基础之上，讲解连接层的实现；连接层负责建立服务端和客户端之间的连接，通过tokio框架我们可以异步的处理连接；
 ---
 

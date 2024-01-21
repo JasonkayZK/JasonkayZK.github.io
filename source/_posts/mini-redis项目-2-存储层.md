@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?2'
 date: 2022-12-05 19:58:43
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 本篇接上一篇《mini-redis项目-1-简介》，讲解mini-redis存储层的实现；
 ---
 

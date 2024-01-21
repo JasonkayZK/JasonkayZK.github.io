@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?4'
 date: 2022-12-06 16:00:59
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 前面几篇文章讲解了mini-redis的存储层、连接层，这一篇在此基础之上继续讲解服务端的实现；
 ---
 

@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?5'
 date: 2022-12-07 16:20:06
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 在上一篇《mini-redis项目-4-服务端》中，我们实现了mini-redis的服务端，这一篇来实现客户端；
 ---
 

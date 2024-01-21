@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?6'
 date: 2022-12-07 16:24:38
 categories: Rust
-tags: [Rust, Database, Redis]
+tags: [Rust, 数据库, Redis]
 description: 本篇是本系列的最后一节，主要是对我们之前实现的功能进行测试；Rust提供了非常方便的工具编写测试和示例；
 ---
 
