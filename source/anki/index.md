@@ -53,7 +53,7 @@ toc: true
     }
 
     // 创建一个表格的函数
-    function createTable(container, data) {
+    function createTable(container, dateElement, data) {
         if (data.length <= 0) {
             var p = document.createElement("p");
             p.textContent = "这个人有点懒，今日无数据～";
@@ -97,7 +97,8 @@ toc: true
         table.appendChild(thead);
         table.appendChild(tbody);
 
-         // 将表格添加到页面中
+        // 将表格添加到页面中
+        dateElement.textContent = dateElement.textContent + `（已学习：${data.length} 个）`;
         container.appendChild(table);
         container.appendChild(document.createElement("br"));
     }
@@ -143,7 +144,7 @@ toc: true
             container.appendChild(dateElement);
             // 创建表格
             var rows = await getData(recentWeekDates[j]);
-            createTable(container, rows);
+            createTable(container, dateElement, rows);
         }
     }
 
