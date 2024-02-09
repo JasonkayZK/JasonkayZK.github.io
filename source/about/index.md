@@ -28,6 +28,8 @@ cover: https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/about.jpg
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2024-02-09 新增[`Anki笔记`](/anki/)页面，用于记录Anki日志！**</font>
+*   <font color="#ff0000">**2024-02-09 移除[`♥Love♥`](/love/)页面入口**</font>
 *   <font color="#ff0000">**2023-12-13 [`畅所欲言`](/chat/)页面修复，使用[`render`](https://dashboard.render.com/)部署**</font>
 *   <font color="#ff0000">**2023-11-26 `jp`と言うscaffold追加した！**</font>
 *   <font color="#ff0000">**2023-07-12 网站评论不再依赖LeanCloud，改用utterance！**</font>
