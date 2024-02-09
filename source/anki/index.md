@@ -109,7 +109,7 @@ toc: true
             redirect: 'follow'
         };
         try {
-            const response = await fetch(`https://www.dolthub.com/api/v1alpha1/jasonkayzk/sync/main?q=select insert_time,content from anki where insert_date='${currentDate}'`, requestOptions); // 发起网络请求
+            const response = await fetch(`https://www.dolthub.com/api/v1alpha1/jasonkayzk/sync/main?q=select insert_time,content from anki where insert_date='${currentDate}' order by insert_time desc`, requestOptions); // 发起网络请求
             const result = await response.json(); // 解析响应数据
             var rows = result["rows"];
             if (rows !== undefined && rows.length !== undefined && rows.length > 0) {
