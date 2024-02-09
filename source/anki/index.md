@@ -52,29 +52,6 @@ toc: true
         return formattedDate;
     }
 
-    function shiftTimezone(dateString) {
-        const dateObj = new Date(dateString);
-
-        // 根据时区调整时间
-        const timeZoneOffset = 8; // 设置东八区时间偏移量
-        const utc = dateObj.getTime(); // 获取日期对象的 UTC 时间
-        const chinaTime = new Date(utc + (3600000 * timeZoneOffset)); // 根据偏移量计算中国时间
-        
-        // 获取年份、月份、日期、小时、分钟和秒钟
-        const year = chinaTime.getFullYear();
-        const month = String(chinaTime.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，所以要加 1；使用padStart()方法确保两位数格式
-        const day = String(chinaTime.getDate()).padStart(2, '0');
-        const hours = String(chinaTime.getHours()).padStart(2, '0');
-        const minutes = String(chinaTime.getMinutes()).padStart(2, '0');
-        const seconds = String(chinaTime.getSeconds()).padStart(2, '0');
-
-        // 格式化为年月日时分秒的形式
-        const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-
-        // 输出中国东八区时间
-        return formattedDate;
-    }
-
     // 创建一个表格的函数
     function createTable(container, data) {
         if (data.length <= 0) {
@@ -106,7 +83,7 @@ toc: true
         for (var i = 0; i < data.length; i++) {
             var tr = document.createElement("tr");
             var td1 = document.createElement("td");
-            td1.textContent = shiftTimezone(data[i].insert_time);
+            td1.textContent = data[i].insert_time;
             var td2 = document.createElement("td");
             td2.textContent = truncateString(data[i].content, MAX_CONTENT_LENGTH);
             td2.setAttribute('style', 'text-align: left;');
