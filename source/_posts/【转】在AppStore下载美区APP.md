@@ -39,7 +39,7 @@ description: 由于一些众所周知的原因，国内App Store经常会有一�
 
 ### **注册美区 Apple ID**
 
-打开美国苹果官网（https://www.apple.com/）；
+打开美国苹果官网 [https://www.apple.com/](https://www.apple.com/)；
 
 **此时会提示选择地区，直接关闭，默认就是美国官网；**
 
