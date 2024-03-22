@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用的数据结构，本文讲解了这些数据结构的特点和异同；">
+<meta name="keywords" content="技术杂谈,数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/11/05/BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用的数据结构，本文讲解了这些数据结构的特点和异同；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-3.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-6.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-7.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-8.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-10.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-11.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-12.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-13.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-14.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-15.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-16.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-17.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-19.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-20.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-21.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-9.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-18.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-22.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-23.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-24.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-25.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-26.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-27.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-28.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-29.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-30.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-31.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-32.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-33.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-34.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-35.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-36.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-37.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-38.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-39.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-40.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-41.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-42.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-43.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-44.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-45.png">
+<meta property="og:updated_time" content="2024-03-22T08:18:26.630Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结">
+<meta name="twitter:description" content="BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用的数据结构，本文讲解了这些数据结构的特点和异同；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-1.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1711095541417">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>482</div>
+        <div><span>标签</span>257</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/sharing/" title="文件分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                文件分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/lucky/" title="幸运抽">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                幸运抽
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.17px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 18.7px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 12.17px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">32</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">19</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/03/22/【译】实现一个简单的内存分配器/">【译】实现一个简单的内存分配器</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/21/基于Git版本控制的关系型数据库Dolt/">基于Git版本控制的关系型数据库Dolt</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/27/Rust中使用libp2p/">Rust中使用libp2p</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/19/在K8S中部署SpringBoot项目/">在K8S中部署SpringBoot项目</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/17/使用jenv管理jdk版本/">使用jenv管理jdk版本</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?4">
+    
+    <h1>BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年11月05日</a>
+    <a><i class="nexmoefont icon-areachart"></i>10.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 46 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/数据库/">数据库</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/技术杂谈/">技术杂谈</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/数据库/">数据库</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结"><span class="toc-text">BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#引言"><span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#存储引擎与存储结构"><span class="toc-text">存储引擎与存储结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#存储引擎要存储什么？"><span class="toc-text">存储引擎要存储什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#存储引擎数据文件的组织形式"><span class="toc-text">存储引擎数据文件的组织形式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#存储结构分类和发展历程"><span class="toc-text">存储结构分类和发展历程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#In-place-update"><span class="toc-text">In-place update</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Out-of-place-update"><span class="toc-text">Out-of-place update</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#存储结构发展历程"><span class="toc-text">存储结构发展历程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#存储结构的共性特点"><span class="toc-text">存储结构的共性特点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#存储结构需要的特性"><span class="toc-text">存储结构需要的特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#以BTree为例的In-place存储结构"><span class="toc-text">以BTree为例的In-place存储结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）"><span class="toc-text">Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Latch导致的性能损失"><span class="toc-text">Latch导致的性能损失</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BTree的各种变种"><span class="toc-text">BTree的各种变种</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#以LSM-Tree为例的Out-of-place存储结构"><span class="toc-text">以LSM-Tree为例的Out-of-place存储结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#LSM-Tree基本概念"><span class="toc-text">LSM-Tree基本概念</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#LSM-Tree结构特性"><span class="toc-text">LSM-Tree结构特性</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#In-place和Out-of-place-update方案差异"><span class="toc-text">In-place和Out-of-place update方案差异</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#深入了解BTree及其变种"><span class="toc-text">深入了解BTree及其变种</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#B-Tree"><span class="toc-text">B+Tree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-Tree-1"><span class="toc-text">B*Tree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-Link-Tree"><span class="toc-text">B-Link Tree</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#补：BTree并发机制"><span class="toc-text">补：BTree并发机制</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#MySQL-5-6-之前的版本"><span class="toc-text">MySQL 5.6 之前的版本</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree并发读取"><span class="toc-text">B+Tree并发读取</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree乐观写"><span class="toc-text">B+Tree乐观写</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree-SMO悲观写入"><span class="toc-text">B+Tree SMO悲观写入</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#MySQL-5-7之后的版本"><span class="toc-text">MySQL 5.7之后的版本</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree并发读取-1"><span class="toc-text">B+Tree并发读取</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree乐观写-1"><span class="toc-text">B+Tree乐观写</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#B-Tree悲观写"><span class="toc-text">B+Tree悲观写</span></a></li></ol></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#B-Link-Tree并发控制优化"><span class="toc-text">B-Link Tree并发控制优化</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CoW-BTree"><span class="toc-text">CoW BTree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Lazy-BTree（惰性BTree）"><span class="toc-text">Lazy BTree（惰性BTree）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Lazy-Adaptive-Tree（惰性自适应BTree）"><span class="toc-text">Lazy-Adaptive Tree（惰性自适应BTree）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bw-Tree"><span class="toc-text">Bw Tree</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#并发情况下，生成-Delta-Record"><span class="toc-text">并发情况下，生成 Delta Record</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#树结构修改"><span class="toc-text">树结构修改</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#页分裂操作"><span class="toc-text">页分裂操作</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#页合并操作"><span class="toc-text">页合并操作</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BwTree总结"><span class="toc-text">BwTree总结</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#深入了解LSM-Tree及其变种"><span class="toc-text">深入了解LSM-Tree及其变种</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#LSM-Tree概念"><span class="toc-text">LSM-Tree概念</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Minor-Merge"><span class="toc-text">Minor Merge</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Major-Merge"><span class="toc-text">Major Merge</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#一条数据的整体写入过程"><span class="toc-text">一条数据的整体写入过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#读操作（Bloom-Filter优化）"><span class="toc-text">读操作（Bloom Filter优化）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#合并策略（Merging-Policy）"><span class="toc-text">合并策略（Merging Policy）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#LSM-Tree并发控制机制"><span class="toc-text">LSM-Tree并发控制机制</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#一些Compaction优化方案"><span class="toc-text">一些Compaction优化方案</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>BTree、B+Tree和LSM-Tree等数据结构是数据库存储引擎中及其常用的数据结构，本文讲解了这些数据结构的特点和异同；</p>
+<p>视频地址：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1se4y1U7Dn/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1se4y1U7Dn/</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结"><a href="#BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结" class="headerlink" title="BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结"></a><strong>BTree、B+Tree和LSM-Tree常用存储引擎数据结构总结</strong></h1><h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a><strong>引言</strong></h2><p>我们知道，数据有三大模块：</p>
+<ul>
+<li>存储；</li>
+<li>事物；</li>
+<li>SQL解析、优化；</li>
+</ul>
+<p>其中，存储模块负责数据在磁盘、内存上的存储、检索和管理，并向上层提供细粒度的数据操作接口；</p>
+<p>同时，由于存储模块和其他模块耦合较少，因此可以将其抽象为一个专用的数据库组件，即：<strong>存储引擎</strong>；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-1.png" alt="image-20221105121651187"></p>
+<p>目前，很多数据库都支持可插拔的存储引擎，例如：MySQL支持：InnoDB、MyISAM、Memory、基于RocksDB的MyRocks等；</p>
+<p><strong>对于存储而言，最重要的就是数据存储的结构（也即，数据结构！）；</strong></p>
+<p><font color="#f00"><strong>内存、缓存、读写流程的任何设计都是建立在存储结构的基础之上的！因此，存储结构和存储引擎的特性和性能关系非常密切！</strong></font></p>
+<p>相比于存储引擎而言，目前的存储结构并不是很多：</p>
+<p>BTree 作为一个非常适合磁盘的存储结构，自关系型数据库诞生以来，一直占据主流；</p>
+<p>而近些年来随着分布式技术的发展以及固态硬盘的发展（随机读写性能的急剧提升），LSM-Tree 越来越火热；</p>
+<br>
+
+<h2 id="存储引擎与存储结构"><a href="#存储引擎与存储结构" class="headerlink" title="存储引擎与存储结构"></a><strong>存储引擎与存储结构</strong></h2><h3 id="存储引擎要存储什么？"><a href="#存储引擎要存储什么？" class="headerlink" title="存储引擎要存储什么？"></a><strong>存储引擎要存储什么？</strong></h3><p>首先要明确，存储引擎要存储什么？</p>
+<p>由于存储引擎是基于文件系统的，因此存储引擎是将一条条数据转换为具体的文件进行存储；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-2.png" alt="image-20221105122636705"></p>
+<blockquote>
+<p>  <strong>很多数据库的 /data 目录下就存储有数据文件；</strong></p>
+</blockquote>
+<p>除了存储原始数据外，我们也需要将数据库中的索引组织为文件来存储；</p>
+<p>因此，存储引擎要存储：</p>
+<ul>
+<li>数据文件；</li>
+<li>索引文件；</li>
+</ul>
+<br>
+
+<h3 id="存储引擎数据文件的组织形式"><a href="#存储引擎数据文件的组织形式" class="headerlink" title="存储引擎数据文件的组织形式"></a><strong>存储引擎数据文件的组织形式</strong></h3><p>目前主流的数据文件组织形式有三种：</p>
+<ul>
+<li>索引组织表；</li>
+<li>堆组织表；</li>
+<li>哈希组织表；</li>
+</ul>
+<br>
+
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-3.png" alt="image-20221105122751344"></p>
+<p><strong>索引组织表：</strong></p>
+<ul>
+<li>索引组织表将数据文件和索引文件合并在一起，如上图右上部分：</li>
+<li>索引组织表直接将数据记录存储在索引文件内部；</li>
+<li>如：InnoDB存储引擎；</li>
+</ul>
+<p><strong>堆组织表：</strong></p>
+<ul>
+<li>堆组织表的数据文件是一个“无序堆”（一堆数据）的数据结构，其中的数据记录一般不需要有特定顺序；</li>
+<li>虽然堆组织表中的数据文件是无序的，但是我们可以通过索引文件中的索引结构来快速定位数据在堆中的位置；</li>
+<li>如：Oracle、PostgreSQL；</li>
+</ul>
+<p>哈希组织表：</p>
+<ul>
+<li>将记录分散存储在一个个桶中，每条记录主键的 Hash 值来确定记录属于哪个桶；</li>
+<li>记录 Hash 值的部分就是索引文件，记录 Hash 结果的部分是数据文件；</li>
+</ul>
+<p>目前主流的存储引擎基本都没有使用哈希组织表；</p>
+<p><font color="#f00"><strong>堆组织表因为数据的插入是无序的，而索引组织表需要根据索引的顺序插入数据，因此通常情况下：</strong></font></p>
+<p><font color="#f00"><strong>堆组织表的写入性能强于索引组织表，读取性能弱于索引组织表；</strong></font></p>
+<p><font color="#f00"><strong>但是，<code>数据文件</code>的组织形式对于性能的影响还是比较小的，因为大多数都使用的是B树索引；</strong></font></p>
+<p><font color="#f00"><strong>而索引作为读写数据的主要入口，<code>索引文件的组织形式</code>对于存储引擎的性能关系更加密切！</strong></font></p>
+<p>例如：</p>
+<p>将索引文件的组织形式从 BTree 换为 LSM-Tree，则性能差异会非常大！</p>
+<p><font color="#f00"><strong>因此，通常情况下要重点关注的其实是：<code>索引文件的组织形式</code>！</strong></font></p>
+<br>
+
+<h2 id="存储结构分类和发展历程"><a href="#存储结构分类和发展历程" class="headerlink" title="存储结构分类和发展历程"></a><strong>存储结构分类和发展历程</strong></h2><p>目前，BTree和LSM-Tree 这两类存储结构在存储引擎中被使用的最为广泛，他们也分别对应了：</p>
+<ul>
+<li><strong>In-place update（BTree、B+Tree）：就地更新结构，直接覆盖旧记录来存储更新内容；</strong></li>
+<li><strong>Out-of-place update（LSM-Tree）：异位更新结构，会将更新的内容存储到新的位置，而不是直接覆盖旧的条目；</strong></li>
+</ul>
+<p>如下图所示；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-4.png" alt="image-20221105131721712"></p>
+<br>
+
+<h3 id="In-place-update"><a href="#In-place-update" class="headerlink" title="In-place update"></a><strong>In-place update</strong></h3><p>In-place update 对应于图（a）部分；</p>
+<p>为了更新 key 为 k1 的 value，In-place 操作会直接涂改掉 k1，并且直接在原位置写入 (k1, v4)；</p>
+<p>这种就地更新的结构，由于只会存储每个记录最新的版本，因此往往读性能更优，但是写入的代价会变大，因为更新会导致随机 IO；</p>
+<br>
+
+<h3 id="Out-of-place-update"><a href="#Out-of-place-update" class="headerlink" title="Out-of-place update"></a><strong>Out-of-place update</strong></h3><p>Out-of-place update 对应于图（b）部分，在更新时，会将更新的内容存储到新的位置，而非覆盖旧的条目；</p>
+<p>在更新 k1 的 value 并不会修改掉原（k1, v1）键值对，而是在一个新的位置写入一条新的纪录（k1, v4）；</p>
+<p>由于这种设计通常是顺序写入，因此写入性能会更高，但是读性能会被牺牲掉：因为可能要扫描多个位置，才能读到想要的结果；</p>
+<blockquote>
+<p>  <strong>例如：level-db 在读取时，会自上而下一层一层的读取直到找到首个匹配的记录；</strong></p>
+</blockquote>
+<p>此外，这种数据结构还需要一个数据整合过程，来防止数据的无限膨胀，即：<strong>Compaction 过程</strong>；</p>
+<br>
+
+<h3 id="存储结构发展历程"><a href="#存储结构发展历程" class="headerlink" title="存储结构发展历程"></a><strong>存储结构发展历程</strong></h3><p>1970年，Rudolf Bayer 教授在《Organization and Maintenance of Large Ordered Indices》一文中提出了BTree，从他的基础上诞生了 B+Tree 等许多变种；</p>
+<p>1996年，《The Log-Structured Merge-Tree（LSM-Tree）》论文发表，LSM-Tree 概念正式诞生；</p>
+<p>2003年，《The Google File System（GFS）》发表，对追加的一致性保证强于改写，此后的分布式文件系统基本都更推荐使用追加写文件；</p>
+<p>2006年，《Bigtable：A distributed strorage system for structured data》发表，相当于一个在 GFS 基础上搭建的不支持事务的分布式存储引擎，而其中的存储引擎采用的就是类似 LSM-Tree 的结构；</p>
+<p>2014年左右，SSD 开始进入大规模商用，LSM-Tree 在SSD 上读性能得到很大提升（随机读减少了普通硬盘的寻道时间），同时LSM-Tree对SSD上的写更加友好（追加写提高了SSD的使用寿命），因此 LSM-Tree 进一步得到发展；</p>
+<blockquote>
+<p>  <strong>SSD 是基于闪存进行存储的，由于闪存不能直接进行覆盖写，而必须首先擦除闪存块之后才能写入；</strong></p>
+<p>  <strong>因此 LSM-Tree 追加写的特性可以完美契合其特性；</strong></p>
+</blockquote>
+<p>总结一下：</p>
+<p>BTree 作为 In-place update 模式的存储结构，在早期机械硬盘结构上表现的最好，因此占据了主流；</p>
+<p>而随着分布式（大数据）和 SSD 技术的发展，Out-of-place update 模式的优势逐渐凸显，因此 LSM Tree 应用的越来越广泛；</p>
+<br>
+
+<h2 id="存储结构的共性特点"><a href="#存储结构的共性特点" class="headerlink" title="存储结构的共性特点"></a><strong>存储结构的共性特点</strong></h2><h3 id="存储结构需要的特性"><a href="#存储结构需要的特性" class="headerlink" title="存储结构需要的特性"></a><strong>存储结构需要的特性</strong></h3><p>我们有那么多的数据结构，例如：数组、链表、Hash表等，为什么 BTree 或 LSM-Tree 能够作为存储结构呢？</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-5.png" alt="image-20221105160429281"></p>
+<p>但是大部分都不适合作为磁盘上的存储结构，这需要考虑一下存储结构需要具有的特性：</p>
+<ul>
+<li>1、适合磁盘存储；</li>
+<li>2、允许并发操作；</li>
+</ul>
+<p>首先，对于磁盘结构，顺序 IO 的性能是远远优于随机 IO 的，因此存储结构涉及到的 IO 次数越少越好，并且尽量一次读取一块连续的区域，因此从这个角度来看，存储结构的一个单元应当越大越好；</p>
+<p>同时，存储结构应当允许并发操作，从写入并发避免数据竞争的角度来看，存储结构的单元应当越小越好；</p>
+<blockquote>
+<p>  <strong>这里所说的并发操作并非数据库事务并发操作，而是内存中的数据结构；</strong></p>
+</blockquote>
+<p>根据上面两个特性再审视一下之前上面列出的内存数据结构不难发现：</p>
+<ul>
+<li>有1没2，即：只适合磁盘存储的，而不适合并发操作的：大文件、数组，他们都是一大段连续的存储区域，如果要修改，影响面很大，基本上要锁住整个数据结构！</li>
+<li>有2没1，即：高并发但是不适合磁盘存储的：链表、哈希表、二叉树、红黑树等，他们的修改、写入影响小，但数据结构的粒度也非常小，一般一次只操作几个字节，不适合磁盘 IO；</li>
+</ul>
+<p>那么是否存在数据结构同时满足上面两个特性呢？</p>
+<p>当然，BTree 就是这么个数据结构；</p>
+<br>
+
+<h3 id="以BTree为例的In-place存储结构"><a href="#以BTree为例的In-place存储结构" class="headerlink" title="以BTree为例的In-place存储结构"></a><strong>以BTree为例的In-place存储结构</strong></h3><p>如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-6.png" alt="image-20221105172421905"></p>
+<p>BTree 是一个以页为单位组织的；</p>
+<p>首先，InnoDB 存储引擎中页的大小为 16k，一般可以指出几百上千个指针，因而具有高扇出、低高度的特点，从而保证了 BTree 是连续 IO、并且 IO 次数极少，因此适合磁盘存储；</p>
+<p>其次，BTree 要修改的单位也是页，因此并发控制的锁在页上，BTree 并发的程度也很高；</p>
+<p>但是并非这么简单，虽然 BTree 要修改的单位是页，但是 BTree 存在 SMO（Structure Modification Operation） 操作，即：在增删改操作可能会造成节点的分裂或者合并，此时需要操作多个磁盘块！</p>
+<blockquote>
+<p>  <strong>当我们向一个页中增加数据超过其大小、或者删除数据使其空间少于二分之一时，就会造成页的分裂或者合并，影响关联节点或者父节点；</strong></p>
+<p>  <strong>同时，上述影响可能还会向上传递，甚至影响到根节点！</strong></p>
+</blockquote>
+<p>SMO 会导致 BTree 的并发能力并不理想；</p>
+<p>所以，如果我们想要保证出现 SMO 操作时读写安全的话，就需要对有可能受到 SMO 操作影响的一整条链上所有节点加锁，如下图所示；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-7.png" alt="image-20221105194306300"></p>
+<p><strong>总之，虽然 BTree 有一定的并发能力，但是由于 SMO 的存在使得 BTree 的性能并不高，勉强满足并发要求，但是有很大的优化空间；</strong></p>
+<br>
+
+<h4 id="Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）"><a href="#Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）" class="headerlink" title="Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）"></a><strong>Lock和Latch的区别（存储引擎并发操作和事务并发操作的不同）</strong></h4><p>这里补充一下存储引擎的并发操作和事务并发操作的不同；</p>
+<p>假设都以锁机制来控制并发，上面两种机制对应的锁分别称为：Lock 和 Latch；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-8.png" alt="image-20221105200353910"></p>
+<p>其中：</p>
+<ul>
+<li>Lock：用来维持数据库事务的 ACID 特性，事务级隔离，锁住的对象为用户的数据，是一个逻辑概念，例如：共享锁、互斥锁（S、X锁）等；</li>
+<li>Latch：保护数据读取过程中，加载到内存中数据结构的锁，是线程级隔离的锁；主要是防止多个线程并发去修改内存中的共享数据；</li>
+</ul>
+<p>例如：</p>
+<p>假设修改一行数据，那么首先需要将这行数据所在的页加载至内存中，随后进行修改；</p>
+<p>而在修改前，为了防止其他线程也要来修改这页数据，需要使用 Latch 对内存数据进行上锁；加好 Latch 后，可以对数据进行修改；</p>
+<p>此时，为了防止在事务进行提交之前，存在其他别的事务读到这行修改后未提交的数据，此时需要对数据增加 Lock；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-10.png" alt="image-20221105195251773"></p>
+<p><font color="#f00"><strong>虽然 Latch 锁掉整个页数据，而 Lock 仅仅锁掉单行数据；</strong></font></p>
+<p><font color="#f00"><strong>但是一旦完成了对这行数据的修改，那么 Latch 锁就可以释放，而 Lock 锁需要等到整个事务提交之后才能够释放！</strong></font></p>
+<p><font color="#f00"><strong>在数据修改完成到事务提交的这段时间，Lock 就可以发挥作用了！</strong></font></p>
+<p><font color="#f00"><strong>因此，在对数据库进行操作时，实际上是存在 Latch 和 Lock 两种锁共同生效的！但是对于用户而言，只能感觉到 Lock 锁（即，事务锁）；</strong></font></p>
+<br>
+
+<h4 id="Latch导致的性能损失"><a href="#Latch导致的性能损失" class="headerlink" title="Latch导致的性能损失"></a><strong>Latch导致的性能损失</strong></h4><p>虽然 Latch 的持续时间很短，但是他也会严重影响数据库性能！</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-11.png" alt="image-20221105200444258"></p>
+<p>如上图所示为 PolarDB 在优化 InnoDB B+Tree 的 Latch 结构前后的性能对比：蓝色为原 InnoDB、绿色为优化后；</p>
+<p>可以看到，在高并发场景下，性能提升接近三倍（即：在优化前执行 INSERT 操作可能只能达到 5w QPS，而优化后可以达到 15w QPS！）；</p>
+<p>关于这里性能损失的原因，后文会说到！</p>
+<br>
+
+<h4 id="BTree的各种变种"><a href="#BTree的各种变种" class="headerlink" title="BTree的各种变种"></a><strong>BTree的各种变种</strong></h4><p>刚讲了上面的内容，那么 BTree 的各种变种的优化方向大致也就是通过优化下面两个方向来设计的：</p>
+<ul>
+<li>1、适合磁盘存储（提高粒度），IO 尽量少且一次读取连续的区域；</li>
+<li>2、允许并发操作（减小粒度），增删改对存储结构的影响尽量小；</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>类型</strong></th>
+<th><strong>加强方向</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>B+Tree</strong></td>
+<td>加强1</td>
+</tr>
+<tr>
+<td><strong>B-Link Tree</strong></td>
+<td>加强2</td>
+</tr>
+<tr>
+<td><strong>Bw Tree</strong></td>
+<td>加强2</td>
+</tr>
+</tbody></table>
+<br>
+
+<p>例如，最出名的 B+Tree 在非叶子节点中仅保留指针（在 BTree 中非叶子结点也存储了行数据），所有的数据都存放在叶子节点，间接减少了树的高度；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-12.png" alt="image-20221105210958977"></p>
+<p>并且这样还可以区分开索引段和数据段，有助于全表扫描时的顺序IO；</p>
+<p>总之，提升了 BTree 的特性1；</p>
+<p>而 B-Link Tree 对 BTree 的并发控制机制做了很大的改进，提升了特性2；</p>
+<p>对于近些年才提出的 Bw-Tree 而言，其采用了类似于 LSM-Tree 的 out-of-place update 方法，追加的写入完全无 Latch 操作（避免多线程并发写），从根本的角度上提升了特性2；</p>
+<br>
+
+<h3 id="以LSM-Tree为例的Out-of-place存储结构"><a href="#以LSM-Tree为例的Out-of-place存储结构" class="headerlink" title="以LSM-Tree为例的Out-of-place存储结构"></a><strong>以LSM-Tree为例的Out-of-place存储结构</strong></h3><h4 id="LSM-Tree基本概念"><a href="#LSM-Tree基本概念" class="headerlink" title="LSM-Tree基本概念"></a><strong>LSM-Tree基本概念</strong></h4><p>下面来讲解一下 LSM-Tree 在上面两个特性上的表现；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-13.png" alt="image-20221105212603574"></p>
+<p>对于 LSM-Tree 的结构而言：</p>
+<p><strong>整体是一个分为多层、并且越向下层数据越多的层次树形结构；</strong></p>
+<p><strong>对于写操作：</strong></p>
+<ul>
+<li><strong>所有的写入操作都会首先直接写入内存（write）；</strong></li>
+<li><strong>如果内存写满了，就会直接将内存中刚刚写入的这块数据刷入磁盘中（flush）；</strong></li>
+<li><strong>当向磁盘刷入一定数量的数据之后，将本层数据和下一层数据进行合并、排序、去重；整理后的数据就放在下一层，因此就去除了数据的冗余（compaction）；</strong></li>
+<li><strong>Compaction 过程可能会持续多层，并且越下层的数据就越多，最终就形成了 LST-Tree 的整体结构；</strong></li>
+</ul>
+<p>下面来看读取操作：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-14.png" alt="image-20221105213608874"></p>
+<p>读取的时候需要注意：</p>
+<p><strong>由于一个 key 对应的 value 可能会存在于多个层次上，此时需要以最新（更上层的）数据为准；</strong></p>
+<p><strong>因此，在查询时需要从上至下一层层的搜索，而第一条找到的就是我们要读的结果！</strong></p>
+<br>
+
+<h4 id="LSM-Tree结构特性"><a href="#LSM-Tree结构特性" class="headerlink" title="LSM-Tree结构特性"></a><strong>LSM-Tree结构特性</strong></h4><p>LSM-Tree 的结构特性和 BTree 截然不同：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-15.png" alt="image-20221105214352955"></p>
+<p>由于其 Out-of-place 的特点：所以在正常插入到内存时，完全不会改变历史数据的结构，即：没有 SMO 过程；</p>
+<p>因此，并发能力很强，BTree 在特性2上的瓶颈在 LSM-Tree 中不存在；</p>
+<p>而 LSM-Tree 中每层数据都比较多，在缓冲池没有命中时，读取 LSM-Tree 时读取的次数可能会非常多！</p>
+<p>所以，LSM-Tree 在特性1上的表现并不好！</p>
+<p>但是，可以优化 LSM-Tree 的特性1，下面是几个常用的优化手段：</p>
+<ul>
+<li>依靠 Compaction 操作整理 LSM-Tree 的结构，减少读 IO 的次数；</li>
+<li>使用 Bloom Filter 对数据进行过滤；</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>实际上 Compaction 操作就可以看作为 LSM-Tree 的 SMO 操作！</strong></font></p>
+<p>  <font color="#f00"><strong>在 Compaction 期间，不仅会占用大量资源，并且还会造成缓冲丢失、写停顿（write stall）等问题，减少并发能力；</strong></font></p>
+<p>  <font color="#f00"><strong>因此，对 LSM-Tree 优化的关键点就落在 Compaction 操作上；</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="In-place和Out-of-place-update方案差异"><a href="#In-place和Out-of-place-update方案差异" class="headerlink" title="In-place和Out-of-place update方案差异"></a><strong>In-place和Out-of-place update方案差异</strong></h3><p>对于 In-place update 结构而言：</p>
+<p>需要把磁盘中的结构加载到内存中，再修改并写回至磁盘中，因此免不了要使用 Latch 机制来做并发控制；</p>
+<p>而对于 Out-of-place update 结构而言：</p>
+<p>虽然存在其他因素干扰其并发能力，但是由于所有的写入都是追加操作，因此无需采用基于 Latch 的机制进行并发控制；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-16.png" alt="image-20221105215805839"></p>
+<p>由于现在多核处理器的发展，NUMA 模式逐渐成为主流，多核处理器在面对 Latch 的频繁获取和释放时都会损耗很多性能；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-17.png" alt="image-20221105220406902"></p>
+<p>可以简单理解：</p>
+<p>CPU 中每个核都有独立的一块存储区域，而读取或者写入的过程就需要将页数据加载到这块存储区域中；这样，并发读写时，一些节点就可能会存在多个核空间中；</p>
+<p>而加 Latch 和解 Latch 的操作又必须同步给多个核，这就造成了很大的性能损耗；</p>
+<p>最显著的例子，对于 B+Tree 而言，在读写时由于根节点是必经之路，因此频繁的对根节点加解 Latch 就会极大的影响多核场景下的并发性能！</p>
+<blockquote>
+<p>  <strong>NUMA：</strong></p>
+<p>  <strong>非统一内存访问架构</strong>（英语：<strong>non-uniform memory access</strong>，简称NUMA）是一种为<a href="https://zh.wikipedia.org/wiki/多處理器" target="_blank" rel="noopener">多处理器</a>的电脑设计的内存架构，内存访问时间取决于内存相对于处理器的位置。在NUMA下，处理器访问它自己的本地内存的速度比非本地内存（内存位于另一个处理器，或者是处理器之间共享的内存）快一些；</p>
+<ul>
+<li><a href="https://zh.wikipedia.org/wiki/%E9%9D%9E%E5%9D%87%E5%8C%80%E8%AE%BF%E5%AD%98%E6%A8%A1%E5%9E%8B" target="_blank" rel="noopener">https://zh.wikipedia.org/wiki/%E9%9D%9E%E5%9D%87%E5%8C%80%E8%AE%BF%E5%AD%98%E6%A8%A1%E5%9E%8B</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="深入了解BTree及其变种"><a href="#深入了解BTree及其变种" class="headerlink" title="深入了解BTree及其变种"></a><strong>深入了解BTree及其变种</strong></h2><p>下面列出了 BTree 的一些变种：</p>
+<ul>
+<li><strong>BTree：</strong><ul>
+<li><strong>B+Tree；</strong></li>
+<li><strong>B*Tree =&gt; B-Link Tree；</strong></li>
+<li><strong>CoW BTree；</strong></li>
+<li><strong>惰性 BTree；</strong></li>
+<li><strong>Bw Tree；</strong></li>
+</ul>
+</li>
+</ul>
+<p>另外还有一些其他变种，例如：FD-Tree；</p>
+<p>下面具体来分析这些变种的优势和发展趋势；</p>
+<p>下图是原始 BTree 的结构：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-19.png" alt="image-20221106093506935"></p>
+<p>可以注意到：在 BTree 中，每个数据只存储一份；</p>
+<p>如果要进行全表扫描，则需要中序遍历整个 BTree，因此会产生大量的随机 IO，性能不佳；所以基本上没有直接使用 BTree 实现存储结构的；</p>
+<p>BTree 早期有两个变种：</p>
+<ul>
+<li>B+Tree；</li>
+<li>B*Tree</li>
+</ul>
+<br>
+
+<h3 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B+Tree"></a><strong>B+Tree</strong></h3><p>相比于 BTree，B+Tree 的数据按照键值大小顺序存放在同一层的叶子节点中（和上面 BTree 中在非叶子节点也存放数据不同），各个叶子节点按照指针连接，组成一个双向链表；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-20.png" alt="image-20221106202131787"></p>
+<p>因此，对于 B+Tree 而言，其非叶子节点仅仅作为查找路径的判断依据，一个 key 值可能在 B+Tree 中存在两份（仅 Key 值）！</p>
+<p>B+Tree 的结构解决了 BTree 中中序遍历扫描的痛点，在一定程度上也能降低层数；</p>
+<br>
+
+<h3 id="B-Tree-1"><a href="#B-Tree-1" class="headerlink" title="B*Tree"></a><strong>B*Tree</strong></h3><p>B*Tree 是 BTree 的另一个变种，其最关键的一点是将节点的最低空间利用率从 BTree 和 B+Tree 的 1/2 提高到了 2/3，并由此改变了节点数据满时的处理逻辑；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-21.png" alt="image-20221106202655090"></p>
+<p>我们知道，BTree 和 B+Tree 的空间利用率为 1/2，即：<strong>当他们的叶子节点满而分裂时，默认状态下会分裂为两个各占一半数据的节点；</strong></p>
+<p> 而 B*Tree：在一个节点满了却又有新的数据要插入进来时，他会将其部分数据搬迁到下一个兄弟节点，直到两个节点空间都满了，就在中间生成一个节点，三个节点平分原来两个节点中的数据；</p>
+<blockquote>
+<p>  <strong>上面选取《The Ubiquitous B-Tree》论文对 B*Tree 的解释；</strong></p>
+</blockquote>
+<p><font color="#f00"><strong>B*Tree 的思想主要是：将当前节点和兄弟节点相关联；</strong></font></p>
+<p>B*Tree 的这种设计虽然可以提升空间利用率，对减少层数、提升读性能有一定的帮助，但这种模式增加了写入操作的复制度；</p>
+<p>而且向右兄弟节点搬迁数据的过程也要视作为一种 SMO 操作，对写入和并发能力有极大的损耗！</p>
+<p>因此，B*Tree 并没有被大量使用；</p>
+<br>
+
+<h3 id="B-Link-Tree"><a href="#B-Link-Tree" class="headerlink" title="B-Link Tree"></a><strong>B-Link Tree</strong></h3><p>由于 B<em>Tree 存在上面所述的劣势，但是基于 **</em>将当前节点和兄弟节点相关联** 的思想，在此基础之上提出了 B-Link Tree，赋予了其突破 BTree 并发控制能力的瓶颈；</p>
+<br>
+
+<h4 id="补：BTree并发机制"><a href="#补：BTree并发机制" class="headerlink" title="补：BTree并发机制"></a><strong>补：BTree并发机制</strong></h4><p>这里以 MySQL InnoDB 存储引擎为例，讲述基于 B+Tree 的存储引擎是如何通过 Latch 进行并发控制的；</p>
+<p>在 MySQL 5.6 之前的版本，只有写和读两种 Latch，被称为 X Latch 和 S Latch；</p>
+<h5 id="MySQL-5-6-之前的版本"><a href="#MySQL-5-6-之前的版本" class="headerlink" title="MySQL 5.6 之前的版本"></a><strong>MySQL 5.6 之前的版本</strong></h5><h6 id="B-Tree并发读取"><a href="#B-Tree并发读取" class="headerlink" title="B+Tree并发读取"></a><strong>B+Tree并发读取</strong></h6><p>对于读的过程，首先要在整个索引上添加 Index S Latch；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-9.png" alt="image-20221107195254918"></p>
+<p>再从上至下找到要读的叶子节点的 Page，然后上叶子节点的 Page S Latch；</p>
+<p>这时就可以释放 Index S Latch了；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-18.png" alt="image-20221107195810041"></p>
+<p>然后进行查询并返回结果，最后释放叶子节点中的 Page S Latch，完成整个读操作；</p>
+<br>
+
+<h6 id="B-Tree乐观写"><a href="#B-Tree乐观写" class="headerlink" title="B+Tree乐观写"></a><strong>B+Tree乐观写</strong></h6><p>写的过程就有些复杂了；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-22.png" alt="image-20221107201558241"></p>
+<p><strong>首先进行乐观的写入，即：假设写入操作不会引起索引结构的变更（不触发 SMO 操作）；</strong></p>
+<p>要先上整个索引的 Index S Latch，再从上至下找到要修改的叶子节点的 Page，此过程和上面的读取步骤相同！</p>
+<p>接下来判断叶子节点是否安全，即：写入操作是否会触发分裂或者合并；</p>
+<p>如果叶子节点 Page 安全，就上 Page X Latch，并释放 Index S Latch，然后再修改数据即可；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-23.png" alt="image-20221107201854133"></p>
+<p>上面就完成了乐观写入的过程；</p>
+<br>
+
+<h6 id="B-Tree-SMO悲观写入"><a href="#B-Tree-SMO悲观写入" class="headerlink" title="B+Tree SMO悲观写入"></a><strong>B+Tree SMO悲观写入</strong></h6><p>如果叶子节点 Page 不安全，那么就要重新进行悲观写入；</p>
+<p>释放一开始上的 Index S Latch，重新上 Index X Latch，阻塞对整颗 B+Tree 的所有操作；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-24.png" alt="image-20221107202325092"></p>
+<p>然后重新搜索，并找到要发生结构变化的节点，上 Page X Latch，再修改树结构，此时可以释放 Index X Latch；</p>
+<p>完成悲观写入过程；</p>
+<blockquote>
+<p>  <strong>上 Index X Latch 的原因是：</strong></p>
+<p>  <strong>有可能 SMO 操作会逐级向上传递，直到根节点！</strong></p>
+</blockquote>
+<br>
+
+<h5 id="MySQL-5-7之后的版本"><a href="#MySQL-5-7之后的版本" class="headerlink" title="MySQL 5.7之后的版本"></a><strong>MySQL 5.7之后的版本</strong></h5><p>从前面的分析可以看出来，上面加锁的缺点非常明显：</p>
+<p><strong>在触发 SMO 操作过程时，由于会持有 Index X Latch 锁住整棵树；此时所有操作都无法进行，包括读操作；</strong></p>
+<p>因此，在 MySQL 5.7、8.0 版本中，针对 SMO 操作会阻塞读的问题，引入了 SX Latch；</p>
+<p>SX Latch 介于 S Latch 和 X Latch 之间，和 X Latch、SX Latch 冲突，但是和 S Latch 不冲突（可以理解为类似RWLock）；</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>S Latch</th>
+<th>SX Latch</th>
+<th>X Latch</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S Latch</td>
+<td>兼容</td>
+<td>兼容</td>
+<td>不兼容</td>
+</tr>
+<tr>
+<td>SX Latch</td>
+<td>兼容</td>
+<td>不兼容</td>
+<td>不兼容</td>
+</tr>
+<tr>
+<td>X Latch</td>
+<td>不兼容</td>
+<td>不兼容</td>
+<td>不兼容</td>
+</tr>
+</tbody></table>
+<p>下面来看一下引入 SX Latch 之后的并发控制方案；</p>
+<br>
+
+<h6 id="B-Tree并发读取-1"><a href="#B-Tree并发读取-1" class="headerlink" title="B+Tree并发读取"></a><strong>B+Tree并发读取</strong></h6><p>对于读操作而言：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-25.png" alt="image-20221107203703637"></p>
+<p>对于读操作而言：</p>
+<p>相比于 MySQL 5.6 之前，这时读步骤主要加上了对查找路径上节点的锁；</p>
+<p>这时因为：</p>
+<p>在引入了 SX Latch 之后，发生 SMO 操作的时候，读操作也可以进行；</p>
+<p>此时为了保证读取的时候查找路径上的非叶子节点不会被 SMO 操作改变，因此就需要对路径上的节点也加上 S Latch；</p>
+<blockquote>
+<p>  <strong>主要注意的是：</strong></p>
+<p>  <font color="#f00"><strong>Index 级别和 Page 级别是两种不同对象的 Latch，因此哪怕有 Index 上的 X Latch 或者 SX Latch，也不会阻塞 Page 上的 S Latch！</strong></font></p>
+</blockquote>
+<br>
+
+<h6 id="B-Tree乐观写-1"><a href="#B-Tree乐观写-1" class="headerlink" title="B+Tree乐观写"></a><strong>B+Tree乐观写</strong></h6><p>写的过程和上面类似，一样是先进行乐观写；</p>
+<p>由于此时假设只会修改叶子节点，因此，乐观写的查找过程和读操作一致：</p>
+<p><strong>添加整个索引的 Index S Latch 和读取路径上节点的 Page S Latch 即可！</strong></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-26.png" alt="image-20221107205012042"></p>
+<p>接下来判断叶子节点是否安全，如果叶子节点 Page 安全，则上 Page X Latch，同时释放索引和路径上的 S Latch；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-27.png" alt="image-20221107205128838"></p>
+<p>然后再修改即可；</p>
+<br>
+
+<h6 id="B-Tree悲观写"><a href="#B-Tree悲观写" class="headerlink" title="B+Tree悲观写"></a><strong>B+Tree悲观写</strong></h6><p>但是如果叶子节点的 Page 不安全，这需要重新进行悲观写入；</p>
+<p>释放一开始上的所有 S Latch，这时我们上 <strong>Index SX Latch</strong>，然后重新搜索，找到要发生结构变化的节点；</p>
+<p>上 Page X Latch，再修改树结构，此时就可以释放 Index SX Latch 和路径上的 Page X Latch；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-28.png" alt="image-20221107205557977"></p>
+<p>随后即可完成对叶子节点的修改，返回结果，并释放叶子节点的 Page X Latch；</p>
+<p>最终完成悲观写入！</p>
+<blockquote>
+<p>  上面就是 MySQL 对 B+Tree 并发控制机制的发展；</p>
+<p>  <strong>当然，对 B+Tree 并发控制的研究和方案原因不止上面介绍的内容，这里只是为了说明 B+Tree 并发控制的痛点；</strong></p>
+</blockquote>
+<br>
+
+<h4 id="B-Link-Tree并发控制优化"><a href="#B-Link-Tree并发控制优化" class="headerlink" title="B-Link Tree并发控制优化"></a><strong>B-Link Tree并发控制优化</strong></h4><p>补充了上面的内容，我们可以知道，B+Tree 的问题在于：</p>
+<p><font color="#f00"><strong>其自上而下的搜索过程决定了加锁过程也必须是自上而下的！</strong></font></p>
+<p><font color="#f00"><strong>哪怕只对一个小小的叶子节点做读写操作，也都必须首先对根节点上 Latch！</strong></font></p>
+<p><font color="#f00"><strong>并且，一旦触发 SMO 操作，就需要对整个树进行加锁！</strong></font></p>
+<p>B-Link Tree 相比于 B+Tree 主要做了三点优化：</p>
+<ul>
+<li>1、非叶子节点也都有指向右兄弟节点的指针；</li>
+<li>2、分裂模式上，采用和 B<em>Tree 类似的做法，即：*</em>将当前层数据向兄弟节点中迁移；**</li>
+<li>3、每个节点都增加一个 High Key 值，记录当前节点的最大 Key；</li>
+</ul>
+<p>B-Link Tree 结构如下图：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-29.png" alt="image-20221107211034348"></p>
+<p>其中加下划线的 Key 为 High Key；</p>
+<p>在前面提到，B+Tree 中一个严重的问题就是，在读写过程中都需要对整棵树、或一层层向下的加 Latch，从而造成 SMO 操作会阻塞其他操作；</p>
+<p>而 B-Link Tree 通过对分裂和查找过程的调整，避免了这一点！</p>
+<p>下图就是 B-Link Tree 树节点分裂的过程；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-30.png" alt="image-20221107223644115"></p>
+<p>可以看到，上面的操作继承了 B*Tree 的思路：</p>
+<p>先将老节点的数据拷贝到新节点，然后建立同一层节点的连接关系，最后再建立从父节点指向新节点的连接关系（<strong>此顺序非常重要！</strong>）；</p>
+<p>那么上面的分裂过程是如何避免整棵树上的锁的呢？</p>
+<p><font color="#f00"><strong>可以通过指向右兄弟节点的指针和 High Key 实现！</strong></font></p>
+<p>如下图，当节点 y 分裂为 y 和 y+ 两个节点后，在 B+Tree 中就必须要提前锁住他们的父节点 x；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-31.png" alt="image-20221107224509181"></p>
+<p>而 B-Link Tree 可以先不锁 x，这时查找 15，顺着 x 找到节点 y，在节点 y 中未能找到 15，但判断 15 大于其中记录的 high key，于是顺着指针就可以找到其右兄弟节点 y+，仍能找到正确的结果；</p>
+<p>因此，<font color="#f00"><strong>B-Link Tree 中的 SMO 操作可以自底向上加锁，而不必像 B+Tree 那样自顶向下加锁！从而避免了 B+Tree 中并发控制瓶颈；</strong></font></p>
+<p>上面就是 B-Link Tree 的基本思路；</p>
+<p>但是在实现 B-Link Tree 时需要考虑的还有很多：</p>
+<ul>
+<li>删除操作需要单独设计；</li>
+<li>原论文中对于一些原子化的假定也不符合现状；</li>
+</ul>
+<p>但是 B-Link Tree 仍是一种非常优秀的存储结构，很大程度上突破了 B+Tree 的性能瓶颈；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>PostgreSQL 的 BTree 类型索引就是基于 B-Link Tree 实现的！</strong></font></p>
+</blockquote>
+<p>下面再来看一看最近比较新的一些 BTree 变种，这些变种很大程度上都采用了和 LSM Tree 类似的思想；</p>
+<br>
+
+<h3 id="CoW-BTree"><a href="#CoW-BTree" class="headerlink" title="CoW BTree"></a><strong>CoW BTree</strong></h3><p>CoW BTree 也称写时复制 BTree，CoW BTree 采用 Copy-on-Write 技术来保证并发操作时的数据完整性，从而避免使用 Latch；</p>
+<blockquote>
+<p>  写入时复制（英语：Copy-on-write，简称COW）是一种计算机程序设计领域的优化策略；</p>
+<p>  其核心思想是：</p>
+<p>  如果有多个调用者（callers）同时请求相同资源（如内存或磁盘上的数据存储），他们会共同获取相同的指针指向相同的资源，直到某个调用者试图修改资源的内容时，系统才会真正复制一份专用副本（private copy）给该调用者，而其他调用者所见到的最初的资源仍然保持不变，这过程对其他的调用者都是透明的（transparently）；</p>
+<p>  此作法主要的优点是如果调用者没有修改该资源，就不会有副本（private copy）被建立，因此多个调用者只是读取操作时可以共享同一份资源；</p>
+</blockquote>
+<p>当某个页要被修改时，就先复制整个页的内容，然后在复制出来的页上进行修改；</p>
+<p>当然，复制产生的新页要替换旧页，此时父节点指向这个页的指针就要变化了；CoW BTree 的做法也非常的粗暴：</p>
+<p><strong>直接将父节点也复制并修改一份！</strong></p>
+<p>接下来再复制并修改父节点的父节点，直到根节点！</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-32.png" alt="image-20221108130239675"></p>
+<p>CoW BTree 的修改逻辑如上图所示：</p>
+<p><font color="#f00"><strong>对于叶子节点的修改会产生一个全新的根节点（即：一个全新的树）！</strong></font></p>
+<p><font color="#f00"><strong>CoW BTree 在很大程度上具有 Out-of-place update 的特性，因为已经写入的页是不变的，所以 CoW BTree 可以像 LSM Tree 那样，完全不依赖 Latch 实现并发控制！</strong></font></p>
+<p><strong>但是，为了达成这一点，CoW BTree 付出的代价也是非常巨大的：为了修改一个小小的数据，就要重新复制多个页，带来巨大的写放大！</strong></p>
+<p>也正是因为上面的问题，因此 CoW BTree 也一直没能成为主流；</p>
+<p>但是 CoW BTree 的思路却很重要！后续的许多变种都对其进行了借鉴和改良；</p>
+<br>
+
+<h3 id="Lazy-BTree（惰性BTree）"><a href="#Lazy-BTree（惰性BTree）" class="headerlink" title="Lazy BTree（惰性BTree）"></a><strong>Lazy BTree（惰性BTree）</strong></h3><p>惰性 BTree 相比于上面提到的 CoW BTree 更进一步，为每个页都设置了一个更新缓冲区；</p>
+<p>这样，更新的内容就放在了更新缓冲区中；</p>
+<p>读取时，将原始页中的内容和更新缓冲区进行合并，来返回正确的数据；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-33.png" alt="image-20221108131401353"></p>
+<p>惰性 BTree 和 LSM Tree 极为相似，甚至可以说，惰性 BTree 中的每一个页就像一个小型的 LSM Tree！</p>
+<p>而更新缓冲区就像 MemTable，当更新缓冲区达到一定程度，就压缩到页中，类似于一个小的 Compaction 的过程！</p>
+<p>惰性 BTree 同样避免了 Latch 机制，同时没有 CoW BTree 那么大的写放大代价，因此具有良好的性能；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>MongoDB 的默认存储引擎 WiredTiger就是使用的这种存储结构！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="Lazy-Adaptive-Tree（惰性自适应BTree）"><a href="#Lazy-Adaptive-Tree（惰性自适应BTree）" class="headerlink" title="Lazy-Adaptive Tree（惰性自适应BTree）"></a><strong>Lazy-Adaptive Tree（惰性自适应BTree）</strong></h3><p>惰性 BTree 还有一个分支：Lazy-Adaptive Tree（LA Tree）；</p>
+<p>整体思路和 Lazy BTree 一致，只是将更新缓冲区中的对象变为子树，用来进一步减少写放大；</p>
+<p>如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-34.png" alt="image-20221108132652431"></p>
+<br>
+
+<h3 id="Bw-Tree"><a href="#Bw-Tree" class="headerlink" title="Bw Tree"></a><strong>Bw Tree</strong></h3><p>随着新硬件（如：SSD存储）技术的发展，其硬件实现原来越有利于 LSM Tree；</p>
+<p>因此，BTree 方面自然也会对新硬件做出适应性的改造，如：CoW BTree 和 Lazy BTree，都在相当程度上具有和 LSM Tree 类似的特性了；</p>
+<p>本小节所介绍的 BwTree 是在这一方向上更进一步的一种 BTree 变种，甚至在很大程度上比 LSM Tree 都更近了一步！</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-35.png" alt="image-20221108133356080"></p>
+<p>BwTree 整体分为三层，从上而下分别是：</p>
+<ul>
+<li>BwTree 索引层；</li>
+<li>缓冲层；</li>
+<li>存储层；</li>
+</ul>
+<p>对于最上层的 BwTree 索引层，可以理解为一个逻辑上的类 BTree 结构，对外提供操作这个索引结构的 API，但其实现是完全无 Latch 的；</p>
+<p>最底层的 Flash Layer 使用了 Log Structure Store 来与固态硬盘交互，管理物理数据结构；</p>
+<blockquote>
+<p>  <strong>Log Structure Store：</strong></p>
+<p>  <strong>利用 Append，即日志追加形式来实现的文件系统；其更符合 SSD 特性；</strong></p>
+<p>  原理类似于 LSM Tree；</p>
+</blockquote>
+<p>对于缓冲层，他将索引层和存储层连接起来，通过一个映射表 Mapping Table，记录逻辑页号到物理指针的映射，来实现了无锁追加的特性；</p>
+<p>来看下面的例子；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-36.png" alt="image-20221108134235088"></p>
+<p>和 Lazy BTree 类似，<strong>BwTree 对每个节点的修改也是不直接修改页，而是生成一个 Delta Record 的结构，记录本次修改的情况，如果再有修改就再生成一个；</strong></p>
+<p>因此，许多个 Delta Record 和页一起，组成了一个类似链表的数据结构（Delta 链表）；</p>
+<p>在查找时：</p>
+<p>从新 Delta Record 向旧 Delta Record 至数据页查找，找到符合条件的结果就返回；</p>
+<blockquote>
+<p>  <strong>这里和 LSM Tree 的查找过程非常类似！</strong></p>
+</blockquote>
+<p>但是这里存在两个问题：</p>
+<ul>
+<li>如何确保并发情况下，生成 Delta Record 的安全性（两个操作要同时生成 Delta Record）；</li>
+<li>发生数据结构的修改，如：分裂、合并节点如何操作；</li>
+</ul>
+<br>
+
+<h4 id="并发情况下，生成-Delta-Record"><a href="#并发情况下，生成-Delta-Record" class="headerlink" title="并发情况下，生成 Delta Record"></a><strong>并发情况下，生成 Delta Record</strong></h4><p>对于第一个问题，BwTree 通过刚刚所说的映射表 Mapping Table，记录从逻辑页号到 Delta 链表头的指针；</p>
+<p>如果要新增 Delta Record 就要修改 Mapping Table 中的 Value；</p>
+<p>这样，BwTree 将修改 Delta Record 的操作，转变为了修改 Mapping Table 的操作，再通过 CAS 操作实现对 Mapping Table 的修改，从而将整个过程原子化，以实现不依赖 Latch 的并发控制；</p>
+<blockquote>
+<p>  <strong>CAS操作：</strong></p>
+<p>  <strong>直接修改值的 CPU 指令，是一个CPU层面的原子指令；</strong></p>
+</blockquote>
+<p><strong>因此，调整 Delta 链表的操作就变得简单了：</strong></p>
+<p><font color="#f00"><strong>如果要修改一页中某一行的值，首先生成 Delta Record 结构，为其赋值，并让他指向原 Delta 链表头；</strong></font></p>
+<p><font color="#f00"><strong>随后，在 Mapping Table 中通过 CAS 操作将页号映射至这个 Delta Record；</strong></font></p>
+<p><font color="#f00"><strong>这样，整个修改操作就完成了！</strong></font></p>
+<p>如上图（a）；</p>
+<br>
+
+<p><font color="#f00"><strong>如果 Delta 链表过长，则需要将他们固化到页中，操作也大同小异：</strong></font></p>
+<p><font color="#f00"><strong>首先生成一个新的页，将 Delta 链表加上原有 Page 中的所有结果合并到新的页中；</strong></font></p>
+<p><font color="#f00"><strong>随后在 Mapping Table 中通过 CAS 操作将页号映射到这个新页即可！</strong></font></p>
+<p>如上图（b）；</p>
+<br>
+
+<p>生成的新页不需要修改原来其父节点指向它的指针吗？</p>
+<p><font color="#f00"><strong>实际上，BwTree 中的指针可以是逻辑指针：父节点记录子节点的逻辑页号，就可以找到子节点了！</strong></font></p>
+<p><font color="#f00"><strong>因此，只要不修改页号，父节点就不用改变；</strong></font></p>
+<p><font color="#f00"><strong>所以，虽然我们替换了页，但是由于有映射表的存在，逻辑页号并没有变化，所以父节点也不用变化；</strong></font></p>
+<br>
+
+<h4 id="树结构修改"><a href="#树结构修改" class="headerlink" title="树结构修改"></a><strong>树结构修改</strong></h4><h5 id="页分裂操作"><a href="#页分裂操作" class="headerlink" title="页分裂操作"></a><strong>页分裂操作</strong></h5><p>当新增或删减节点时，BwTree 的做法基本上借鉴了 B-Link Tree 的思路：</p>
+<p>采用了一个指向右兄弟节点的指针，来使分裂过程分为 child split 和 parent update 两个步骤，每个步骤都是原子操作，从而实现了原子化的 SMO 操作；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-37.png" alt="image-20221108140231109"></p>
+<p>上图就是页 P 分裂为 P 和 Q 的过程；</p>
+<p>首先（a）步生成页 Q，但这时页 P 仍然是指向原下一个节点 R 的，页 Q 不可达；</p>
+<p>（b）步对页 P 增加了一个特殊的 Delta Record，它负责对页 P 和页 Q 两部分的数据进行路由；</p>
+<p>（c）步再按照相似的方法调整父节点；</p>
+<p><strong>随着页 P 和父节点的压缩操作，会将 Delta Record 链表合并到页中！</strong></p>
+<br>
+
+<h5 id="页合并操作"><a href="#页合并操作" class="headerlink" title="页合并操作"></a><strong>页合并操作</strong></h5><p>页合并操作和上面的分裂思路类似，先通过增加一个 remove delta record 来标记要删除的节点；</p>
+<p>再通过对其前置节点增加一个 merge delta 标记修改，最后再修改父节点；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-38.png" alt="image-20221108200001820"></p>
+<br>
+
+<h4 id="BwTree总结"><a href="#BwTree总结" class="headerlink" title="BwTree总结"></a><strong>BwTree总结</strong></h4><p>从前面的分析可以看到，BwTree 更像是 B-Link Tree 和 LSM Tree 的结合，从而兼具无 Latch 的特性，又在相当程度上拥有 BTree 一族的读优势！</p>
+<p>目前，BwTree 在学术界还有不少的探索和关注，但在工业界还未听说有成功的实践；</p>
+<br>
+
+<h2 id="深入了解LSM-Tree及其变种"><a href="#深入了解LSM-Tree及其变种" class="headerlink" title="深入了解LSM-Tree及其变种"></a><strong>深入了解LSM-Tree及其变种</strong></h2><h3 id="LSM-Tree概念"><a href="#LSM-Tree概念" class="headerlink" title="LSM-Tree概念"></a><strong>LSM-Tree概念</strong></h3><p>LSM Tree 的概念起源于 1996年的论文《The Log Structure Merge Tree》，此后由 Google Bigtable 第一个商业化实现并于 2006 年发表论文《Bigtable：A distributed strorage system for structured data》；</p>
+<p>随后，Google 的两位专家基于 BigTable 的经验实现了 LevelDB，一个单机 LSM Tree 存储引擎，并开源；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>Chrome 浏览器中的 <a href="https://en.wikipedia.org/wiki/IndexedDB" target="_blank" rel="noopener">IndexedDB</a> 底层实现就是 LevelDB！</strong></font></p>
+</blockquote>
+<p>此后，FaceBook 基于 LevelDB 开发了 RocksDB（非常棒的 KV 数据库，非常值得学习！）！</p>
+<p>RocksDB 做了相当多的迭代演进，如：多线程、Column Family（类似于关系型数据库中表的概念）、Compaction策略等；</p>
+<p>目前，RocksDB 已经成为 LSM Tree 领域的一个事实标准！</p>
+<blockquote>
+<p>  <strong>包括 TiDB 底层的存储也是使用的RocksDB！</strong></p>
+</blockquote>
+<p>下图为 RocksDB 的结构图；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-39.png" alt="image-20221108201917997"></p>
+<p>写入的数据首先要记录 WAL（Write-ahead Log），用来做实时落盘，以实现持久性；</p>
+<p>随后，数据有序的写入 Active Memtable 中；同时，<font color="#f00"><strong>Active Memtable 也是这里唯一可变的结构！</strong></font></p>
+<p>在一个 Active Memtable 写满后，就把它转换为 Immutable Memtable；</p>
+<p><font color="#f00"><strong>上面两类 Memtable 都在内存中，使用的数据结构基本上是跳跃表（也有vector、hash-skiplist等）</strong></font></p>
+<br>
+
+<h4 id="Minor-Merge"><a href="#Minor-Merge" class="headerlink" title="Minor Merge"></a><strong>Minor Merge</strong></h4><p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-40.png" alt="image-20221108202159880"></p>
+<p>当 Immutable Memtable 达到指定的数量后，就将 Immutable Memtable 落盘到磁盘中的 L0 层；</p>
+<p>上面这步操作被称为 minor merge；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-41.png" alt="image-20221108203307920"></p>
+<p><strong>通常，对于 minor merge 的 Memtable 不做整理（无 Compaction 过程），直接刷入磁盘；</strong></p>
+<p>因此，L0 层可能会存在重复的数据；</p>
+<br>
+
+<h4 id="Major-Merge"><a href="#Major-Merge" class="headerlink" title="Major Merge"></a><strong>Major Merge</strong></h4><p>当 L0 层的数据满了之后，就会触发 major merge，也就是关键的 Compaction 操作；</p>
+<p>将 L0 层的数据和 L1 层的数据进行合并，全部整理为 <code>“固定大小的、不可变的数据块”</code>，称为 SSTable（Sorted String Table），并放在 L1 层；</p>
+<blockquote>
+<p>   <strong>SSTable 是由 LevelDB 最初实现的一种数据格式，被称为 Sorted String Table（有序字符串表）；</strong></p>
+<p>  <strong>一个 SST 通常由两个部分组成：</strong></p>
+<ul>
+<li><strong>索引文件；</strong></li>
+<li><strong>数据文件；</strong></li>
+</ul>
+<p>  <strong>其中，数据文件就是要存储的 KV 数据，而索引文件可以是 BTree 或者哈希表；</strong></p>
+<p>  <font color="#f00"><strong>（可以将 SST 理解为一个小型的聚簇索引结构，只是这个结构整体是不可变的！）</strong></font></p>
+<p>  <img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-42.png" alt="image-20221108204250443"></p>
+</blockquote>
+<p>这样，除了 L0 层之外的磁盘中的每一层都是由一个个 SST 组成的，这些 SST 之间互不重叠！</p>
+<p><font color="#f00"><strong>SST 的出现结合后文会讲到的的 Bloom Filter，在很大程度上提升了 LSM Tree 的读性能！</strong></font></p>
+<p><font color="#f00"><strong>并且，L1 和之后层次间的合并，可以仅合并部分重叠的 SST，使 Compaction 过程更加灵活、效率更高；</strong></font></p>
+<br>
+
+<h4 id="一条数据的整体写入过程"><a href="#一条数据的整体写入过程" class="headerlink" title="一条数据的整体写入过程"></a><strong>一条数据的整体写入过程</strong></h4><p>因此，一条数据进入到 LSM Tree 后会：</p>
+<p>首先写入 active memtable，然后进入 immutable memtable，接下来被刷入 L0 层，然后随着 Compaction 操作一层层向下；</p>
+<blockquote>
+<p>  <strong>这也是 LevelDB 的由来，一层一层的；</strong></p>
+</blockquote>
+<p>这个过程如果碰到了更下层的同 key 数据，那么就会将对方合并；</p>
+<p>如果在 Compaction 过程中遇到了从更高层来的同 key 新的数据，那么就会被合并；</p>
+<br>
+
+<h4 id="读操作（Bloom-Filter优化）"><a href="#读操作（Bloom-Filter优化）" class="headerlink" title="读操作（Bloom Filter优化）"></a><strong>读操作（Bloom Filter优化）</strong></h4><p>从 LSM Tree 中读取的过程就是从上至下层层扫描，直至找到数据；</p>
+<p>在查找的过程中，有一个非常关键的优化，可以加速我们对数据的筛选，那就是：<strong>Bloom Filter</strong>！</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-43.png" alt="image-20221108210258083"></p>
+<p><strong>Bloom Filter 用来筛选一层中是否包含我们要查找的数据；</strong></p>
+<p><font color="#f00"><strong>注意到，它可能会返回<code>假阳性</code>的结果，也就是返回一个 key 在这一层，但是实际查找下来是不存在的！但是一定不会返回假阴性的结果！</strong></font></p>
+<p><font color="#f00"><strong>即：如果 Bloom Filter 返回一个 key 不在这一层，那么这个 key 一定是不存在的！</strong></font></p>
+<blockquote>
+<p>  Bloom Filter的原理实际上也很简单：</p>
+<p>  <strong>就是对每个 key 做 hash 操作，做成一个 bytes 映射数组；</strong></p>
+<p>  <strong>然后对要查找的 key 也进行同样的 hash 操作，然后和 bytes 映射数组比对即可；</strong></p>
+</blockquote>
+<p>通常，如果只有一个 Hash 函数的话，Hash 值重合的概率比较高，误报率较高；</p>
+<p>因此，可以设置多个 Hash 函数，这样进来一个 key 的话，只有所有 bytes 映射都命中，才需要真正查询，可以极大程度上降低误报率！</p>
+<p>但是如果 Hash 函数过多，Bloom Filter 的代价就会过大，占用的内存也会增多；</p>
+<p>因此需要好好协调，这里是一个重要的调参方向；</p>
+<br>
+
+<h4 id="合并策略（Merging-Policy）"><a href="#合并策略（Merging-Policy）" class="headerlink" title="合并策略（Merging Policy）"></a><strong>合并策略（Merging Policy）</strong></h4><p>上面讲述的是目前主流的 LSM Tree 的实现，本小节来简单介绍一下另一些 LSM Tree 的实现和探索；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-44.png" alt="image-20221108213322199"></p>
+<p>LevelDB 等一系列 LSM Tree 实现采用的方法都是 Leveling Merge Policy 方法；</p>
+<p>如上图（a），Leveling 合并策略就是将相连两层的数据做合并，然后一起写入下面一层；</p>
+<p>而除此之外，还有另一种合并策略，就是图（b），Tiering Merge Policy；</p>
+<p><strong>Tiering 合并策略的每一层都有多个重叠的组件，合并时也并非将相连两层合并，而是将一层中所有组件进行合并，并放入下一层；</strong></p>
+<p>相比于 Leveling 合并策略，Tiering 合并策略显而易见的对写入更加友好，但读取的性能会进一步降低：因为每一层也有多个重叠的区域，查找时都是要查找的！</p>
+<blockquote>
+<p>  <strong>Cassandra 数据库使用的便是 Teiring 合并策略；</strong></p>
+</blockquote>
+<br>
+
+<h4 id="LSM-Tree并发控制机制"><a href="#LSM-Tree并发控制机制" class="headerlink" title="LSM-Tree并发控制机制"></a><strong>LSM-Tree并发控制机制</strong></h4><p>总体来讲，LSM Tree 因为其天然的 Out-of-place update 特性，在并发控制方面的问题比 BTree 少很多！</p>
+<p>对于 LSM Tree 而言，关注的重点主要在于<strong>会引起结构变更的操作：</strong></p>
+<ul>
+<li><strong>Memtable 落盘；</strong></li>
+<li><strong>Compaction 过程；</strong></li>
+</ul>
+<p>在早期只有一个 Memtable 的情况下，Memtable 的落盘会造成一段时间的不可写！</p>
+<p>目前，区分 active memtable 和 immutable memtable 的设计就能在很大程度上避免 memtable 落盘造成的问题；</p>
+<br>
+
+<h5 id="一些Compaction优化方案"><a href="#一些Compaction优化方案" class="headerlink" title="一些Compaction优化方案"></a><strong>一些Compaction优化方案</strong></h5><p>Compaction 一种都是 LSM Tree 的瓶颈所在：</p>
+<p>Compaction 过程中占用大量资源，并调整数据位置，同时会引发缓冲池中数据的大量丢失，影响 LSM Tree 结构的读取性能，严重情况下，还可能会造成写停顿（Write Stall）！</p>
+<p>因此，关于 Compaction 的优化一直也是 LSM 领域的关注重点！</p>
+<p>使用 Tiering 合并策略是提升综合写性能、减少写放大的一个重要手段；</p>
+<p>还有另外一些手段来优化 Compaction：</p>
+<ul>
+<li><strong>采用流水线技术</strong>：将读取、合并、写入三个操作以流水线的形式执行，以增强合并操作的资源利用率，减少耗时；</li>
+<li><strong>复用组件</strong>：在合并的过程中识别出不变的部分并保留；</li>
+<li><strong>主动更新Cache</strong>：在 Compaction 结束后主动更新 Cache，或采用机器学习的方式预测回填；</li>
+<li><strong>单独硬件执行Compaction</strong>：把 Compaction 操作 Offload 到例如 FPGA 等额外的硬件上执行；</li>
+</ul>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/storage-45.png" alt="image-20221108220304194"></p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>视频地址：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1se4y1U7Dn/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1se4y1U7Dn/</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/11/05/BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结/" title="https://jasonkayzk.github.io/2022/11/05/BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/11/05/BTree、B-Tree和LSM-Tree常用存储引擎数据结构总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1711095541527"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
