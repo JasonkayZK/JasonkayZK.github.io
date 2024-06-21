@@ -28,6 +28,7 @@ cover: https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/about.jpg
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2024-06-21 关闭文件分享、幸运抽页面！**</font>
 *   <font color="#ff0000">**2024-02-09 新增[`Anki笔记`](/anki/)页面，用于记录Anki日志！**</font>
 *   <font color="#ff0000">**2024-02-09 移除[`♥Love♥`](/love/)页面入口**</font>
 *   <font color="#ff0000">**2023-12-13 [`畅所欲言`](/chat/)页面修复，使用[`render`](https://dashboard.render.com/)部署**</font>
