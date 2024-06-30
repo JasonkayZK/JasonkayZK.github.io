@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Lambda表达式总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了. 这篇文章总结了Lambda表达式的基本使用.">
+<meta name="keywords" content="Lambda表达式,函数式接口">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lambda表达式总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/16/Lambda表达式总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了. 这篇文章总结了Lambda表达式的基本使用.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-06-30T02:18:11.058Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lambda表达式总结">
+<meta name="twitter:description" content="Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了. 这篇文章总结了Lambda表达式的基本使用.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1719713966616">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>485</div>
+        <div><span>标签</span>259</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.17px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.04px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">47</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">7</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/06/30/Mac合盖后不休眠/">Mac合盖后不休眠</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/17/アニメ「風が強く吹いている」名言のまとめ/">アニメ「風が強く吹いている」名言のまとめ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/06/HANABI-Mr-Children-歌詞/">【翻訳】HANABI-Mr.Children-歌詞</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/22/【译】实现一个简单的内存分配器/">【译】实现一个简单的内存分配器</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/21/基于Git版本控制的关系型数据库Dolt/">基于Git版本控制的关系型数据库Dolt</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="http://aliyunzixunbucket.oss-cn-beijing.aliyuncs.com/png/20180111002536155989.png">
+    
+    <h1>Lambda表达式总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月16日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 43 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/学习案例/">学习案例</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Lambda表达式/">Lambda表达式</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/函数式接口/">函数式接口</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Lambda表达式"><span class="toc-text">Lambda表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#0-函数式接口"><span class="toc-text">0. 函数式接口</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-函数式接口的声明"><span class="toc-text">1): 函数式接口的声明</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-调用函数式接口"><span class="toc-text">2): 调用函数式接口</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-目标类型-Target-typing"><span class="toc-text">1. 目标类型(Target typing)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Lambda类型推断"><span class="toc-text">1): Lambda类型推断</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-类型检查详细例子"><span class="toc-text">2): 类型检查详细例子</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-类型推断总结"><span class="toc-text">3): 类型推断总结:</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Hello-Lambda"><span class="toc-text">2. Hello Lambda</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-使用普通方法"><span class="toc-text">1): 使用普通方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-使用匿名内部类"><span class="toc-text">2): 使用匿名内部类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-使用Lambda表达式"><span class="toc-text">3): 使用Lambda表达式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-从匿名内部类演变为Lambda表达式"><span class="toc-text">4): 从匿名内部类演变为Lambda表达式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-匿名方法"><span class="toc-text">5): 匿名方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-Lambda的弊端"><span class="toc-text">6): Lambda的弊端</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Lambda-方法引用"><span class="toc-text">3. Lambda 方法引用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-引用静态方法"><span class="toc-text">1): 引用静态方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-引用对象方法"><span class="toc-text">2): 引用对象方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-引用容器中的对象方法"><span class="toc-text">3): 引用容器中的对象方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-引用构造器"><span class="toc-text">4): 引用构造器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-方法引用小结"><span class="toc-text">5): 方法引用小结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Lambda-聚合操作"><span class="toc-text">4. Lambda 聚合操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-传统方法与聚合操作方法遍历数据"><span class="toc-text">1): 传统方法与聚合操作方法遍历数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Stream和管道的概念"><span class="toc-text">2): Stream和管道的概念</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-管道源"><span class="toc-text">3): 管道源</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#把Collection切换成管道源"><span class="toc-text">把Collection切换成管道源:</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#数组切换为管道源"><span class="toc-text">数组切换为管道源</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-中间操作"><span class="toc-text">4): 中间操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-结束操作"><span class="toc-text">5): 结束操作</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-十个经典的Lambda表达式例子"><span class="toc-text">5. 十个经典的Lambda表达式例子</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-用Lambda实现Runnable"><span class="toc-text">1): 用Lambda实现Runnable</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-使用Java-8-lambda表达式进行事件处理"><span class="toc-text">2): 使用Java 8 lambda表达式进行事件处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-使用lambda表达式对列表进行迭代"><span class="toc-text">3): 使用lambda表达式对列表进行迭代</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-使用lambda表达式和函数式接口Predicate"><span class="toc-text">4): 使用lambda表达式和函数式接口Predicate</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-如何在lambda表达式中加入Predicate"><span class="toc-text">5): 如何在lambda表达式中加入Predicate</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-Java-8中使用lambda表达式的Map和Reduce示例"><span class="toc-text">6): Java 8中使用lambda表达式的Map和Reduce示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-2-Java-8中使用lambda表达式的Map和Reduce示例"><span class="toc-text">6.2): Java 8中使用lambda表达式的Map和Reduce示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-通过过滤创建一个String列表"><span class="toc-text">7): 通过过滤创建一个String列表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8-对列表的每个元素应用函数"><span class="toc-text">8): 对列表的每个元素应用函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#9-复制不同的值，创建一个子列表"><span class="toc-text">9): 复制不同的值，创建一个子列表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#10-计算集合元素的最大值、最小值、总和以及平均值"><span class="toc-text">10:): 计算集合元素的最大值、最小值、总和以及平均值</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-Lambda表达式-vs-匿名类"><span class="toc-text">6. Lambda表达式 vs 匿名类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>Java在JDK 8中发布了Lambda特性, 开始支持函数式编程了! 虽然平时用的不是很多, 但是看别人写出的代码刷刷刷, 几下子几个箭头就搞定了, 感觉就很爽! 尤其是最近做了一个项目, 项目中对于Jedis各种操作的封装出神入化!</p>
+<p>所以就趁着中秋节花时间学习了一下Lambda表达式的基本用法!</p>
+<p>本文章中所有例程代码: <a href="https://github.com/JasonkayZK/Java_Samples/tree/java-lambda" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/java-lambda</a></p>
+<br>
+
+<a id="more"></a>
+
+<h2 id="Lambda表达式"><a href="#Lambda表达式" class="headerlink" title="Lambda表达式"></a>Lambda表达式</h2><p>在使用java8之前，我们在处理一些<strong>包含有单个方法的接口</strong>时，一般是通过实现具体类或者匿名类的方式来处理的.</p>
+<p>这种方式能实现所期望的功能，而且也是传统的一切皆对象思想的体现。从实现的细节来看，却显得比较繁琐。在引入了lambda表达式这种新特性之后，我们有了一种更加简练的方式来实现对应的功能特性，当然，也带来了一种函数式编程思想上的转变。</p>
+<p>先来看一下函数式接口的声明:</p>
+<h3 id="0-函数式接口"><a href="#0-函数式接口" class="headerlink" title="0. 函数式接口"></a>0. 函数式接口</h3><p>函数式接口就是<font color="#0000ff">只声明<code>一个抽象方法</code>的接口. </font></p>
+<p>在java里，我们经常可以看到不少只包含有一个方法定义的接口，比如<code>Runnable, Callable, Comparator</code>等. 而这种仅仅包含有一个接口方法的接口就可以称其为函数式接口. </p>
+<p>需要特别注意的一点就是: <font color="#ff0000">这里指的方法是<em>接口里定义的抽象方法</em>. 由于java8里引入了<code>默认方法(default method)</code>, 在接口里也可以定义默认方法的实现! 但是这些方法并不算抽象方法!</font></p>
+<p>另外, <font color="#ff0000">如果某个接口定义了一个抽象方法的同时继承了一个包含其他抽象方法的接口，那么该接口就<em>不是</em>函数式接口.</font></p>
+<br>
+
+<p>除此之外，<font color="#0000ff">Java SE 8中增加了一个新的包: <code>java.util.function</code>, 它里面包含了常用的函数式接口, </font></p>
+<p>例如： </p>
+<ul>
+<li>Predicate<t>——接收T对象并返回boolean</t></li>
+<li>Consumer<t>——接收T对象，不返回值</t></li>
+<li>Function&lt;T, R&gt;——接收T对象，返回R对象</li>
+<li>Supplier<t>——提供T对象（例如工厂），不接收值</t></li>
+<li>UnaryOperator<t>——接收T对象，返回T对象</t></li>
+<li>BinaryOperator<t>——接收两个T对象，返回T对象</t></li>
+</ul>
+<h4 id="1-函数式接口的声明"><a href="#1-函数式接口的声明" class="headerlink" title="1): 函数式接口的声明"></a>1): 函数式接口的声明</h4><p><font color="#ff0000">为保证方法的数量有且仅有一个, java 8 使用了专有注解<code>@FunctionalInterface</code>. </font></p>
+<p><strong>例如: 声明一个函数式接口</strong></p>
+<pre><code class="java">package lambda.lesson0.functional;
+
+@FunctionalInterface
+public interface FunctionalService {
+
+    void sayHello();
+}
+</code></pre>
+<p><font color="#ff0000">当接口声明的抽象方法多于或者少于一个时编译都会报错!</font></p>
+<h4 id="2-调用函数式接口"><a href="#2-调用函数式接口" class="headerlink" title="2): 调用函数式接口"></a>2): 调用函数式接口</h4><pre><code class="java">package lambda.lesson0.functional;
+
+public class FunctionalDemo {
+
+    public static void main(String[] args) {
+        invokeSayHello(() -&gt; System.out.println(&quot;Hello&quot;));
+    }
+
+    private static void invokeSayHello(FunctionalService service) {
+        service.sayHello();
+    }
+
+}
+</code></pre>
+<p>通过Lambda表达式调用了函数式接口的方法!</p>
+<br>
+
+<hr>
+<h3 id="1-目标类型-Target-typing"><a href="#1-目标类型-Target-typing" class="headerlink" title="1. 目标类型(Target typing)"></a>1. 目标类型(Target typing)</h3><p>其实对于<font color="#ff0000">Lambda表达式本质上就是一个对应的函数式接口对象!</font></p>
+<h4 id="1-Lambda类型推断"><a href="#1-Lambda类型推断" class="headerlink" title="1): Lambda类型推断"></a>1): Lambda类型推断</h4><p><font color="#0000ff">一个lambda表达式它本身并没有包含它到底实现哪个函数式接口的信息. 我们怎么知道我们定义的某个lambda表达式可以用到某个函数式接口呢？</font></p>
+<p><font color="#ff0000">实际上，对于lambda表达式的类型是通过它的<em>应用上下文</em>来推导出来的. </font> </p>
+<p>这个过程我们称之为<strong>类型推导(type inference)</strong>. 那么，<strong>在上下文中我们期望获得到的类型则称之为<code>目标类型</code></strong>.</p>
+<p><strong>例如: 下面代码中的lambda表达式类型是ActionListener</strong></p>
+<pre><code class="java">    ActionListener l = (ActionEvent e) -&gt; ui.dazzle(e.getModifiers());  </code></pre>
+<br>
+
+<p>但是<font color="#ff0000">同样的lambda表达式在不同的上下文中可以有不同的类型</font>：</p>
+<pre><code class="java">    Callable&lt;String&gt; c = () -&gt; &quot;done&quot;;  
+
+    PrivilegedAction&lt;String&gt; a = () -&gt; &quot;done&quot;;  </code></pre>
+<p><font color="#0000ff">第一个lambda表达式() -&gt; “done”是Callable的实例; 而第二个lambda表达式则是PrivilegedAction的实例。</font></p>
+<br>
+
+<h4 id="2-类型检查详细例子"><a href="#2-类型检查详细例子" class="headerlink" title="2): 类型检查详细例子"></a>2): 类型检查详细例子</h4><p>​     首先，我们这部分应用lambda表达式的代码如下：</p>
+<pre><code class="java">    inventory.sort((Apple a1, Apple a2) -&gt; a1.getWeight().compareTo(a2.getWeight()));  </code></pre>
+<ul>
+<li><p>我们首先<font color="#0000ff">检查<code>inventory.sort方法</code>的签名</font>，它的详细签名如下：</p>
+<p><code>void sort(Comparator&lt;? super E&gt; c)</code></p>
+</li>
+<li><p>那么它<font color="#0000ff">期待的参数类型是Comparator<apple>;</apple></font></p>
+</li>
+<li><p>对于Comparator接口，它是一个函数式接口，并有定义的抽象方法compare;</p>
+</li>
+<li><p>compare方法的详细签名如下：</p>
+<p><code>int compare(Apple o1, Apple o2)</code>, 这表示这个方法<font color="#0000ff">期待两个类型为Apple的输入参数，并返回一个整型的结果</font></p>
+</li>
+<li><p><font color="#ff0000">比对lambda表达式的函数签名类型，它也是两个输入类型为Apple，并且输出为int类型;</font></p>
+</li>
+</ul>
+<p>这样，lambda表达式的目标类型和我们的类型匹配了!</p>
+<br>
+
+<h4 id="3-类型推断总结"><a href="#3-类型推断总结" class="headerlink" title="3): 类型推断总结:"></a>3): 类型推断总结:</h4><p>总结起来，<strong>当且仅当下面所有条件均满足时，lambda表达式才可以被赋给目标类型T</strong>：</p>
+<ul>
+<li><font color="#ff0000">T是一个函数式接口</font></li>
+<li><font color="#ff0000">lambda表达式的参数和T的方法参数在数量和类型上一一对应</font></li>
+<li><font color="#ff0000">lambda表达式的返回值和T的方法返回值相兼容（Compatible）</font></li>
+<li><font color="#ff0000">lambda表达式内所抛出的异常和T的方法throws类型相兼容</font></li>
+</ul>
+<br>
+
+<p><font color="#ff0000">由于目标类型（函数式接口）已经”知道”lambda表达式的形式参数（Formal parameter）类型，所以我们没有必要把已知类型再重复一遍. </font></p>
+<p>也就是说，lambda表达式的参数类型可以从目标类型中得出：</p>
+<pre><code class="java">    Comparator&lt;Apple&gt; comp = (a1, a2) -&gt; a1.getWeight().compareTo(a2.getWeight());  </code></pre>
+<p>在上面的例子里, <font color="#0000ff">编译器可以推导出a1和a2的类型是Apple。所以它就在lambda表达式里省略了a1, a2的类型声明。这样可以使得我们的代码更加简练.</font></p>
+<br>
+
+<hr>
+<h3 id="2-Hello-Lambda"><a href="#2-Hello-Lambda" class="headerlink" title="2. Hello Lambda"></a>2. Hello Lambda</h3><p>上面简单介绍了Lambda表达式的本质以及简化代码的原理. 下面给出一个例子来详细介绍Lambda表达式:</p>
+<p><strong>假设一个情景: 找出满足条件Hero</strong></p>
+<p>Hero类:</p>
+<pre><code class="java">package lambda.pojo;
+
+public class Hero implements Comparable&lt;Hero&gt;{
+
+    public String name;
+    public float hp;
+    public int damage;
+
+    public Hero(){
+
+    }
+
+    public Hero(String name) {
+        this.name =name;
+
+    }
+
+    public Hero(String name,float hp, int damage) {
+        this.name =name;
+        this.hp = hp;
+        this.damage = damage;
+    }
+
+    @Override
+    public int compareTo(Hero anotherHero) {
+        if(damage&lt;anotherHero.damage)
+            return 1;
+        else
+            return -1;
+    }
+
+    @Override
+    public String toString() {
+        return &quot;Hero [name=&quot; + name + &quot;, hp=&quot; + hp + &quot;, damage=&quot; + damage + &quot;]\r\n&quot;;
+    }
+
+}</code></pre>
+<p>给定一组heroes, 从中找出所有满足条件: <code>hp&gt;100 &amp;&amp; damage&lt;50</code>的数据!</p>
+<br>
+
+<h4 id="1-使用普通方法"><a href="#1-使用普通方法" class="headerlink" title="1): 使用普通方法"></a>1): 使用普通方法</h4><pre><code class="java">package lambda.lesson2.helloLambda.normal;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class NormalFind {
+
+    public static void main(String[] args) {
+        Random random = new Random();
+        List&lt;Hero&gt; heroes = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 10; i++) {
+            heroes.add(new Hero(&quot;Hero &quot; + i, random.nextInt(1000), random.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合: &quot;);
+        System.out.println(heroes);
+
+        System.out.println(&quot;筛选出 hp&gt;100 &amp;&amp; damange&lt;50的英雄&quot;);
+        filter(heroes);
+    }
+
+    private static void filter(List&lt;Hero&gt; heroes) {
+        for (Hero hero : heroes) {
+            if (hero.hp &gt; 100 &amp;&amp; hero.damage &lt; 50) {
+                System.out.println(hero);
+            }
+        }
+    }
+}
+</code></pre>
+<p><font color="#0000ff">创建了一个<code>filter方法</code>, 通过调用此方法对列表进行过滤查找!</font></p>
+<br>
+
+<h4 id="2-使用匿名内部类"><a href="#2-使用匿名内部类" class="headerlink" title="2): 使用匿名内部类"></a>2): 使用匿名内部类</h4><p>首先准备一个接口HeroChecker, 提供test方法: </p>
+<pre><code class="java">package lambda.service;
+
+import lambda.pojo.Hero;
+
+public interface HeroChecker {
+
+    boolean test(Hero hero);
+}
+</code></pre>
+<br>
+
+<p>然后通过匿名内部类实现该接口, 然后调用filter方法, 传递checker去判断!</p>
+<pre><code class="java">package lambda.lesson2.helloLambda.interfaceMethod;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class InterfaceFind {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+        System.out.println(&quot;使用匿名类的方式，筛选出 hp&gt;100 &amp;&amp; damange&lt;50的英雄&quot;);
+
+        filter(heros, new HeroChecker() {
+            @Override
+            public boolean test(Hero hero) {
+                return (hero.hp &gt; 100 &amp;&amp; hero.damage &lt; 50);
+            }
+        });
+    }
+
+    private static void filter(List&lt;Hero&gt; heros, HeroChecker heroChecker) {
+        for (Hero hero : heros) {
+            if (heroChecker.test(hero)) {
+                System.out.println(hero);
+            }
+        }
+    }
+
+
+}
+</code></pre>
+<br>
+
+<h4 id="3-使用Lambda表达式"><a href="#3-使用Lambda表达式" class="headerlink" title="3): 使用Lambda表达式"></a>3): 使用Lambda表达式</h4><p>通过Lambda表达式构造匿名内部类:</p>
+<pre><code class="java">filter(heros, h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);</code></pre>
+<p>同样是调用filter方法, 但是传递一个Lambda表达式显然更加方便!</p>
+<pre><code class="java">package lambda.lesson2.helloLambda.lambda;
+
+import lambda.pojo.Hero;
+import lambda.service.HeroChecker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class LambdaFind {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;Hero&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+
+        System.out.println(&quot;使用Lamdba的方式，筛选出 hp&gt;100 &amp;&amp; damange&lt;50的英雄&quot;);
+        filter(heros, h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);
+
+    }
+
+    private static void filter(List&lt;Hero&gt; heroes, HeroChecker checker) {
+        for (Hero hero : heroes) {
+            if (checker.test(hero)) {
+                System.out.println(hero);
+            }
+        }
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="4-从匿名内部类演变为Lambda表达式"><a href="#4-从匿名内部类演变为Lambda表达式" class="headerlink" title="4): 从匿名内部类演变为Lambda表达式"></a>4): 从匿名内部类演变为Lambda表达式</h4><p>Lambda表达式可以看成是匿名类一点点演变过来</p>
+<ul>
+<li>匿名类的正常写法 </li>
+</ul>
+<pre><code class="java">HeroChecker c1 = new HeroChecker() {
+    @Override
+    public boolean test(Hero h) {
+        return (h.hp&gt;100 &amp;&amp; h.damage&lt;50);
+    }
+};</code></pre>
+<ul>
+<li><font color="#ff0000">把外面的壳子去掉, 只保留只保留方法参数和方法体, 参数和方法体之间加上符号 -&gt;</font></li>
+</ul>
+<pre><code class="java">HeroChecker c2 = (Hero h) -&gt; {
+    return  h.hp&gt;100 &amp;&amp; h.damage&lt;50;
+}</code></pre>
+<ul>
+<li><p><font color="#ff0000">把return和{}去掉</font></p>
+<pre><code class="java">HeroChecker c3 = (Hero h) -&gt;h.hp&gt;100 &amp;&amp; h.damage&lt;50;</code></pre>
+</li>
+</ul>
+<ul>
+<li>把参数类型和圆括号去掉<strong>(只有一个参数的时候，才可以去掉圆括号)</strong></li>
+</ul>
+<pre><code class="java">HeroChecker c4 = h -&gt; h.hp &gt; 100 &amp;&amp;  h.damage &lt; 50;</code></pre>
+<ul>
+<li>直接把表达式传递进去</li>
+</ul>
+<pre><code class="java">filter(heros, h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);</code></pre>
+<p><strong>注: 以上所有的Lambda表达式均是合法的!!!</strong></p>
+<br>
+
+<pre><code class="java">package lambda.lesson2.helloLambda.generateLambda;
+
+import lambda.pojo.Hero;
+import lambda.service.HeroChecker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class GenerateLambdaDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+        System.out.println(&quot;使用匿名类的方式，筛选出 hp&gt;100 &amp;&amp; damange&lt;50的英雄&quot;);
+
+        // 1. 匿名内部类正常写法
+        HeroChecker c1 = new HeroChecker() {
+            @Override
+            public boolean test(Hero h) {
+                return (h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);
+            }
+        };
+
+        // 2. 把new HeroChcekcer，方法名，方法返回类型信息去掉
+        // 只保留方法参数和方法体
+        // 参数和方法体之间加上符号 -&gt;
+        HeroChecker c2 = (Hero h) -&gt; {
+            return (h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);
+        };
+
+        // 3. 把return和{}去掉
+        HeroChecker c3 = (Hero h) -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50;
+
+        // 4. 把参数类型和圆括号去掉
+        HeroChecker c4 = h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50;
+
+        // 直接把表达式传递进去
+        filter(heros, h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);
+    }
+
+    private static void filter(List&lt;Hero&gt; heroes, HeroChecker checker) {
+        for (Hero hero : heroes) {
+            if (checker.test(hero)) {
+                System.out.println(hero);
+            }
+        }
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="5-匿名方法"><a href="#5-匿名方法" class="headerlink" title="5): 匿名方法"></a>5): 匿名方法</h4><p>与匿名类的概念类似: <font color="#0000ff">匿名方法把方法作为参数. </font></p>
+<p>虽然代码是这么写:</p>
+<pre><code class="java">filter(heros, h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50);</code></pre>
+<p>但是，<font color="#ff0000">Java会在背后，悄悄的，把这些都还原成匿名类方式.</font> </p>
+<p>引入Lambda表达式，会使得代码更加紧凑，而不是各种接口和匿名类到处飞.</p>
+<br>
+
+<h4 id="6-Lambda的弊端"><a href="#6-Lambda的弊端" class="headerlink" title="6): Lambda的弊端"></a>6): Lambda的弊端</h4><p>Lambda表达式虽然带来了代码的简洁，但是也有其局限性:</p>
+<ul>
+<li><font color="#0000ff">可读性差，与啰嗦的但是清晰的匿名类代码结构比较起来，Lambda表达式一旦变得比较长，就<em>难以理解</em>;</font></li>
+<li><font color="#0000ff">不便于调试，很难在Lambda表达式中增加调试信息，比如日志</font></li>
+<li>版本支持，Lambda表达式在JDK8版本中才开始支持，如果系统使用的是以前的版本，考虑系统的稳定性等原因，而不愿意升级，那么就无法使用;</li>
+</ul>
+<p>Lambda比较<strong>适合用在简短的业务代码中, 如: Redis命令. 而并不适合用在复杂的系统中，会加大维护成本</strong>                    </p>
+<br>
+
+<hr>
+<h3 id="3-Lambda-方法引用"><a href="#3-Lambda-方法引用" class="headerlink" title="3. Lambda 方法引用"></a>3. Lambda 方法引用</h3><h4 id="1-引用静态方法"><a href="#1-引用静态方法" class="headerlink" title="1): 引用静态方法"></a>1): 引用静态方法</h4><p>首先添加一个静态方法:</p>
+<pre><code class="java">public static boolean testHero(Hero h) {
+   return h.hp&gt;100 &amp;&amp; h.damage&lt;50;
+}</code></pre>
+<p>此时在Lambda表达式中调用这个静态方法:</p>
+<pre><code class="java">filter(heros, h -&gt; TestLambda.testHero(h) );</code></pre>
+<p>调用静态方法:</p>
+<pre><code class="java">filter(heros, TestLambda::testHero);</code></pre>
+<p>即: <strong>引用静态方法</strong></p>
+<pre><code class="java">package lambda.lesson3.methodReferece.staticMethod;
+
+import lambda.pojo.Hero;
+import lambda.service.HeroChecker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class StaticMethodDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+
+        System.out.println(&quot;在Lambda表达式中使用静态方法&quot;);
+        filter(heros, h -&gt; h.hp&gt;100 &amp;&amp; h.damage&lt;50);
+
+        System.out.println(&quot;直接引用静态方法&quot;);
+        filter(heros, StaticMethodDemo::testHero);
+    }
+
+    public static boolean testHero(Hero h) {
+        return h.hp&gt;100 &amp;&amp; h.damage&lt;50;
+    }
+
+    public static void filter(List&lt;Hero&gt; heroes, HeroChecker checker) {
+        for (Hero hero : heroes) {
+            if (checker.test(hero)) {
+                System.out.println(hero);
+            }
+        }
+    }
+
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-引用对象方法"><a href="#2-引用对象方法" class="headerlink" title="2): 引用对象方法"></a>2): 引用对象方法</h4><p><font color="#0000ff">与引用静态方法很类似，只是传递方法的时候，<em>需要一个对象的存在</em>.</font></p>
+<pre><code class="java">TestLambda testLambda = new TestLambda();
+filter(heros, testLambda::testHero);</code></pre>
+<p>即: <strong>引用对象方法</strong></p>
+<pre><code class="java">package lambda.lesson3.methodReferece.memberMethod;
+
+import lambda.pojo.Hero;
+import lambda.service.HeroChecker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MemberMethodDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+
+        System.out.println(&quot;使用引用对象方法  的过滤结果：&quot;);
+        MemberMethodDemo test = new MemberMethodDemo();
+        filter(heros, test::testHero);
+    }
+
+    private boolean testHero(Hero h) {
+        return h.hp&gt;100 &amp;&amp; h.damage&lt;50;
+    }
+
+    private static void filter(List&lt;Hero&gt; heroes, HeroChecker checker) {
+        for (Hero hero : heroes) {
+            if (checker.test(hero))
+                System.out.print(hero);
+        }
+    }
+
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="3-引用容器中的对象方法"><a href="#3-引用容器中的对象方法" class="headerlink" title="3): 引用容器中的对象方法"></a>3): 引用容器中的对象方法</h4><p>首先为<code>JavaBean</code>对象Hero添加一个方法</p>
+<pre><code class="java">public boolean matched(){
+   return this.hp&gt;100 &amp;&amp; this.damage&lt;50;
+}</code></pre>
+<p>使用Lambda表达式</p>
+<pre><code class="java">filter(heros,h-&gt; h.hp&gt;100 &amp;&amp; h.damage&lt;50 );</code></pre>
+<p>在Lambda表达式中调用容器中的对象Hero的方法matched</p>
+<pre><code class="java">filter(heros,h-&gt; h.matched() );</code></pre>
+<p>matched恰好就是容器中的对象Hero的方法，那就可以进一步改写为: </p>
+<pre><code class="java">filter(heros, Hero::matched);</code></pre>
+<p><strong>注意到:</strong></p>
+<ul>
+<li><font color="#ff0000">matched()是成员方法;</font></li>
+<li><font color="#ff0000">Hero::matched()是通过类名引用的</font></li>
+</ul>
+<br>
+
+
+
+<h4 id="4-引用构造器"><a href="#4-引用构造器" class="headerlink" title="4): 引用构造器"></a>4): 引用构造器</h4><p><font color="#0000ff">有的接口中的方法会返回一个对象，比如<code>java.util.function.Supplier</code>提供了一个get方法，返回一个对象!</font></p>
+<pre><code class="java">public interface Supplier&lt;T&gt; {
+    T get();
+}</code></pre>
+<p>设计一个方法，参数是这个接口</p>
+<pre><code class="java">public static List getList(Supplier&lt;List&gt; s){
+  return s.get();
+}</code></pre>
+<p>为了调用这个方法，有3种方式:</p>
+<ul>
+<li><strong>第一种: 匿名类</strong></li>
+</ul>
+<pre><code class="java">Supplier&lt;List&gt; s = new Supplier&lt;List&gt;() {
+    public List get() {
+        return new ArrayList();
+    }
+};
+List list1 = getList(s);</code></pre>
+<br>
+
+<ul>
+<li>第二种：Lambda表达式</li>
+</ul>
+<pre><code class="java">List list2 = getList(()-&gt;new ArrayList());</code></pre>
+<br>
+
+<ul>
+<li>第三种：引用构造器</li>
+</ul>
+<pre><code class="java">List list3 = getList(ArrayList::new);</code></pre>
+<br>
+
+<pre><code class="java">package lambda.lesson3.methodReferece.constructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+public class ConstructorLambdaDemo {
+
+    public static void main(String[] args) {
+        // 1. 匿名内部类
+        List list1 = getList(new Supplier&lt;List&gt;() {
+            @Override
+            public List get() {
+                return new ArrayList();
+            }
+        });
+
+        // 2. Lambda表达式
+        List list2 = getList(() -&gt; new ArrayList());
+
+        // 3. 引用构造器
+        List list3 = getList(ArrayList::new);
+
+        System.out.println(list1 == list2);
+        System.out.println(list2 == list3);
+    }
+
+    public static List getList(Supplier&lt;List&gt; s) {
+        return s.get();
+    }
+
+}
+</code></pre>
+<p><font color="#ff0000">用三种不同的方法创建了容器, 通过比较发现三种方法均能创建容器, 且每个都不相同!</font></p>
+<p>输出为:</p>
+<pre><code>false
+false</code></pre><br>
+
+
+
+<h4 id="5-方法引用小结"><a href="#5-方法引用小结" class="headerlink" title="5): 方法引用小结"></a>5): 方法引用小结</h4><p><font color="#0000ff">有的情况下，我们已经有一些方法实现同样的功能了，那么我们可以重用这些原有的功能而不至于自己去重复实现, 这时候使用Lambda引用即可!</font></p>
+<p>方法引用有很多种，它们的语法如下：</p>
+<ul>
+<li>静态方法引用：ClassName::methodName</li>
+<li>实例上的实例方法引用：instanceReference::methodName</li>
+<li>超类上的实例方法引用：super::methodName</li>
+<li>类型上的实例方法引用：ClassName::methodName</li>
+<li>构造方法引用：Class::new</li>
+<li>数组构造方法引用：TypeName[]::new</li>
+</ul>
+<p><font color="#ff0000">对于静态方法引用，我们需要在类名和方法名之间加入::分隔符，例如Integer::sum;</font></p>
+<p><font color="#ff0000">对于具体对象上的实例方法引用，我们则需要在对象名和方法名之间加入分隔符</font></p>
+<br>
+
+<hr>
+<h3 id="4-Lambda-聚合操作"><a href="#4-Lambda-聚合操作" class="headerlink" title="4. Lambda 聚合操作"></a>4. Lambda 聚合操作</h3><h4 id="1-传统方法与聚合操作方法遍历数据"><a href="#1-传统方法与聚合操作方法遍历数据" class="headerlink" title="1): 传统方法与聚合操作方法遍历数据"></a>1): 传统方法与聚合操作方法遍历数据</h4><p>遍历数据的传统方式就是使用for循环，然后条件判断，最后打印出满足条件的数据:</p>
+<pre><code class="java">for (Hero h : heros) {
+   if (h.hp &gt; 100 &amp;&amp; h.damage &lt; 50)
+      System.out.println(h.name);
+}</code></pre>
+<p>使用聚合操作方式，画风就发生了变化：</p>
+<pre><code class="java">heros
+    .stream()
+    .filter(h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50)
+    .forEach(h -&gt; System.out.println(h.name));</code></pre>
+<p>源代码:</p>
+<pre><code class="java">package lambda.lesson4.polymerization;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class TraverseDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;Hero&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        System.out.println(&quot;初始化后的集合：&quot;);
+        System.out.println(heros);
+
+        System.out.println(&quot;查询条件：hp&gt;100 &amp;&amp; damage&lt;50&quot;);
+        System.out.println(&quot;通过传统操作方式找出满足条件的数据：&quot;);
+        for(Hero hero : heros) {
+            if (hero.hp &gt; 100 &amp;&amp; hero.damage &lt; 50) {
+                System.out.println(hero.name);
+            }
+        }
+
+        System.out.println(&quot;通过聚合操作方式找出满足条件的数据：&quot;);
+        heros
+                .stream()
+                .filter(h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50)
+                .forEach(h -&gt; System.out.println(h.name));
+
+
+    }
+
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-Stream和管道的概念"><a href="#2-Stream和管道的概念" class="headerlink" title="2): Stream和管道的概念"></a>2): Stream和管道的概念</h4><p>要了解聚合操作，首先要建立Stream和管道的概念: </p>
+<ul>
+<li><font color="#ff0000">Stream 和Collection结构化的数据不一样: Stream是一系列的元素，就像是生产线上的罐头一样，一串串的出来;</font></li>
+<li><font color="#ff0000">管道指的是<em>一系列的聚合操作</em>;</font></li>
+</ul>
+<p>管道又分<strong>3个部分</strong></p>
+<ul>
+<li><strong>管道源</strong>：在这个例子里，源是一个List</li>
+<li><strong>中间操作</strong>： <font color="#0000ff">每个中间操作，<em>又会返回一个Stream</em>，比如.filter()又返回一个Stream, 中间操作是“懒”操作，并<code>不会真正进行遍历</code></font>;</li>
+<li><strong>结束操作</strong>：<font color="#ff0000">当这个操作执行后，流就被使用”光”了，无法再被操作! 所以这<code>必定是流的最后一个操作</code>.  结束操作不会返回Stream，但是会返回int、float、String、 Collection或者像forEach，什么都不返回,  结束操作才进行真正的遍历行为，在遍历的时候，才会去进行中间操作的相关判断</font></li>
+</ul>
+<p><strong>注</strong>： <font color="#0000ff">这个Stream和I/O章节的InputStream,OutputStream是不一样的概念!</font>    </p>
+<br>
+
+<h4 id="3-管道源"><a href="#3-管道源" class="headerlink" title="3): 管道源"></a>3): 管道源</h4><h5 id="把Collection切换成管道源"><a href="#把Collection切换成管道源" class="headerlink" title="把Collection切换成管道源:"></a>把Collection切换成管道源:</h5><p>很简单，调用stream()就行了:</p>
+<pre><code class="java">heros.stream()</code></pre>
+<br>
+
+<h5 id="数组切换为管道源"><a href="#数组切换为管道源" class="headerlink" title="数组切换为管道源"></a>数组切换为管道源</h5><p><font color="#ff0000">数组却没有stream()方法，需要使用工具类的静态方法</font></p>
+<pre><code class="java">Arrays.stream(hs)</code></pre>
+<p>或者</p>
+<pre><code class="java">Stream.of(hs)</code></pre>
+<p>如:</p>
+<pre><code class="java">package lambda.lesson4.polymerization;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+public class ArrayToPipeSource {
+
+    public static void main(String[] args) {
+        /* 管道源是集合 */
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;Hero&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+
+        heros
+                .stream()
+                .forEach(h -&gt; System.out.println(h.name));
+
+        Hero hs[] = heros.toArray(new Hero[heros.size()]);
+        Arrays.stream(hs)
+                .forEach(h -&gt; System.out.println(h.name));
+
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="4-中间操作"><a href="#4-中间操作" class="headerlink" title="4): 中间操作"></a>4): 中间操作</h4><p><font color="#0000ff">每个中间操作，又会返回一个Stream，比如.filter()又返回一个Stream, 中间操作是“懒”操作，并不会真正进行遍历;</font></p>
+<p>中间操作比较多，主要分两类: <font color="#00ff00">对元素进行筛选 和 转换为其他形式的流</font></p>
+<p>对元素进行筛选：</p>
+<ul>
+<li>filter 匹配</li>
+<li>distinct 去除重复(根据equals判断)</li>
+<li>sorted 自然排序</li>
+<li>sorted(Comparator<t>) 指定排序</t></li>
+<li>limit 保留</li>
+<li>skip 忽略</li>
+</ul>
+<br>
+
+<p>转换为其他形式的流</p>
+<ul>
+<li>mapToDouble 转换为double的流</li>
+<li>map  转换为任意类型的流</li>
+</ul>
+<br>
+
+<p>*<em>例如: *</em></p>
+<pre><code class="java">package lambda.lesson4.polymerization.middle;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MiddleOptDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+        //制造一个重复数据
+        heros.add(heros.get(0));
+        System.out.println(&quot;初始化集合后的数据 (最后一个数据重复)：&quot;);
+        System.out.println(heros);
+
+        System.out.println(&quot;满足条件hp&gt;100&amp;&amp;damage&lt;50的数据&quot;);
+        heros
+                .stream()
+                .filter(h -&gt; h.hp &gt; 100 &amp;&amp; h.damage &lt; 50)
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;去除重复的数据，去除标准是看equals&quot;);
+        heros
+                .stream()
+                .distinct()
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;按照血量排序&quot;);
+        heros
+                .stream()
+                .sorted((h1, h2) -&gt; h1.hp - h2.hp &gt;= 0 ? 1 : -1)
+                .forEach(hero -&gt; System.out.println(hero));
+
+        System.out.println(&quot;保留3个&quot;);
+        heros
+                .stream()
+                .limit(3)
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;忽略前三个&quot;);
+        heros
+                .stream()
+                .skip(3)
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;转为double的Stream&quot;);
+        heros
+                .stream()
+                .mapToDouble(Hero::getHp)
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;转为任意类型的Stream&quot;);
+        heros
+                .stream()
+                .map((h) -&gt; h.name + &quot; - &quot; + h.hp + &quot; - &quot; + h.damage)
+                .forEach(h -&gt; System.out.println(h));
+
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="5-结束操作"><a href="#5-结束操作" class="headerlink" title="5): 结束操作"></a>5): 结束操作</h4><p><font color="#ff0000">当进行结束操作后，流就被使用“光”了，无法再被操作; 所以这<em>必定是流的最后一个操作</em>;  </font></p>
+<p><font color="#ff0000">结束操作不会返回Stream，但是会返回int、float、String、 Collection或者像forEach，什么都不返回; 结束操作才真正进行遍历行为，前面的中间操作也在这个时候，才真正的执行;</font></p>
+<p><strong>常见结束操作如下</strong>：</p>
+<ul>
+<li>forEach() 遍历每个元素</li>
+<li>toArray() 转换为数组</li>
+<li>min(Comparator<t>) 取最小的元素</t></li>
+<li>max(Comparator<t>) 取最大的元素</t></li>
+<li>count() 总数</li>
+<li>findFirst() 第一个元素</li>
+</ul>
+<br>
+
+<p>*<em>例如:  *</em></p>
+<pre><code class="java">package lambda.lesson4.polymerization.end;
+
+import lambda.pojo.Hero;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+public class EndingOptDemo {
+
+    public static void main(String[] args) {
+        Random r = new Random();
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 5; i++) {
+            heros.add(new Hero(&quot;hero &quot; + i, r.nextInt(1000), r.nextInt(100)));
+        }
+
+        System.out.println(&quot;遍历集合中的每个数据&quot;);
+        heros.stream()
+                .forEach(h -&gt; System.out.println(h));
+
+        System.out.println(&quot;返回一个数组&quot;);
+        Object[] bs = heros.stream().toArray();
+        System.out.println(Arrays.toString(bs));
+
+        System.out.println(&quot;返回伤害最高的那个英雄&quot;);
+        Hero min = heros.stream()
+                .max((h1, h2) -&gt; h1.damage - h2.damage)
+                .get();
+        System.out.println(min);
+
+        System.out.println(&quot;返回伤害最低的那个英雄&quot;);
+        Hero max = heros.stream()
+                .min((h1, h2) -&gt; h1.damage - h2.damage)
+                .get();
+        System.out.println(max);
+
+        System.out.println(&quot;流中数据的总数&quot;);
+        long count = heros.stream()
+                .count();
+        System.out.println(count);
+
+        System.out.println(&quot;第一个英雄&quot;);
+        Hero first = heros.stream()
+                .findFirst()
+                .get();
+        System.out.println(first);
+
+    }
+}
+</code></pre>
+<br>
+
+<hr>
+<h3 id="5-十个经典的Lambda表达式例子"><a href="#5-十个经典的Lambda表达式例子" class="headerlink" title="5. 十个经典的Lambda表达式例子"></a>5. 十个经典的Lambda表达式例子</h3><h4 id="1-用Lambda实现Runnable"><a href="#1-用Lambda实现Runnable" class="headerlink" title="1): 用Lambda实现Runnable"></a>1): 用Lambda实现Runnable</h4><p>使用lambda表达式替换匿名类，而实现Runnable接口是匿名类的最好示例。看一下Java 8之前的runnable实现方法，需要4行代码，而使用lambda表达式只需要一行代码:</p>
+<pre><code class="java">package lambda.lesson5.examples.example1;
+
+public class RunnableDemo {
+
+    public static void main(String[] args) {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(&quot;Before Java8, too much code for too little to do&quot;);
+            }
+        }).start();
+
+        new Thread(() -&gt; System.out.println(&quot;In Java8, Lambda expression rocks !!&quot;)).start();
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-使用Java-8-lambda表达式进行事件处理"><a href="#2-使用Java-8-lambda表达式进行事件处理" class="headerlink" title="2): 使用Java 8 lambda表达式进行事件处理"></a>2): 使用Java 8 lambda表达式进行事件处理</h4><p>如果你用过Swing API编程，你就会记得怎样写事件监听代码。这又是一个旧版本简单匿名类的经典用例，但现在可以不这样了。你可以用lambda表达式写出更好的事件监听代码:</p>
+<pre><code class="java">package lambda.lesson5.examples.example2;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class ListenerDemo {
+
+    public static void main(String[] args) {
+        JButton button1 = new JButton();
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println(&quot;Event handling without lambda expression is boring&quot;);
+            }
+        });
+
+        JButton button2 = new JButton();
+        button2.addActionListener(e -&gt; System.out.println(&quot;Light, Camera, Action !! Lambda expressions Rocks&quot;));
+
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="3-使用lambda表达式对列表进行迭代"><a href="#3-使用lambda表达式对列表进行迭代" class="headerlink" title="3): 使用lambda表达式对列表进行迭代"></a>3): 使用lambda表达式对列表进行迭代</h4><p>由于Java是命令式语言，Java 8之前的所有循环代码都是顺序的，即可以对其元素进行并行化处理! 如果你想做并行过滤，就需要自己写代码，这并不是那么容易! </p>
+<p>通过引入lambda表达式和默认方法，将做什么和怎么做的问题分开了，这意味着Java集合现在知道怎样做迭代，并可以在API层面对集合元素进行并行处理!</p>
+<p>下面的例子里，我将介绍如何在<a href="http://javarevisited.blogspot.sg/2012/03/how-to-loop-arraylist-in-java-code.html" target="_blank" rel="noopener">使用</a><a href="http://javarevisited.blogspot.sg/2012/03/how-to-loop-arraylist-in-java-code.html" target="_blank" rel="noopener">lambda</a>或不使用lambda表达式的情况下迭代列表。你可以看到列表现在有了一个 forEach()  方法，它可以迭代所有对象，并将你的lambda代码应用在其中:</p>
+<pre><code class="java">package lambda.lesson5.examples.example3;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class TraverseDemo {
+
+    public static void main(String[] args) {
+        List&lt;String&gt; features = Arrays.asList(&quot;Lambdas&quot;, &quot;Default Method&quot;, &quot;Stream API&quot;, &quot;Date and Time API&quot;);
+        for (String feature : features) {
+            System.out.println(feature);
+        }
+
+        features.stream().forEach(n -&gt; System.out.println(n));
+
+        // 使用Java 8的方法引用更方便，方法引用由::双冒号操作符标示，
+        // 看起来像C++的作用域解析运算符
+        features.stream().forEach(System.out::println);
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="4-使用lambda表达式和函数式接口Predicate"><a href="#4-使用lambda表达式和函数式接口Predicate" class="headerlink" title="4): 使用lambda表达式和函数式接口Predicate"></a>4): 使用lambda表达式和函数式接口Predicate</h4><p>除了在语言层面支持函数式编程风格，Java 8也添加了一个包，叫做``java.util.function`。它包含了很多类，用来支持Java的函数式编程。</p>
+<p><font color="#ff0000">其中一个便是Predicate，使用<code>java.util.function.Predicate</code>函数式接口以及lambda表达式，可以向API方法添加逻辑，用更少的代码支持更多的动态行为!</font></p>
+<p>下面是Java 8 Predicate 的例子，展示了过滤集合数据的多种常用方法。Predicate接口非常适用于做过滤!</p>
+<pre><code class="java">package lambda.lesson5.examples.example4;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+
+public class PredicateDemo {
+
+    public static void main(String[] args) {
+        List&lt;String&gt; languages = Arrays.asList(&quot;Java&quot;, &quot;Scala&quot;, &quot;C++&quot;, &quot;Haskell&quot;, &quot;Lisp&quot;);
+
+        System.out.println(&quot;Languages which starts with J :&quot;);
+        filter(languages, s -&gt; s.startsWith(&quot;J&quot;));
+
+        System.out.println(&quot;Languages which ends with a &quot;);
+        filter(languages, s -&gt; s.endsWith(&quot;a&quot;));
+
+        System.out.println(&quot;Print all languages :&quot;);
+        filter(languages, s -&gt; true);
+
+        System.out.println(&quot;Print no language : &quot;);
+        filter(languages, s -&gt; false);
+
+        System.out.println(&quot;Print language whose length greater than 4:&quot;);
+        filter(languages, s -&gt; s.length() &gt; 4);
+    }
+
+    public static void filter(List&lt;String&gt; names, Predicate&lt;String&gt; predicate) {
+        names.stream()
+                .filter(name -&gt; predicate.test(name))
+                .forEach(System.out::println);
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="5-如何在lambda表达式中加入Predicate"><a href="#5-如何在lambda表达式中加入Predicate" class="headerlink" title="5): 如何在lambda表达式中加入Predicate"></a>5): 如何在lambda表达式中加入Predicate</h4><p><font color="#ff0000">java.util.function.Predicate 允许将两个或更多的 Predicate 合成一个. 它提供类似于逻辑操作符AND和OR的方法，名字叫做and()、or()和xor()，用于将传入 filter() 方法的条件合并起来.</font></p>
+<p>例如，要得到所有以J开始，长度为四个字母的语言，可以定义两个独立的 Predicate 示例分别表示每一个条件，然后用<code>Predicate.and()</code> 方法将它们合并起来，如下所示：</p>
+<pre><code class="java">package lambda.lesson5.examples.example5;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+
+public class MultiPredicate {
+
+    public static void main(String[] args) {
+        List&lt;String&gt; languages = Arrays.asList(&quot;Java&quot;, &quot;Scala&quot;, &quot;C++&quot;, &quot;Haskell&quot;, &quot;Lisp&quot;);
+
+        Predicate&lt;String&gt; startWithJ = n -&gt; n.startsWith(&quot;J&quot;);
+        Predicate&lt;String&gt; fourLetterLonger = n -&gt; n.length() &gt;= 4;
+
+        languages.stream()
+                .filter(startWithJ.and(fourLetterLonger))
+                .forEach(System.out::println);
+    }
+}
+</code></pre>
+<p>类似地，也可以使用 or() 和 xor() 方法.</p>
+<br>
+
+<h4 id="6-Java-8中使用lambda表达式的Map和Reduce示例"><a href="#6-Java-8中使用lambda表达式的Map和Reduce示例" class="headerlink" title="6): Java 8中使用lambda表达式的Map和Reduce示例"></a>6): Java 8中使用lambda表达式的Map和Reduce示例</h4><p>本例介绍<strong>最广为人知的函数式编程概念map: 它允许你将对象进行转换!</strong></p>
+<p>例如在本例中，我们将 <code>costBeforeTax</code>  列表的每个元素转换成为税后的值:</p>
+<ul>
+<li>我们将 <code>x -&gt; x*x lambda</code>表达式传到 map() 方法，后者将其应用到流中的每一个元素, 然后用  forEach() 将列表元素打印出来; </li>
+<li>使用流API的收集器类，可以得到所有含税的开销; </li>
+<li>有 toList() 这样的方法将 map  或任何其他操作的结果合并起来;</li>
+</ul>
+<p>由于收集器在流上做终端操作，因此之后便不能重用流了! 你甚至可以用流API的 reduce()  方法将所有数字合成一个，下一个例子将会讲到。</p>
+<pre><code class="java">package lambda.lesson5.examples.example6;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class LambdaMap {
+
+    public static void main(String[] args) {
+        // 使用lambda表达式为每个订单加上12%的税
+        List&lt;Integer&gt;  costBeforeTax = Arrays.asList(100, 200, 300, 400, 500);
+        costBeforeTax.stream()
+                .map(cost -&gt; cost + 0.12 * cost)
+                .forEach(System.out::println);
+
+    }
+
+}
+</code></pre>
+<br>
+
+<h4 id="6-2-Java-8中使用lambda表达式的Map和Reduce示例"><a href="#6-2-Java-8中使用lambda表达式的Map和Reduce示例" class="headerlink" title="6.2): Java 8中使用lambda表达式的Map和Reduce示例"></a>6.2): Java 8中使用lambda表达式的Map和Reduce示例</h4><p>在上个例子中，可以看到map将集合类（例如列表）元素进行转换. </p>
+<p>还有一个 *<em>reduce() 函数可以将所有值合并成一个! *</em></p>
+<p>Map和Reduce操作是函数式编程的核心操作，因为其功能，<font color="#00ff00">reduce 又被称为折叠操作.</font> 另外，reduce 并不是一个新的操作，你有可能已经在使用它: <em>SQL中类似 sum()、avg() 或者 count() 的聚集函数，实际上就是 reduce 操作，因为它们接收多个值并返回一个值;</em></p>
+<p><font color="#0000ff">流API定义的 reduceh() 函数可以接受lambda表达式，并对所有值进行合并, IntStream这样的类有类似 average()、count()、sum() 的内建方法来做 reduce 操作，也有mapToLong()、mapToDouble() 方法来做转换;</font></p>
+<p>这并不会限制你，你可以用内建方法，也可以自己定义, 在这个Java 8的Map Reduce示例里，我们首先对所有价格应用 12% 的VAT，然后用 reduce() 方法计算总和。</p>
+<pre><code class="java">        List&lt;Integer&gt; costBeforeTax = Arrays.asList(100, 200, 300, 400, 500);
+        double bill = costBeforeTax.stream()
+                .map(cost -&gt; cost + 0.12 * cost)
+                .reduce((sum, cost) -&gt; sum + cost)
+                .get();
+        System.out.println(&quot;Total: &quot; + bill);</code></pre>
+<br>
+
+<h4 id="7-通过过滤创建一个String列表"><a href="#7-通过过滤创建一个String列表" class="headerlink" title="7): 通过过滤创建一个String列表"></a>7): 通过过滤创建一个String列表</h4><p>过滤是Java开发者在大规模集合上的一个常用操作，而现在使用lambda表达式和流API过滤大规模数据集合是惊人的简单;</p>
+<p><font color="#0000ff">流提供了一个 filter() 方法，接受一个 Predicate 对象，即可以传入一个lambda表达式作为过滤逻辑;</font></p>
+<p>下面的例子是用lambda表达式过滤Java集合，将帮助理解:</p>
+<pre><code class="java">package lambda.lesson5.examples.example7;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class FilterDemo {
+
+    public static void main(String[] args) {
+        List&lt;String&gt; strList = Arrays.asList(new String[] {
+                &quot;abc&quot;, &quot;bcd&quot;, &quot;&quot;, &quot;defg&quot;, &quot;jk&quot;
+        });
+
+        List&lt;String&gt; filtered = strList.stream()
+                .filter(x -&gt; x.length() &gt; 2)
+                .collect(Collectors.toList());
+        System.out.printf(&quot;Original List : %s, filtered list : %s %n&quot;, strList, filtered);
+
+    }
+}
+</code></pre>
+<br>
+
+<h4 id="8-对列表的每个元素应用函数"><a href="#8-对列表的每个元素应用函数" class="headerlink" title="8): 对列表的每个元素应用函数"></a>8): 对列表的每个元素应用函数</h4><p><font color="#ff0000">我们通常需要对列表的每个元素使用某个函数，例如逐一乘以某个数、除以某个数或者做其它操作。这些操作都很适合用 map() 方法，可以将转换逻辑以lambda表达式的形式放在 map() 方法里，就可以对集合的各个元素进行转换了，</font></p>
+<p>如下所示:</p>
+<pre><code class="java">package lambda.lesson5.examples.example8;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class InvokeMethodDemo {
+
+    public static void main(String[] args) {
+        List&lt;String&gt; G7 = Arrays.asList(&quot;USA&quot;, &quot;Japan&quot;, &quot;France&quot;, &quot;Germany&quot;, &quot;Italy&quot;, &quot;U.K.&quot;,&quot;Canada&quot;);
+        String G7Countries = G7.stream()
+                .map(x -&gt; x.toUpperCase())
+                .collect(Collectors.joining(&quot;,&quot;));
+        System.out.println(G7Countries);
+    }
+}
+
+</code></pre>
+<p>输出为:</p>
+<pre><code>USA,JAPAN,FRANCE,GERMANY,ITALY,U.K.,CANADA</code></pre><br>
+
+<h4 id="9-复制不同的值，创建一个子列表"><a href="#9-复制不同的值，创建一个子列表" class="headerlink" title="9): 复制不同的值，创建一个子列表"></a>9): 复制不同的值，创建一个子列表</h4><p><font color="#0000ff">利用流的 distinct() 方法来对集合进行去重:</font></p>
+<pre><code class="java">package lambda.lesson5.examples.example9;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class DistinctDemo {
+
+    public static void main(String[] args) {
+        List&lt;Integer&gt; numbers = Arrays.asList(9, 10, 3, 4, 7, 3, 4);
+
+        List&lt;Integer&gt; distinct = numbers.stream()
+                .map(i -&gt; i*i)
+                .distinct()
+                .collect(Collectors.toList());
+        System.out.printf(&quot;Original List : %s,  Square Without duplicates : %s %n&quot;, numbers, distinct);
+    }
+}
+</code></pre>
+<p>输出为:</p>
+<pre><code>Original List : [9, 10, 3, 4, 7, 3, 4],  Square Without duplicates : [81, 100, 9, 16, 49]</code></pre><br>
+
+<h4 id="10-计算集合元素的最大值、最小值、总和以及平均值"><a href="#10-计算集合元素的最大值、最小值、总和以及平均值" class="headerlink" title="10:): 计算集合元素的最大值、最小值、总和以及平均值"></a>10:): 计算集合元素的最大值、最小值、总和以及平均值</h4><p><font color="#ff0000">IntStream、LongStream 和 DoubleStream 等流的类中，有个非常有用的方法叫做<br><code>summaryStatistics()</code>. 可以返回 IntSummaryStatistics、LongSummaryStatistics 或者 DoubleSummaryStatistic s，描述流中元素的各种摘要数据. </font></p>
+<p>在本例中，我们用这个方法来计算列表的最大值和最小值. 它也有getSum() 和 getAverage() 方法来获得列表的所有元素的总和及平均值.</p>
+<pre><code class="java">package lambda.lesson5.examples.example10;
+
+import java.util.Arrays;
+import java.util.IntSummaryStatistics;
+import java.util.List;
+
+public class MaxMinAveSumDemo {
+
+    public static void main(String[] args) {
+        List&lt;Integer&gt; primes = Arrays.asList(2, 3, 5, 7, 11, 13, 17, 19, 23, 29);
+        IntSummaryStatistics statistics = primes.stream()
+                .mapToInt(x -&gt; x).summaryStatistics();
+        System.out.println(&quot;Highest prime number in List : &quot; + statistics.getMax());
+        System.out.println(&quot;Lowest prime number in List : &quot; + statistics.getMin());
+        System.out.println(&quot;Sum of all prime numbers : &quot; + statistics.getSum());
+        System.out.println(&quot;Average of all prime numbers : &quot; + statistics.getAverage());
+    }
+}
+</code></pre>
+<p>输出如下:</p>
+<pre><code>Highest prime number in List : 29
+Lowest prime number in List : 2
+Sum of all prime numbers : 129
+Average of all prime numbers : 12.9</code></pre><br>
+
+<hr>
+<h3 id="6-Lambda表达式-vs-匿名类"><a href="#6-Lambda表达式-vs-匿名类" class="headerlink" title="6. Lambda表达式 vs 匿名类"></a>6. Lambda表达式 vs 匿名类</h3><p>既然lambda表达式即将正式取代Java代码中的匿名内部类，那么有必要对二者做一个比较分析:</p>
+<ul>
+<li><p>一个关键的不同点就是关键字 this:</p>
+<p><font color="#ff0000">匿名类的 this 关键字指向匿名类，而lambda表达式的 this 关键字指向包围lambda表达式的类;</font></p>
+</li>
+<li><p>另一个不同点是二者的编译方式:</p>
+<p><font color="#ff0000">Java编译器将lambda表达式编译成类的私有方法。使用了Java 7的 <code>invokedynamic</code> 字节码指令来动态绑定这个方法!</font></p>
+</li>
+</ul>
+<br>
+
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><font color="#ff0000">1. lambda表达式仅能放入如下代码：</font><ul>
+<li><font color="#0000ff">预定义使用了 @Functional  注释的函数式接口; </font></li>
+<li><font color="#0000ff">自带一个抽象函数的方法;</font></li>
+<li><font color="#0000ff">或者SAM（Single Abstract Method  单个抽象方法）类型</font></li>
+</ul>
+</li>
+</ul>
+<p>这些称为lambda表达式的<strong>目标类型</strong>，可以用作返回类型，或lambda目标代码的参数. </p>
+<p><strong>例如</strong>: </p>
+<p><font color="#ff0000">若一个方法接收Runnable、Comparable或者  Callable 接口，都有单个抽象方法，可以传入lambda表达式; </font></p>
+<p><font color="#ff0000">类似的，如果一个方法接受声明于 java.util.function  包内的接口，例如 Predicate、Function、Consumer 或 Supplier，那么可以向其传lambda表达式;</font></p>
+<br>
+
+
+
+<ul>
+<li><font color="#ff0000">2. lambda表达式内可以使用方法引用，仅当<em>该方法不修改lambda表达式提供的参数</em></font></li>
+</ul>
+<p>本例中的lambda表达式可以换为方法引用，因为这仅是一个参数相同的简单方法调用:</p>
+<pre><code class="java">list.forEach(n -&gt; System.out.println(n)); 
+list.forEach(System.out::println);  // 使用方法引用</code></pre>
+<p><font color="#ff0000">然而，若对参数有任何修改，则不能使用方法引用，而需键入完整地lambda表达式!</font></p>
+<p>如下所示：</p>
+<pre><code class="java">list.forEach((String s) -&gt; System.out.println(&quot;*&quot; + s + &quot;*&quot;));</code></pre>
+<p>事实上，可以省略这里的lambda参数的类型声明，编译器可以从列表的类属性推测出来;</p>
+<br>
+
+
+
+<ul>
+<li><font color="#0000ff">3. lambda内部可以使用静态、非静态和局部变量，这称为lambda内的变量捕获;</font></li>
+</ul>
+<br>
+
+
+
+<ul>
+<li><font color="#0000ff">4. Lambda表达式在Java中又称为<em>闭包或匿名函数</em>，所以如果有同事把它叫闭包的时候，不用惊讶;</font></li>
+</ul>
+<br>
+
+
+
+<ul>
+<li>5.Lambda方法在编译器内部被翻译成<em>私有方法</em>，并派发<code>invokedynamic</code>字节码指令来进行调用;</li>
+</ul>
+<p>可以使用JDK中的 javap  工具来反编译class文件, 使用 javap -p 或 javap -c -v 命令来看一看lambda表达式生成的字节码.</p>
+<p>大致应该长这样：</p>
+<pre><code class="java">private static java.lang.Object lambda$0(java.lang.String);</code></pre>
+<br>
+
+
+
+<ul>
+<li><font color="#ff0000">6. lambda表达式有个限制，那就是只能引用 final 或 final 局部变量，这就是说不能在lambda内部修改定义在域外的变量!</font></li>
+</ul>
+<pre><code class="java">List&lt;Integer&gt; primes = Arrays.asList(new Integer[]{2, 3,5,7});
+int factor = 2;
+primes.forEach(element -&gt; { factor++; });
+
+Compile time error : &quot;local variables referenced from a lambda expression must be final or effectively final&quot;</code></pre>
+<p><font color="#0000ff">但是，只是访问它而不作修改是可以的;</font></p>
+<p>如下所示：</p>
+<pre><code class="java">List&lt;Integer&gt; primes = Arrays.asList(new Integer[]{2, 3,5,7});
+int factor = 2;
+primes.forEach(element -&gt; { System.out.println(factor*element); });</code></pre>
+<p>输出：</p>
+<pre><code>4
+6
+10
+14</code></pre><p>因此，<strong>它看起来更像不可变闭包</strong>，类似于Python。</p>
+<br>
+
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>文章参考:</p>
+<ul>
+<li><a href="https://blog.csdn.net/iteye_12150/article/details/82642847" target="_blank" rel="noopener">java8 lambda表达式学习总结</a></li>
+<li><a href="http://how2j.cn/k/lambda/lambda-stream/700.html" target="_blank" rel="noopener">http://how2j.cn/k/lambda/lambda-stream/700.html</a></li>
+<li><a href="https://www.cnblogs.com/coprince/p/8692972.html" target="_blank" rel="noopener">Java8 lambda表达式10个示例</a></li>
+</ul>
+<p>本文章中所有例程代码: <a href="https://github.com/JasonkayZK/Java_Samples/tree/java-lambda" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/java-lambda</a></p>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/16/Lambda表达式总结/" title="https://jasonkayzk.github.io/2019/09/16/Lambda表达式总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/16/Lambda表达式总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1719713966726"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

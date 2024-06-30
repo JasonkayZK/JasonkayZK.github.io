@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Golang实现自定义协程池 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在某些场景下，我们需要连接池的实现来避免每次使用组件都重新创建连接，以提升效率；但是某些情况下我们所使用的组件并未提供连接池给我们使用(例如消息队列nsq)，这个时候我们就需要一个能够自定义的连接池来面对各种需要协程池的场景！本文即实现了一个自定义的连接池；">
+<meta name="keywords" content="Golang,协程池">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang实现自定义协程池">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/09/25/Golang实现自定义协程池/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在某些场景下，我们需要连接池的实现来避免每次使用组件都重新创建连接，以提升效率；但是某些情况下我们所使用的组件并未提供连接池给我们使用(例如消息队列nsq)，这个时候我们就需要一个能够自定义的连接池来面对各种需要协程池的场景！本文即实现了一个自定义的连接池；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-06-30T02:18:11.050Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Golang实现自定义协程池">
+<meta name="twitter:description" content="在某些场景下，我们需要连接池的实现来避免每次使用组件都重新创建连接，以提升效率；但是某些情况下我们所使用的组件并未提供连接池给我们使用(例如消息队列nsq)，这个时候我们就需要一个能够自定义的连接池来面对各种需要协程池的场景！本文即实现了一个自定义的连接池；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1719713946267">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>485</div>
+        <div><span>标签</span>259</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.17px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.04px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">47</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">7</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/06/30/Mac合盖后不休眠/">Mac合盖后不休眠</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/17/アニメ「風が強く吹いている」名言のまとめ/">アニメ「風が強く吹いている」名言のまとめ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/06/HANABI-Mr-Children-歌詞/">【翻訳】HANABI-Mr.Children-歌詞</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/22/【译】实现一个简单的内存分配器/">【译】实现一个简单的内存分配器</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/21/基于Git版本控制的关系型数据库Dolt/">基于Git版本控制的关系型数据库Dolt</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?98">
+    
+    <h1>Golang实现自定义协程池</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年09月25日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 29 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/协程池/">协程池</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Golang实现自定义协程池"><span class="toc-text">Golang实现自定义协程池</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#不同连接池实现方式"><span class="toc-text">不同连接池实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#go-redis"><span class="toc-text">go-redis</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#redigo"><span class="toc-text">redigo</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#radix-v2"><span class="toc-text">radix.v2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实现自己的连接池"><span class="toc-text">实现自己的连接池</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#定义Pool接口"><span class="toc-text">定义Pool接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#定义连接"><span class="toc-text">定义连接</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#定义连接池"><span class="toc-text">定义连接池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#具体实现"><span class="toc-text">具体实现</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#①-创建连接池-NewChannelPool"><span class="toc-text">① 创建连接池 - NewChannelPool</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#②-获取连接-Get"><span class="toc-text">② 获取连接 - Get</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#③-释放连接-Put"><span class="toc-text">③ 释放连接 - Put</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#④-关闭连接池-ShutDown"><span class="toc-text">④ 关闭连接池 - ShutDown</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#定义错误类型"><span class="toc-text">定义错误类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用方式"><span class="toc-text">使用方式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#①-创建协程池"><span class="toc-text">① 创建协程池</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#②-使用连接"><span class="toc-text">② 使用连接</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#③-获取池中可用连接数"><span class="toc-text">③ 获取池中可用连接数</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#性能测试"><span class="toc-text">性能测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在某些场景下，我们需要连接池的实现来避免每次使用组件都重新创建连接，以提升效率；但是某些情况下我们所使用的组件并未提供连接池给我们使用(例如消息队列nsq)，这个时候我们就需要一个能够自定义的连接池来面对各种需要协程池的场景！</p>
+<p>本文首先分析了几种常见连接池的实现方式，最后实现了一个开箱即用的自定义的连接池；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/pool" target="_blank" rel="noopener">https://github.com/JasonkayZK/pool</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<br>
+
+<h2 id="Golang实现自定义协程池"><a href="#Golang实现自定义协程池" class="headerlink" title="Golang实现自定义协程池"></a>Golang实现自定义协程池</h2><p>连接池是一个用来维护可复用连接的数据结构，正确地使用连接池可以达到减少网络往返损耗，降低系统资源占用，提升响应性能的目的。连接池主要的思想是把新建的连接暂存到池子中，当请求结束后不关闭连接，而是放回到连接池中，需要的时候从连接池中取出连接使用。</p>
+<h3 id="不同连接池实现方式"><a href="#不同连接池实现方式" class="headerlink" title="不同连接池实现方式"></a>不同连接池实现方式</h3><p><a href="https://link.zhihu.com/?target=https%3A//github.com/go-redis/redis" target="_blank" rel="noopener">go-redis</a>，<a href="https://link.zhihu.com/?target=https%3A//github.com/gomodule/redigo" target="_blank" rel="noopener">redigo</a>和<a href="https://link.zhihu.com/?target=https%3A//github.com/mediocregopher/radix.v2" target="_blank" rel="noopener">radix.v2</a>都是用Go实现的Redis客户端，它们都在代码中实现了健壮的连接池，而它们实现的方式又各不一样，接下来就一起窥探它们的连接池实现的区别；</p>
+<p>下面这个表格展示了它们的特点：</p>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>go-redis</strong></th>
+<th><strong>redigo</strong></th>
+<th><strong>radix.v2</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>连接池实现方式</strong></td>
+<td>slice</td>
+<td>linkedlist</td>
+<td>channel</td>
+</tr>
+<tr>
+<td><strong>自动关闭空闲连接</strong></td>
+<td>√</td>
+<td>√</td>
+<td>×</td>
+</tr>
+<tr>
+<td><strong>连接最大生存时间</strong></td>
+<td>√</td>
+<td>√</td>
+<td>×</td>
+</tr>
+<tr>
+<td><strong>连接健康检测</strong></td>
+<td>×</td>
+<td>√</td>
+<td>√</td>
+</tr>
+<tr>
+<td><strong>连接池</strong>stats</td>
+<td>√</td>
+<td>√</td>
+<td>×</td>
+</tr>
+</tbody></table>
+<p>下面我们一个一个来看：</p>
+<h4 id="go-redis"><a href="#go-redis" class="headerlink" title="go-redis"></a>go-redis</h4><p><code>ConnPool</code>是go-redis中连接池的实现，其数据结构如下：</p>
+<pre><code class="go">type ConnPool struct {
+    opt *Options
+
+    dialErrorsNum uint32 // atomic
+
+    lastDialErrorMu sync.RWMutex
+    lastDialError   error
+
+    queue chan struct{}
+
+    connsMu      sync.Mutex
+    conns        []*Conn
+    idleConns    []*Conn
+    poolSize     int
+    idleConnsLen int
+
+    stats Stats
+
+    _closed uint32 // atomic
+}</code></pre>
+<p>主要字段说明：</p>
+<ul>
+<li>opt：连接池的参数选项。</li>
+<li>dialErrorsNum：连接失败的错误数。</li>
+<li>lastDialError：最近一次的连接错误。</li>
+<li>queue：轮转队列，是一个channel结构。</li>
+<li>conns：连接队列，维护了未被删除所有连接。</li>
+<li>idleConns：空闲连接队列，维护了所有的空闲连接。</li>
+<li>poolSize：连接池大小。</li>
+<li>idleConnsLen：空闲连接数。</li>
+<li>stats：连接池的使用数据。</li>
+<li>_closed：连接池是否关闭。</li>
+</ul>
+<p>连接池的选项如下：</p>
+<pre><code class="go">type Options struct {
+    Dialer  func() (net.Conn, error)
+    OnClose func(*Conn) error
+
+    PoolSize           int
+    MinIdleConns       int
+    MaxConnAge         time.Duration
+    PoolTimeout        time.Duration
+    IdleTimeout        time.Duration
+    IdleCheckFrequency time.Duration
+}</code></pre>
+<p>字段说明：</p>
+<ul>
+<li>Dialer：新建连接的工厂函数。</li>
+<li>OnClose：关闭连接的回调函数。</li>
+<li>PoolSize：连接池大小。</li>
+<li>MinIdleConns：最小空闲连接数。</li>
+<li>PoolTimeout：连接池获取的超时时间。</li>
+<li>IdleTimeout：空闲连接的超时时间。</li>
+<li>IdleCheckFrequency：超时空闲连接清理的间隔时间。</li>
+</ul>
+<p>新建连接池的过程如下：</p>
+<pre><code class="go">func NewConnPool(opt *Options) *ConnPool {
+    p := &amp;ConnPool{
+        opt: opt,
+
+        queue:     make(chan struct{}, opt.PoolSize),
+        conns:     make([]*Conn, 0, opt.PoolSize),
+        idleConns: make([]*Conn, 0, opt.PoolSize),
+    }
+
+    for i := 0; i &lt; opt.MinIdleConns; i++ {
+        p.checkMinIdleConns()
+    }
+
+    if opt.IdleTimeout &gt; 0 &amp;&amp; opt.IdleCheckFrequency &gt; 0 {
+        go p.reaper(opt.IdleCheckFrequency)
+    }
+
+    return p
+}</code></pre>
+<p>首先会初始化一个ConnPool实例，赋予<code>PoolSize</code>大小的连接队列和轮转队列，接着会根据<code>MinIdleConns</code>参数维持一个最小连接数，以保证连接池中有这么多数量的连接处于活跃状态。<code>IdleTimeout</code>和<code>IdleCheckFrequency</code>参数用来在每过一段时间内会对连接池中不活跃的连接做清理操作。</p>
+<p>从连接池中获取一个连接的过程如下：</p>
+<p>1.检查连接池是否被关闭，如果被关闭直接返回<code>ErrClosed</code>错误。否则尝试在轮转队列中占据一个位置，如果抢占的等待时间超过连接池的超时时间，会返回<code>ErrPoolTimeout</code>错误。</p>
+<pre><code class="go">if p.closed() {
+    return nil, ErrClosed
+}
+
+err := p.waitTurn()
+if err != nil {
+    return nil, err
+}</code></pre>
+<p>这里面的等待过程如下：</p>
+<pre><code class="go">func (p *ConnPool) waitTurn() error {
+    select {
+    case p.queue &lt;- struct{}{}:
+        return nil
+    default:
+        timer := timers.Get().(*time.Timer)
+        timer.Reset(p.opt.PoolTimeout)
+
+        select {
+        case p.queue &lt;- struct{}{}:
+            if !timer.Stop() {
+                &lt;-timer.C
+            }
+            timers.Put(timer)
+            return nil
+        case &lt;-timer.C:
+            timers.Put(timer)
+            return ErrPoolTimeout
+        }
+    }
+}</code></pre>
+<p>轮转队列的主要作用是协调连接池的生产-消费过程，每往轮转队列中添加一个元素时，可用的连接资源的数量就减少一。若无法立即写入，该过程将尝试等待<code>PoolTimeout</code>大小的时间后，返回相应结果。</p>
+<p>2.尝试从连接池的空闲连接队列中获取一个已有连接，如果该连接已过期，则关闭并丢弃该连接，继续重复相同尝试操作，直至获取到一个连接或连接队列为空为止。</p>
+<pre><code class="go">for {
+    p.connsMu.Lock()
+    cn := p.popIdle()
+    p.connsMu.Unlock()
+
+    if cn == nil {
+        break
+    }
+
+    if p.isStaleConn(cn) {
+        _ = p.CloseConn(cn)
+        continue
+    }
+
+    return cn, nil
+}</code></pre>
+<p>3.如果上一步无法获取到已有连接，则新建一个连接，如果没有返回错误则直接返回，如果新建连接时返回错误，则释放掉轮转队列中的位置，返回连接错误。</p>
+<pre><code class="go">newcn, err := p._NewConn(true)
+if err != nil {
+    p.freeTurn()
+    return nil, err
+}
+
+return newcn, nil</code></pre>
+<p>其中新建连接的过程如下：</p>
+<pre><code class="go">cn, err := p.newConn(pooled)
+if err != nil {
+    return nil, err
+}
+
+p.connsMu.Lock()
+p.conns = append(p.conns, cn)
+if pooled {
+    if p.poolSize &lt; p.opt.PoolSize {
+        p.poolSize++
+    } else {
+        cn.pooled = false
+    }
+}
+p.connsMu.Unlock()
+return cn, nil</code></pre>
+<p>新建的连接会插入到连接池的<code>conns</code>队列中，当发现连接池的大小超出了设定的连接大小时，这时候会触发超卖，新建的连接的<code>pooled</code>属性被设置为false，也就是说这个连接不会再落地，未来将会被删除。</p>
+<p>从连接池中取出的连接一般来说都是要放回到连接池中的，放回的过程如下：</p>
+<pre><code class="go">func (p *ConnPool) Put(cn *Conn) {
+    if !cn.pooled {
+        p.Remove(cn)
+        return
+    }
+
+    p.connsMu.Lock()
+    p.idleConns = append(p.idleConns, cn)
+    p.idleConnsLen++
+    p.connsMu.Unlock()
+    p.freeTurn()
+}</code></pre>
+<p>简单地说就是直接放空闲连接队列中插入这个连接，并把轮转队列的资源释放掉。若连接被标记为不要被池化，则会从连接池中删除这个连接。</p>
+<p>删除的过程如下，删除会从连接池的<code>conns</code>队列中移除这个连接：</p>
+<pre><code class="go">func (p *ConnPool) removeConn(cn *Conn) {
+    p.connsMu.Lock()
+    for i, c := range p.conns {
+        if c == cn {
+            p.conns = append(p.conns[:i], p.conns[i+1:]...)
+            if cn.pooled {
+                p.poolSize--
+                p.checkMinIdleConns()
+            }
+            break
+        }
+    }
+    p.connsMu.Unlock()
+}</code></pre>
+<p>最后再来看下连接池是怎么自动收割长时间不使用的空闲连接的，后台的goroutine会定时执行任务，不断地从空闲连接队列中取出过时连接，做删除和关闭连接操作，并释放轮转资源：</p>
+<pre><code class="go">var n int
+for {
+    p.getTurn()
+
+    p.connsMu.Lock()
+    cn := p.reapStaleConn()
+    p.connsMu.Unlock()
+
+    if cn != nil {
+        p.removeConn(cn)
+    }
+
+    p.freeTurn()
+
+    if cn != nil {
+        p.closeConn(cn)
+        n++
+    } else {
+        break
+    }
+}
+return n, nil</code></pre>
+<h4 id="redigo"><a href="#redigo" class="headerlink" title="redigo"></a><strong>redigo</strong></h4><p><code>Pool</code>是redigo中连接池的实现，其数据结构如下：</p>
+<pre><code class="go">type Pool struct {
+    Dial func() (Conn, error)
+
+    TestOnBorrow func(c Conn, t time.Time) error
+
+    MaxIdle int
+    MaxActive int
+
+    IdleTimeout time.Duration
+
+    Wait bool
+
+    MaxConnLifetime time.Duration
+
+    chInitialized uint32
+
+    mu     sync.Mutex
+    closed bool
+    active int
+    ch     chan struct{}
+    idle   idleList
+}</code></pre>
+<p>主要字段说明：</p>
+<ul>
+<li>Dial：新建连接的工厂函数。</li>
+<li>TestOnBorrow：连接的健康检测函数。</li>
+<li>MaxIdle：最大空闲连接数。</li>
+<li>MaxActive：最大活跃连接数。</li>
+<li>IdleTimeout：空闲连接的超时时间</li>
+<li>Wait：如果连接池达到了最大的活跃连接数，Wait用以指示是否需要继续等待。</li>
+<li>active：活跃连接数量。</li>
+<li>closed：连接池是否关闭。</li>
+<li>idle：维护空闲连接的集合，<code>idleList</code>的实现与链表类似，不多介绍。</li>
+</ul>
+<p>可以看出连接池的参数选项和数据都集中在了连接池的结构体中，区别于go-redis中连接池和连接选项分开的情况。</p>
+<p>redigo推荐用类似以下的方式来新建一个连接池，而不是使用一个它自带的工厂方法：</p>
+<pre><code class="go">func newPool(addr string) *redis.Pool {
+   return &amp;redis.Pool{
+     MaxIdle: 3,
+     IdleTimeout: 240 * time.Second,
+     Dial: func () (redis.Conn, error) { return redis.Dial(&quot;tcp&quot;, addr)},
+   }
+ }</code></pre>
+<p>从连接池中获取一个连接的过程如下：</p>
+<p>1.检测是否设置了<code>Wait</code>和<code>MaxActive</code>选项，若是，则对连接池的<code>ch</code>属性进行懒加载，<code>ch</code>是一个设置了<code>MaxActive</code>大小的channel，用以维护活跃连接资源，如果<code>ch</code>已经被初始化了则会马上返回。</p>
+<p>接下来再尝试从<code>ch</code>中获取一个资源，这里会进行一个阻塞获取操作，等待直至有可用资源。</p>
+<pre><code class="go">// Handle limit for p.Wait == true.
+if p.Wait &amp;&amp; p.MaxActive &gt; 0 {
+    p.lazyInit()
+    if ctx == nil {
+        &lt;-p.ch
+    } else {
+        select {
+        case &lt;-p.ch:
+        case &lt;-ctx.Done():
+            return nil, ctx.Err()
+        }
+    }
+}</code></pre>
+<p>2.接下来会进行几个动作，首先会遍历空闲连接的链表，逐个检测连接是否过时，如果连接已超过设定的过时时间，则从链表中摘走该连接，并关闭底层连接，把活跃连接数减少一；接着尝试从链表头部中获取一个可用连接，调用测活函数和检查生命周期，如果通过判断则返回该连接，如果不通过则丢弃掉该连接，并把活跃连接数减少一，如果连接池被关闭的话，函数会在这时候返回错误。</p>
+<pre><code class="go">p.mu.Lock()
+
+// Prune stale connections at the back of the idle list.
+if p.IdleTimeout &gt; 0 {
+    n := p.idle.count
+    for i := 0; i &lt; n &amp;&amp; p.idle.back != nil &amp;&amp; p.idle.back.t.Add(p.IdleTimeout).Before(nowFunc()); i++ {
+        pc := p.idle.back
+        p.idle.popBack()
+        p.mu.Unlock()
+        pc.c.Close()
+        p.mu.Lock()
+        p.active--
+    }
+}
+
+// Get idle connection from the front of idle list.
+for p.idle.front != nil {
+    pc := p.idle.front
+    p.idle.popFront()
+    p.mu.Unlock()
+    if (p.TestOnBorrow == nil || p.TestOnBorrow(pc.c, pc.t) == nil) &amp;&amp;
+        (p.MaxConnLifetime == 0 || nowFunc().Sub(pc.created) &lt; p.MaxConnLifetime) {
+        return pc, nil
+    }
+    pc.c.Close()
+    p.mu.Lock()
+    p.active--
+}
+
+// Check for pool closed before dialing a new connection.
+if p.closed {
+    p.mu.Unlock()
+    return nil, errors.New(&quot;redigo: get on closed pool&quot;)
+}
+
+// Handle limit for p.Wait == false.
+if !p.Wait &amp;&amp; p.MaxActive &gt; 0 &amp;&amp; p.active &gt;= p.MaxActive {
+    p.mu.Unlock()
+    return nil, ErrPoolExhausted
+}
+
+p.active++
+p.mu.Unlock()</code></pre>
+<p>3.如果无法在上一步获取连接，连接池则会新建一个连接返回，如果连接返回失败，则释放掉<code>ch</code>中的资源，可以看出这里的<code>ch</code>的作用跟go-redis连接池实现中的轮转队列的作用是类似的。</p>
+<pre><code class="go">c, err := p.Dial()
+if err != nil {
+    c = nil
+    p.mu.Lock()
+    p.active--
+    if p.ch != nil &amp;&amp; !p.closed {
+        p.ch &lt;- struct{}{}
+    }
+    p.mu.Unlock()
+}
+return &amp;poolConn{c: c, created: nowFunc()}, err</code></pre>
+<p>在redigo的连接池的<code>Get</code>方法中无论成功或失败，是只返回一个连接结构体作为返回结果的，而在go-redis中的<code>Get</code>方法则返回两个结果，一个代表连接，另一个是错误，这里也可以看出它们在接口设计上的区别。</p>
+<pre><code class="go">func (p *ConnPool) Get() (*Conn, error) // go-redis
+func (p *Pool) Get() Conn // redigo</code></pre>
+<p>把连接放回到连接池的过程如下：</p>
+<pre><code class="go">p.mu.Lock()
+if !p.closed &amp;&amp; !forceClose {
+    pc.t = nowFunc()
+    p.idle.pushFront(pc)
+    if p.idle.count &gt; p.MaxIdle {
+        pc = p.idle.back
+        p.idle.popBack()
+    } else {
+        pc = nil
+    }
+}
+
+if pc != nil {
+    p.mu.Unlock()
+    pc.c.Close()
+    p.mu.Lock()
+    p.active--
+}
+
+if p.ch != nil &amp;&amp; !p.closed {
+    p.ch &lt;- struct{}{}
+}
+p.mu.Unlock()
+return nil</code></pre>
+<p>当连接池没被关闭时，放回连接池的连接会被重新插入到链表头中，如果链表长度超过最大空闲数量了，则会从链表尾部摘除一个连接。否则连接会被关闭并释放相应资源。</p>
+<p>注意这里的<code>put</code>方法是不对外暴露的，而是通过对外暴露的<code>Close</code>方法的内部进行调用，使用者无须关心把连接放回池中的逻辑，而只需要像使用普通网络连接一样使用就好了：</p>
+<pre><code class="go">func serveHome(w http.ResponseWriter, r *http.Request) {
+     conn := pool.Get()
+     defer conn.Close()
+     //...
+ }</code></pre>
+<h4 id="radix-v2"><a href="#radix-v2" class="headerlink" title="radix.v2"></a>radix.v2</h4><p><code>Pool</code>是radix.v2中的连接池的实现，其数据结构如下：</p>
+<pre><code class="go">type Pool struct {
+    pool        chan *redis.Client
+    reservePool chan *redis.Client
+    df          DialFunc
+
+    po opts
+
+    limited chan bool
+
+    initDoneCh chan bool // used for tests
+    stopCh     chan bool
+
+    Network, Addr string
+}</code></pre>
+<p>主要字段说明：</p>
+<ul>
+<li>pool：维护连接的channel。</li>
+<li>reservePool：连接保留池，若pool的连接满了，额外的连接会放到这里面来，其中的连接会定期尝试回到pool中。</li>
+<li>df：连接的工厂函数。</li>
+<li>po：连接选项。</li>
+<li>limited：连接限制池。</li>
+</ul>
+<p>radix.v2的连接池实现对比其他两个来说要比较简洁一些，其新建一个连接池的过程如下：</p>
+<p>1.初始化构造参数，新建一个<code>Pool</code>实例：</p>
+<pre><code class="go">var defaultPoolOpts []Opt
+// if pool size is 0 don&#39;t do any pinging, cause there&#39;d be no point
+if size &gt; 0 {
+    defaultPoolOpts = append(defaultPoolOpts, PingInterval(10*time.Second/time.Duration(size)))
+}
+
+var po opts
+for _, opt := range append(defaultPoolOpts, os...) {
+    opt(&amp;po)
+}
+
+p := Pool{
+    Network:     network,
+    Addr:        addr,
+    po:          po,
+    pool:        make(chan *redis.Client, size),
+    reservePool: make(chan *redis.Client, po.overflowSize),
+    limited:     make(chan bool, po.createLimitBuffer),
+    df:          df,
+    initDoneCh:  make(chan bool),
+    stopCh:      make(chan bool),
+}</code></pre>
+<p>这里面会构造一些默认参数，例如设置了连接定期发送ping命令的配置，以及对<code>Pool</code>实例中的数据结构进行初始化。</p>
+<p>2.启动后台任务，分别定时进行连接健康检测，以及定时从保留连接池中清理连接：</p>
+<pre><code class="go">if po.pingInterval &gt; 0 {
+    doEvery(po.pingInterval, func() {
+        // instead of using Cmd/Get, which might make a new connection,
+        // we only check from the pool
+        select {
+        case conn := &lt;-p.pool:
+            // we don&#39;t care if PING errors since Put will handle that
+            conn.Cmd(&quot;PING&quot;)
+            p.Put(conn)
+        default:
+        }
+    })
+}
+
+if po.overflowSize &gt; 0 {
+    doEvery(po.overflowDrainInterval, func() {
+        // remove one from the reservePool, if there is any, and try putting it
+        // into the main pool
+        select {
+        case conn := &lt;-p.reservePool:
+            select {
+            case p.pool &lt;- conn:
+            default:
+                // if the main pool is full then just close it
+                conn.Close()
+            }
+        default:
+        }
+    })
+}</code></pre>
+<p>3.新建一个连接并检测server是否存活，如果存在错误直接返回，否则继续新建<code>size-1</code>数量的连接，存放在连接池供使用：</p>
+<pre><code class="go">mkConn := func() error {
+    client, err := df(network, addr)
+    if err == nil {
+        p.pool &lt;- client
+    }
+    return err
+}
+
+if size &gt; 0 {
+    // make one connection to make sure the redis instance is actually there
+    if err := mkConn(); err != nil {
+        return &amp;p, err
+    }
+}
+
+// make the rest of the connections in the background, if any fail it&#39;s fine
+go func() {
+    for i := 0; i &lt; size-1; i++ {
+        mkConn()
+    }
+    close(p.initDoneCh)
+}()
+
+return &amp;p, nil</code></pre>
+<p>从连接池中获取一个连接的过程如下：</p>
+<pre><code class="go">select {
+case conn := &lt;-p.pool:
+    return conn, nil
+case conn := &lt;-p.reservePool:
+    return conn, nil
+case &lt;-p.stopCh:
+    return nil, errors.New(&quot;pool emptied&quot;)
+default:
+    var timeoutCh &lt;-chan time.Time
+    if p.po.getTimeout &gt; 0 {
+        timer := time.NewTimer(p.po.getTimeout)
+        defer timer.Stop()
+        timeoutCh = timer.C
+    }
+
+    select {
+    case conn := &lt;-p.pool:
+        return conn, nil
+    case conn := &lt;-p.reservePool:
+        return conn, nil
+    case &lt;-timeoutCh:
+        return nil, ErrGetTimeout
+    case &lt;-p.limited:
+        return p.df(p.Network, p.Addr)
+    }
+}</code></pre>
+<p>连接池首先尝试从<code>pool</code>中获取一个连接，其次会尝试从<code>reservePool</code>中获取一个连接，如果都无法获取到连接，则会等待一段时间获取连接，直至超时或返回。</p>
+<p>把连接放回到连接池的过程如下：</p>
+<pre><code class="go">select {
+case &lt;-p.stopCh:
+    conn.Close()
+    return
+default:
+}
+
+select {
+case p.pool &lt;- conn:
+default:
+    if p.po.overflowSize == 0 {
+        conn.Close()
+        return
+    }
+
+    // we need a separate select here since it&#39;s indeterminate which case go
+    // will select and we want to always prefer the main pool over the reserve
+    select {
+    case p.reservePool &lt;- conn:
+    default:
+        conn.Close()
+    }
+}</code></pre>
+<p>同样地，连接会首先尝试放回到<code>pool</code>中，如果失败则会尝试放到<code>reservePool</code>中，当还是出现失败则直接丢弃并关闭连接。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>用不同方式实现的连接池都有各自的特点，比如用channel实现的话代码会更加简单和清晰，用slice或linkedlist实现的话则整体性能会更高一些，但良好的连接池共同的特点是：提供对用户友好的接口，安全可靠，以及能保证在并发环境下的正确性。</p>
+<br>
+
+<h3 id="实现自己的连接池"><a href="#实现自己的连接池" class="headerlink" title="实现自己的连接池"></a>实现自己的连接池</h3><p>经过上面对几种常见的连接池实现方式的比较，接下来我们使用channel实现一个我们自定义的连接池；</p>
+<p>首先，根据上面的分析，我们希望我们的连接池具备一下特性：</p>
+<ul>
+<li>通用协程池：适合任意需要协程池的场景；</li>
+<li>自动关闭空闲连接：可设置连接的最大空闲时间，超时的连接将关闭丢弃，避免空闲时连接自动失效问题；</li>
+<li>请求连接超时：用户可自行设定请求连接超时时间；</li>
+<li>连接健康检查：支持用户设定 ping 方法，检查连接的连通性，无效的连接将丢弃；</li>
+</ul>
+<h4 id="定义Pool接口"><a href="#定义Pool接口" class="headerlink" title="定义Pool接口"></a>定义Pool接口</h4><p>Pool接口的定义如下：</p>
+<pre><code class="go">package channel_pool
+
+// The pool interface
+type Pool interface {
+    // Get returns a new connection from the pool. Closing the connections puts
+    // it back to the Pool. Closing it when the pool is destroyed or full will
+    // be counted as an error.
+    Get() (interface{}, error)
+
+    // Put puts the connection into the pool instead of closing it.
+    Put(interface{}) error
+
+    // CloseConn directly close the connection
+    CloseConn(interface{}) error
+
+    // ShutDown closes the pool and all its connections.
+    // After ShutDown() the pool is no longer usable.
+    ShutDown() error
+
+    // Len returns the current number of connections of the pool.
+    Len() int
+}</code></pre>
+<p>包括了一个线程池都应该具备的一些基本方法，例如：获取连接Get、放回资源Put、关闭协程池ShutDown等；</p>
+<p>下面我们看看对于线程池中的单个连接资源的定义；</p>
+<hr>
+<h4 id="定义连接"><a href="#定义连接" class="headerlink" title="定义连接"></a>定义连接</h4><p>对于连接池中单个连接的定义在generalConn中：</p>
+<pre><code class="go">// generalConn is a wrapper around the connection
+type generalConn struct {
+    conn     interface{}
+    t        time.Time
+    unusable bool
+}</code></pre>
+<p>generalConn相当于一般连接conn的一个包装类，其内部封装了实际连接资源conn、创建时间t用于判断是否超时/闲置连接、unusable作为不可用(待回收标记，目前实现中尚未使用)；</p>
+<p>接下来看看连接池是如何定义的；</p>
+<hr>
+<h4 id="定义连接池"><a href="#定义连接池" class="headerlink" title="定义连接池"></a>定义连接池</h4><p>连接池的定义如下：</p>
+<pre><code class="go">// the pool
+type channelPool struct {
+    mu           sync.RWMutex
+    conns        chan *generalConn
+    factory      func() (interface{}, error)
+    close        func(interface{}) error
+    ping         func(interface{}) error
+    idleTimeout  time.Duration
+    waitTimeOut  time.Duration
+    maxActive    int
+    openingConns int
+    connReqs     []chan *generalConn
+}</code></pre>
+<p>其中：</p>
+<ul>
+<li>mu：取用连接池资源时的读写锁；</li>
+<li>conns：在调用Get方法后向用户返回具体连接的chan；</li>
+<li>factory：用户提供的创建连接的具体工厂方法，初始化连接池时必须指定；</li>
+<li>close：用户提供的具体关闭连接的方法，默认为nil；</li>
+<li>ping：用户提供的具体进行连接健康检测的方法，默认为nil；</li>
+<li>idleTimeout：协程的最大闲置时长(懒删除)，设置为小于等于0时不删除；</li>
+<li>waitTimeout：使用Get方法获取协程连接的最大等待时长(当协程池资源被完全使用时，使用Get获取连接会导致当前协程被阻塞！)，超过该时间会导致WaitConnectionTimeoutErr错误；</li>
+<li>maxActive：池中最多可存在的连接数，当所有的协程连接资源都被占用时，再次获取将会被等待至多WaitTimeout时长，然后报WaitConnectionTimeoutErr错误；</li>
+<li>openingConns：目前存在的连接数；</li>
+<li>connReqs：用户调用Get请求获取的连接资源chan；<ul>
+<li>当线程池中资源已经全部被占用(使用中的资源打到MaxCap)，此时请求会被丢入此chan数组中等待分配(直到获取超时)；</li>
+<li>当用户调用Put方法释放资源时、释放的是connReqs的资源；</li>
+</ul>
+</li>
+</ul>
+<p>接下来看看连接池中各个方法是如何实现的；</p>
+<hr>
+<h4 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h4><h5 id="①-创建连接池-NewChannelPool"><a href="#①-创建连接池-NewChannelPool" class="headerlink" title="① 创建连接池 - NewChannelPool"></a><strong>① 创建连接池 - NewChannelPool</strong></h5><p>创建连接池使用的是Golang经典的创建资源的方法：通过传入一个配置类进行资源的创建；</p>
+<p>这里使用到的类是：</p>
+<pre><code class="go">// Configs for pool
+type Options struct {
+    // The number of the connections when initiate the pool
+    // Also, the least connection number of the pool
+    InitialCap int
+
+    // Max connection number in the pool
+    MaxCap int
+
+    // Max idle number in the pool
+    MaxIdle int
+
+    // The method the build the connection
+    Factory func() (interface{}, error)
+
+    // The method to close the connection
+    Close func(interface{}) error
+
+    // Check connection health
+    Ping func(interface{}) error
+
+    // Max life time for idle connection
+    IdleTimeout time.Duration
+
+    // Max time to get a connection from pool
+    // Else this will return a errs.MaxActiveConnectionErr
+    WaitTimeout time.Duration
+}</code></pre>
+<p>初始化时需要传入协程池的相关参数；</p>
+<p>各个参数说明如下：</p>
+<ul>
+<li>InitialCap：初始化连接数；</li>
+<li>MaxCap：池中最多可存在的连接数，当所有的协程连接资源都被占用时，再次获取将会被等待至多WaitTimeout时长，然后报WaitConnectionTimeoutErr错误；</li>
+<li>MaxIdle：最多可闲置的协程数；</li>
+<li>Factory：创建连接时使用的工厂方法；</li>
+<li>Ping：健康检查时使用的Ping方法；</li>
+<li>Close：关闭连接使用的方法；</li>
+<li>IdleTimeout：协程的最大闲置时长(懒删除)，设置为小于等于0时不删除；</li>
+<li>WaitTimeout：使用Get方法获取协程连接的最大等待时长(当协程池资源被完全使用时，使用Get获取连接会导致当前协程被阻塞！)，超过该时间会导致WaitConnectionTimeoutErr错误；</li>
+</ul>
+<p>此后调用NewChannelPool方法，创建一个generalPool实例：</p>
+<p>在NewChannelPool中进行了：参数校验、参数装配、然后创建了InitialCap个连接；</p>
+<h5 id="②-获取连接-Get"><a href="#②-获取连接-Get" class="headerlink" title="② 获取连接 - Get"></a><strong>② 获取连接 - Get</strong></h5><p>连接的获取、空置超时、健康检测都是在Get方法中以Lazy方式实现的：</p>
+<p>在获取连接时，首先会判断是否达到了MaxCap：</p>
+<ul>
+<li>如果存在可以使用的连接(在Put释放时阻塞)，则会判断是否空置超时、健康检查，并最终返回；</li>
+<li>如果不存在，则：<ul>
+<li>数量未达到maxActive，则创建新的连接，并返回；</li>
+<li>数量达到maxActive，则阻塞(由<code>&lt;-req</code>实现)；当阻塞超过时间规定时刻，则会抛出NewWaitConnectionTimeoutErr错误，并清除当前chan；</li>
+</ul>
+</li>
+</ul>
+<h5 id="③-释放连接-Put"><a href="#③-释放连接-Put" class="headerlink" title="③ 释放连接 - Put"></a><strong>③ 释放连接 - Put</strong></h5><p>连接的释放取决于连接的请求状况：</p>
+<ul>
+<li>如果当前存在连接请求，则待释放的资源会直接通过req传递至Get方法；</li>
+<li>如果当前不存在连接请求：则会释放该资源；</li>
+</ul>
+<h5 id="④-关闭连接池-ShutDown"><a href="#④-关闭连接池-ShutDown" class="headerlink" title="④ 关闭连接池 - ShutDown"></a><strong>④ 关闭连接池 - ShutDown</strong></h5><p>使用ShutDown关闭连接池会将协程池的所有配置置空(防止内存泄漏、并便于垃圾回收)，同时尝试调用协程池中配置的close方法关闭各个协程；</p>
+<blockquote>
+<br>
+
+<p>与Java中的线程池尽最大可能保证线程安全执行不同，这里由close方法来保证各个连接资源的关闭；</p>
+<p>这是考虑到，不同类型连接处理close的逻辑各异，同时，不少第三方连接已经提供了较为合理的关闭方式，所以就不重复造轮子了！</p>
+<p>但是还是要提醒一句：</p>
+<p><font color="#f00"><strong>如果close处理不当，如：单个协程出现死循环无法退出，是一定会造成内存泄漏的！这里的ShutDown仅仅是尝试关闭连接，并不保证强制关闭(有需要的可以使用context改进本协程池)</strong></font></p>
+</blockquote>
+<hr>
+<h4 id="定义错误类型"><a href="#定义错误类型" class="headerlink" title="定义错误类型"></a>定义错误类型</h4><p>自定义了几个错误：</p>
+<ul>
+<li>ClosedErr：协程池已经关闭(调用ShutDown方法)/初始化失败时，使用协程池资源时报错；</li>
+<li>MaxActiveConnectionErr：达到最大的连接数，并创建连接失败时报错；</li>
+<li>WaitConnectionTimeoutErr：达到最大的连接数，并达到最大等待时间WaitTimeout时报错；</li>
+</ul>
+<p>其内部的NewXXXErr方法用于创建一个错误，并且可以通过IsXXXErr来判断是否发生了该错误；</p>
+<hr>
+<h4 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h4><p>通过下面的方式引入仓库即可：</p>
+<pre><code class="bash">go get -u github.com/jasonkayzk/pool/channel_pool</code></pre>
+<h5 id="①-创建协程池"><a href="#①-创建协程池" class="headerlink" title="① 创建协程池"></a><strong>① 创建协程池</strong></h5><p>使用<code>NewChannelPool</code>创建一个协程池：</p>
+<pre><code class="go">func newChannelPool() (Pool, error) {
+    ops := Options{
+        InitialCap:  InitialCap,
+        MaxCap:      MaximumCap,
+        MaxIdle:     MaxIdleCap,
+        Factory:     factory,
+        Ping:        pingFunc,
+        Close:       closeFunc,
+        IdleTimeout: IdleTimeout,
+        WaitTimeout: WaitTimeout,
+    }
+    return NewChannelPool(&amp;ops)
+}</code></pre>
+<h5 id="②-使用连接"><a href="#②-使用连接" class="headerlink" title="② 使用连接"></a><strong>② 使用连接</strong></h5><p>通过Get方法从协程池中取出连接，并通过类型转换，将interface{}转换为对应的连接类型；</p>
+<p>然后使用连接处理逻辑，最后通过Put方法释放连接；</p>
+<pre><code class="go">func xxx() {
+    conn, _ := p.Get()
+    cli := conn.(*rpc.Client)
+    defer p.Put(conn)
+
+    // 使用cli连接处理逻辑
+    ...
+}</code></pre>
+<h5 id="③-获取池中可用连接数"><a href="#③-获取池中可用连接数" class="headerlink" title="③ 获取池中可用连接数"></a><strong>③ 获取池中可用连接数</strong></h5><p>通过Len方法，可以获取到线程池中可用的连接数；</p>
+<p>例如：</p>
+<pre><code class="go">func TestPool_Get(t *testing.T) {
+    p, err := newChannelPool()
+    if err != nil {
+        t.Errorf(&quot;create pool error: %s&quot;, err)
+    }
+    defer p.ShutDown()
+
+    _, err = p.Get()
+    if err != nil {
+        t.Errorf(&quot;Get error: %s&quot;, err)
+    }
+
+    // after one get, current capacity should be lowered by one.
+    if p.Len() != (InitialCap - 1) {
+        t.Errorf(&quot;Get error. Expecting %d, got %d&quot;, InitialCap-1, p.Len())
+    }
+}</code></pre>
+<br>
+
+<h4 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h4><p>为了进行协程池的性能测试，首先我们建立一个rpc服务：</p>
+<pre><code class="go">type Number int
+
+type Args struct {
+    A, B int
+}
+
+func rpcServer() {
+    number := new(Number)
+    _ = rpc.Register(number)
+    rpc.HandleHTTP()
+
+    l, e := net.Listen(&quot;tcp&quot;, address)
+    if e != nil {
+        panic(e)
+    }
+    go http.Serve(l, nil)
+}
+
+func (n *Number) Multiply(args *Args, reply *int) error {
+    *reply = args.A * args.B
+    return nil
+}
+</code></pre>
+<p>这个rpc服务注册了Number中的服务，好让我们可以远程调用其Multiply方法，返回两个数的乘积；</p>
+<p>接下来我们分别通过协程池和非协程池(每次调用创建一个连接)进行rpc调用，并调用5000次，比较时间：</p>
+<pre><code>poolMethod elapsed:  1.6118875s
+simpleMethod elapsed:  9.0750414s</code></pre><blockquote>
+<p>  具体测试代码见example目录；</p>
+</blockquote>
+<p>经过测试，这个协程池的性能还是不错的，速度的确提升了很多；</p>
+<br>
+
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>本协程池的实现参考了Github中star数较多的协程池，并根据自己的需求做了一定的修改：</p>
+<ul>
+<li><a href="https://github.com/fatih/pool" target="_blank" rel="noopener">fatih/pool</a></li>
+<li><a href="https://github.com/silenceper/pool" target="_blank" rel="noopener">silenceper/pool</a></li>
+</ul>
+<p>当然，相比于Java中线程池的实现是小巫见大巫了；</p>
+<p>如果对Java中线程池实现感兴趣，并且想尝试自己写一个类似于Java这种大而全的协程池的，可以先看一下我之前写的JDK11中的线程池的源码解析；</p>
+<p>系列文章入口：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2020/02/06/Java线程池ThreadPoolExecutor分析与实战/">Java线程池ThreadPoolExecutor分析与实战</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/">Java线程池ThreadPoolExecutor分析与实战续</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/03/05/Java线程池ThreadPoolExecutor分析与实战终/">Java线程池ThreadPoolExecutor分析与实战终</a></li>
+</ul>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>参考文章：</p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/47480504" target="_blank" rel="noopener">实现连接池的几种姿势</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/pool" target="_blank" rel="noopener">https://github.com/JasonkayZK/pool</a></li>
+</ul>
+<br>
+
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/09/25/Golang实现自定义协程池/" title="https://jasonkayzk.github.io/2020/09/25/Golang实现自定义协程池/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/09/25/Golang实现自定义协程池/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1719713946377"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

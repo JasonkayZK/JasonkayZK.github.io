@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Rust模块组织结构 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本文讲述了Rust中模块的组织形式和约定；">
+<meta name="keywords" content="Rust,Cargo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust模块组织结构">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/11/19/Rust模块组织结构/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本文讲述了Rust中模块的组织形式和约定；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/100085326/164968138-0efae930-8bc0-4c8b-b4e8-163e6c566d5a.png">
+<meta property="og:updated_time" content="2024-06-30T02:18:11.066Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Rust模块组织结构">
+<meta name="twitter:description" content="本文讲述了Rust中模块的组织形式和约定；">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/100085326/164968138-0efae930-8bc0-4c8b-b4e8-163e6c566d5a.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1719713926917">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>485</div>
+        <div><span>标签</span>259</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/project/" title="项目总结">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                项目总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/japanese/" title="日本語勉強について">
+            <i class="mdui-list-item-icon nexmoefont icon-left"></i>
+            <div class="mdui-list-item-content">
+                日本語勉強について
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.17px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.04px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">47</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">7</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/06/30/Mac合盖后不休眠/">Mac合盖后不休眠</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/17/アニメ「風が強く吹いている」名言のまとめ/">アニメ「風が強く吹いている」名言のまとめ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/06/06/HANABI-Mr-Children-歌詞/">【翻訳】HANABI-Mr.Children-歌詞</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/22/【译】实现一个简单的内存分配器/">【译】实现一个简单的内存分配器</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/21/基于Git版本控制的关系型数据库Dolt/">基于Git版本控制的关系型数据库Dolt</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?88">
+    
+    <h1>Rust模块组织结构</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年11月19日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8.7k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 38 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Cargo/">Cargo</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Rust模块组织结构"><span class="toc-text">Rust模块组织结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#基本说明"><span class="toc-text">基本说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Package、Crate和Module"><span class="toc-text">Package、Crate和Module</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#包-Crate"><span class="toc-text">包 Crate</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#项目-Package"><span class="toc-text">项目 Package</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#二进制-Package"><span class="toc-text">二进制 Package</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#库-Package"><span class="toc-text">库 Package</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#易混淆的-Package-和包"><span class="toc-text">易混淆的 Package 和包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#典型的-Package-结构"><span class="toc-text">典型的 Package 结构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模块-Module"><span class="toc-text">模块 Module</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建嵌套模块"><span class="toc-text">创建嵌套模块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#模块树"><span class="toc-text">模块树</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#父子模块"><span class="toc-text">父子模块</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#用路径引用模块"><span class="toc-text">用路径引用模块</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#绝对路径引用"><span class="toc-text">绝对路径引用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#相对路径引用"><span class="toc-text">相对路径引用</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#绝对还是相对？"><span class="toc-text">绝对还是相对？</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#代码可见性"><span class="toc-text">代码可见性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-super-引用模块"><span class="toc-text">使用 super 引用模块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-self-引用模块"><span class="toc-text">使用 self 引用模块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#结构体和枚举的可见性"><span class="toc-text">结构体和枚举的可见性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#模块与文件分离"><span class="toc-text">模块与文件分离</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用-use-及受限可见性"><span class="toc-text">使用 use 及受限可见性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#基本引入方式"><span class="toc-text">基本引入方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#绝对路径引入模块"><span class="toc-text">绝对路径引入模块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#相对路径引入模块中的函数"><span class="toc-text">相对路径引入模块中的函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#引入模块还是函数？"><span class="toc-text">引入模块还是函数？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#避免同名引用"><span class="toc-text">避免同名引用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#模块-函数"><span class="toc-text">模块::函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#as-别名引用"><span class="toc-text">as 别名引用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#引入项再导出"><span class="toc-text">引入项再导出</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用第三方包"><span class="toc-text">使用第三方包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用-简化引入方式"><span class="toc-text">使用 {} 简化引入方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用-引入模块下的所有项"><span class="toc-text">使用 * 引入模块下的所有项</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他引入模块的方式"><span class="toc-text">其他引入模块的方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#受限的可见性"><span class="toc-text">受限的可见性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#限制可见性语法"><span class="toc-text">限制可见性语法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一个单文件多模块的使用案例"><span class="toc-text">一个单文件多模块的使用案例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多个目录间模块引用"><span class="toc-text">多个目录间模块引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多个Cargo之间进行引用"><span class="toc-text">多个Cargo之间进行引用</span></a></li></ol><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li>
+      </ul>
+    </div>
+    
+    <p>本文讲述了Rust中模块的组织形式和约定；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/project-structure" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/project-structure</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="Rust模块组织结构"><a href="#Rust模块组织结构" class="headerlink" title="Rust模块组织结构"></a><strong>Rust模块组织结构</strong></h1><h2 id="基本说明"><a href="#基本说明" class="headerlink" title="基本说明"></a><strong>基本说明</strong></h2><p>当工程规模变大时，把代码写到一个甚至几个文件中，都是不太聪明的做法，可能存在以下问题：</p>
+<ol>
+<li>单个文件过大，导致打开、翻页速度大幅变慢</li>
+<li>查询和定位效率大幅降低，类比下，你会把所有知识内容放在一个几十万字的文档中吗？</li>
+<li>只有一个代码层次：函数，难以维护和协作，想象一下你的操作系统只有一个根目录，剩下的都是单层子目录会如何：<code>disaster</code></li>
+</ol>
+<p>同时，将大的代码文件拆分成包和模块，还允许我们实现代码抽象和复用：将你的代码封装好后提供给用户，那么用户只需要调用公共接口即可，无需知道内部该如何实现；</p>
+<p>Rust 有自己的规则和约定来组织其模块；例如：一个 crate 包最多可以有一个库 <code>crate</code>，任意多个二进制<code>crate</code>、导入文件夹内的模块的两种约定方式等等；</p>
+<p>先把一些术语说明一下：</p>
+<ul>
+<li>项目(Packages)：<strong>一个 <code>Cargo</code> 提供的 <code>feature</code>，可以用来构建、测试和分享包；</strong></li>
+<li>包(Crate)：<strong>一个由多个模块组成的树形结构，可以作为三方库进行分发，也可以生成可执行文件进行运行；</strong></li>
+<li>模块(Module)：<strong>可以一个文件多个模块，也可以一个文件一个模块</strong>，模块可以被认为是真实项目中的代码组织单元；</li>
+</ul>
+<p>首先，<code>包(crate)</code> 是 Cargo 中的定义，执行 <code>cargo new xxxx</code> 就是创建了一个包，<code>crate</code> 是二进制(bin)或库(lib)项目；</p>
+<p>Rust 约定：在 <code>Cargo.toml</code> 的同级目录下：</p>
+<ul>
+<li>包含<code>src/main.rs</code>文件，就是<strong>与包同名的二进制<code>crate</code>；</strong></li>
+<li>包含<code>src/lib.rs</code>，就是与<strong>包同名的库<code>crate</code>；</strong></li>
+</ul>
+<p>一个包内可以有多个 <code>crate</code>，多个<code>crates</code>就是一个模块的树形结构；例如，如果一个包内同时包含<code>src/main.rs</code>和<code>src/lib.rs</code>，那么他就有两个<code>crate</code>；</p>
+<p>如果想要包含多个二进制<code>crate</code>，<code>rust</code>规定：需要将文件放在<code>src/bin</code>目录下，每个文件就是一个单独的<code>crate</code>！</p>
+<p><code>crate root</code> 是用来描述如何构建<code>crate</code>的文件；例如：<code>src/main.rs</code>、<code>src/lib.rs</code> 都是<code>crate root</code>；</p>
+<p><strong><code>crate root</code>将由<code>Cargo</code>传递给<code>rustc</code>来实际构建库或者二进制项目！</strong></p>
+<blockquote>
+<p>  <font color="#f00"><strong>这也是为什么，入口文件中要写入各个模块：<code>mod xxx;</code> 才能使其生效！</strong></font></p>
+</blockquote>
+<p><strong>带有 <code>Cargo.toml</code> 文件的包用来整体描述如何构建<code>crate</code>；同时，一个包可以最多有一个库<code>crate</code>，任意多个二进制<code>crate</code>；</strong></p>
+<br>
+
+<h2 id="Package、Crate和Module"><a href="#Package、Crate和Module" class="headerlink" title="Package、Crate和Module"></a><strong>Package、Crate和Module</strong></h2><p>项目 <code>Package</code> 和包 <code>Crate</code> 的概念很容易被搞混，甚至在很多书中，这两者都是不分的，但是由于官方对此做了明确的区分，因此我们会在本章节中试图(挣扎着)理清这个概念；</p>
+<h3 id="包-Crate"><a href="#包-Crate" class="headerlink" title="包 Crate"></a><strong>包 Crate</strong></h3><p>对于 Rust 而言，<strong>crate 是一个独立的可编译单元，它编译后会生成一个可执行文件或者一个库；</strong></p>
+<p>一个包会将相关联的功能打包在一起，使得该功能可以很方便的在多个项目中分享；</p>
+<p>例如：标准库中没有提供、而是在三方库中提供的 <code>rand</code> 包；它提供了随机数生成的功能，我们只需要将该包通过 <code>use rand;</code> 引入到当前项目的作用域中，就可以在项目中使用 <code>rand</code> 的功能：<code>rand::XXX</code>；</p>
+<p><strong>同一个包中不能有同名的类型，但是在不同包中就可以；</strong>例如，虽然 <code>rand</code> 包中，有一个 <code>Rng</code> 特征，可是我们依然可以在自己的项目中定义一个 <code>Rng</code>，前者通过 <code>rand::Rng</code> 访问，后者通过 <code>Rng</code> 访问，对于编译器而言，这两者的边界非常清晰，不会存在引用歧义；</p>
+<br>
+
+<h3 id="项目-Package"><a href="#项目-Package" class="headerlink" title="项目 Package"></a><strong>项目 Package</strong></h3><p>鉴于 Rust 团队标新立异的起名传统，以及包的名称被 <code>crate</code> 占用，库的名称被 <code>library</code> 占用，经过斟酌， 我们决定将 <code>Package</code> 翻译成项目，你也可以理解为工程、软件包；</p>
+<p>由于 <code>Package</code> 就是一个项目，因此它<font color="#f00"><strong>包含有独立的 <code>Cargo.toml</code> 文件，以及因为功能性被组织在一起的一个或多个包；一个 <code>Package</code> 只能包含一个库(library)类型的包，但是可以包含多个二进制可执行类型的包；</strong></font></p>
+<br>
+
+<h4 id="二进制-Package"><a href="#二进制-Package" class="headerlink" title="二进制 Package"></a><strong>二进制 Package</strong></h4><p>下面的命令可以创建一个二进制 <code>Package</code>：</p>
+<pre><code class="bash">$ cargo new my-project
+     Created binary (application) `my-project` package
+$ ls my-project
+Cargo.toml
+src
+$ ls my-project/src
+main.rs</code></pre>
+<p>这里，Cargo 为我们创建了一个名称是 <code>my-project</code> 的 <code>Package</code>，同时在其中创建了 <code>Cargo.toml</code> 文件，可以看一下该文件，里面并没有提到 <code>src/main.rs</code> 作为程序的入口；</p>
+<p>原因是 Cargo 有一个惯例：<font color="#f00"><strong><code>src/main.rs</code> 是二进制包的根文件，该二进制包的包名跟所属 <code>Package</code> 相同，在这里都是 <code>my-project</code>，所有的代码执行都从该文件中的 <code>fn main()</code> 函数开始；</strong></font></p>
+<p>使用 <code>cargo run</code> 可以运行该项目，输出：<code>Hello, world!</code>；</p>
+<br>
+
+<h4 id="库-Package"><a href="#库-Package" class="headerlink" title="库 Package"></a><strong>库 Package</strong></h4><p>再来创建一个库类型的 <code>Package</code>：</p>
+<pre><code class="bash">$ cargo new my-lib --lib
+     Created library `my-lib` package
+$ ls my-lib
+Cargo.toml
+src
+$ ls my-lib/src
+lib.rs</code></pre>
+<p>首先，如果你试图运行 <code>my-lib</code>，会报错：</p>
+<pre><code class="bash">$ cargo run
+error: a bin target must be available for `cargo run`</code></pre>
+<p>原因是：<font color="#f00"><strong>库类型的 <code>Package</code> 只能作为三方库被其它项目引用，而不能独立运行，只有之前的二进制 <code>Package</code> 才可以运行；</strong></font></p>
+<p>与 <code>src/main.rs</code> 一样，Cargo 知道，如果一个 <code>Package</code> 包含有 <code>src/lib.rs</code>，意味它包含有一个库类型的同名包 <code>my-lib</code>，该包的根文件是 <code>src/lib.rs</code>；</p>
+<br>
+
+<h4 id="易混淆的-Package-和包"><a href="#易混淆的-Package-和包" class="headerlink" title="易混淆的 Package 和包"></a><strong>易混淆的 Package 和包</strong></h4><p>看完上面，相信大家看出来为何 <code>Package</code> 和包容易被混淆了吧？因为你用 <code>cargo new</code> 创建的 <code>Package</code> 和它其中包含的包是同名的！</p>
+<p>不过，只要你牢记：<strong><code>Package</code> 是一个项目工程，而包只是一个编译单元，基本上也就不会混淆这个两个概念了：<code>src/main.rs</code> 和 <code>src/lib.rs</code> 都是编译单元，因此它们都是包；</strong></p>
+<br>
+
+<h4 id="典型的-Package-结构"><a href="#典型的-Package-结构" class="headerlink" title="典型的 Package 结构"></a><strong>典型的 <code>Package</code> 结构</strong></h4><p>上面创建的 <code>Package</code> 中仅包含 <code>src/main.rs</code> 文件，意味着它仅包含一个二进制同名包 <code>my-project</code>；</p>
+<p>如果一个 <code>Package</code> 同时拥有 <code>src/main.rs</code> 和 <code>src/lib.rs</code>，那就意味着它包含两个包：库包和二进制包；</p>
+<p><strong>同时，这两个包名也都是 <code>my-project</code> —— 都与 <code>Package</code> 同名；</strong></p>
+<p>一个真实项目中典型的 <code>Package</code>，会包含多个二进制包，这些包文件被放在 <code>src/bin</code> 目录下，每一个文件都是独立的二进制包，同时也会包含一个库包，该包只能存在一个 <code>src/lib.rs</code>：</p>
+<pre><code class="bash">.
+├── Cargo.toml
+├── Cargo.lock
+├── src
+│   ├── main.rs
+│   ├── lib.rs
+│   └── bin
+│       └── main1.rs
+│       └── main2.rs
+├── tests
+│   └── some_integration_tests.rs
+├── benches
+│   └── simple_bench.rs
+└── examples
+    └── simple_example.rs</code></pre>
+<ul>
+<li><strong>唯一库包：<code>src/lib.rs</code></strong></li>
+<li><strong>默认二进制包：<code>src/main.rs</code>，编译后生成的可执行文件与 <code>Package</code> 同名</strong></li>
+<li><strong>其余二进制包：<code>src/bin/main1.rs</code> 和 <code>src/bin/main2.rs</code>，它们会分别生成一个文件同名的二进制可执行文件</strong></li>
+<li><strong>集成测试文件：<code>tests</code> 目录下</strong></li>
+<li><strong>基准性能测试 <code>benchmark</code> 文件：<code>benches</code> 目录下</strong></li>
+<li><strong>项目示例：<code>examples</code> 目录下</strong></li>
+</ul>
+<p>这种目录结构基本上是 Rust 的标准目录结构，在 <code>GitHub</code> 的大多数项目上，你都将看到它的身影；</p>
+<p>理解了包的概念，我们再来看看构成包的基本单元：模块；</p>
+<br>
+
+<h3 id="模块-Module"><a href="#模块-Module" class="headerlink" title="模块 Module"></a><strong>模块 Module</strong></h3><p>本小节讲深入讲解 Rust 的代码构成单元：模块；</p>
+<p>使用模块可以将包中的代码按照功能性进行重组，最终实现更好的可读性及易用性；</p>
+<p>同时，我们还能非常灵活地去控制代码的可见性，进一步强化 Rust 的安全性；</p>
+<br>
+
+<h4 id="创建嵌套模块"><a href="#创建嵌套模块" class="headerlink" title="创建嵌套模块"></a><strong>创建嵌套模块</strong></h4><p>小餐馆，相信大家都挺熟悉的，学校外的估计也没少去，那么咱就用小餐馆为例，来看看 Rust 的模块该如何使用；</p>
+<p>可以使用 <code>cargo new --lib restaurant</code> 创建一个小餐馆；</p>
+<p>注意，这里创建的是一个库类型的 <code>Package</code>，然后将以下代码放入 <code>src/lib.rs</code> 中：</p>
+<pre><code class="rust">// 餐厅前厅，用于吃饭
+mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+
+        fn seat_at_table() {}
+    }
+
+    mod serving {
+        fn take_order() {}
+
+        fn serve_order() {}
+
+        fn take_payment() {}
+    }
+}</code></pre>
+<p><strong>以上的代码（在同一个文件中就）创建了三个模块</strong>，有几点需要注意的：</p>
+<ul>
+<li><strong>使用 <code>mod</code> 关键字来创建新模块，后面紧跟着模块名称；</strong></li>
+<li><strong>模块可以嵌套，这里嵌套的原因是招待客人和服务都发生在前厅，因此我们的代码模拟了真实场景；</strong></li>
+<li><strong>模块中可以定义各种 Rust 类型，例如函数、结构体、枚举、特征等；</strong></li>
+<li><strong>所有模块均定义在同一个文件中；</strong></li>
+</ul>
+<p>类似上述代码中所做的，使用模块，我们就能将功能相关的代码组织到一起，然后通过一个模块名称来说明这些代码为何被组织在一起，这样其它程序员在使用你的模块时，就可以更快地理解和上手；</p>
+<br>
+
+<h4 id="模块树"><a href="#模块树" class="headerlink" title="模块树"></a><strong>模块树</strong></h4><p>之前我们提到过 <code>src/main.rs</code> 和 <code>src/lib.rs</code> 被称为包根(crate root)，是由于这两个文件的内容形成了一个模块 <code>crate</code>，该模块位于包的树形结构(由模块组成的树形结构)的根部：</p>
+<pre><code class="bash">crate
+ └── front_of_house
+     ├── hosting
+     │   ├── add_to_waitlist
+     │   └── seat_at_table
+     └── serving
+         ├── take_order
+         ├── serve_order
+         └── take_payment</code></pre>
+<p>这颗树展示了模块之间<strong>彼此的嵌套</strong>关系，因此被称为<strong>模块树</strong>；</p>
+<p>其中 <code>crate</code> 包根是 <code>src/lib.rs</code> 文件，包根文件中的三个模块分别形成了模块树的剩余部分；</p>
+<br>
+
+<h5 id="父子模块"><a href="#父子模块" class="headerlink" title="父子模块"></a><strong>父子模块</strong></h5><p>如果模块 <code>A</code> 包含模块 <code>B</code>，那么 <code>A</code> 是 <code>B</code> 的父模块，<code>B</code> 是 <code>A</code> 的子模块；</p>
+<p>在上例中，<code>front_of_house</code> 是 <code>hosting</code> 和 <code>serving</code> 的父模块，反之，后两者是前者的子模块；</p>
+<p>聪明的读者，应该能联想到，模块树跟计算机上文件系统目录树的相似之处；</p>
+<p>然而不仅仅是组织结构上的相似，就连使用方式都很相似：<strong>每个文件都有自己的路径，用户可以通过这些路径使用它们，在 Rust 中，我们也通过路径的方式来引用模块；</strong></p>
+<br>
+
+<h4 id="用路径引用模块"><a href="#用路径引用模块" class="headerlink" title="用路径引用模块"></a><strong>用路径引用模块</strong></h4><p>想要调用一个函数，就需要知道它的路径，在 Rust 中，这种路径有两种形式：</p>
+<ul>
+<li><strong>绝对路径</strong>，从包根开始，路径名以包名或者 <code>crate</code> 作为开头</li>
+<li><strong>相对路径</strong>，从当前模块开始，以 <code>self</code>，<code>super</code> 或当前模块的标识符作为开头</li>
+</ul>
+<p>让我们继续经营那个惨淡的小餐馆，这次为它实现一个小功能：</p>
+<p>src/lib.rs</p>
+<pre><code class="rust">// 餐厅前厅，用于吃饭
+pub mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // 相对路径
+    front_of_house::hosting::add_to_waitlist();
+}</code></pre>
+<p><code>eat_at_restaurant</code> 是一个定义在 crate root 中的函数，在该函数中使用了两种方式对 <code>add_to_waitlist</code> 进行调用；</p>
+<h5 id="绝对路径引用"><a href="#绝对路径引用" class="headerlink" title="绝对路径引用"></a><strong>绝对路径引用</strong></h5><p>因为 <code>eat_at_restaurant</code> 和 <code>add_to_waitlist</code> 都定义在一个包中，因此在绝对路径引用时，可以直接以 <code>crate</code> 开头，然后逐层引用，每一层之间使用 <code>::</code> 分隔：</p>
+<pre><code class="rust">crate::front_of_house::hosting::add_to_waitlist();</code></pre>
+<p>对比下之前的模块树：</p>
+<pre><code class="bash">crate
+ └── eat_at_restaurant
+ └── front_of_house
+     ├── hosting
+     │   ├── add_to_waitlist
+     │   └── seat_at_table
+     └── serving
+         ├── take_order
+         ├── serve_order
+         └── take_payment</code></pre>
+<p>可以看出，绝对路径的调用，完全符合了模块树的层级递进，非常符合直觉；</p>
+<p>如果类比文件系统，就跟使用绝对路径调用可执行程序差不多：<code>/front_of_house/hosting/add_to_waitlist</code>，使用 <code>crate</code> 作为开始就和使用 <code>/</code> 作为开始一样；</p>
+<br>
+
+<h5 id="相对路径引用"><a href="#相对路径引用" class="headerlink" title="相对路径引用"></a><strong>相对路径引用</strong></h5><p>再回到模块树中，因为 <code>eat_at_restaurant</code> 和 <code>front_of_house</code> 都处于 <code>crate root</code> 中，因此相对路径可以使用 <code>front_of_house</code> 作为开头：</p>
+<pre><code class="rust">front_of_house::hosting::add_to_waitlist();</code></pre>
+<p>如果类比文件系统，那么它<strong>类似于调用同一个目录下的程序</strong>，你可以这么做：<code>front_of_house/hosting/add_to_waitlist</code>；</p>
+<br>
+
+<h5 id="绝对还是相对？"><a href="#绝对还是相对？" class="headerlink" title="绝对还是相对？"></a><strong>绝对还是相对？</strong></h5><p><strong>如果只是为了引用到指定模块中的对象，那么两种都可以；</strong></p>
+<p>但是在实际使用时，需要遵循一个原则：<font color="#f00"><strong>当代码被挪动位置时，尽量减少引用路径的修改，相信大家都遇到过，修改了某处代码，导致所有路径都要挨个替换，这显然不是好的路径选择；</strong></font></p>
+<p>回到之前的例子：</p>
+<p>如果我们把 <code>front_of_house</code> 模块和 <code>eat_at_restaurant</code> 移动到一个模块中 <code>customer_experience</code>，那么绝对路径的引用方式就必须进行修改：<code>crate::customer_experience::front_of_house ...</code>；</p>
+<p>但是假设我们使用的相对路径，那么该路径就无需修改，因为它们两个的相对位置其实没有变：</p>
+<pre><code class="console">crate
+ └── customer_experience
+    └── eat_at_restaurant
+    └── front_of_house
+        ├── hosting
+        │   ├── add_to_waitlist
+        │   └── seat_at_table</code></pre>
+<p>从新的模块树中可以很清晰的看出这一点；</p>
+<p>再比如，其它的都不动，把 <code>eat_at_restaurant</code> 移动到模块 <code>dining</code> 中，如果使用相对路径，你需要修改该路径，但如果使用的是绝对路径，就无需修改：</p>
+<pre><code class="console">crate
+ └── dining
+     └── eat_at_restaurant
+ └── front_of_house
+     ├── hosting
+     │   ├── add_to_waitlist</code></pre>
+<p>不过，如果不确定哪个好，你可以考虑<strong>优先使用绝对路径，因为调用的地方和定义的地方往往是分离的，而定义的地方较少会变动；</strong></p>
+<br>
+
+<h4 id="代码可见性"><a href="#代码可见性" class="headerlink" title="代码可见性"></a><strong>代码可见性</strong></h4><p>Rust 出于安全的考虑，默认情况下，所有的类型都是私有化的，包括函数、方法、结构体、枚举、常量，是的，就连模块本身也是私有化的；</p>
+<p>在 Rust 中，<strong>父模块<code>完全无法访问</code>子模块中的私有项，但是子模块却可以访问父模块、父父..模块的私有项！</strong></p>
+<p>例如下面的代码是无法编译通过的：</p>
+<pre><code class="rust">mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // 相对路径
+    front_of_house::hosting::add_to_waitlist();
+}</code></pre>
+<p><code>hosting</code> 模块是私有的，无法在包根进行访问；</p>
+<p>那么为何 <code>front_of_house</code> 模块就可以访问？</p>
+<p>因为它和 <code>eat_at_restaurant</code> 同属于一个包根作用域内，<strong>同一个模块内的代码自然不存在私有化问题</strong>(所以我们之前章节的代码都没有报过这个错误！)；</p>
+<p>类似其它语言的 <code>public</code> 或者 Go 语言中的首字母大写，Rust 提供了 <code>pub</code> 关键字，通过它你可以控制模块和模块中指定项的可见性；</p>
+<br>
+
+<h4 id="使用-super-引用模块"><a href="#使用-super-引用模块" class="headerlink" title="使用 super 引用模块"></a><strong>使用 <code>super</code> 引用模块</strong></h4><p>在上文用路径引用模块小节，使用路径引用模块中，我们提到了相对路径有三种方式开始：<code>self</code>、<code>super</code>和 <code>crate</code> 或者模块名，其中第三种在前面已经讲到过，现在来看看通过 <code>super</code> 的方式引用模块项；</p>
+<p><code>super</code> 代表的是<strong>父模块为开始的引用方式，非常类似于文件系统中的 <code>..</code>；</strong></p>
+<p>语法：<code>../a/b</code> 文件名：</p>
+<p>src/lib.rs</p>
+<pre><code class="rust">// 餐厅前厅，用于吃饭
+pub mod front_of_house {
+    pub mod serving {
+        fn serve_order() {}
+
+        // 厨房模块
+        mod back_of_house {
+            fn fix_incorrect_order() {
+                cook_order();
+                super::serve_order();
+            }
+
+            fn cook_order() {}
+        }
+    }
+}</code></pre>
+<p>在厨房模块中，使用 <code>super::serve_order</code> 语法，调用了父模块中的 <code>serve_order</code> 函数；</p>
+<p>那么你可能会问，为何不使用 <code>crate::serve_order</code> 的方式？</p>
+<p>其实也可以，不过如果你确定未来这种层级关系不会改变，那么 <code>super::serve_order</code> 的方式会更稳定，未来就算它们都不在 crate root了，依然无需修改引用路径；</p>
+<p>所以路径的选用，往往还是取决于场景，以及未来代码的可能走向；</p>
+<br>
+
+<h4 id="使用-self-引用模块"><a href="#使用-self-引用模块" class="headerlink" title="使用 self 引用模块"></a><strong>使用 <code>self</code> 引用模块</strong></h4><p><code>self</code> 其实就是引用自身模块中的项，也就是说和我们之前章节的代码类似，都调用同一模块中的内容，区别在于之前章节中直接通过名称调用即可，而 <code>self</code>，你得多此一举：</p>
+<pre><code class="rust">pub mod serving {
+
+  fn serve_order() {
+    self::back_of_house::cook_order()
+  }
+
+  // 厨房模块
+  mod back_of_house {
+    pub fn cook_order() {}
+  }
+}</code></pre>
+<p>是的，多此一举，因为完全可以直接调用 <code>back_of_house</code>，但是 <code>self</code> 还有一个大用处，在后文中会讲；</p>
+<br>
+
+<h4 id="结构体和枚举的可见性"><a href="#结构体和枚举的可见性" class="headerlink" title="结构体和枚举的可见性"></a><strong>结构体和枚举的可见性</strong></h4><p>为何要把结构体和枚举的可见性单独拎出来讲呢？因为这两个家伙的成员字段拥有完全不同的可见性：</p>
+<ul>
+<li><strong>将结构体设置为 <code>pub</code>，但它的所有字段依然是私有的；</strong></li>
+<li><strong>将枚举设置为 <code>pub</code>，它的所有字段则将对外可见；</strong></li>
+</ul>
+<p>原因在于：<strong>枚举和结构体的使用方式不一样：</strong></p>
+<ul>
+<li>如果枚举的成员对外不可见，那该枚举将一点用都没有，因此枚举成员的可见性自动跟枚举可见性保持一致，这样可以简化用户的使用；</li>
+<li>而结构体的应用场景比较复杂，其中的字段也往往部分在 A 处被使用，部分在 B 处被使用，因此无法确定成员的可见性，那索性就设置为全部不可见，将选择权交给程序员；</li>
+</ul>
+<br>
+
+<h4 id="模块与文件分离"><a href="#模块与文件分离" class="headerlink" title="模块与文件分离"></a><strong>模块与文件分离</strong></h4><p>在之前的例子中，我们所有的模块都定义在 <code>src/lib.rs</code> 中，但是当模块变多或者变大时，需要<strong>将模块放入一个单独的文件中</strong>，让代码更好维护；</p>
+<p>现在，把 <code>front_of_house</code> 前厅分离出来，放入一个单独的文件中：</p>
+<p>src/front_of_house.rs</p>
+<pre><code class="rust">// 餐厅前厅，用于吃饭
+pub mod hosting {
+    pub fn add_to_waitlist() {}
+
+    fn seat_at_table() {}
+}
+
+pub mod serving {
+    fn take_order() {}
+
+    fn serve_order() {
+        self::back_of_house::cook_order()
+    }
+
+    fn take_payment() {}
+
+    // 厨房模块
+    mod back_of_house {
+        fn fix_incorrect_order() {
+            cook_order();
+            super::serve_order();
+        }
+
+        pub fn cook_order() {}
+    }
+}</code></pre>
+<p>然后，将以下代码留在 <code>src/lib.rs</code> 中：</p>
+<pre><code class="rust">mod front_of_house;
+
+pub use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    hosting::add_to_waitlist();
+
+    // 相对路径
+    hosting::add_to_waitlist();
+}</code></pre>
+<p>其实跟之前在同一个文件中也没有太大的不同，但是有几点值得注意：</p>
+<ul>
+<li><code>mod front_of_house</code>：告诉 Rust 从另一个和模块 <code>front_of_house</code> 同名的文件中加载该模块的内容；</li>
+<li>使用绝对路径的方式来引用 <code>hosting</code> 模块：<code>crate::front_of_house::hosting</code>；</li>
+</ul>
+<p>需要注意的是，和之前代码中 <code>mod front_of_house{..}</code> 的完整模块不同：</p>
+<p>现在的代码中，<strong>模块的声明和实现是分离的</strong>，实现是在单独的 <code>front_of_house.rs</code> 文件中，然后通过 <code>mod front_of_house;</code> 这条声明语句从该文件中把模块内容加载进来；</p>
+<p><strong>因此我们可以认为：模块 <code>front_of_house</code> 的定义还是在 <code>src/lib.rs</code> 中，只不过模块的具体内容被移动到了 <code>src/front_of_house.rs</code> 文件中；</strong></p>
+<p>在这里出现了一个新的关键字 <code>use</code>，联想到其它章节我们见过的标准库引入 <code>use std::fmt;</code>，可以大致猜测，该关键字<strong>用来将外部模块中的项引入到当前作用域中来，这样无需冗长的父模块前缀即可调用</strong>：<code>hosting::add_to_waitlist();</code>，在下节中，我们将对 <code>use</code> 进行详细的讲解；</p>
+<br>
+
+<h2 id="使用-use-及受限可见性"><a href="#使用-use-及受限可见性" class="headerlink" title="使用 use 及受限可见性"></a><strong>使用 use 及受限可见性</strong></h2><p>如果代码中，通篇都是 <code>crate::front_of_house::hosting::add_to_waitlist</code> 这样的函数调用形式，我不知道有谁会喜欢；</p>
+<p>因此我们需要一个办法来简化这种使用方式，在 Rust 中，<strong>可以使用 <code>use</code> 关键字把路径提前引入到当前作用域中，随后的调用就可以省略该路径，极大地简化了代码；</strong></p>
+<br>
+
+<h3 id="基本引入方式"><a href="#基本引入方式" class="headerlink" title="基本引入方式"></a><strong>基本引入方式</strong></h3><p>在 Rust 中，引入模块中的项有两种方式：<a href="https://course.rs/basic/crate-module/module.html#用路径引用模块" target="_blank" rel="noopener">绝对路径和相对路径</a>，这两者在前文中都讲过，就不再赘述；</p>
+<p>先来看看使用绝对路径的引入方式；</p>
+<h4 id="绝对路径引入模块"><a href="#绝对路径引入模块" class="headerlink" title="绝对路径引入模块"></a><strong>绝对路径引入模块</strong></h4><pre><code class="rust">mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist();
+    hosting::add_to_waitlist();
+    hosting::add_to_waitlist();
+}</code></pre>
+<p>这里，我们使用 <code>use</code> 和绝对路径的方式，将 <code>hosting</code> 模块引入到当前作用域中，然后只需通过 <code>hosting::add_to_waitlist</code> 的方式，即可调用目标模块中的函数；</p>
+<p>相比 <code>crate::front_of_house::hosting::add_to_waitlist()</code> 的方式要简单的多；</p>
+<p>那么，还能更简单吗？</p>
+<br>
+
+<h4 id="相对路径引入模块中的函数"><a href="#相对路径引入模块中的函数" class="headerlink" title="相对路径引入模块中的函数"></a><strong>相对路径引入模块中的函数</strong></h4><p>在下面代码中，我们不仅要使用相对路径进行引入，而且与上面引入 <code>hosting</code> 模块不同，直接引入该模块中的 <code>add_to_waitlist</code> 函数：</p>
+<pre><code class="rust">mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+use front_of_house::hosting::add_to_waitlist;
+
+pub fn eat_at_restaurant() {
+    add_to_waitlist();
+    add_to_waitlist();
+    add_to_waitlist();
+}</code></pre>
+<p>很明显，函数调用又变得更短了；</p>
+<br>
+
+<h4 id="引入模块还是函数？"><a href="#引入模块还是函数？" class="headerlink" title="引入模块还是函数？"></a><strong>引入模块还是函数？</strong></h4><p>从使用简洁性来说，引入函数自然是更甚一筹，但是在某些时候，引入模块会更好：</p>
+<ul>
+<li><strong>需要引入同一个模块的多个函数</strong></li>
+<li><strong>作用域中存在同名函数</strong></li>
+</ul>
+<p>在以上两种情况中，使用 <code>use front_of_house::hosting</code> 引入模块要比 <code>use front_of_house::hosting::add_to_waitlist;</code> 引入函数更好；</p>
+<p><strong>例如，如果想使用 <code>HashMap</code>，那么直接引入该结构体是比引入模块更好的选择，因为在 <code>collections</code> 模块中，我们只需要使用一个 <code>HashMap</code> 结构体：</strong></p>
+<pre><code class="rust">use std::collections::HashMap;
+
+fn main() {
+    let mut map = HashMap::new();
+    map.insert(1, 2);
+}</code></pre>
+<p>其实严格来说，对于引用方式并没有需要遵守的惯例，主要还是取决于你的喜好，不过我们建议：</p>
+<p><strong>优先使用最细粒度(引入函数、结构体等)的引用方式，如果引起了某种麻烦(例如前面两种情况)，再使用引入模块的方式；</strong></p>
+<br>
+
+<h3 id="避免同名引用"><a href="#避免同名引用" class="headerlink" title="避免同名引用"></a><strong>避免同名引用</strong></h3><p>根据上一章节的内容，我们只要<strong>保证同一个模块中不存在同名项</strong>就行；</p>
+<p>话虽如此，一起看看，如果遇到同名的情况该如何处理；</p>
+<h4 id="模块-函数"><a href="#模块-函数" class="headerlink" title="模块::函数"></a><strong>模块::函数</strong></h4><pre><code class="rust">use std::fmt;
+use std::io;
+
+fn function1() -&gt; fmt::Result {
+    // --snip--
+}
+
+fn function2() -&gt; io::Result&lt;()&gt; {
+    // --snip--
+}</code></pre>
+<p>上面的例子给出了很好的解决方案，使用模块引入的方式，具体的 <code>Result</code> 通过 <code>模块::Result</code> 的方式进行调用；</p>
+<p>可以看出，<strong>避免同名冲突的关键，就是使用父模块的方式来调用；</strong></p>
+<p>除此之外，还可以给予引入的项起一个别名；</p>
+<br>
+
+<h4 id="as-别名引用"><a href="#as-别名引用" class="headerlink" title="as 别名引用"></a><strong><code>as</code> 别名引用</strong></h4><p>对于同名冲突问题，还可以使用 <code>as</code> 关键字来解决，它可以赋予引入项一个全新的名称：</p>
+<pre><code class="rust">use std::fmt::Result;
+use std::io::Result as IoResult;
+
+fn function1() -&gt; Result {
+    // --snip--
+}
+
+fn function2() -&gt; IoResult&lt;()&gt; {
+    // --snip--
+}</code></pre>
+<p>如上所示，首先通过 <code>use std::io::Result</code> 将 <code>Result</code> 引入到作用域，然后使用 <code>as</code> 给予它一个全新的名称 <code>IoResult</code>，这样就不会再产生冲突：</p>
+<ul>
+<li><code>Result</code> 代表 <code>std::fmt::Result；</code></li>
+<li><code>IoResult</code> 代表 <code>std:io::Result</code>；</li>
+</ul>
+<br>
+
+<h3 id="引入项再导出"><a href="#引入项再导出" class="headerlink" title="引入项再导出"></a><strong>引入项再导出</strong></h3><p><strong>当外部的模块项 <code>A</code> 被引入到当前模块中时，它的可见性自动被设置为私有的，如果你希望允许其它外部代码引用我们的模块项 <code>A</code>，那么可以对它进行再导出：</strong></p>
+<pre><code class="rust">mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+pub use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist();
+    hosting::add_to_waitlist();
+    hosting::add_to_waitlist();
+}</code></pre>
+<p>如上，<strong>使用 <code>pub use</code> 即可实现：</strong></p>
+<p><strong>这里 <code>use</code> 代表引入 <code>hosting</code> 模块到当前作用域，<code>pub</code> 表示将该引入的内容再度设置为可见；</strong></p>
+<p>当你希望将内部的实现细节隐藏起来或者按照某个目的组织代码时，可以使用 <code>pub use</code> 再导出；</p>
+<p>例如，统一使用一个模块来提供对外的 API，那该模块就可以引入其它模块中的 API，然后进行再导出，最终对于用户来说，所有的 API 都是由一个模块统一提供的；</p>
+<br>
+
+<h2 id="使用第三方包"><a href="#使用第三方包" class="headerlink" title="使用第三方包"></a><strong>使用第三方包</strong></h2><p>之前我们一直在引入标准库模块或者自定义模块，现在来引入下第三方包中的模块；</p>
+<p>关于如何引入外部依赖，在 <a href="https://course.rs/first-try/cargo.html#package-配置段落" target="_blank" rel="noopener">Cargo 入门</a>中就有讲，这里直接给出操作步骤：</p>
+<ol>
+<li><strong>修改 <code>Cargo.toml</code> 文件，在 <code>[dependencies]</code> 区域添加一行：<code>rand = &quot;0.8.3&quot;</code></strong></li>
+<li><strong>此时，如果你用的是 <code>VSCode</code> 和 <code>rust-analyzer</code> 插件，该插件会自动拉取该库，你可能需要等它完成后，再进行下一步（VSCode 左下角有提示）</strong></li>
+</ol>
+<p>好了，此时，<code>rand</code> 包已经被我们添加到依赖中，下一步就是在代码中使用：</p>
+<pre><code class="rust">use rand::Rng;
+
+fn main() {
+    let secret_number = rand::thread_rng().gen_range(1..101);
+}</code></pre>
+<p>这里使用 <code>use</code> 引入了第三方包 <code>rand</code> 中的 <code>Rng</code> 特征，因为我们需要调用的 <code>gen_range</code> 方法定义在该特征中；</p>
+<blockquote>
+<p>  <strong>crates.io，lib.rs</strong></p>
+<p>  Rust 社区已经为我们贡献了大量高质量的第三方包，你可以在 <code>crates.io</code> 或者 <code>lib.rs</code> 中检索和使用；</p>
+<p>  从目前来说查找包更推荐 <code>lib.rs</code>，搜索功能更强大，内容展示也更加合理，但是下载依赖包还是得用<code>crates.io</code>；</p>
+</blockquote>
+<br>
+
+<h2 id="使用-简化引入方式"><a href="#使用-简化引入方式" class="headerlink" title="使用 {} 简化引入方式"></a><strong>使用 <code>{}</code> 简化引入方式</strong></h2><p>对于以下一行一行的引入方式：</p>
+<pre><code class="rust">use std::collections::HashMap;
+use std::collections::BTreeMap;
+use std::collections::HashSet;
+
+use std::cmp::Ordering;
+use std::io;</code></pre>
+<p>可以使用 <code>{}</code> 来一起引入进来，在大型项目中，使用这种方式来引入，可以减少大量 <code>use</code> 的使用：</p>
+<pre><code class="rust">use std::collections::{HashMap,BTreeMap,HashSet};
+use std::{cmp::Ordering, io};</code></pre>
+<p>对于下面的同时引入模块和模块中的项：</p>
+<pre><code class="rust">use std::io;
+use std::io::Write;</code></pre>
+<p>可以使用 <code>{}</code> 的方式进行简化:</p>
+<pre><code class="rust">use std::io::{self, Write};</code></pre>
+<blockquote>
+<p>  <strong>self</strong></p>
+<p>  上面使用到了模块章节提到的 <code>self</code> 关键字，用来替代模块自身，结合上一节中的 <code>self</code>，可以得出它在模块中的两个用途：</p>
+<ul>
+<li><strong><code>use self::xxx</code>，表示加载当前模块中的 <code>xxx</code>。此时 <code>self</code> 可省略</strong></li>
+<li><strong><code>use xxx::{self, yyy}</code>，表示，加载当前路径下模块 <code>xxx</code> 本身，以及模块 <code>xxx</code> 下的 <code>yyy</code></strong></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="使用-引入模块下的所有项"><a href="#使用-引入模块下的所有项" class="headerlink" title="使用 * 引入模块下的所有项"></a><strong>使用 <code>*</code> 引入模块下的所有项</strong></h2><p>对于之前一行一行引入 <code>std::collections</code> 的方式，我们还可以使用</p>
+<pre><code class="rust">use std::collections::*;</code></pre>
+<p>以上这种方式来引入 <code>std::collections</code> 模块下的所有公共项，这些公共项自然包含了 <code>HashMap</code>，<code>HashSet</code> 等想手动引入的集合类型；</p>
+<p>当<strong>使用 <code>*</code> 来引入的时候要格外小心，因为你很难知道到底哪些被引入到了当前作用域中，有哪些会和你自己程序中的名称相冲突：</strong></p>
+<pre><code class="rust">use std::collections::*;
+
+struct HashMap;
+fn main() {
+   let mut v =  HashMap::new();
+   v.insert(&quot;a&quot;, 1);
+}</code></pre>
+<p>以上代码中，<code>std::collection::HashMap</code> 被 <code>*</code> 引入到当前作用域，但是由于存在另一个同名的结构体，因此 <code>HashMap::new</code> 根本不存在，因为对于编译器来说，<strong>本地同名类型的优先级更高；</strong></p>
+<p>在实际项目中，<strong>这种引用方式往往用于快速写测试代码，它可以把所有东西一次性引入到 <code>tests</code> 模块中；</strong></p>
+<br>
+
+<h2 id="其他引入模块的方式"><a href="#其他引入模块的方式" class="headerlink" title="其他引入模块的方式"></a><strong>其他引入模块的方式</strong></h2><p>通过 <code>#[path =&quot;你的路径&quot;]</code> 可以放在任何目录都行，如：</p>
+<pre><code class="rust">#[path =&quot;你的路径&quot;]
+mod core;</code></pre>
+<p>可以无视 <code>mod.rs</code> 或者目录方式：</p>
+<p><a href="https://user-images.githubusercontent.com/100085326/164968138-0efae930-8bc0-4c8b-b4e8-163e6c566d5a.png" target="_blank" rel="noopener"><img src="https://user-images.githubusercontent.com/100085326/164968138-0efae930-8bc0-4c8b-b4e8-163e6c566d5a.png" alt="image"></a></p>
+<p>当然，也可以在目录下创建 <code>mod.rs</code> 文件，但是需要一层一层的 <code>pub mod</code> 导出，或者采用 <code>2018</code> 版本的模块目录和模块.rs 同名方式（<strong>官方推荐</strong>)，总之，<code>#[path]</code> 方式最灵活（慎用）；</p>
+<p>三种方式对比：</p>
+<p><code>Rust</code> 模块引用三种方式：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Rust 2015</th>
+<th align="left">Rust 2018</th>
+<th align="left">#[path = “路径”]</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">.<br>├── lib.rs<br>└── foo/<br>    ├── mod.rs<br>    └── bar.rs</td>
+<td align="left">.<br>├── lib.rs<br>├── foo.rs<br>└── foo/<br>    └── bar.rs</td>
+<td align="left">.<br>├── lib.rs       <br>└── pkg/         // 任意目录名<br>    ├── foo.rs   // #[path = “./pkg/foo.rs”]<br>    └── bar.rs   // #[path = “./pkg/bar.rs”]</td>
+</tr>
+</tbody></table>
+<br>
+
+<h2 id="受限的可见性"><a href="#受限的可见性" class="headerlink" title="受限的可见性"></a><strong>受限的可见性</strong></h2><p>在上一节中，我们学习了<a href="https://course.rs/basic/crate-module/module.html#代码可见性" target="_blank" rel="noopener">可见性</a>这个概念，这也是模块体系中最为核心的概念，控制了模块中哪些内容可以被外部看见，但是在实际使用时，光被外面看到还不行，我们还想控制哪些人能看，这就是 Rust 提供的受限可见性；</p>
+<p>例如，<strong>在 Rust 中，包是一个模块树，我们可以通过 <code>pub(crate) item;</code> 这种方式来实现：<code>item</code> 虽然是对外可见的，但是只在当前包内可见，外部包无法引用到该 <code>item</code>；</strong></p>
+<p>所以，如果我们想要<strong>让某一项可以在整个包中都可以被使用，那么有两种办法：</strong></p>
+<ul>
+<li><strong>在crate root中定义一个非 <code>pub</code> 类型的 <code>X</code>(父模块的项对子模块都是可见的，因此包根中的项对模块树上的所有模块都可见)；</strong></li>
+<li><strong>在子模块中定义一个 <code>pub</code> 类型的 <code>Y</code>，同时通过 <code>use</code> 将其引入到包根；</strong></li>
+</ul>
+<p>例如：</p>
+<pre><code class="rust">mod a {
+    pub mod b {
+        pub fn c() {          
+            println!(&quot;{:?}&quot;,crate::X);
+        }
+
+      // 在子模块中定义一个 `pub` 类型的 `Y`，同时通过 `use` 将其引入到包根
+        #[derive(Debug)]
+        pub struct Y;
+    }
+}
+
+// 在crate root中定义一个非 `pub` 类型的 `X`(父模块的项对子模块都是可见的，因此包根中的项对模块树上的所有模块都可见)
+#[derive(Debug)]
+struct X;
+use a::b::Y;
+fn d() {
+    println!(&quot;{:?}&quot;,Y);
+}</code></pre>
+<p>以上代码充分说明了之前两种办法的使用方式，但是有时我们会遇到这两种方法都不太好用的时候；</p>
+<p>例如希望对于某些特定的模块可见，但是对于其他模块又不可见：</p>
+<pre><code class="rust">// 目标：`a` 导出 `I`、`bar` and `foo`，其他的不导出
+pub mod a {
+    pub const I: i32 = 3;
+
+    fn semisecret(x: i32) -&gt; i32 {
+        use self::b::c::J;
+        x + J
+    }
+
+    pub fn bar(z: i32) -&gt; i32 {
+        semisecret(I) * z
+    }
+    pub fn foo(y: i32) -&gt; i32 {
+        semisecret(I) + y
+    }
+
+    mod b {
+        mod c {
+            const J: i32 = 4;
+        }
+    }
+}</code></pre>
+<p>这段代码会报错，因为与父模块中的项对子模块可见相反，子模块中的项对父模块是不可见的；</p>
+<p>这里 <code>semisecret</code> 方法中，<code>a</code> -&gt; <code>b</code> -&gt; <code>c</code> 形成了父子模块链，那 <code>c</code> 中的 <code>J</code> 自然对 <code>a</code> 模块不可见；</p>
+<p>如果使用之前的可见性方式，那么想保持 <code>J</code> 私有，同时让 <code>a</code> 继续使用 <code>semisecret</code> 函数的办法是：将该函数移动到 <code>c</code> 模块中，然后用 <code>pub use</code> 将 <code>semisecret</code> 函数进行再导出：</p>
+<pre><code class="rust">pub mod a {
+    pub const I: i32 = 3;
+
+    use self::b::semisecret;
+
+    pub fn bar(z: i32) -&gt; i32 {
+        semisecret(I) * z
+    }
+    pub fn foo(y: i32) -&gt; i32 {
+        semisecret(I) + y
+    }
+
+    mod b {
+        pub use self::c::semisecret;
+        mod c {
+            const J: i32 = 4;
+            pub fn semisecret(x: i32) -&gt; i32 {
+                x + J
+            }
+        }
+    }
+}</code></pre>
+<p>这段代码说实话问题不大，但是有些破坏了我们之前的逻辑；</p>
+<p>如果想保持代码逻辑，同时又只让 <code>J</code> 在 <code>a</code> 内可见该怎么办？</p>
+<pre><code class="rust">pub mod a {
+    pub const I: i32 = 3;
+
+    fn semisecret(x: i32) -&gt; i32 {
+        use self::b::c::J;
+        x + J
+    }
+
+    pub fn bar(z: i32) -&gt; i32 {
+        semisecret(I) * z
+    }
+    pub fn foo(y: i32) -&gt; i32 {
+        semisecret(I) + y
+    }
+
+    mod b {
+        pub(in crate::a) mod c {
+            pub(in crate::a) const J: i32 = 4;
+        }
+    }
+}</code></pre>
+<p>通过 <code>pub(in crate::a)</code> 的方式，我们指定了模块 <code>c</code> 和常量 <code>J</code> 的可见范围都只是 <code>a</code> 模块中，<code>a</code> 之外的模块是完全访问不到它们的！</p>
+<br>
+
+<h4 id="限制可见性语法"><a href="#限制可见性语法" class="headerlink" title="限制可见性语法"></a><strong>限制可见性语法</strong></h4><p><code>pub(crate)</code> 或 <code>pub(in crate::a)</code> 就是限制可见性语法，前者是限制在整个包内可见，后者是通过绝对路径，<strong>限制在包内的某个模块内可见</strong>，总结一下：</p>
+<ul>
+<li><strong><code>pub</code> 意味着可见性无任何限制；</strong></li>
+<li><strong><code>pub(crate)</code> 表示在当前包可见；</strong></li>
+<li><strong><code>pub(self)</code> 在当前模块可见；</strong></li>
+<li><strong><code>pub(super)</code> 在父模块可见；</strong></li>
+<li><strong><code>pub(in &lt;path&gt;)</code> 表示在某个路径代表的模块中可见，其中 <code>path</code> 必须是父模块或者祖先模块；</strong></li>
+</ul>
+<br>
+
+<h2 id="一个单文件多模块的使用案例"><a href="#一个单文件多模块的使用案例" class="headerlink" title="一个单文件多模块的使用案例"></a><strong>一个单文件多模块的使用案例</strong></h2><p>下面是一个模块的综合例子：</p>
+<p>my_mod/src/lib.rs</p>
+<pre><code class="rust">// 一个名为 `my_mod` 的模块
+mod my_mod {
+    // 模块中的项默认具有私有的可见性
+    fn private_function() {
+        println!(&quot;called `my_mod::private_function()`&quot;);
+    }
+
+    // 使用 `pub` 修饰语来改变默认可见性。
+    pub fn function() {
+        println!(&quot;called `my_mod::function()`&quot;);
+    }
+
+    // 在同一模块中，项可以访问其它项，即使它是私有的。
+    pub fn indirect_access() {
+        print!(&quot;called `my_mod::indirect_access()`, that\n&gt; &quot;);
+        private_function();
+    }
+
+    // 模块也可以嵌套
+    pub mod nested {
+        pub fn function() {
+            println!(&quot;called `my_mod::nested::function()`&quot;);
+        }
+
+        fn private_function() {
+            println!(&quot;called `my_mod::nested::private_function()`&quot;);
+        }
+
+        // 使用 `pub(in path)` 语法定义的函数只在给定的路径中可见。
+        // `path` 必须是父模块（parent module）或祖先模块（ancestor module）
+        pub(in crate::my_mod) fn public_function_in_my_mod() {
+            print!(&quot;called `my_mod::nested::public_function_in_my_mod()`, that\n &gt; &quot;);
+            public_function_in_nested()
+        }
+
+        // 使用 `pub(self)` 语法定义的函数则只在当前模块中可见。
+        pub(self) fn public_function_in_nested() {
+            println!(&quot;called `my_mod::nested::public_function_in_nested&quot;);
+        }
+
+        // 使用 `pub(super)` 语法定义的函数只在父模块中可见。
+        pub(super) fn public_function_in_super_mod() {
+            println!(&quot;called my_mod::nested::public_function_in_super_mod&quot;);
+        }
+    }
+
+    pub fn call_public_function_in_my_mod() {
+        print!(&quot;called `my_mod::call_public_funcion_in_my_mod()`, that\n&gt; &quot;);
+        nested::public_function_in_my_mod();
+        print!(&quot;&gt; &quot;);
+        nested::public_function_in_super_mod();
+    }
+
+    // `pub(crate)` 使得函数只在当前包中可见
+    pub(crate) fn public_function_in_crate() {
+        println!(&quot;called `my_mod::public_function_in_crate()&quot;);
+    }
+
+    // 嵌套模块的可见性遵循相同的规则
+    mod private_nested {
+        pub fn function() {
+            println!(&quot;called `my_mod::private_nested::function()`&quot;);
+        }
+    }
+}
+
+fn function() {
+    println!(&quot;called `function()`&quot;);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn main() {
+        // 模块机制消除了相同名字的项之间的歧义。
+        function();
+        my_mod::function();
+
+        // 公有项，包括嵌套模块内的，都可以在父模块外部访问。
+        my_mod::indirect_access();
+        my_mod::nested::function();
+        my_mod::call_public_function_in_my_mod();
+
+        // pub(crate) 项可以在同一个 crate 中的任何地方访问
+        my_mod::public_function_in_crate();
+
+        // pub(in path) 项只能在指定的模块中访问
+        // 报错！函数 `public_function_in_my_mod` 是私有的
+        //my_mod::nested::public_function_in_my_mod();
+
+        // 模块的私有项不能直接访问，即便它是嵌套在公有模块内部的
+
+        // 报错！`private_function` 是私有的
+        //my_mod::private_function();
+
+        // 报错！`private_function` 是私有的
+        //my_mod::nested::private_function();
+
+        // 报错！ `private_nested` 是私有的
+        //my_mod::private_nested::function();
+    }
+}</code></pre>
+<blockquote>
+<p>  <strong>上面的内容90%以上整理自：</strong></p>
+<ul>
+<li><a href="https://course.rs/basic/crate-module/intro.html" target="_blank" rel="noopener">https://course.rs/basic/crate-module/intro.html</a></li>
+</ul>
+<p>  <strong>一本神一样的 Rust 语言圣经！</strong></p>
+</blockquote>
+<br>
+
+<h2 id="多个目录间模块引用"><a href="#多个目录间模块引用" class="headerlink" title="多个目录间模块引用"></a><strong>多个目录间模块引用</strong></h2><p>前面给出的例子大多都是在单个模块中引用；</p>
+<p>本小节来看一看在不同目录之间的引用；</p>
+<p>看一下目录结构：</p>
+<pre><code class="bash">$ tree .                      
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── main.rs
+    └── user_info
+        ├── mod.rs
+        └── user.rs
+
+3 directories, 9 files</code></pre>
+<p><strong><code>rust</code>约定在目录下使用<code>mod.rs</code>将模块导出；</strong></p>
+<p>看一下user.rs的代码：</p>
+<pre><code class="rust">#[derive(Debug)]
+pub struct User {
+    name: String,
+    age: i32
+}
+
+impl User {
+    pub fn new_user(name: String, age: i32) -&gt; User {
+        User{
+            name,
+            age
+        }
+    }
+    pub fn name(&amp;self) -&gt; &amp;str {
+        &amp;self.name
+    }
+}
+
+pub fn add(x: i32, y: i32) -&gt; i32 {
+    x + y 
+}</code></pre>
+<p>然后在<code>mod.rs</code>里导出：</p>
+<pre><code class="rust">pub mod user;</code></pre>
+<p>在<code>main.rs</code>调用：</p>
+<pre><code class="rust">mod user_info;
+use user_info::user::User;
+
+fn main() {
+    let u1 = User::new_user(String::from(&quot;tom&quot;), 5);
+    println!(&quot;user name: {}&quot;, u1.name());
+    println!(&quot;1+2: {}&quot;, user_info::user::add(1, 2));
+}</code></pre>
+<br>
+
+<h2 id="多个Cargo之间进行引用"><a href="#多个Cargo之间进行引用" class="headerlink" title="多个Cargo之间进行引用"></a><strong>多个Cargo之间进行引用</strong></h2><p>最后，再来看看多个 Cargo 项目之间的引用；</p>
+<p>首先分别创建一个可执行项目和一个库项目：</p>
+<pre><code class="bash">cargo new multi-crate
+cargo new utils --lib</code></pre>
+<p>在utils库中，已经生成了代码：</p>
+<pre><code class="rust">pub fn add(left: usize, right: usize) -&gt; usize {
+    left + right
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = add(2, 2);
+        assert_eq!(result, 4);
+    }
+}</code></pre>
+<p>在我们的二进制库的<code>Cargo.toml</code>引入该库：</p>
+<pre><code class="toml">[dependencies]
+utils = { path = &quot;../utils&quot;, version = &quot;0.1.0&quot; }</code></pre>
+<p><code>path</code>就是库项目的路径；</p>
+<p><code>main.rs</code>使用<code>use</code>引入就可以使用了：</p>
+<pre><code class="rust">use utils::add;
+
+fn main() {
+    let x = add(1, 2);
+    println!(&quot;utils::add(1, 2): {}&quot;, x);
+}</code></pre>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/project-structure" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/project-structure</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://course.rs/basic/crate-module/intro.html" target="_blank" rel="noopener">https://course.rs/basic/crate-module/intro.html</a></li>
+<li><a href="https://www.cnblogs.com/li-peng/p/13587910.html" target="_blank" rel="noopener">https://www.cnblogs.com/li-peng/p/13587910.html</a></li>
+<li><a href="https://stackoverflow.com/questions/67617824/when-to-use-crate-vs-proj-name-in-imports" target="_blank" rel="noopener">https://stackoverflow.com/questions/67617824/when-to-use-crate-vs-proj-name-in-imports</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/11/19/Rust模块组织结构/" title="https://jasonkayzk.github.io/2022/11/19/Rust模块组织结构/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/11/19/Rust模块组织结构/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1719713927030"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
