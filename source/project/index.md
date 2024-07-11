@@ -472,8 +472,7 @@ Other:
 
 如对以上项目内容有任何疑问, 欢迎与我交流:
 
-wechat: z271226192**(优先)**
+- Email：jasonkayzk@gmail.com
 
-qq: 271226192
 
 <br/>

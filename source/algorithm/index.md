@@ -475,16 +475,5 @@ cover: https://img.paulzzh.com/touhou/random?2
 
 ![wechat](https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/wechat.jpg)
 
-<br/>
-
-------------------------------
-
-如对以上项目内容有任何疑问, 欢迎与我交流:
-
-**微信公众号: Coder张小凯**
-
-**wechat: z271226192(优先)**
-
-**qq: 271226192**
 
 <br/>

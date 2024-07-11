@@ -29,8 +29,7 @@ cover: https://img.paulzzh.com/touhou/random?0
 
 **連絡先:**
 
--   Wechat: z271226192
--   QQ: 271226192
+-   Email：jasonkayzk@gmail.com
 -   Twitter: https://twitter.com/Jasonkay_ZK/
 
 <br/>
