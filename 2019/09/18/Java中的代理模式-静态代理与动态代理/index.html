@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java中的代理模式-静态代理与动态代理 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="反射技术中常见的一个概念就是动态代理, 本篇文章主要讲述了代理模式, 动态代理与静态代理等.">
+<meta name="keywords" content="JDK动态代理,代理模式,CGLib动态代理,静态代理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java中的代理模式-静态代理与动态代理">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/18/Java中的代理模式-静态代理与动态代理/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="反射技术中常见的一个概念就是动态代理, 本篇文章主要讲述了代理模式, 动态代理与静态代理等.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTExMTYy">
+<meta property="og:image" content="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTM4NzM2">
+<meta property="og:updated_time" content="2024-07-28T02:13:53.276Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java中的代理模式-静态代理与动态代理">
+<meta name="twitter:description" content="反射技术中常见的一个概念就是动态代理, 本篇文章主要讲述了代理模式, 动态代理与静态代理等.">
+<meta name="twitter:image" content="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTExMTYy">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1722132909910">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>497</div>
+        <div><span>标签</span>261</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">56</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/07/28/简单易用的内网穿透组网工具ZeroTier/">简单易用的内网穿透组网工具ZeroTier</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/人生は一度きり。だから楽しむべきよ/">人生は一度きり。だから楽しむべきよ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/解决VMWare桥接模式下无法自动获取IP的问题/">解决VMWare桥接模式下无法自动获取IP的问题</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/26/MacOS双开微信的方法/">【转】MacOS双开微信的方法</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/23/一些tg使用指南总结/">一些tg使用指南总结</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTM4NzM2">
+    
+    <h1>Java中的代理模式-静态代理与动态代理</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月18日</a>
+    <a><i class="nexmoefont icon-areachart"></i>5.5k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 25 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/学习案例/">学习案例</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/CGLib动态代理/">CGLib动态代理</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/JDK动态代理/">JDK动态代理</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/代理模式/">代理模式</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/静态代理/">静态代理</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java中的代理模式"><span class="toc-text">Java中的代理模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-什么是代理"><span class="toc-text">1. 什么是代理?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-代理模式"><span class="toc-text">2. 代理模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-静态代理实例"><span class="toc-text">3. 静态代理实例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-静态代理服务接口-MovieService"><span class="toc-text">1): 静态代理服务接口: MovieService</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-静态代理服务实现类-MovieServiceImpl"><span class="toc-text">2): 静态代理服务实现类: MovieServiceImpl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-服务的代理类-MovieProxy"><span class="toc-text">3): 服务的代理类: MovieProxy</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-测试代码"><span class="toc-text">4): 测试代码:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-静态代理小结"><span class="toc-text">5): 静态代理小结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-动态代理实例-初窥"><span class="toc-text">4. 动态代理实例: 初窥</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-动态代理接口-WineService"><span class="toc-text">1): 动态代理接口 WineService</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-服务接口具体实现类-WineServiceImpl"><span class="toc-text">2): 服务接口具体实现类: WineServiceImpl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-动态代理类-WineHandler"><span class="toc-text">3): 动态代理类: WineHandler</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-测试代码-1"><span class="toc-text">4): 测试代码:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-动态代理分析"><span class="toc-text">5): 动态代理分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Proxy-newProxyInstance-方法"><span class="toc-text">Proxy.newProxyInstance()方法</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#InvocationHandler"><span class="toc-text">InvocationHandler</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-动态代理的又一个例子-对比"><span class="toc-text">5. 动态代理的又一个例子: 对比</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-服务接口另一个实现类-WineServiceImpl2"><span class="toc-text">1): 服务接口另一个实现类 WineServiceImpl2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-测试代码"><span class="toc-text">2): 测试代码:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-动态代理与静态代理比较"><span class="toc-text">3): 动态代理与静态代理比较</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#补充-开闭原则"><span class="toc-text">补充: 开闭原则</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-动态代理的最终例子-内幕"><span class="toc-text">6. 动态代理的最终例子: 内幕</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-香烟服务接口-CigarService"><span class="toc-text">1): 香烟服务接口 CigarService</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-香烟服务实现类-CigarServiceImpl"><span class="toc-text">2): 香烟服务实现类 CigarServiceImpl</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-测试代码"><span class="toc-text">3): 测试代码:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-动态代理的秘密"><span class="toc-text">4): 动态代理的秘密</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-CGLib动态代理和JDK动态代理的区别"><span class="toc-text">7. CGLib动态代理和JDK动态代理的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-JDK动态代理例子"><span class="toc-text">1): JDK动态代理例子</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#业务接口-MyService-必须"><span class="toc-text">业务接口 MyService(必须)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#业务接口实现类-MyServiceImpl-非必须"><span class="toc-text">业务接口实现类 MyServiceImpl(非必须!)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#代理类-MyInvocationHandler"><span class="toc-text">代理类 MyInvocationHandler</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#方法测试-JavaProxyTest"><span class="toc-text">方法测试 JavaProxyTest</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-CGLib动态代理例子"><span class="toc-text">2): CGLib动态代理例子</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#配置CGLib依赖"><span class="toc-text">配置CGLib依赖</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#服务直接实现类-CGLibServiceImpl"><span class="toc-text">服务直接实现类 CGLibServiceImpl</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#拦截类-MyInterceptor"><span class="toc-text">拦截类 MyInterceptor</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#测试代码"><span class="toc-text">测试代码</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-两种动态代理的区别"><span class="toc-text">3): 两种动态代理的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-动态代理底层实现"><span class="toc-text">4): 动态代理底层实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-Spring中使用的是哪种代理方式呢"><span class="toc-text">8. Spring中使用的是哪种代理方式呢?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-总结"><span class="toc-text">9. 总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>在Spring的体系下, 大多数的实现都在使用动态代理, 如: Spring的AOP, 事务注解, Mybatis的mapper, 分页插件也都离不开代理模式. </p>
+<p>示例源码: <a href="https://github.com/JasonkayZK/Java_Samples/tree/java-proxy" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/java-proxy</a></p>
+<br>
+
+<p>本篇文章讲述了代理模式相关的内容, 主要包括:</p>
+<ul>
+<li>什么是代理? 如何使用代理?</li>
+<li>代理模式</li>
+<li>静态代理</li>
+<li>动态代理的实现, 语法, 内幕</li>
+<li>CGLib动态代理和JDK动态代理的区别与应用</li>
+<li>Spring中使用了哪种代理方法</li>
+<li>…………………</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="Java中的代理模式"><a href="#Java中的代理模式" class="headerlink" title="Java中的代理模式"></a>Java中的代理模式</h2><h3 id="1-什么是代理"><a href="#1-什么是代理" class="headerlink" title="1. 什么是代理?"></a>1. 什么是代理?</h3><p>代理是英文 Proxy 翻译过来的. 我们在生活中见到过的代理, 大概最常见的就是朋友圈中卖面膜的同学了.</p>
+<p>她们从厂家拿货，然后在朋友圈中宣传，然后卖给熟人.</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTExMTYy" alt="代理"></p>
+<p>​    <br></p>
+<p>按理说，顾客可以直接从厂家购买产品，但是现实生活中，很少有这样的销售模式。一般都是厂家委托给代理商进行销售，顾客跟代理商打交道，而不直接与产品实际生产者进行关联. 所以，代理就有一种中间人的味道。</p>
+<br>
+
+
+
+<hr>
+<h3 id="2-代理模式"><a href="#2-代理模式" class="headerlink" title="2. 代理模式"></a>2. 代理模式</h3><p>代理模式是面向对象编程中比较常见的设计模式. 这是常见代理模式常见的 UML 示意图: </p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNjI5MjEzOTM4NzM2" alt="代理模式常见的 UML 示意图"></p>
+<br>
+
+<p>需要注意的有下面几点：</p>
+<ul>
+<li>用户<font color="#0000ff">只关心接口功能，而不在乎谁提供了功能. </font>上图中接口是 Subject;</li>
+<li><font color="#0000ff">接口真正实现者是上图的 RealSubject，但是它不与用户直接接触，而是通过代理;</font></li>
+<li><font color="#0000ff">代理就是上图中的 Proxy，由于它实现了 Subject 接口，所以它能够直接与用户接触;</font></li>
+<li>用户调用 Proxy 的时候，Proxy 内部调用了 RealSubject; 所以，Proxy 是中介者，它<font color="#ff0000">可以增强 RealSubject 操作;</font></li>
+</ul>
+<br>
+
+
+
+<hr>
+<h3 id="3-静态代理实例"><a href="#3-静态代理实例" class="headerlink" title="3. 静态代理实例"></a>3. 静态代理实例</h3><p>我们平常去电影院看电影的时候，在电影开始的阶段是不是经常会放广告呢？</p>
+<p>电影是电影公司委托给影院进行播放的，但是影院可以在播放电影的时候，产生一些自己的经济收益，比如卖爆米花、可乐等，然后在影片开始结束时播放一些广告。</p>
+<p>现在用代码来进行模拟。</p>
+<h4 id="1-静态代理服务接口-MovieService"><a href="#1-静态代理服务接口-MovieService" class="headerlink" title="1): 静态代理服务接口: MovieService"></a>1): 静态代理服务接口: MovieService</h4><p>首先得有一个接口，通用的接口是代理模式实现的基础。这个接口我们命名为 MovieService，代表电影播放的服务</p>
+<pre><code class="java">package proxy.staticProxy.service;
+
+public interface MovieService {
+    void play();
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-静态代理服务实现类-MovieServiceImpl"><a href="#2-静态代理服务实现类-MovieServiceImpl" class="headerlink" title="2): 静态代理服务实现类: MovieServiceImpl"></a>2): 静态代理服务实现类: MovieServiceImpl</h4><p>然后, 我们要有一个真正的实现这个Service的实现类</p>
+<pre><code class="java">package proxy.staticProxy.service.impl;
+
+import proxy.staticProxy.service.MovieService;
+
+public class MovieServiceImpl implements MovieService {
+
+    @Override
+    public void play() {
+        System.out.println(&quot;您正在观看电影 《肖申克的救赎》&quot;);
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="3-服务的代理类-MovieProxy"><a href="#3-服务的代理类-MovieProxy" class="headerlink" title="3): 服务的代理类: MovieProxy"></a>3): 服务的代理类: MovieProxy</h4><p>最后我们还需要一个Movie服务的代理类.(相当于Cinema, 负责调用电影播放的功能, 同时再加上电影播放前后的广告等!)</p>
+<pre><code class="java">package proxy.staticProxy.proxy;
+
+import proxy.staticProxy.service.MovieService;
+import proxy.staticProxy.service.impl.MovieServiceImpl;
+
+public class MovieProxy implements MovieService {
+
+    MovieServiceImpl movieService;
+
+    public MovieProxy(MovieServiceImpl movieService) {
+        super();
+        this.movieService = movieService;
+    }
+
+    @Override
+    public void play() {
+        advertise(true);
+        movieService.play();
+        advertise(false);
+    }
+
+    public void advertise(boolean isStart) {
+        System.out.println(isStart ? &quot;电影马上开始了，爆米花、可乐、口香糖9.8折，快来买啊！&quot; : &quot;电影马上结束了，爆米花、可乐、口香糖9.8折，买回家吃吧！&quot;);
+    }
+
+
+}
+</code></pre>
+<p>MovieProxy就是 Proxy 代理对象，它有一个 play() 方法。不过在调用MovieServiceImpl的play() 方法时，它进行了一些相关利益的处理，那就是广告!</p>
+<br>
+
+<h4 id="4-测试代码"><a href="#4-测试代码" class="headerlink" title="4): 测试代码:"></a>4): 测试代码:</h4><pre><code class="java">package proxy.staticProxy;
+
+import proxy.staticProxy.proxy.MovieProxy;
+import proxy.staticProxy.service.impl.MovieServiceImpl;
+
+public class StaticProxyTest {
+
+    public static void main(String[] args) {
+        new MovieProxy(new MovieServiceImpl()).play();
+    }
+}
+</code></pre>
+<p>最后可以看到输出的结果:</p>
+<pre><code>电影马上开始了，爆米花、可乐、口香糖9.8折，快来买啊！
+您正在观看电影 《肖申克的救赎》
+电影马上结束了，爆米花、可乐、口香糖9.8折，买回家吃吧！</code></pre><br>
+
+
+
+<h4 id="5-静态代理小结"><a href="#5-静态代理小结" class="headerlink" title="5): 静态代理小结"></a>5): 静态代理小结</h4><p><font color="#0000ff">代理模式可以在不修改被代理对象的基础上，通过扩展代理类(<em>例如: 通过构造函数传入具体业务方法的引用等</em>)，进行一些功能的附加与增强;</font></p>
+<p><font color="#ff0000">值得注意的是，代理类和被代理类应该<code>共同实现一个接口，或者是共同继承某个类;</code></font></p>
+<p><strong>为什么叫做静态呢?</strong></p>
+<p>因为它的<strong>类型是事先预定好的</strong>, 比如上面代码中的 MovieProxy 这个类. </p>
+<p>但是对于真正的调用来说, 实际上并不关心这个代理对象, 只要能够实现相应的业务逻辑就好, 而并不需要MovieProxy这个类! </p>
+<p>对于静态代理而言, 我们需要手动编写代码让 MovieProxy 实现 Movie 接口，而<font color="#ff0000">在动态代理中，我们可以让程序在运行的时候自动在内存中创建一个实现 MovieProxy 接口的代理，而不需要去定义 MovieProxy 这个类</font></p>
+<br>
+
+<hr>
+<h3 id="4-动态代理实例-初窥"><a href="#4-动态代理实例-初窥" class="headerlink" title="4. 动态代理实例: 初窥"></a>4. 动态代理实例: 初窥</h3><p>假设有一个大商场，商场有很多的柜台，有一个柜台卖茅台酒. </p>
+<p>我们进行代码的模拟:</p>
+<h4 id="1-动态代理接口-WineService"><a href="#1-动态代理接口-WineService" class="headerlink" title="1): 动态代理接口 WineService"></a>1): 动态代理接口 WineService</h4><pre><code class="java">package proxy.dynamicProxy.service;
+
+public interface WineService {
+    void sellWine();
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-服务接口具体实现类-WineServiceImpl"><a href="#2-服务接口具体实现类-WineServiceImpl" class="headerlink" title="2): 服务接口具体实现类: WineServiceImpl"></a>2): 服务接口具体实现类: WineServiceImpl</h4><pre><code class="java">package proxy.dynamicProxy.service.impl;
+
+import proxy.dynamicProxy.service.WineService;
+
+public class WineServiceImpl implements WineService {
+
+    @Override
+    public void sellWine() {
+        System.out.println(&quot;我卖得是茅台酒。&quot;);
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="3-动态代理类-WineHandler"><a href="#3-动态代理类-WineHandler" class="headerlink" title="3): 动态代理类: WineHandler"></a>3): 动态代理类: WineHandler</h4><p>有了卖酒的服务之后, 我们还要有一个代理类, 帮助我们在卖酒的同时做一些别的事情: 比如在卖酒的前后对这笔交易做一个记录!</p>
+<pre><code class="java">package proxy.dynamicProxy.handler;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+public class WineHandler implements InvocationHandler {
+
+    private Object wine;
+
+    public WineHandler(Object wine) {
+        this.wine = wine;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println(&quot;销售开始  柜台是： &quot;+this.getClass().getSimpleName());
+        method.invoke(wine, args);
+        System.out.println(&quot;销售结束&quot;);
+        return null;
+    }
+
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="4-测试代码-1"><a href="#4-测试代码-1" class="headerlink" title="4): 测试代码:"></a>4): 测试代码:</h4><pre><code class="java">package proxy.dynamicProxy;
+
+import proxy.dynamicProxy.handler.WineHandler;
+import proxy.dynamicProxy.service.WineService;
+import proxy.dynamicProxy.service.impl.WineServiceImpl;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
+public class DynamicProxyTest {
+
+    public static void main(String[] args) {
+        WineService wineService = new WineServiceImpl();
+
+        InvocationHandler handler = new WineHandler(wineService);
+
+        WineService dynamicProxy = (WineService) Proxy.newProxyInstance(WineService.class.getClassLoader(), WineServiceImpl.class.getInterfaces(), handler);
+
+        dynamicProxy.sellWine();
+    }
+}
+</code></pre>
+<p>代码如上所示: </p>
+<p>我们首先创建了一个卖酒服务的实现类WineServiceImpl, 然后将它传递给代理的Handler, 并通过 <code>Proxy.newProxyInstance();</code>方法创建了一个实际的代理对象, 最后通过调用生成的代理对象的方法完成了交易!</p>
+<p>输出如下:</p>
+<pre><code>销售开始  柜台是： WineHandler
+我卖得是茅台酒。
+销售结束</code></pre><br>
+
+
+
+<h4 id="5-动态代理分析"><a href="#5-动态代理分析" class="headerlink" title="5): 动态代理分析"></a>5): 动态代理分析</h4><p><font color="#0000ff">动态代码涉及了一个非常重要的类 Proxy. 正是通过 Proxy 的静态方法 newProxyInstance 才会动态创建代理!</font></p>
+<h5 id="Proxy-newProxyInstance-方法"><a href="#Proxy-newProxyInstance-方法" class="headerlink" title="Proxy.newProxyInstance()方法"></a>Proxy.newProxyInstance()方法</h5><pre><code class="java">// Proxy生成代理类的方法
+public static Object newProxyInstance(ClassLoader loader,
+                                          Class&lt;?&gt;[] interfaces,
+                                          InvocationHandler h)</code></pre>
+<p>下面讲解它的 3 个参数意义:</p>
+<ul>
+<li>loader: 自然是类加载器</li>
+<li>interfaces: 代码要用来代理的接口</li>
+<li>h: 一个 InvocationHandler 对象</li>
+</ul>
+<br>
+
+<h5 id="InvocationHandler"><a href="#InvocationHandler" class="headerlink" title="InvocationHandler"></a>InvocationHandler</h5><p>InvocationHandler 是一个接口. <font color="#ff0000">每个代理的实例都有一个与之关联的 InvocationHandler 实现类，如果<em>代理的方法被调用，那么代理便会通知和转发给内部的 InvocationHandler 实现类，由它决定处理</em>;</font></p>
+<pre><code class="java">public interface InvocationHandler {
+    public Object invoke(Object proxy, Method method, Object[] args)
+        throws Throwable;
+}</code></pre>
+<p><font color="#ff0000">InvocationHandler 内部只有一个 invoke() 方法，正是这个方法决定了怎么样处理代理传递过来的方法调用</font></p>
+<ul>
+<li>proxy: 代理对象</li>
+<li>method: 代理对象调用的方法</li>
+<li>args: 调用的方法中的参数</li>
+</ul>
+<p><font color="#ff0000">Proxy 动态产生的代理会调用 InvocationHandler 实现类，所以 <em>InvocationHandler 是实际执行者</em></font></p>
+<br>
+
+<hr>
+<h3 id="5-动态代理的又一个例子-对比"><a href="#5-动态代理的又一个例子-对比" class="headerlink" title="5. 动态代理的又一个例子: 对比"></a>5. 动态代理的又一个例子: 对比</h3><p>乍看一下, 动态代理和静态代理都差不多, 都很麻烦, 只不过一个需要自己编写Proxy类, 一个需要编写Handler而已.</p>
+<p>下面加深一下业务难度: 我们不仅要卖<strong>茅台酒</strong>，还想卖<strong>五粮液</strong>.</p>
+<h4 id="1-服务接口另一个实现类-WineServiceImpl2"><a href="#1-服务接口另一个实现类-WineServiceImpl2" class="headerlink" title="1): 服务接口另一个实现类 WineServiceImpl2"></a>1): 服务接口另一个实现类 WineServiceImpl2</h4><pre><code class="java">package proxy.dynamicProxy.service.impl;
+
+import proxy.dynamicProxy.service.WineService;
+
+public class WineServiceImpl2 implements WineService {
+
+    @Override
+    public void sellWine() {
+        System.out.println(&quot;我卖得是五粮液。&quot;);
+    }
+}
+</code></pre>
+<p>此时WineServiceImpl2也实现了WineService这个接口, 同样可以通过Handler生成对应的代理类.</p>
+<br>
+
+
+
+<h4 id="2-测试代码"><a href="#2-测试代码" class="headerlink" title="2): 测试代码:"></a>2): 测试代码:</h4><pre><code class="java">package proxy.dynamicProxy;
+
+import proxy.dynamicProxy.handler.WineHandler;
+import proxy.dynamicProxy.service.WineService;
+import proxy.dynamicProxy.service.impl.WineServiceImpl;
+import proxy.dynamicProxy.service.impl.WineServiceImpl2;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
+public class DynamicProxyTest2 {
+
+    public static void main(String[] args) {
+        WineService wineService1 = new WineServiceImpl();
+        WineService wineService2 = new WineServiceImpl2();
+
+        InvocationHandler handler1 = new WineHandler(wineService1);
+        InvocationHandler handler2 = new WineHandler(wineService2);
+
+        ((WineService)Proxy.newProxyInstance(WineService.class.getClassLoader(),WineServiceImpl.class.getInterfaces(), handler1)).sellWine();
+
+        ((WineService)Proxy.newProxyInstance(WineService.class.getClassLoader(),WineServiceImpl2.class.getInterfaces(), handler2)).sellWine();
+
+
+    }
+}
+</code></pre>
+<p>输出如下:</p>
+<pre><code>销售开始  柜台是： WineHandler
+我卖得是茅台酒。
+销售结束
+销售开始  柜台是： WineHandler
+我卖得是五粮液。
+销售结束</code></pre><p>仅仅增加了一个服务接口对应的实现类便完成了从茅台酒到五粮液酒的转换, 这就是动态代理与静态代理的区别!</p>
+<br>
+
+
+
+<h4 id="3-动态代理与静态代理比较"><a href="#3-动态代理与静态代理比较" class="headerlink" title="3): 动态代理与静态代理比较"></a>3): 动态代理与静态代理比较</h4><p><font color="#ff0000">如果是静态代理的话, 还需要修改Proxy类中构造函数的参数类型或者创建一个新的Proxy代理来完成! 因为对于静态代理来说, 一旦代码固定, 则代理类就固定下来了! 而通过动态代理, 可以在运行时, 通过反射来创建代理类!</font></p>
+<p><font color="#ff0000">其实这也是代理模式的设计思想: 通过代理的方式避免暴露被代理对象或者说代理不容易被取得的对象，满足开闭原则!</font></p>
+<br>
+
+<h5 id="补充-开闭原则"><a href="#补充-开闭原则" class="headerlink" title="补充: 开闭原则"></a>补充: 开闭原则</h5><p><font color="#ff0000">开闭原则，对于扩展是开放的，对于修改是关闭。在本例中, 我们通过增加了一个WineServiceImpl2业务实现类, 从而避免了类似静态代理修改Proxy中的构造函数, 显然满足开闭原则!</font></p>
+<br>
+
+<hr>
+<h3 id="6-动态代理的最终例子-内幕"><a href="#6-动态代理的最终例子-内幕" class="headerlink" title="6. 动态代理的最终例子: 内幕"></a>6. 动态代理的最终例子: 内幕</h3><p>现在扩大商场的经营，除了卖酒之外，还要卖烟!</p>
+<h4 id="1-香烟服务接口-CigarService"><a href="#1-香烟服务接口-CigarService" class="headerlink" title="1): 香烟服务接口 CigarService"></a>1): 香烟服务接口 CigarService</h4><pre><code class="java">package proxy.dynamicProxy.service;
+
+public interface CigarService {
+    void sell();
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="2-香烟服务实现类-CigarServiceImpl"><a href="#2-香烟服务实现类-CigarServiceImpl" class="headerlink" title="2): 香烟服务实现类 CigarServiceImpl"></a>2): 香烟服务实现类 CigarServiceImpl</h4><pre><code class="java">package proxy.dynamicProxy.service.impl;
+
+import proxy.dynamicProxy.service.CigarService;
+
+public class CigarServiceImpl implements CigarService {
+
+    @Override
+    public void sell() {
+        System.out.println(&quot;售卖的是正宗的芙蓉王，可以扫描条形码查证。&quot;);
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h4 id="3-测试代码"><a href="#3-测试代码" class="headerlink" title="3): 测试代码:"></a>3): 测试代码:</h4><pre><code class="java">package proxy.dynamicProxy;
+
+import proxy.dynamicProxy.handler.WineHandler;
+import proxy.dynamicProxy.service.CigarService;
+import proxy.dynamicProxy.service.WineService;
+import proxy.dynamicProxy.service.impl.CigarServiceImpl;
+import proxy.dynamicProxy.service.impl.WineServiceImpl;
+import proxy.dynamicProxy.service.impl.WineServiceImpl2;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
+public class DynamicProxyTest3 {
+
+    public static void main(String[] args) {
+        WineService wineService1 = new WineServiceImpl();
+        WineService wineService2 = new WineServiceImpl2();
+        CigarService cigarService = new CigarServiceImpl();
+
+        InvocationHandler handler1 = new WineHandler(wineService1);
+        InvocationHandler handler2 = new WineHandler(wineService2);
+        InvocationHandler handler3 = new WineHandler(cigarService);
+
+        ((WineService) Proxy.newProxyInstance(WineService.class.getClassLoader(),
+                WineServiceImpl.class.getInterfaces(), handler1)).sellWine();
+
+        ((WineService)Proxy.newProxyInstance(WineService.class.getClassLoader(),  WineServiceImpl2.class.getInterfaces(), handler2)).sellWine();
+
+        ((CigarService)Proxy.newProxyInstance(CigarService.class.getClassLoader(), CigarServiceImpl.class.getInterfaces(), handler3)).sell();
+    }
+}
+</code></pre>
+<p>上述代码通过Proxy.newProxyInstance() 方法, 分别产生了SellWine 和 SellCigarette 两种接口的实现类代理, 并且使用的Handler是同一个!</p>
+<p>这就是动态代理与静态代理的另一个区别: <font color="#ff0000">动态代理通过解耦, 将Proxy中业务逻辑相同的部分, 放入的同一个Handler中, 简化了代码! 从而避免了对于不同的Proxy在处理相同的业务逻辑时, 还要写大量重复的代码!</font></p>
+<br>
+
+<h4 id="4-动态代理的秘密"><a href="#4-动态代理的秘密" class="headerlink" title="4): 动态代理的秘密"></a>4): 动态代理的秘密</h4><p>为什么 Proxy 能够动态产生不同接口类型的代理? 其实是通过传入进去的接口然后通过反射动态生成了一个接口实例!</p>
+<p>如: 对于WineService 接口， Proxy.newProxyInstance() 内部肯定会有一个sellWine()方法供我们调用!</p>
+<p>通过查看<code>Proxy.newProxyInstance()</code>源码, 下述代码是在<strong>JDK 11</strong> 中的源码:</p>
+<pre><code class="java">    @CallerSensitive
+    public static Object newProxyInstance(ClassLoader loader, Class&lt;?&gt;[] interfaces, InvocationHandler h) {
+        Objects.requireNonNull(h);
+        Class&lt;?&gt; caller = System.getSecurityManager() == null ? null : Reflection.getCallerClass();
+
+        /*
+         * Look up or generate the designated proxy class and its constructor.
+         */
+        Constructor&lt;?&gt; cons = getProxyConstructor(caller, loader, interfaces);
+        return newProxyInstance(caller, cons, h);
+    }
+</code></pre>
+<p>在调用时:</p>
+<ul>
+<li><font color="#00ff00">首先通过Object的静态方法判断传入的Handler不为null</font>:</li>
+</ul>
+<pre><code class="java">    public static &lt;T&gt; T requireNonNull(T obj) {
+        if (obj == null) {
+            throw new NullPointerException();
+        } else {
+            return obj;
+        }
+    }</code></pre>
+<br>
+
+<ul>
+<li><font color="#00ff00">然后通过通过<code>getProxyConstructor</code>方法创建了代理类，并返回了该类的构造方法</font>:</li>
+</ul>
+<pre><code class="java">private static Constructor&lt;?&gt; getProxyConstructor(Class&lt;?&gt; caller, ClassLoader loader, Class&lt;?&gt;... interfaces) {
+        if (interfaces.length == 1) {
+            Class&lt;?&gt; intf = interfaces[0];
+            if (caller != null) {
+                checkProxyAccess(caller, loader, intf);
+            }
+
+            return (Constructor)proxyCache.sub(intf).computeIfAbsent(loader, (ld, clv) -&gt; {
+                return (new Proxy.ProxyBuilder(ld, (Class)clv.key())).build();
+            });
+        } else {
+            Class&lt;?&gt;[] intfsArray = (Class[])interfaces.clone();
+            if (caller != null) {
+                checkProxyAccess(caller, loader, intfsArray);
+            }
+
+            List&lt;Class&lt;?&gt;&gt; intfs = Arrays.asList(intfsArray);
+            return (Constructor)proxyCache.sub(intfs).computeIfAbsent(loader, (ld, clv) -&gt; {
+                return (new Proxy.ProxyBuilder(ld, (List)clv.key())).build();
+            });
+        }
+    }</code></pre>
+<p>在<code>getProxyConstructor</code>函数中，可以看到if-else分支，这里是对单接口的情况做了代码优化。我们主要关注其代理类的生成部分，就是<code>new ProxyBuilder(ld, clv.key()).build()</code>!</p>
+<pre><code>(ld, clv) -&gt; new ProxyBuilder(ld, clv.key()).build() 这种写法是lambda表达式的语法，非常精简。 </code></pre><br>
+
+<pre><code class="java">        Constructor&lt;?&gt; build() {
+            Class proxyClass = defineProxyClass(this.module, this.interfaces);
+
+            final Constructor cons;
+            try {
+                cons = proxyClass.getConstructor(Proxy.constructorParams);
+            } catch (NoSuchMethodException var4) {
+                throw new InternalError(var4.toString(), var4);
+            }
+
+            AccessController.doPrivileged(new PrivilegedAction&lt;Void&gt;() {
+                public Void run() {
+                    cons.setAccessible(true);
+                    return null;
+                }
+            });
+            return cons;
+        }</code></pre>
+<p>在build方法中，从语意上可以看到代理类<code>proxyClass</code>在<code>defineProxyClass</code>方法中生成。之后通过反射并根据构造函数的参数，获取到代理类的构造方法并返回;</p>
+<br>
+
+<ul>
+<li>最后使用反射，生成代理类的对象并返回:</li>
+</ul>
+<pre><code class="java">    private static Object newProxyInstance(Class&lt;?&gt; caller, Constructor&lt;?&gt; cons, InvocationHandler h) {
+        try {
+            if (caller != null) {
+                checkNewProxyPermission(caller, cons.getDeclaringClass());
+            }
+
+            return cons.newInstance(h);
+        } catch (InstantiationException | IllegalAccessException var5) {
+            throw new InternalError(var5.toString(), var5);
+        } catch (InvocationTargetException var6) {
+            Throwable t = var6.getCause();
+            if (t instanceof RuntimeException) {
+                throw (RuntimeException)t;
+            } else {
+                throw new InternalError(t.toString(), t);
+            }
+        }
+    }</code></pre>
+<br>
+
+
+
+<hr>
+<h3 id="7-CGLib动态代理和JDK动态代理的区别"><a href="#7-CGLib动态代理和JDK动态代理的区别" class="headerlink" title="7. CGLib动态代理和JDK动态代理的区别"></a>7. CGLib动态代理和JDK动态代理的区别</h3><p>根据动态代理的实现方式不同, 又分为<code>CGLib动态代理</code>和<code>JDK自带动态代理</code>!</p>
+<h4 id="1-JDK动态代理例子"><a href="#1-JDK动态代理例子" class="headerlink" title="1): JDK动态代理例子"></a>1): JDK动态代理例子</h4><h5 id="业务接口-MyService-必须"><a href="#业务接口-MyService-必须" class="headerlink" title="业务接口 MyService(必须)"></a>业务接口 MyService(必须)</h5><pre><code class="java">package proxy.jdk.service;
+
+/**
+ * 业务服务的最顶层接口，必须!!
+ */
+public interface MyService {
+    void gotoSchool();
+    void gotoWork();
+    void oneDay();
+    void oneDayFinal();
+}
+</code></pre>
+<br>
+
+<h5 id="业务接口实现类-MyServiceImpl-非必须"><a href="#业务接口实现类-MyServiceImpl-非必须" class="headerlink" title="业务接口实现类 MyServiceImpl(非必须!)"></a>业务接口实现类 MyServiceImpl(非必须!)</h5><pre><code class="java">package proxy.jdk.service.impl;
+
+import proxy.jdk.service.MyService;
+
+/**
+ * 需要被代理的类，实现了顶层接口，非必须!!
+ */
+public class MyServiceImpl implements MyService {
+    @Override
+    public void gotoSchool() {
+        System.out.println(&quot;gotoSchool&quot;);
+    }
+    @Override
+    public void gotoWork() {
+        System.out.println(&quot;gotoWork&quot;);
+    }
+    @Override
+    public void oneDay() {
+        gotoSchool();
+        gotoWork();
+    }
+    @Override
+    public final void oneDayFinal() {
+        gotoSchool();
+        gotoWork();
+    }
+}
+</code></pre>
+<br>
+
+<h5 id="代理类-MyInvocationHandler"><a href="#代理类-MyInvocationHandler" class="headerlink" title="代理类 MyInvocationHandler"></a>代理类 MyInvocationHandler</h5><pre><code class="java">package proxy.jdk.handler;
+
+import proxy.jdk.service.MyService;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+/**
+ * InvocationHandler 的一个实现，实际上处理代理的逻辑在这里
+ *
+ * 甚至可以不需要写Service接口的实现类, 而在Handler中写!
+ *
+ */
+public class MyInvocationHandler implements InvocationHandler {
+
+    MyService service;
+
+    public MyInvocationHandler(MyService service) {
+        this.service = service;
+    }
+
+    public void aopMethod() {
+        System.out.println(&quot;before method&quot;);
+    }
+
+    // 继承方法，代理时实际执行的方法;
+    // 如果要实现原方法，则需要调用method.invoke(service, args);
+    // 这里还调用了一个aopMethod(),可以类比于Spring中的切面before注解;
+    @Override
+    public Object invoke(Object o, Method method, Object[] args) throws Throwable {
+        aopMethod();
+        return method.invoke(service, args);
+    }
+}
+</code></pre>
+<br>
+
+<h5 id="方法测试-JavaProxyTest"><a href="#方法测试-JavaProxyTest" class="headerlink" title="方法测试 JavaProxyTest"></a>方法测试 JavaProxyTest</h5><pre><code class="java">package proxy.jdk;
+
+import proxy.jdk.handler.MyInvocationHandler;
+import proxy.jdk.service.MyService;
+import proxy.jdk.service.impl.MyServiceImpl;
+
+import java.lang.reflect.Proxy;
+
+@SuppressWarnings(&quot;restriction&quot;)
+public class JavaProxyTest {
+
+    public static void main(String[] args) {
+
+        MyService newService = (MyService) Proxy.newProxyInstance(MyService.class.getClassLoader(),
+                MyServiceImpl.class.getInterfaces(),
+                new MyInvocationHandler(new MyServiceImpl()));
+
+        // 这里可以看到这个类以及被代理，在执行方法前会执行aopMethod();
+        // 这里需要注意的是oneDay（）方法和oneDayFinal（）的区别;
+        // oneDayFinal的方法aopMethod执行1次，oneDay的aopMethod执行1次!!!
+        newService.gotoSchool();
+        newService.gotoWork();
+        newService.oneDay();
+        newService.oneDayFinal();
+    }
+}
+</code></pre>
+<p>最终输出结果为:</p>
+<pre><code>before method
+gotoSchool
+before method
+gotoWork
+before method
+gotoSchool
+gotoWork
+before method
+gotoSchool
+gotoWork</code></pre><p>即最终通过代理类, 会在调用每一个业务方法之前, 都调用在代理类中创建的<code>aopMethod()方法!</code></p>
+<p><strong>需要注意的是: oneDay()方法和oneDayFinal()的区别!!!!</strong>: </p>
+<p><font color="#ff0000"> oneDayFinal的方法在具体业务实现类中被声明为<code>final</code>! 最终aopMethod执行1次，oneDay的aopMethod执行1次!!!</font></p>
+<p>在下面CGLib中可以看出, 由于实现方式不同而导致的最终结果不同!( <strong>被final声明的方法不可被继承</strong>!)</p>
+<br>
+
+
+
+<h4 id="2-CGLib动态代理例子"><a href="#2-CGLib动态代理例子" class="headerlink" title="2): CGLib动态代理例子"></a>2): CGLib动态代理例子</h4><p><font color="#ff0000">与JDK动态代理通过顶层接口与反射生成代理对象不同, CGLib可以通过动态生成字节码技术, 直接通过业务实现类完成动态代理!</font></p>
+<h5 id="配置CGLib依赖"><a href="#配置CGLib依赖" class="headerlink" title="配置CGLib依赖"></a>配置CGLib依赖</h5><pre><code class="java">    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;cglib&lt;/groupId&gt;
+            &lt;artifactId&gt;cglib&lt;/artifactId&gt;
+            &lt;version&gt;3.2.6&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;</code></pre>
+<p>由于CGLib不属于JDK自带的库, 所以需要通过Maven配置相关的依赖. 如上.</p>
+<br>
+
+
+
+<h5 id="服务直接实现类-CGLibServiceImpl"><a href="#服务直接实现类-CGLibServiceImpl" class="headerlink" title="服务直接实现类 CGLibServiceImpl"></a>服务直接实现类 CGLibServiceImpl</h5><pre><code class="java">package proxy.cglib.service.impl;
+
+/**
+ * 需要被代理的类，不需要实现顶层接口!!
+ */
+public class CGLibServiceImpl {
+
+    public void goHome() {
+        System.out.println(&quot;============Go Home============&quot;);
+    }
+
+    public void gotoSchool() {
+        System.out.println(&quot;===========Go to school============&quot;);
+    }
+
+    public void oneday() {
+        goHome();
+        gotoSchool();
+    }
+
+    public final void onedayFinal() {
+        goHome();
+        gotoSchool();
+    }
+}
+</code></pre>
+<br>
+
+
+
+<h5 id="拦截类-MyInterceptor"><a href="#拦截类-MyInterceptor" class="headerlink" title="拦截类 MyInterceptor"></a>拦截类 MyInterceptor</h5><p>拦截类完成类似于jdk动态代理中的InvocationHandler的功能, 不过是通过动态生成字节码技术实现!</p>
+<pre><code class="java">package proxy.cglib.interceptor;
+
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+import proxy.cglib.service.impl.CGLibServiceImpl;
+
+import java.lang.reflect.Method;
+
+/**
+ * 可以类比于jdk动态代理中的InvocationHandler, 实际上被代理后重要的类!
+ *
+ * 实际上后续执行的就是intercept里的方法;
+ *
+ * 如果需要执行原来的方法，则调用 method.invoke(s, args);
+ *
+ * 这里也加了一个aopMethod();
+ */
+public class MyInterceptor implements MethodInterceptor {
+
+    private CGLibServiceImpl service;
+
+    public MyInterceptor(CGLibServiceImpl service) {
+        this.service = service;
+    }
+
+    private void aopMethod() {
+        System.out.println(&quot;i am aopMethod&quot;);
+    }
+
+    @Override
+    public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        aopMethod();
+        return method.invoke(service, args);
+    }
+
+}
+</code></pre>
+<br>
+
+
+
+<h5 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h5><pre><code class="java">package proxy.cglib;
+
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.Enhancer;
+import proxy.cglib.interceptor.MyInterceptor;
+import proxy.cglib.service.impl.CGLibServiceImpl;
+import proxy.jdk.service.MyService;
+
+public class CGLibProxyTest {
+
+    public static void main(String[] args) {
+        Enhancer enhancer = new Enhancer();
+        Callback c = new MyInterceptor(new CGLibServiceImpl());
+
+        enhancer.setSuperclass(CGLibServiceImpl.class);
+        enhancer.setCallback(c);
+
+        CGLibServiceImpl helper = (CGLibServiceImpl) enhancer.create();
+
+        helper.goHome();
+        helper.gotoSchool();
+        System.out.println();
+        // 这里可以看到这个类以及被代理，在执行方法前会执行aopMethod（）;
+        // 这里需要注意的是oneDay（）方法和onedayFinal（）的区别:
+        // onedayFinal的方法aopMethod执行2次，oneDay的aopMethod执行1次!!!!
+        // 注意这里和jdk的代理的区别!!!
+        helper.oneday();
+        System.out.println();
+
+        helper.onedayFinal();
+    }
+
+}
+</code></pre>
+<p>输出结果:</p>
+<pre><code>i am aopMethod
+============Go Home============
+i am aopMethod
+===========Go to school============
+
+i am aopMethod
+============Go Home============
+===========Go to school============
+
+i am aopMethod
+============Go Home============
+i am aopMethod
+===========Go to school============</code></pre><p>可以看出与JDK不同的是: <font color="#ff0000">对于业务实现类中被声明为final的方法, 通过CGLib动态代理, <em>调用了两次aopMethod()方法!</em></font></p>
+<p><strong>原因在于:</strong></p>
+<p><font color="#ff0000">cglib是直接继承了原有类，实现了Factory接口，而jdk是实现了自己的顶层接口，继承了Proxy接口! 这里需要注意一下，这样的话，按照类来找话，jdk就找不到他的实现了，因为他的实现类实际上是一个Proxy类，而不是他自己!</font></p>
+<p><font color="#ff0000">而正是由于cglib是基于继承的方式实现类的动态代理，因此无法实现对final方法的代理!</font></p>
+<br>
+
+
+
+<h4 id="3-两种动态代理的区别"><a href="#3-两种动态代理的区别" class="headerlink" title="3): 两种动态代理的区别"></a>3): 两种动态代理的区别</h4><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>静态代理</td>
+<td>简单，代理模式，是动态代理的理论基础. 常见使用在代理模式</td>
+</tr>
+<tr>
+<td>jdk动态代理</td>
+<td><font color="#ff0000">需要有顶层接口才能使用，但是在只有顶层接口的时候也可以使用.</font>常见是mybatis的mapper文件是代理。<br>使用反射完成。使用了动态生成字节码技术。</td>
+</tr>
+<tr>
+<td>cglib动态代理</td>
+<td><font color="#ff0000">可以直接代理类，使用字节码技术，不能对 final类进行继承.</font><br>使用了动态生成字节码技术。</td>
+</tr>
+</tbody></table>
+<br>
+
+
+
+<h4 id="4-动态代理底层实现"><a href="#4-动态代理底层实现" class="headerlink" title="4): 动态代理底层实现"></a>4): 动态代理底层实现</h4><p><font color="#00ff00">生成代码的过程中，都使用了缓存，jdk自带的使用了weakReference引用，而cglib使用的直接是 WeakHashMap，基本也类似;</font></p>
+<p>具体两种方法的底层字节码可参见本篇参考文章: </p>
+<p><a href="https://blog.csdn.net/doujinlong1/article/details/80680149" target="_blank" rel="noopener">cglib动态代理和jdk动态代理的区别与应用</a></p>
+<p>这里不再赘述!</p>
+<br>
+
+
+
+<hr>
+<h3 id="8-Spring中使用的是哪种代理方式呢"><a href="#8-Spring中使用的是哪种代理方式呢" class="headerlink" title="8. Spring中使用的是哪种代理方式呢?"></a>8. Spring中使用的是哪种代理方式呢?</h3><ul>
+<li><font color="#ff0000">如果一个类有顶层接口，则<em>默认使用</em>jdk的动态代理来代理;</font></li>
+<li><font color="#ff0000">如果直接是一个类，则使用cglib动态代理;</font></li>
+<li><font color="#ff0000">如果没有需要代理的方法，如: 所有方法都没有@Transactional注解，Aop这种，则不会被代理;</font></li>
+</ul>
+<p><strong>例如:</strong></p>
+<p>对于一个Service的实现类 TestServiceImpl 实现了一个顶层接口TestService: </p>
+<pre><code class="java">@Service
+public class TestServiceImpl implements TestService {
+
+    @Transactional
+    public void updateActual() {
+    }
+
+}</code></pre>
+<br>
+
+<p>然后我们如果在Controller里使用</p>
+<pre><code class="java">@Autowired
+private TestServiceImpl testServiceImpl;</code></pre>
+<p>注解来注入，这时候会发现，启动时报错的! 报错也很明显: </p>
+<pre><code class="java">The bean &#39;testServiceImpl&#39; could not be injected as a &#39;com.rrc.finance.service.apply.TestServiceImpl&#39; because it is a JDK dynamic proxy that implements:
+    com.rrc.finance.service.apply.TestService</code></pre>
+<p>改成 ：</p>
+<pre><code class="java">@Autowired
+private  TestService  testServiceImpl; </code></pre>
+<p>即可正常启动!</p>
+<p><font color="#ff0000">这证明了动态代理生成的代码是一个  TestService 却不是一个TestServiceImpl! 使用的是jdk的动态代理!</font></p>
+<p>这里去掉事务注解和 去掉接口实现 自己可以再试一下;</p>
+<br>
+
+<hr>
+<h3 id="9-总结"><a href="#9-总结" class="headerlink" title="9. 总结"></a>9. 总结</h3><ul>
+<li>代理模式本质上的目的是为了增强现有代码的功能;</li>
+<li>代理分为静态代理和动态代理两种;</li>
+<li>静态代理，所有代理类需要自己编写代码写成;</li>
+<li>动态代理，代理类通过 Proxy.newInstance() 方法生成;</li>
+<li>不管是静态代理还是动态代理，代理与被代理者都要实现两样接口，它们的实质是面向接口编程;</li>
+<li>静态代理和动态代理的区别是在于要不要开发者自己定义 Proxy 类;</li>
+<li>动态代理通过 Proxy 动态生成 proxy class，但是它也指定了一个 InvocationHandler 的实现类;</li>
+<li>动态代理又分为JDK动态代理和CGLib动态代理两, 两者都使用了字节码生成技术;</li>
+<li>JDK动态代理需要有顶层接口才能使用，在只有顶层接口的时候也可以使用.使用反射完成;</li>
+<li>CGLib代理可以直接代理类，使用字节码技术, 但不能对 final类进行继承;</li>
+</ul>
+<br>
+
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>参考文章: </p>
+<ul>
+<li><a href="https://blog.csdn.net/briblue/article/details/73928350" target="_blank" rel="noopener">轻松学，Java 中的代理模式及动态代理</a></li>
+<li><a href="https://blog.csdn.net/doujinlong1/article/details/80680149" target="_blank" rel="noopener">cglib动态代理和jdk动态代理的区别与应用</a></li>
+<li><a href="http://www.imooc.com/article/details/id/24883" target="_blank" rel="noopener">Java设计模式（14）———-动态代理原理源码分析</a></li>
+</ul>
+<br>
+
+<p>示例源码: <a href="https://github.com/JasonkayZK/Java_Samples/tree/java-proxy" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/java-proxy</a></p>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/18/Java中的代理模式-静态代理与动态代理/" title="https://jasonkayzk.github.io/2019/09/18/Java中的代理模式-静态代理与动态代理/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/18/Java中的代理模式-静态代理与动态代理/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1722132910018"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

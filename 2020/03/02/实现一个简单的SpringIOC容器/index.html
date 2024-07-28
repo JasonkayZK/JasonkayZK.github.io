@@ -1,0 +1,3338 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>实现一个简单的SpringIOC容器 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="Spring中核心的思想即IoC和AOP. 为了更好的理解关于Spring IoC底层实现, 打算根据Spring 5.x的源码实现一个简单的Spring IoC容器">
+<meta name="keywords" content="Spring,Spring源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现一个简单的SpringIOC容器">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/03/02/实现一个简单的SpringIOC容器/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="Spring中核心的思想即IoC和AOP. 为了更好的理解关于Spring IoC底层实现, 打算根据Spring 5.x的源码实现一个简单的Spring IoC容器">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-07-28T02:13:53.308Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="实现一个简单的SpringIOC容器">
+<meta name="twitter:description" content="Spring中核心的思想即IoC和AOP. 为了更好的理解关于Spring IoC底层实现, 打算根据Spring 5.x的源码实现一个简单的Spring IoC容器">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1722132898355">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>497</div>
+        <div><span>标签</span>261</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">56</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/07/28/简单易用的内网穿透组网工具ZeroTier/">简单易用的内网穿透组网工具ZeroTier</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/人生は一度きり。だから楽しむべきよ/">人生は一度きり。だから楽しむべきよ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/解决VMWare桥接模式下无法自动获取IP的问题/">解决VMWare桥接模式下无法自动获取IP的问题</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/26/MacOS双开微信的方法/">【转】MacOS双开微信的方法</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/23/一些tg使用指南总结/">一些tg使用指南总结</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?21">
+    
+    <h1>实现一个简单的SpringIOC容器</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年03月02日</a>
+    <a><i class="nexmoefont icon-areachart"></i>11.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 56 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Spring/">Spring</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Spring/">Spring</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Spring源码/">Spring源码</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#实现一个简单的SpringIOC容器"><span class="toc-text">实现一个简单的SpringIOC容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#零-容器入口ApplicationContext"><span class="toc-text">零.容器入口ApplicationContext</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一-自定义注解"><span class="toc-text">一. 自定义注解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-容器初始化"><span class="toc-text">二. 容器初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Spring中的构造方法"><span class="toc-text">Spring中的构造方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#容器抽象类AbstractApplicationContext"><span class="toc-text">容器抽象类AbstractApplicationContext</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#容器实现类AnnotationConfigApplicationContext"><span class="toc-text">容器实现类AnnotationConfigApplicationContext</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-Bean工厂类构造方法"><span class="toc-text">三. Bean工厂类构造方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BeanFactory接口"><span class="toc-text">BeanFactory接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#构造DefaultListableBeanFactory"><span class="toc-text">构造DefaultListableBeanFactory</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-Bean元数据定义BeanDefinition"><span class="toc-text">四. Bean元数据定义BeanDefinition</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五-Bean扫描器ClassPathBeanDefinitionScanner"><span class="toc-text">五. Bean扫描器ClassPathBeanDefinitionScanner</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ClassPathBeanDefinitionScanner代码"><span class="toc-text">ClassPathBeanDefinitionScanner代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scanner的功能"><span class="toc-text">Scanner的功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scanner的属性"><span class="toc-text">Scanner的属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#doScan-方法"><span class="toc-text">doScan()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#进行Bean注册"><span class="toc-text">进行Bean注册</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#六-Bean的创建和注入"><span class="toc-text">六. Bean的创建和注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#DefaultListableBeanFactory代码"><span class="toc-text">DefaultListableBeanFactory代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#七-代码测试"><span class="toc-text">七. 代码测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#定义几个Service方法"><span class="toc-text">定义几个Service方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#控制器类"><span class="toc-text">控制器类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后置处理器"><span class="toc-text">后置处理器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动类"><span class="toc-text">启动类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>Spring中核心的思想即IoC和AOP. 为了更好的理解关于Spring IoC底层实现, 打算根据Spring 5.x的源码实现一个简单的Spring IoC容器</p>
+<p>本文内容包括:</p>
+<ul>
+<li>自定义注解@MyAutowired等</li>
+<li>容器初始化</li>
+<li>Bean工程类的构造方法</li>
+<li>Bean元数据定义BeanDefinition</li>
+<li>Bean扫描器ClassPathBeanDefinitionScanner</li>
+<li>Bean的创建和注入</li>
+<li>代码测试</li>
+</ul>
+<p>源代码: </p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="实现一个简单的SpringIOC容器"><a href="#实现一个简单的SpringIOC容器" class="headerlink" title="实现一个简单的SpringIOC容器"></a>实现一个简单的SpringIOC容器</h2><p>本例子<strong>仅仅使用了Lombok和commons-lang3实现了Spring-core中的大部分IoC功能</strong></p>
+<p>包括:</p>
+<ul>
+<li><code>@MyAutowired</code>, <code>@MyService</code>, <code>@MyComponent</code>, <code>@MyController</code>, <code>@MyLazy</code>等注解</li>
+<li>创建基于AnnotationConfig的上下文容器AnnotationConfigApplicationContext</li>
+<li>DefaultListableBeanFactory: Bean工厂的实现</li>
+<li>BeanPostProcessor: 实现Bean的初始化前置/后置处理</li>
+<li>AnnotationConfigRegistry: JavaBean的元数据BeanDefinition的注册类</li>
+<li>ClassPathBeanDefinitionScanner: 根据ClassPath的包扫描器</li>
+</ul>
+<p>可完成类似于:</p>
+<ul>
+<li>读取并解析配置文件(可配置dev等)</li>
+<li>扫描指定包的注解(<code>@Component</code>, <code>@Service</code>等)实现Bean和容器的初始化</li>
+<li>通过context.getBean()获取指定的bean</li>
+<li>通过继承BeanPostProcessor实现Bean的初始化前置/后置处理</li>
+<li>通过<code>@MyLazy</code>实现懒加载</li>
+<li>通过<code>@MyService</code>或<code>@MyController</code>的name属性指定Bean名称(Id)</li>
+<li>解决循环依赖问题</li>
+</ul>
+<br>
+
+<h2 id="零-容器入口ApplicationContext"><a href="#零-容器入口ApplicationContext" class="headerlink" title="零.容器入口ApplicationContext"></a>零.容器入口ApplicationContext</h2><p>在开始仿写spring的ioc容器之前，我们先来看一下spring容器中的一个核心类ApplicationContext(即spring容器的入口):</p>
+<pre><code class="java">// 基于包路径扫描
+ApplicationContext context = new AnnotationConfigApplicationContext(&quot;top.jasonkayzk&quot;);
+// 基于XML配置文件
+ApplicationContext context1 = new ClassPathXmlApplicationContext(&quot;myBeans.xml&quot;);
+// 基于配置类
+ApplicationContext context2 = new AnnotationConfigApplicationContext(MyConf.class);
+// ......</code></pre>
+<p>这些类就是Spring容器的入口</p>
+<p>本例将会仿写一个<strong>基于注解的包扫描实现IOC功能的小Demo</strong>, 也就是: AnnotationConfigApplicationContext类</p>
+<blockquote>
+<br>
+
+<p><strong>补充:</strong></p>
+<p><strong>从Spring的源码可以看出:</strong></p>
+<p><strong>ApplicationContext同时也实现了BeanFactory和BeanRegistry接口</strong></p>
+<p><strong>(即完成了Bean创建和Bean信息注册功能)</strong></p>
+</blockquote>
+<br>
+
+<h2 id="一-自定义注解"><a href="#一-自定义注解" class="headerlink" title="一. 自定义注解"></a>一. 自定义注解</h2><p>首先，我们先定义了几个需要用到的注解，从而实现<strong>Bean的扫描、Bean的懒加载、Bean的注入等</strong>这些基础的用法:</p>
+<ul>
+<li>@MyAutowired</li>
+<li>@MyComponent</li>
+<li>@MyLazy</li>
+<li>@MyService</li>
+<li>@MyController</li>
+<li>@MyRequestMapping</li>
+</ul>
+<p>代码如下：</p>
+<p>MyAutowired.java</p>
+<pre><code class="java">// 实现Bean的属性填充，依赖注入
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@Documented
+@MyComponent
+public @interface MyAutowired {
+}</code></pre>
+<p>MyComponent.java</p>
+<pre><code class="java">/**
+ * 实现Bean的扫描
+ *
+ * 类加载时会添加到候选资源中，后期完成Bean的注入
+ *
+ * @author zk
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MyComponent {
+    /**
+     * 组件名称
+     *
+     * @return 组件名称
+     */
+    String name() default &quot;&quot;;
+}</code></pre>
+<p>MyLazy.java</p>
+<pre><code class="java">/**
+ * 当添加了这个注解，则表示Bean是懒加载的
+ *
+ * @author zk
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@MyComponent
+public @interface MyLazy {
+}</code></pre>
+<p>MyService.java</p>
+<pre><code class="java">/**
+ * Spring中业务层注解
+ *
+ * @author zk
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@MyComponent
+public @interface MyService {
+    /**
+     * 业务Bean名称
+     *
+     * @return 业务Bean名称
+     */
+    String name() default &quot;&quot;;
+}</code></pre>
+<p>MyController.java</p>
+<pre><code class="java">/**
+ * SpringMVC中控制器注解
+ *
+ * @author zk
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@MyComponent
+public @interface MyController {
+}</code></pre>
+<p>MyRequestMapping.java</p>
+<pre><code class="java">/**
+ * 访问控制层url处理
+ *
+ * @author zk
+ */
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MyRequestMapping {
+    /**
+     * 请求访问url路径
+     *
+     * @return 请求访问url路径, 默认为: &quot;/&quot;
+     */
+    String value() default &quot;/&quot;;
+}</code></pre>
+<br>
+
+<h2 id="二-容器初始化"><a href="#二-容器初始化" class="headerlink" title="二. 容器初始化"></a>二. 容器初始化</h2><p>注解创建完毕后，我们开始创建这个AnnotationConfigApplicationContext类</p>
+<h3 id="Spring中的构造方法"><a href="#Spring中的构造方法" class="headerlink" title="Spring中的构造方法"></a>Spring中的构造方法</h3><p>在创建这个类之前，我们先分析一下spring-framework-5.0.x源码中这个类的构造方法:</p>
+<p>AnnotationConfigApplicationContext.java</p>
+<pre><code class="java">public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
+    private final AnnotatedBeanDefinitionReader reader;
+    // Bean定义扫描器
+    private final ClassPathBeanDefinitionScanner scanner;
+
+    public AnnotationConfigApplicationContext() {
+        // 此类有一个父类GenericApplicationContext, 在执行构造方法之前, 先执行父类构造方法
+        // super();
+
+        // 初始化注解模式下Bean定义的扫描器
+        // 此处的this就是AnnotationConfigApplicationContext
+        this.reader = new AnnotatedBeanDefinitionReader(this);
+        this.scanner = new ClassPathBeanDefinitionScanner(this);
+    }
+
+    // 扫描给定包中的bean定义, 并自动刷新和创建上下文
+    public AnnotationConfigApplicationContext(String... basePackages) {
+        // 初始化容器信息, Bean的扫描器, 注册表等信息
+        this();
+        // 加载, 扫描指定包路径下的所有类
+        // 将所有的带有指定标记的类扫描到一个集合中, 集合保存类的源数据信息
+        this.scan(basePackages);
+        // 注入Bean
+        this.refresh();
+    }
+    //......
+}</code></pre>
+<p>在上述代码中，可以看得出来，我们需要编写一个构造器: </p>
+<p><code>new AnnotationConfigApplicationContext(String basePackages)</code></p>
+<p>并且完成下列初始化工作:</p>
+<ul>
+<li><strong>首先容器调用自身的构造函数this()完成容器的初始化准备工作</strong></li>
+<li><strong>其次调用scan(basePackages)方法完成包的扫描工作将扫描的包添加到候选资源集合中</strong></li>
+<li><strong>利用上述扫描过的集合, 使用refresh()方法完成Bean的创建和注入工作</strong></li>
+</ul>
+<h3 id="容器抽象类AbstractApplicationContext"><a href="#容器抽象类AbstractApplicationContext" class="headerlink" title="容器抽象类AbstractApplicationContext"></a>容器抽象类AbstractApplicationContext</h3><p>为了展示与Spring中类似的继承关系(GenericApplicationContext), 这里我定义了一个AbstractApplicationContext类</p>
+<p>所以在进行构造时, 首先会调用AbstractApplicationContext类的构造函数</p>
+<p>而AbstractApplicationContext实现了BeanDefinitionRegistry接口, 所以先看一下BeanDefinitionRegistry接口</p>
+<p>BeanDefinitionRegistry.java</p>
+<pre><code class="java">// bean的注册器
+public interface BeanDefinitionRegistry {
+    void registerBeanDefinition(String beanName, BeanDefinition beanDefinition);
+
+    BeanDefinition getBeanDefinition(String beanName);
+
+    boolean containsBeanDefinition(String beanName);
+
+    Set&lt;String&gt; getBeanDefinitionNames();
+
+    void registerProperties(Properties properties);
+}</code></pre>
+<blockquote>
+  <br>
+
+<p>  BeanDefinitionRegistry接口主要维护了BeanDefinition(即Bean的元数据类, 见下)的列表</p>
+</blockquote>
+<p>接下来看一下AbstractApplicationContext</p>
+<p>AbstractApplicationContext.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.context;
+
+import top.jasonkayzk.ioc.core.entity.BeanDefinition;
+import top.jasonkayzk.ioc.core.factory.DefaultListableBeanFactory;
+import top.jasonkayzk.ioc.core.registry.BeanDefinitionRegistry;
+
+import java.util.Properties;
+import java.util.Set;
+
+/**
+ * ApplicationContext, Spring容器的顶层抽象类
+ *
+ * @author zk
+ */
+public abstract class AbstractApplicationContext implements BeanDefinitionRegistry {
+
+    /**
+     * Bean工厂，用户Bean的创建和管理
+     */
+    public final DefaultListableBeanFactory beanFactory;
+
+    /**
+     * 创建一个新的AbstractApplicationContext
+     */
+    public AbstractApplicationContext() {
+        // 调用父类的构造函数
+        // 为ApplicationContext Spring上下文对象初始化BeanFactory
+        this.beanFactory = new DefaultListableBeanFactory();
+    }
+
+    /**
+     * 往注册表中注册一个新的 BeanDefinition实例[关键]
+     */
+    @Override
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        this.beanFactory.registerBeanDefinition(beanName, beanDefinition);
+    }
+
+    /**
+     * 根据Bean的名称获取Bean的定义
+     *
+     * @param beanName Bean的名称
+     * @return Bean的定义
+     */
+    @Override
+    public BeanDefinition getBeanDefinition(String beanName) {
+        return this.beanFactory.beanDefinitionMap.get(beanName);
+    }
+
+    /**
+     * 判断是否包含某个Bean
+     *
+     * @param beanName Bean的名称
+     * @return 是否包含某个Bean
+     */
+    @Override
+    public boolean containsBeanDefinition(String beanName) {
+        return this.beanFactory.beanDefinitionMap.containsKey(beanName);
+    }
+
+    /**
+     * 获取所有Bean的id
+     *
+     * @return 所有Bean的id(name)的Set集合
+     */
+    @Override
+    public Set&lt;String&gt; getBeanDefinitionNames() {
+        return this.beanFactory.beanDefinitionMap.keySet();
+    }
+
+    /**
+     * 注册配置文件
+     *
+     * @param properties 配置文件
+     */
+    @Override
+    public void registerProperties(Properties properties) {
+        this.beanFactory.registerProperties(properties);
+    }
+
+    /**
+     * 从容器中获取Bean
+     *
+     * @param beanName Bean名称
+     * @return Bean名称对应的Bean
+     */
+    public Object getBean(String beanName) {
+        return this.beanFactory.getBean(beanName);
+    }
+
+    /**
+     * 注入Bean
+     */
+    public void refresh() {
+        // 获取bean工厂
+        DefaultListableBeanFactory beanFactory = obtainFreshBeanFactory();
+        // 工厂信息初始化完成后，开始创建单例非懒加载的bean
+        finishBeanFactoryInitialization(beanFactory);
+    }
+
+    /**
+     * 获取Bean工厂类
+     *
+     * @return Bean工厂类
+     */
+    private DefaultListableBeanFactory obtainFreshBeanFactory() {
+        return this.beanFactory;
+    }
+
+    /**
+     * 开始进行Bean的注入工作
+     *
+     * @param beanFactory bean工厂的实例
+     */
+    private void finishBeanFactoryInitialization(DefaultListableBeanFactory beanFactory) {
+        beanFactory.preInstantiateSingletons();
+    }
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p>首先, AbstractApplicationContext虽然是一个抽象类, 但是内部没有abstract方法!</p>
+<p><strong>① Bean工厂: beanFactory</strong></p>
+<p>DefaultListableBeanFactory类型, 用于用户Bean的创建和管理(后文会将介绍)</p>
+<hr>
+<p><strong>② 构造方法</strong></p>
+<p>AbstractApplicationContext是一个抽象类, 但是需要注意的是: <font color="#f00"><strong>抽象类的构造方法在子类构造时也是会被调用的!</strong></font></p>
+<p>此次在创建AnnotationConfigApplicationContext时, 会先调用AbstractApplicationContext的构造方法, 初始化beanFactory;</p>
+<hr>
+<p><strong>③ 与BeanDefinition相关方法</strong></p>
+<p>BeanDefinition是一个实体类, 里面存放大量与Bean相关的元数据, 如: beanName, beanClass, lazyInit等</p>
+<p>AbstractApplicationContext中定义了一些获取这些元数据的操作, 如:</p>
+<ul>
+<li>registerBeanDefinition(): 往注册表中注册一个新的 BeanDefinition实例</li>
+<li>getBeanDefinition(): 根据Bean的名称获取Bean的定义</li>
+<li>containsBeanDefinition(): 判断容器中是否包含某个Bean</li>
+<li>getBeanDefinitionNames(): 获取所有Bean的id(Name)</li>
+</ul>
+<hr>
+<p><strong>④ 与Application配置相关</strong></p>
+<p>registerProperties()方法: 向BeanFactory中注册配置文件</p>
+<hr>
+<p><strong>⑤ 与Bean操作相关方法</strong></p>
+<ul>
+<li>getBean(String beanName): 从容器中根据名称获取Bean</li>
+<li>refresh(): 完成Bean的注入工作(向依赖中注入Bean)</li>
+</ul>
+<p><font color="#f00"><strong>上述方法其实是通过BeanFactory实现的</strong></font></p>
+</blockquote>
+<p>父类AbstractApplicationContext初始化之后, 会完成scan()和refresh()方法完成Bean创建和Bean注入工作</p>
+<h3 id="容器实现类AnnotationConfigApplicationContext"><a href="#容器实现类AnnotationConfigApplicationContext" class="headerlink" title="容器实现类AnnotationConfigApplicationContext"></a>容器实现类AnnotationConfigApplicationContext</h3><p>对于AnnotationConfigApplicationContext很简单(他就是一个外壳而已):</p>
+<p>对于AnnotationConfigApplicationContext它实现了AnnotationConfigRegistry接口(而AbstractApplicationContext实现了BeanDefinitionRegistry接口)</p>
+<p>虽然和父类实现的接口不同, 但是AnnotationConfigRegistry也是定义了一些维护BeanDefinition集合的方法</p>
+<p>下面先来看一下AnnotationConfigRegistry:</p>
+<p>AnnotationConfigRegistry.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.registry;
+
+import top.jasonkayzk.ioc.core.annotation.MyComponent;
+
+/**
+ * 注解的注册器
+ *
+ * @author zk
+ */
+public interface AnnotationConfigRegistry {
+    /**
+     * 将一个或者多个类进行注册
+     * 调用此方法{@code register}是幂等的, 即:
+     * 将同一个注解过的类注册多次没有副作用!
+     * &lt;p&gt;
+     * Register one or more annotated classes to be processed.
+     * Calls to {@code register} are idempotent; adding the same
+     * annotated class more than once has no additional effect.
+     *
+     * @param annotatedClasses 一个或者多个被注解的类
+     *                         如: {@link MyComponent @MyComponent} 类
+     */
+    void register(Class&lt;?&gt;... annotatedClasses);
+
+    /**
+     * 基于指定的包进行扫描注解类
+     *
+     * Perform a scan within the specified base packages.
+     *
+     * @param basePackages the packages to check for annotated classes
+     */
+    void scan(String... basePackages);
+}</code></pre>
+<p>再来看一下AnnotationConfigApplicationContext类</p>
+<p>AnnotationConfigApplicationContext.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.context;
+
+import top.jasonkayzk.ioc.core.registry.AnnotationConfigRegistry;
+import top.jasonkayzk.ioc.core.scanner.ClassPathBeanDefinitionScanner;
+
+/**
+ * 通过Annotation配置的上下文容器
+ *
+ * @author zk
+ */
+public class AnnotationConfigApplicationContext extends AbstractApplicationContext implements AnnotationConfigRegistry {
+
+    /**
+     * 创建一个扫描器
+     */
+    private final ClassPathBeanDefinitionScanner scanner;
+
+    public AnnotationConfigApplicationContext() {
+        this.scanner = new ClassPathBeanDefinitionScanner(this);
+    }
+
+    public AnnotationConfigApplicationContext(String... basePackages) {
+        // 容器初始化
+        this();
+
+        // 加载: 扫描指定包路径下的所有的类
+        // 将所有的带有指定标记的类扫描到一个集合中，集合中保存的是类的元数据信息
+        scan(basePackages);
+
+        // 注入Bean
+        refresh();
+    }
+
+    @Override
+    public void register(Class&lt;?&gt;... annotatedClasses) {
+    }
+
+    @Override
+    public void scan(String... basePackages) {
+        this.scanner.scan(basePackages);
+    }
+}</code></pre>
+<br>
+
+<h2 id="三-Bean工厂类构造方法"><a href="#三-Bean工厂类构造方法" class="headerlink" title="三. Bean工厂类构造方法"></a>三. Bean工厂类构造方法</h2><p>在上面AnnotationConfigApplicationContext构造时, 首先构造了父类AbstractApplicationContext</p>
+<p>而AbstractApplicationContext初始化了一个类DefaultListableBeanFactory(即Bean工厂)</p>
+<p>BeanFactory是Spring框架中核心的核心, 它完成了: Bean的初始化, 注入, 管理等各种核心方法</p>
+<h3 id="BeanFactory接口"><a href="#BeanFactory接口" class="headerlink" title="BeanFactory接口"></a>BeanFactory接口</h3><p>先看一下DefaultListableBeanFactory实现的接口BeanFactory</p>
+<p>BeanFactory.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.factory;
+
+/**
+ * Spring中工厂模式创建Bean的工厂接口
+ *
+ * @author zk
+ */
+public interface BeanFactory {
+    /**
+     * 根据Bean的名称获取Bean对象
+     *
+     * @param beanName Bean的名称
+     * @return Bean对象
+     */
+    Object getBean(String beanName);
+
+    /**
+     * 真正开始获取Bean
+     *
+     * @param beanName Bean的名称
+     * @return Bean对象
+     */
+    Object doGetBean(String beanName);
+
+    /**
+     * 根据bean的名称创建Bean
+     *
+     * @param beanName Bean的名称
+     * @return Bean对象
+     */
+    Object createBean(String beanName);
+
+    /**
+     * 根据bean的名称真正开始创建bean
+     *
+     * @param beanName Bean的名称
+     * @return Bean对象
+     */
+    Object doCreateBean(String beanName);
+}</code></pre>
+<p>其实核心方法只有两个: doGetBean(), doCreateBean()</p>
+<p>分别用来获取Bean对象和创建Bean对象(<strong>doCreateBean尤其关键!!</strong>)</p>
+<hr>
+<h3 id="构造DefaultListableBeanFactory"><a href="#构造DefaultListableBeanFactory" class="headerlink" title="构造DefaultListableBeanFactory"></a>构造DefaultListableBeanFactory</h3><p>再来看一下DefaultListableBeanFactory的小部分内容:</p>
+<pre><code class="java">public class DefaultListableBeanFactory implements BeanFactory {
+
+    /**
+     * 一级缓存
+     * 用于存放完全初始化好的Bean，从该缓存中拿出来的Bean可以直接使用
+     */
+    private final Map&lt;String, Object&gt; singletonObjects = new ConcurrentHashMap&lt;&gt;(256);
+
+    /**
+     * 二级缓存:
+     * 存储的原始的Bean(还未完全填充属性),
+     * 用于解决Spring中的循环依赖问题，此时已经分配了内存地址
+     * &lt;p&gt;
+     * Cache of early singleton objects: bean name --&gt; bean instance
+     */
+    private final Map&lt;String, Object&gt; earlySingletonObjects = new HashMap&lt;&gt;(16);
+
+    /**
+     * 三级缓存:
+     * 单例对象工厂的cache，存放bean工厂对象，用于解决循环依赖
+     * Cache of singleton factories: bean name --&gt; ObjectFactory
+     */
+    private final Map&lt;String, Object&gt; singletonFactories = new HashMap&lt;&gt;(16);
+
+    /**
+     * 保存所有BeanPostProcessor
+     */
+    private Set&lt;BeanPostProcessor&gt; beanPostProcessorSet = new HashSet&lt;&gt;(16);
+
+    /**
+     * Bean的源数据集合，存储的是扫描器扫描的类的源数据信息
+     */
+    public final Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;&gt;(128);
+
+    /**
+     * 配置文件
+     */
+    private Properties properties = null;
+
+    ......
+}</code></pre>
+<p>在DefaultListableBeanFactory中有几个比较重要的集合:</p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>集合名称</strong></th>
+<th align="center"><strong>作用</strong></th>
+<th align="left"><strong>详细说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>singletonObjects</strong></td>
+<td align="center"><strong>一级缓存</strong></td>
+<td align="left">用于<strong>存放完全初始化好的Bean</strong>，从该缓存中拿出来的Bean可以直接使用</td>
+</tr>
+<tr>
+<td align="left"><strong>earlySingletonObjects</strong></td>
+<td align="center"><strong>二级缓存</strong></td>
+<td align="left"><strong>存储的原始的Bean(还未完全填充属性)</strong><br><font color="#f00"><strong>用于解决Spring中的循环依赖问题，此时已经分配了内存地址</strong></font></td>
+</tr>
+<tr>
+<td align="left"><strong>singletonFactories</strong></td>
+<td align="center"><strong>三级缓存</strong></td>
+<td align="left"><strong>单例对象工厂的cache，存放bean工厂对象</strong><br><strong>用于解决循环依赖</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>beanDefinitionMap</strong></td>
+<td align="center"></td>
+<td align="left">Bean的源数据集合，存储的是扫描器扫描的类的源数据信息</td>
+</tr>
+<tr>
+<td align="left"><strong>beanPostProcessorSet</strong></td>
+<td align="center"></td>
+<td align="left">保存所有BeanPostProcessor</td>
+</tr>
+</tbody></table>
+<p>分别用于: 记录Bean的创建过程和所有的Bean的候选资源集合以及所有的Bean的后置处理器，这些在后面都会被用到!</p>
+<blockquote>
+<br>
+
+<p><strong>说明:</strong></p>
+<p>截至到现在: <strong>在执行AnnotationConfigApplicationContext的this()构造函数之前的事情基本上都处理的差不多了</strong></p>
+<p>现在可以开始进行<strong>初始化操作了:</strong></p>
+<p>在AnnotationConfigApplicationContext的构造函数中，实例化了一个ClassPathBeanDefinitionScanner类(也就是创建了一个类的扫描器):</p>
+<p>用于扫描需要扫描的包路径下的所有的类，<strong>将指定的类添加到候选资源集合中，也就是上面看到的这个beanDefinitionMap集合中；</strong></p>
+</blockquote>
+<br>
+
+<h2 id="四-Bean元数据定义BeanDefinition"><a href="#四-Bean元数据定义BeanDefinition" class="headerlink" title="四. Bean元数据定义BeanDefinition"></a>四. Bean元数据定义BeanDefinition</h2><p>在查看ClassPathBeanDefinitionScanner之前, 需要看一下BeanDefinition这个类</p>
+<p>因为在DefaultListableBeanFactory中维护了一个BeanDefinition的表beanDefinitionMap(包括Bean的所有元数据信息)</p>
+<p>所以在分析DefaultListableBeanFactory之前, <strong>先看一下这个BeanDefinition</strong></p>
+<p>BeanDefinition.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.entity;
+
+import lombok.Data;
+
+/**
+ * JavaBean元数据定义，记录候选Bean的行为信息
+ *
+ * @author zk
+ */
+@Data
+public class BeanDefinition {
+
+    /**
+     * Bean的name(同时也是Id)
+     */
+    private String beanName;
+
+    /**
+     * Bean的字节码对象
+     */
+    public Class&lt;?&gt; beanClass;
+
+    /**
+     * Bean的全限制名
+     */
+    public String beanReferenceName;
+
+    /**
+     * 是否是抽象的
+     */
+    private boolean abstractFlag = false;
+
+    /**
+     * 是否是懒加载的
+     */
+    private boolean lazyInit = false;
+
+    /**
+     * Bean的作用域: 设置默认单例
+     */
+    private String scope = &quot;singleton&quot;;
+
+    public BeanDefinition(String beanName, Class&lt;?&gt; beanClass, String beanReferenceName) {
+        this.beanName = beanName;
+        this.beanClass = beanClass;
+        this.beanReferenceName = beanReferenceName;
+    }
+
+    public BeanDefinition(String beanName, Class&lt;?&gt; beanClass, String beanReferenceName, boolean abstractFlag) {
+        this.beanName = beanName;
+        this.beanClass = beanClass;
+        this.beanReferenceName = beanReferenceName;
+        this.abstractFlag = abstractFlag;
+    }
+
+    public BeanDefinition(String beanName, Class&lt;?&gt; beanClass, String beanReferenceName, boolean lazyInit,  boolean abstractFlag) {
+        this.beanName = beanName;
+        this.beanClass = beanClass;
+        this.beanReferenceName = beanReferenceName;
+        this.lazyInit = lazyInit;
+        this.abstractFlag = abstractFlag;
+    }
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p>可以看出BeanDefinition就是一个简单的POJO(所以也被Lombok的@Data标注)</p>
+<p>下面对BeanDefinition包括的一些属性做简单说明:</p>
+<p><strong>① beanName</strong></p>
+<p>熟悉Spring的都知道, Spring中不能存在两个相同命名的Bean(这个name被作为beanId使用)</p>
+<p><strong>② beanClass</strong></p>
+<p>与beanName对应的类对象(后面通过反射创建对象)</p>
+<p><strong>③ beanReferenceName</strong></p>
+<p>Bean的全限定名</p>
+<p><strong>④ abstractFlag</strong></p>
+<p>Bean是否是抽象的(抽象类/接口无法创建实例!)</p>
+<p><strong>⑤ 是否是懒加载的</strong></p>
+<p>在Spring中单例bean默认不是懒加载的, 通常会在启动时进行初始化</p>
+<p>若标注为@Lazy, 则会在使用时才进行初始化</p>
+<p><strong>⑥ scope</strong></p>
+<p>Bean的作用域: <strong>在Spring中默认Bean为单例</strong></p>
+<p>下面为Spring中五种作用域</p>
+<table>
+<thead>
+<tr>
+<th><strong>作用域</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>singleton</strong></td>
+<td>在spring IoC容器仅存在一个Bean实例，Bean以单例方式存在，bean作用域范围的默认值</td>
+</tr>
+<tr>
+<td><strong>prototype</strong></td>
+<td><strong>每次从容器中调用Bean时，都返回一个新的实例</strong>，即每次调用getBean()时，相当于执行newXxxBean()</td>
+</tr>
+<tr>
+<td><strong>request</strong></td>
+<td>每次<strong>HTTP请求都会创建一个新的Bean</strong><br>该作用域仅适用于web的Spring WebApplicationContext环境</td>
+</tr>
+<tr>
+<td><strong>session</strong></td>
+<td><strong>同一个HTTP Session共享一个Bean，不同Session使用不同的Bean</strong><br>该作用域仅适用于web的Spring WebApplicationContext环境</td>
+</tr>
+<tr>
+<td><strong>application</strong></td>
+<td><strong>限定一个Bean的作用域为<code>ServletContext</code>的生命周期</strong><br>该作用域仅适用于web的Spring WebApplicationContext环境</td>
+</tr>
+</tbody></table>
+</blockquote>
+<br>
+
+<h2 id="五-Bean扫描器ClassPathBeanDefinitionScanner"><a href="#五-Bean扫描器ClassPathBeanDefinitionScanner" class="headerlink" title="五. Bean扫描器ClassPathBeanDefinitionScanner"></a>五. Bean扫描器ClassPathBeanDefinitionScanner</h2><p>当this()方法完成后，紧接着，我们开始进行包的扫描工作，也就是scan(basePackages)方法:</p>
+<p>他是通过在AnnotationConfigApplicationContext类初始化的ClassPathBeanDefinitionScanner类的scan(basePackages)方法实现的</p>
+<h3 id="ClassPathBeanDefinitionScanner代码"><a href="#ClassPathBeanDefinitionScanner代码" class="headerlink" title="ClassPathBeanDefinitionScanner代码"></a>ClassPathBeanDefinitionScanner代码</h3><p>ClassPathBeanDefinitionScanner的代码如下:</p>
+<p>ClassPathBeanDefinitionScanner.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.scanner;
+
+import org.apache.commons.lang3.StringUtils;
+import top.jasonkayzk.ioc.app.controller.CustomerController;
+import top.jasonkayzk.ioc.core.annotation.MyComponent;
+import top.jasonkayzk.ioc.core.annotation.MyController;
+import top.jasonkayzk.ioc.core.annotation.MyLazy;
+import top.jasonkayzk.ioc.core.annotation.MyRequestMapping;
+import top.jasonkayzk.ioc.core.annotation.MyService;
+import top.jasonkayzk.ioc.core.entity.BeanDefinition;
+import top.jasonkayzk.ioc.core.entity.IocConstant;
+import top.jasonkayzk.ioc.core.registry.BeanDefinitionRegistry;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+
+/**
+ * 类扫描器
+ *
+ * @author zk
+ */
+public class ClassPathBeanDefinitionScanner {
+
+    /**
+     * Bean注册表
+     */
+    private final BeanDefinitionRegistry registry;
+
+    /**
+     * 扫描包下所有的类的字节码对象(候选资源和非候选资源)
+     */
+    private final static Set&lt;String&gt; BASE_PACKAGE_CLASS_NAME = new HashSet&lt;&gt;();
+
+    /**
+     * 存储所有的候选资源的名称
+     */
+    private final static Set&lt;String&gt; BEAN_DEFINITION_NAMES = new HashSet&lt;&gt;();
+
+    public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry) {
+        this.registry = registry;
+    }
+
+    /**
+     * 开始进行包扫描
+     *
+     * @param basePackages 包的路径
+     */
+    public void scan(String[] basePackages) {
+        doScan(basePackages);
+    }
+
+    /**
+     * 获取所有的候选资源元数据信息
+     *
+     * @param basePackages 包的路径
+     */
+    private void doScan(String[] basePackages) {
+        Set&lt;BeanDefinition&gt; candidates = new HashSet&lt;&gt;();
+
+        // 扫描并注册配置文件
+        Properties properties = findAllConfigurationFile();
+        registry.registerProperties(properties);
+
+        // 扫描所有的候选资源列表
+        findCandidateComponents(basePackages, candidates);
+
+        // 将扫描出来的候选资源信息添加到注册表中
+        candidates.forEach(beanDefinition -&gt; registry.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition));
+    }
+
+    /**
+     * 获取所有的候选资源源数据信息
+     *
+     * @param basePackages 需要扫描的包的候选资源信息
+     */
+    private void findCandidateComponents(String[] basePackages, Set&lt;BeanDefinition&gt; candidates) {
+        // 加载所有class
+        for (String basePackage : basePackages) {
+            loadClass(basePackage);
+        }
+
+        // 获取到需要扫描的包路径下所有的类后
+        // 开始挑选出需要所有的候选资源信息: BeanDefinition
+        BASE_PACKAGE_CLASS_NAME.forEach(packageClassName -&gt; {
+            try {
+                Class&lt;?&gt; packageClass = Class.forName(packageClassName);
+
+                // 判断是否是候选资源(携带指定注解: @MyComponent, @MyService)
+                Class&lt;?&gt; annos = getAnnos(packageClass);
+                if (!Objects.isNull(annos)) {
+                    String beanName;
+                    // 被@MyComponent标注, 并且@MyComponent的name(id)不为空
+                    // 按照@MyComponent的name来注册beanName;
+                    if (annos.getTypeName().equals(MyComponent.class.getTypeName()) &amp;&amp; StringUtils.isNotEmpty(packageClass.getAnnotation(MyComponent.class).name())) {
+                        beanName = packageClass.getAnnotation(MyComponent.class).name();
+                        // 被@MyService标注, 并且@MyService的name(id)不为空
+                        // 按照@MyService的name来注册beanName;
+                    } else if (annos.getTypeName().equals(MyService.class.getTypeName()) &amp;&amp; StringUtils.isNotEmpty(packageClass.getAnnotation(MyService.class).name())) {
+                        beanName = packageClass.getAnnotation(MyService.class).name();
+                    } else {
+                        // 否则name为空, 按照类名首字母变成小写创建Bean
+                        // (此处注意: 由于是单例, 这样做一定不会重复!!!)
+                        beanName = toLowercaseIndex(packageClass.getSimpleName());
+                    }
+
+                    // 如果BEAN_DEFINITION_NAMES集合中存在了beanName
+                    // 说明beanName声明重复!
+                    if (BEAN_DEFINITION_NAMES.contains(beanName)) {
+                        throw new RuntimeException(&quot;beanName已经存在：&quot; + beanName);
+                    }
+
+                    // 判断当前类是否是抽象的
+                    boolean isAbstract = false;
+                    if (Modifier.isAbstract(packageClass.getModifiers())) {
+                        isAbstract = true;
+                    }
+
+                    // 判断是否是懒加载的
+                    if (packageClass.isAnnotationPresent(MyLazy.class)) {
+                        candidates.add(new BeanDefinition(beanName, packageClass, packageClassName, true, isAbstract));
+                    } else {
+                        candidates.add(new BeanDefinition(beanName, packageClass, packageClassName, isAbstract));
+                    }
+
+                    // 加入Bean
+                    BEAN_DEFINITION_NAMES.add(beanName);
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * 类名首字母转小写
+     *
+     * @param name 类名
+     * @return 类名首字母转小写后的字符串
+     */
+    public static String toLowercaseIndex(String name) {
+        if (StringUtils.isNotEmpty(name)) {
+            return name.substring(0, 1).toLowerCase() + name.substring(1);
+        }
+        return name;
+    }
+
+    /**
+     * 扫描配置文件
+     * &lt;p&gt;
+     * 从这里可以看出优先级:
+     * &lt;p&gt;
+     * include &gt;&gt; active &gt;&gt; 默认
+     */
+    private Properties findAllConfigurationFile() {
+        Properties properties = new Properties();
+        InputStream is = null, is1 = null;
+        try {
+            // 寻找: &quot;application.properties&quot;文件
+            is = this.getClass().getClassLoader().getResourceAsStream(&quot;application.properties&quot;);
+            if (!Objects.isNull(is)) {
+                InputStreamReader inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+                properties.load(inputStreamReader);
+            }
+            // 如果properties中存在IocConstant.ACTIVE(&quot;spring.profiles.active&quot;)
+            // 需要扫描application-${spring.profiles.active}.properties配置
+            if (properties.containsKey(IocConstant.ACTIVE) &amp;&amp; !Objects.isNull(properties.get(IocConstant.ACTIVE))) {
+                is1 = this.getClass().getClassLoader().getResourceAsStream(&quot;application-&quot; + properties.get(IocConstant.ACTIVE) + &quot;.properties&quot;);
+                if (!Objects.isNull(is1)) {
+                    InputStreamReader inputStreamReader = new InputStreamReader(is1, StandardCharsets.UTF_8);
+                    properties.load(inputStreamReader);
+                }
+            }
+            // 如果properties中存在IocConstant.INCLUDE(&quot;spring.profiles.include&quot;)
+            // 需要扫描application-${spring.profiles.include}.properties配置
+            if (properties.containsKey(IocConstant.INCLUDE) &amp;&amp; !Objects.isNull(properties.get(IocConstant.INCLUDE))) {
+                is1 = this.getClass().getClassLoader().getResourceAsStream(&quot;application-&quot; + properties.get(IocConstant.INCLUDE) + &quot;.properties&quot;);
+                if (!Objects.isNull(is1)) {
+                    InputStreamReader inputStreamReader = new InputStreamReader(is1, StandardCharsets.UTF_8);
+                    properties.load(inputStreamReader);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (is1 != null) {
+                try {
+                    is1.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return properties;
+    }
+
+    /**
+     * 加载所有的候选资源信息
+     *
+     * @param basePackage 需要扫描的包的候选资源信息
+     */
+    private void loadClass(String basePackage) {
+        URL url = this.getClass().getClassLoader().getResource(basePackage.replaceAll(&quot;\\.&quot;, &quot;/&quot;));
+        File file = new File(Objects.requireNonNull(url).getFile());
+        if (file.exists() &amp;&amp; file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (File fileSon : Objects.requireNonNull(files)) {
+                if (fileSon.isDirectory()) {
+                    // 递归扫描
+                    loadClass(basePackage + &quot;/&quot; + fileSon.getName());
+                } else {
+                    // 是文件并且是以 .class结尾
+                    if (fileSon.getName().endsWith(&quot;.class&quot;)) {
+                        String beanReferenceName = basePackage.replace(&quot;/&quot;, &quot;.&quot;) + &quot;.&quot; + fileSon.getName().replaceAll(&quot;.class&quot;, &quot;&quot;);
+                        System.out.println(&quot;正在读取class文件： &quot; + beanReferenceName);
+                        BASE_PACKAGE_CLASS_NAME.add(beanReferenceName);
+                    }
+                }
+            }
+        } else {
+            throw new RuntimeException(&quot;没有找到需要扫描的文件目录&quot;);
+        }
+    }
+
+    /**
+     * 判断当前类是否包含组合注解: @MyComponent
+     * 注意: interface java.lang.annotation.Documented等存在循环，会导致内存溢出，所以需要排除java的源注解
+     *
+     * @param clazz 类对象
+     */
+    private static Class&lt;?&gt; getAnnos(Class&lt;?&gt; clazz) {
+        Annotation[] annotations = clazz.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotation.annotationType() != Deprecated.class &amp;&amp;
+                    annotation.annotationType() != SuppressWarnings.class &amp;&amp;
+                    annotation.annotationType() != Override.class &amp;&amp;
+                    annotation.annotationType() != Target.class &amp;&amp;
+                    annotation.annotationType() != Retention.class &amp;&amp;
+                    annotation.annotationType() != Documented.class &amp;&amp;
+                    annotation.annotationType() != Inherited.class &amp;&amp;
+                    annotation.annotationType() != MyRequestMapping.class
+            ) {
+                if (annotation.annotationType() == MyComponent.class) {
+                    return clazz;
+                } else {
+                    return getAnnos(annotation.annotationType());
+                }
+            }
+        }
+        return null;
+    }
+}</code></pre>
+<p>ClassPathBeanDefinitionScanner的代码也是比较多哈…我们一点一点来分析</p>
+<hr>
+<h3 id="Scanner的功能"><a href="#Scanner的功能" class="headerlink" title="Scanner的功能"></a><strong>Scanner的功能</strong></h3><p>首先再说一下ClassPathBeanDefinitionScanner的功能:</p>
+<ul>
+<li>首先扫描并注册配置文件(Spring中默认是application.properties)</li>
+<li>其次通过扫描给定的basePackages数组给出的包路径, 找到被注解的类</li>
+<li>然后通过构造器传入的beanRegistry对bean的BeanDefinition进行注册</li>
+</ul>
+<hr>
+<h3 id="Scanner的属性"><a href="#Scanner的属性" class="headerlink" title="Scanner的属性"></a><strong>Scanner的属性</strong></h3><p>Scanner包括的属性有:</p>
+<ul>
+<li>BeanDefinitionRegistry registry: Bean注册表</li>
+<li>BASE_PACKAGE_CLASS_NAME: 扫描包下所有的类的字节码对象(候选资源和非候选资源)</li>
+<li>BEAN_DEFINITION_NAMES: 存储所有的候选资源的名称</li>
+</ul>
+<blockquote>
+<br>
+
+<p>此处需要注意的是:</p>
+<p><font color="#f00"><strong>registry并不是在Scanner中初始化的, 而是Context初始化之后, 通过Scanner的构造器传递给Scanner的!</strong></font></p>
+<p><font color="#f00"><strong>即: 最终Scanner扫描的BeanDefinition会直接传入Context的registry中!</strong></font></p>
+</blockquote>
+<hr>
+<h3 id="doScan-方法"><a href="#doScan-方法" class="headerlink" title="doScan()方法"></a><strong>doScan()方法</strong></h3><p>scan()方法调用了doScan()方法</p>
+<p>而doScan()是Scanner的核心方法, context正是通过这个方法完成了包的扫描</p>
+<p>下面是doScan()方法</p>
+<pre><code class="java">/**
+     * 获取所有的候选资源元数据信息
+     *
+     * @param basePackages 包的路径
+     */
+private void doScan(String[] basePackages) {
+    Set&lt;BeanDefinition&gt; candidates = new HashSet&lt;&gt;();
+
+    // 扫描并注册配置文件
+    Properties properties = findAllConfigurationFile();
+    registry.registerProperties(properties);
+
+    // 扫描所有的候选资源列表
+    findCandidateComponents(basePackages, candidates);
+
+    // 将扫描出来的候选资源信息添加到注册表中
+    candidates.forEach(beanDefinition -&gt; registry.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition));
+}</code></pre>
+<p>可以很清楚的看到, doScan()方法正是一步一步实现了上述所说的Scanner的功能, 分别通过以下方法:</p>
+<ul>
+<li>findAllConfigurationFile()</li>
+<li>findCandidateComponents()</li>
+<li>registry.registerBeanDefinition()</li>
+</ul>
+<p>下面一一来看:</p>
+<p><strong>① findAllConfigurationFile()</strong></p>
+<p>此方法完成了从classpath中读取并载入配置文件</p>
+<p>熟悉Spring的人都知道, 默认的配置文件是application.properties</p>
+<p>下面来看这个方法:</p>
+<pre><code class="java">/**
+     * 扫描配置文件
+     * &lt;p&gt;
+     * 从这里可以看出优先级:
+     * &lt;p&gt;
+     * include &gt;&gt; active &gt;&gt; 默认
+     */
+private Properties findAllConfigurationFile() {
+    Properties properties = new Properties();
+    InputStream is = null, is1 = null;
+    try {
+        // 寻找: &quot;application.properties&quot;文件
+        is = this.getClass().getClassLoader().getResourceAsStream(&quot;application.properties&quot;);
+        if (!Objects.isNull(is)) {
+            InputStreamReader inputStreamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+            properties.load(inputStreamReader);
+        }
+        // 如果properties中存在IocConstant.ACTIVE(&quot;spring.profiles.active&quot;)
+        // 需要扫描application-${spring.profiles.active}.properties配置
+        if (properties.containsKey(IocConstant.ACTIVE) &amp;&amp; !Objects.isNull(properties.get(IocConstant.ACTIVE))) {
+            is1 = this.getClass().getClassLoader().getResourceAsStream(&quot;application-&quot; + properties.get(IocConstant.ACTIVE) + &quot;.properties&quot;);
+            if (!Objects.isNull(is1)) {
+                InputStreamReader inputStreamReader = new InputStreamReader(is1, StandardCharsets.UTF_8);
+                properties.load(inputStreamReader);
+            }
+        }
+        // 如果properties中存在IocConstant.INCLUDE(&quot;spring.profiles.include&quot;)
+        // 需要扫描application-${spring.profiles.include}.properties配置
+        if (properties.containsKey(IocConstant.INCLUDE) &amp;&amp; !Objects.isNull(properties.get(IocConstant.INCLUDE))) {
+            is1 = this.getClass().getClassLoader().getResourceAsStream(&quot;application-&quot; + properties.get(IocConstant.INCLUDE) + &quot;.properties&quot;);
+            if (!Objects.isNull(is1)) {
+                InputStreamReader inputStreamReader = new InputStreamReader(is1, StandardCharsets.UTF_8);
+                properties.load(inputStreamReader);
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        if (is != null) {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (is1 != null) {
+            try {
+                is1.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    return properties;
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p><strong>①</strong> 方法首先会寻找: “application.properties”文件, 如果找到则会解析其中配置(properties.load()方法)</p>
+<p><strong>②</strong> <strong>之后,</strong> 如果properties中存在IocConstant.ACTIVE(“spring.profiles.active”), 则会扫描application-${spring.profiles.active}.properties配置</p>
+<p><strong>③</strong> <strong>之后,</strong> 如果properties中存在IocConstant.INCLUDE(“spring.profiles.include”), 则会扫描application-${spring.profiles.include}.properties配置</p>
+<p><strong>需要注意的是properties.load()方法:</strong></p>
+<p><font color="#f00"><strong>对于同一个properties对象, 多次调用load()方法仅仅会覆盖掉key相同的属性, load多个不同的流的不同属性则会叠加属性(而不是覆盖!)</strong></font></p>
+<p><font color="#f00"><strong>所以从这里也可以看出Spring的配置优先级: <code>include &gt;&gt; active &gt;&gt; 默认</code>, 因为后面的属性可能覆盖前面的属性</strong></font></p>
+</blockquote>
+<hr>
+<p><strong>② findCandidateComponents()</strong></p>
+<p>通过findAllConfigurationFile()方法加载过所有的配置文件之后, 接下来进行Bean的扫描</p>
+<p>findCandidateComponents()方法:</p>
+<pre><code class="java">/**
+     * 获取所有的候选资源源数据信息
+     *
+     * @param basePackages 需要扫描的包的候选资源信息
+     */
+private void findCandidateComponents(String[] basePackages, Set&lt;BeanDefinition&gt; candidates) {
+    // 加载所有class
+    for (String basePackage : basePackages) {
+        loadClass(basePackage);
+    }
+
+    // 获取到需要扫描的包路径下所有的类后
+    // 开始挑选出需要所有的候选资源信息: BeanDefinition
+    BASE_PACKAGE_CLASS_NAME.forEach(packageClassName -&gt; {
+        try {
+            Class&lt;?&gt; packageClass = Class.forName(packageClassName);
+
+            // 判断是否是候选资源(携带指定注解: @MyComponent, @MyService)
+            Class&lt;?&gt; annos = getAnnos(packageClass);
+            if (!Objects.isNull(annos)) {
+                String beanName;
+                // 被@MyComponent标注, 并且@MyComponent的name(id)不为空
+                // 按照@MyComponent的name来注册beanName;
+                if (annos.getTypeName().equals(MyComponent.class.getTypeName()) &amp;&amp; StringUtils.isNotEmpty(packageClass.getAnnotation(MyComponent.class).name())) {
+                    beanName = packageClass.getAnnotation(MyComponent.class).name();
+                    // 被@MyService标注, 并且@MyService的name(id)不为空
+                    // 按照@MyService的name来注册beanName;
+                } else if (annos.getTypeName().equals(MyService.class.getTypeName()) &amp;&amp; StringUtils.isNotEmpty(packageClass.getAnnotation(MyService.class).name())) {
+                    beanName = packageClass.getAnnotation(MyService.class).name();
+                } else {
+                    // 否则name为空, 按照类名首字母变成小写创建Bean
+                    // (此处注意: 由于是单例, 这样做一定不会重复!!!)
+                    beanName = toLowercaseIndex(packageClass.getSimpleName());
+                }
+
+                // 如果BEAN_DEFINITION_NAMES集合中存在了beanName
+                // 说明beanName声明重复!
+                if (BEAN_DEFINITION_NAMES.contains(beanName)) {
+                    throw new RuntimeException(&quot;beanName已经存在：&quot; + beanName);
+                }
+
+                // 判断当前类是否是抽象的
+                boolean isAbstract = false;
+                if (Modifier.isAbstract(packageClass.getModifiers())) {
+                    isAbstract = true;
+                }
+
+                // 判断是否是懒加载的
+                if (packageClass.isAnnotationPresent(MyLazy.class)) {
+                    candidates.add(new BeanDefinition(beanName, packageClass, packageClassName, true, isAbstract));
+                } else {
+                    candidates.add(new BeanDefinition(beanName, packageClass, packageClassName, isAbstract));
+                }
+
+                // 加入Bean
+                BEAN_DEFINITION_NAMES.add(beanName);
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    });
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p><strong>① 加载所有Class</strong></p>
+<p>findCandidateComponents()方法首先<strong>通过loadClass()方法递归加载所有指定的basePackages中的Class类:</strong></p>
+<pre><code class="java">/**
+    * 加载所有的候选资源信息
+    *
+    * @param basePackage 需要扫描的包的候选资源信息
+    */
+private void loadClass(String basePackage) {
+   URL url = this.getClass().getClassLoader().getResource(basePackage.replaceAll(&quot;\\.&quot;, &quot;/&quot;));
+   File file = new File(Objects.requireNonNull(url).getFile());
+   if (file.exists() &amp;&amp; file.isDirectory()) {
+       File[] files = file.listFiles();
+       for (File fileSon : Objects.requireNonNull(files)) {
+           if (fileSon.isDirectory()) {
+               // 递归扫描
+               loadClass(basePackage + &quot;/&quot; + fileSon.getName());
+           } else {
+               // 是文件并且是以 .class结尾
+               if (fileSon.getName().endsWith(&quot;.class&quot;)) {
+                   String beanReferenceName = basePackage.replace(&quot;/&quot;, &quot;.&quot;) + &quot;.&quot; + fileSon.getName().replaceAll(&quot;.class&quot;, &quot;&quot;);
+                   System.out.println(&quot;正在读取class文件： &quot; + beanReferenceName);
+                   BASE_PACKAGE_CLASS_NAME.add(beanReferenceName);
+               }
+           }
+       }
+   } else {
+       throw new RuntimeException(&quot;没有找到需要扫描的文件目录&quot;);
+   }
+}</code></pre>
+<p><strong>将扫描到的所有类加入BASE_PACKAGE_CLASS_NAME集合中!</strong></p>
+<hr>
+<p><strong>② 挑选出需要的候选资源信息</strong></p>
+<p>遍历刚刚扫描创建的BASE_PACKAGE_CLASS_NAME集合中的Class, <strong>通过getAnnos()方法反射获取注解然后检查是否含有特定注解</strong></p>
+<p>getAnnos()方法:</p>
+<pre><code class="java">/**
+    * 判断当前类是否包含组合注解: @MyComponent
+    * 注意: interface java.lang.annotation.Documented等存在循环，会导致内存溢出，所以需要排除java的源注解
+    *
+    * @param clazz 类对象
+    */
+private static Class&lt;?&gt; getAnnos(Class&lt;?&gt; clazz) {
+   Annotation[] annotations = clazz.getAnnotations();
+   for (Annotation annotation : annotations) {
+       if (annotation.annotationType() != Deprecated.class &amp;&amp;
+           annotation.annotationType() != SuppressWarnings.class &amp;&amp;
+           annotation.annotationType() != Override.class &amp;&amp;
+           annotation.annotationType() != Target.class &amp;&amp;
+           annotation.annotationType() != Retention.class &amp;&amp;
+           annotation.annotationType() != Documented.class &amp;&amp;
+           annotation.annotationType() != Inherited.class &amp;&amp;
+           annotation.annotationType() != MyRequestMapping.class
+          ) {
+           if (annotation.annotationType() == MyComponent.class) {
+               return clazz;
+           } else {
+               return getAnnos(annotation.annotationType());
+           }
+       }
+   }
+   return null;
+}</code></pre>
+<p>如果含有特定注解, 则进行以下几个判断:</p>
+<ol>
+<li><strong>注解是否含有name属性:</strong><ul>
+<li>如果含有, 则使用用户指定的name(反射获取)创建Bean<strong>(确实是使用name创建BeanDefinition)</strong></li>
+<li>否则按照类名首字母变成小写创建Bean<strong>(由于是单例, 这样做name一定不会重复!!!)</strong></li>
+</ul>
+</li>
+<li>经过了上一步保证了一定获取了beanName, 接下来判断beanName是否重复:<ul>
+<li><strong>如果已经存在beanName, 直接报错(不能存在相同beanId)</strong></li>
+</ul>
+</li>
+<li>反射判断当前Bean是否是抽象的(isAbstract)</li>
+<li>通过注解判断是否是懒加载的</li>
+</ol>
+<p>可以看出上面的几个判断正是创建一个BeanDefinition的过程, 所以最后将Bean加入BEAN_DEFINITION_NAME和candidates中</p>
+</blockquote>
+<h3 id="进行Bean注册"><a href="#进行Bean注册" class="headerlink" title="进行Bean注册"></a><strong>进行Bean注册</strong></h3><p>在findCandidateComponents()方法返回之后, 方法返回到doScan()方法中</p>
+<p>而经过了上述几个步骤, 最终在candidates中加入了所以符合预期的BeanDefinition</p>
+<p>所以只需要遍历candidates集合, 将BeanDefinition注册到(也是context中的)registry即可!</p>
+<blockquote>
+  <br>
+
+<p>  至此, Scanner完成了他的使命!</p>
+</blockquote>
+<br>
+
+<h2 id="六-Bean的创建和注入"><a href="#六-Bean的创建和注入" class="headerlink" title="六. Bean的创建和注入"></a>六. Bean的创建和注入</h2><p>在上面的两个步骤中，我们完成了容器的初始化、类加载以及BeanDefinition创建的步骤, 现在我们就可以开始进行Bean的注入工作了</p>
+<p>即调用AnnotationConfigApplicationContext类中有参构造refresh()方法<strong>(此时，调用的是其父类AbstractApplicationContext中的refresh方法)</strong></p>
+<p><strong>在spring源码中，refresh()方法一共有12个步骤，</strong>在这里我们就不整那么复杂了, 就直接完成第11步操作finishBeanFactoryInitialization(beanFactory)实例化所有的单例Bean；</p>
+<h3 id="DefaultListableBeanFactory代码"><a href="#DefaultListableBeanFactory代码" class="headerlink" title="DefaultListableBeanFactory代码"></a>DefaultListableBeanFactory代码</h3><p>在这里，我们调用beanFactory的preInstantiateSingletons()方法，下面是完整的DefaultListableBeanFactory类的代码:</p>
+<p>DefaultListableBeanFactory.java</p>
+<pre><code class="java">package top.jasonkayzk.ioc.core.factory;
+
+import top.jasonkayzk.ioc.core.annotation.MyAutowired;
+import top.jasonkayzk.ioc.core.entity.BeanDefinition;
+import top.jasonkayzk.ioc.core.processor.BeanPostProcessor;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static top.jasonkayzk.ioc.core.scanner.ClassPathBeanDefinitionScanner.toLowercaseIndex;
+
+/**
+ * Spring中默认的Bean的工厂类
+ *
+ * @author zk
+ */
+public class DefaultListableBeanFactory implements BeanFactory {
+
+    /**
+     * 一级缓存
+     * 用于存放完全初始化好的Bean，从该缓存中拿出来的Bean可以直接使用
+     */
+    private final Map&lt;String, Object&gt; singletonObjects = new ConcurrentHashMap&lt;&gt;(256);
+
+    /**
+     * 二级缓存:
+     * 存储的原始的Bean(还未完全填充属性),
+     * 用于解决Spring中的循环依赖问题，此时已经分配了内存地址
+     * &lt;p&gt;
+     * Cache of early singleton objects: bean name --&gt; bean instance
+     */
+    private final Map&lt;String, Object&gt; earlySingletonObjects = new HashMap&lt;&gt;(16);
+
+    /**
+     * 三级缓存:
+     * 单例对象工厂的cache，存放bean工厂对象，用于解决循环依赖
+     * Cache of singleton factories: bean name --&gt; ObjectFactory
+     */
+    private final Map&lt;String, Object&gt; singletonFactories = new HashMap&lt;&gt;(16);
+
+    /**
+     * 保存所有BeanPostProcessor
+     */
+    private Set&lt;BeanPostProcessor&gt; beanPostProcessorSet = new HashSet&lt;&gt;(16);
+
+    /**
+     * Bean的源数据集合，存储的是扫描器扫描的类的源数据信息
+     */
+    public final Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;&gt;(128);
+
+    /**
+     * 配置文件
+     */
+    private Properties properties = null;
+
+    /**
+     * 动态向候选资源集合中添加候选数据
+     *
+     * @param beanName       bean名称
+     * @param beanDefinition bean元数据实例
+     */
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        this.beanDefinitionMap.put(beanName, beanDefinition);
+    }
+
+    /**
+     * 注册配置文件
+     *
+     * @param properties 配置文件
+     */
+    public void registerProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public Object getBean(String beanName) {
+        return doGetBean(beanName);
+    }
+
+    @Override
+    public Object doGetBean(String beanName) {
+        // 一级缓存寻找, 存在则直接返回
+        if (singletonObjects.containsKey(beanName)) {
+            return this.singletonObjects.get(beanName);
+        }
+        // 一级缓存不存在, 创建
+        return this.createBean(beanName);
+    }
+
+    @Override
+    public Object createBean(String beanName) {
+        return doCreateBean(beanName);
+    }
+
+    @Override
+    public Object doCreateBean(String beanName) {
+        synchronized (DefaultListableBeanFactory.class) {
+            // 先判断当前对象是否正在被创建
+            // 因为这是一个synchronized方法, 如果存在当前对象则说明出现了循环依赖
+            // A -&gt; B -&gt; A
+            // 包括两个判断: 二级缓存(原始的Bean[还未完全填充属性])的创建和三级缓存Bean的工厂类的缓存
+            if (earlySingletonObjects.containsKey(beanName) || singletonFactories.containsKey(beanName)) {
+                throw new RuntimeException(&quot;IOC容器中存在循环依赖异常 beanName=&quot; + beanName);
+            }
+
+            // 添加到三级缓存中，标记当前Bean正准备创建
+            singletonFactories.put(beanName, &quot;&quot;);
+            // Bean的定义元数据
+            BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+            if (Objects.isNull(beanDefinition)) {
+                // 无Bean的定义则直接返回
+                return null;
+            }
+
+            // 获取Bean
+            Object beanObj = null;
+            try {
+                // 通过beanDefinition获取对应类的Class, 并通过反射生成对象
+                // 此方法在JDK 9过时:
+                // beanObj = beanDefinition.getBeanClass().newInstance();
+                // 推荐使用clazz.getDeclaredConstructor().newInstance()创建
+                beanObj = beanDefinition.getBeanClass().getDeclaredConstructor().newInstance();
+
+                // 如果Bean实现了后置处理器, 添加到beanPostProcessorSet中(进行后置处理)
+                if (beanObj instanceof BeanPostProcessor) {
+                    beanPostProcessorSet.add((BeanPostProcessor) beanObj);
+                }
+
+                // 添加到二级缓存中，标记当前Bean正在被创建，只是还没有完全填充属性
+                earlySingletonObjects.put(beanName, beanObj);
+                // 由于是单例, 直接删除了这个Bean的工厂类实例(因为已经创建了Bean)
+                singletonFactories.remove(beanName);
+
+                // 进行属性填充
+                // 属性填充后，有可能对象被反射之类的或者是产生了代理对象!
+                populateBean(beanObj);
+
+                // 进行Bean的后置处理器处理
+                initializeBeanPostProcessor(beanName, beanObj);
+
+                // 属性填充完毕后，保存当前对象到一级缓存中，表示当前Bean可以直接拿出来使用
+                singletonObjects.put(beanName, beanObj);
+                earlySingletonObjects.remove(beanName);
+            } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return beanObj;
+        }
+    }
+
+    /**
+     * 实例化所有单例非懒加载的bean
+     * (在context中进行)
+     */
+    public void preInstantiateSingletons() {
+        // 获取所有的候选资源Bean的名称
+        Set&lt;String&gt; beanNames = beanDefinitionMap.keySet();
+        beanNames.forEach(beanName -&gt; {
+            BeanDefinition bd = beanDefinitionMap.get(beanName);
+            // 如果不是抽象的，并且是单例的，并且不是懒加载的Bean
+            // 抽象类不能被实例化，只能被继承
+            if (!Objects.isNull(bd) &amp;&amp; !bd.isAbstractFlag() &amp;&amp; !bd.isLazyInit()) {
+                getBean(beanName);
+            }
+        });
+    }
+
+    /**
+     * 完成Bean的后置处理器工作
+     *
+     * @param beanName bean名称
+     * @param beanObj  操作的bean对象
+     */
+    private void initializeBeanPostProcessor(String beanName, Object beanObj) {
+        // 遍历beanPostProcessorSet
+        // 完成所有(Init前)Bean的后置处理器工作
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessorSet) {
+            beanObj = beanPostProcessor.postProcessBeforeInitialization(beanObj, beanName);
+        }
+
+        // 执行Bean的init方法
+        System.out.println(&quot;假设正在执行&quot; + beanName + &quot;的init方法.....&quot;);
+
+        // 遍历beanPostProcessorSet
+        // 完成所有(Init后)Bean的后置处理器工作
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessorSet) {
+            beanObj = beanPostProcessor.postProcessAfterInitialization(beanObj, beanName);
+        }
+    }
+
+    /**
+     * 对当前Bean进行依赖注入
+     *
+     * @param beanObj 此处返回当前Bean，后期如果有更改，可能返回是一个代理类
+     */
+    private void populateBean(Object beanObj) throws IllegalAccessException {
+        // 反射获取Bean的所有属性
+        Field[] fields = beanObj.getClass().getDeclaredFields();
+
+        // 遍历属性并进行依赖注入
+        for (Field field : fields) {
+            // 将access改为true(防止private属性)
+            field.setAccessible(true);
+
+            // 判断当前属性是否需要进行依赖注入
+            // 有无@MyAutowired注解
+            if (field.isAnnotationPresent(MyAutowired.class)) {
+                // 类名首字母转小写字符串
+                String simpleName = toLowercaseIndex(field.getType().getSimpleName());
+
+                // 先判断当前属性类型名称小写是否在候选资源中
+                Set&lt;String&gt; beanDefinitionNames = beanDefinitionMap.keySet();
+                // 如果候选资源中不存在
+                if (!beanDefinitionNames.contains(simpleName)) {
+                    // 通过全名寻找Bean实例
+                    simpleName = toLowercaseIndex(field.getName());
+                    if (!beanDefinitionNames.contains(simpleName)) {
+                        // 注入的属性的类型名称小写和属性名称都不在候选资源中
+                        throw new RuntimeException(&quot;当前类&quot; + beanObj + &quot;找不到属性类型&quot; + field.getType() + &quot;的Bean&quot;);
+                    }
+                }
+
+                // 否则候选资源中存在
+                // 一级缓存查找: 判断依赖的Bean是否已经被创建好可以直接被使用了
+                if (singletonObjects.containsKey(simpleName)) {
+                    field.set(beanObj, singletonObjects.get(simpleName));
+                    // 查看二级缓存中是否存在
+                } else if (earlySingletonObjects.containsKey(simpleName)) {
+                    field.set(beanObj, earlySingletonObjects.get(simpleName));
+                } else {
+                    // 上面通过全名寻找的Bean实例(一级缓存)
+                    field.set(beanObj, getBean(simpleName));
+                }
+            }
+        }
+    }
+}</code></pre>
+<p>其中包括一个Bean的后置处理器接口BeanPostProcessor:</p>
+<pre><code class="java">/**
+ * Bean的后置处理器
+ *
+ * @author zk
+ */
+public interface BeanPostProcessor {
+    /**
+     * Bean的初始化前置处理
+     * @param bean JavaBean
+     * @param beanName bean名称
+     * @return 初始化前对bean进行处理
+     */
+    public Object postProcessBeforeInitialization(Object bean, String beanName);
+
+    /**
+     * Bean的初始化的后置处理
+     * @param bean JavaBean
+     * @param beanName bean名称
+     * @return 初始化后对bean进行处理
+     */
+    public Object postProcessAfterInitialization(Object bean, String beanName);
+}</code></pre>
+<p>BeanPostProcessor主要完成Bean在初始化前和初始化后的一些操作</p>
+<p>下面我们来着重看一下DefaultListableBeanFactory:</p>
+<p><strong>① DefaultListableBeanFactory的属性</strong></p>
+<p>前面已经提到过, 在DefaultListableBeanFactory中有几个比较重要的集合:</p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>集合名称</strong></th>
+<th align="center"><strong>作用</strong></th>
+<th align="left"><strong>详细说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>singletonObjects</strong></td>
+<td align="center"><strong>一级缓存</strong></td>
+<td align="left">用于<strong>存放完全初始化好的Bean</strong>，从该缓存中拿出来的Bean可以直接使用</td>
+</tr>
+<tr>
+<td align="left"><strong>earlySingletonObjects</strong></td>
+<td align="center"><strong>二级缓存</strong></td>
+<td align="left"><strong>存储的原始的Bean(还未完全填充属性)</strong><br><font color="#f00"><strong>用于解决Spring中的循环依赖问题，此时已经分配了内存地址</strong></font></td>
+</tr>
+<tr>
+<td align="left"><strong>singletonFactories</strong></td>
+<td align="center"><strong>三级缓存</strong></td>
+<td align="left"><strong>单例对象工厂的cache，存放bean工厂对象</strong><br><strong>用于解决循环依赖</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>beanDefinitionMap</strong></td>
+<td align="center"></td>
+<td align="left">Bean的源数据集合，存储的是扫描器扫描的类的源数据信息</td>
+</tr>
+<tr>
+<td align="left"><strong>beanPostProcessorSet</strong></td>
+<td align="center"></td>
+<td align="left">保存所有BeanPostProcessor</td>
+</tr>
+</tbody></table>
+<p>分别用于: 记录Bean的创建过程和所有的Bean的候选资源集合以及所有的Bean的后置处理器;</p>
+<p>而properties是通过前面Scanner初始化的配置信息</p>
+<hr>
+<p><strong>② 实例化所有非懒加载的Bean</strong></p>
+<p>前面说到context初始化最后一个方法是调用refresh()方法创建和注入bean, 而refresh方法内部最终就是调用的BeanFactory的preInstantiateSingletons()方法完成bean的初始化</p>
+<p>preInstantiateSingletons()方法:</p>
+<pre><code class="java">/**
+     * 实例化所有单例非懒加载的bean
+     * (在context中进行)
+     */
+public void preInstantiateSingletons() {
+    // 获取所有的候选资源Bean的名称
+    Set&lt;String&gt; beanNames = beanDefinitionMap.keySet();
+    beanNames.forEach(beanName -&gt; {
+        BeanDefinition bd = beanDefinitionMap.get(beanName);
+        // 如果不是抽象的，并且是单例的，并且不是懒加载的Bean
+        // 抽象类不能被实例化，只能被继承
+        if (!Objects.isNull(bd) &amp;&amp; !bd.isAbstractFlag() &amp;&amp; !bd.isLazyInit()) {
+            getBean(beanName);
+        }
+    });
+}</code></pre>
+<p>可见在preInstantiateSingletons方法中是通过<strong>遍历BeanDefinitionMap集合, 判断: 不是抽象的，并且是单例的，并且不是懒加载的Bean, 来通过getBean创建</strong></p>
+<p>下面来看看getBean()方法;</p>
+<hr>
+<p><strong>③ 获取Bean</strong></p>
+<p>获取bean主要是通过getBean()方法, 其内部是通过doGetBean()方法实现:</p>
+<pre><code class="java">@Override
+public Object getBean(String beanName) {
+    return doGetBean(beanName);
+}
+
+@Override
+public Object doGetBean(String beanName) {
+    // 一级缓存寻找, 存在则直接返回
+    if (singletonObjects.containsKey(beanName)) {
+        return this.singletonObjects.get(beanName);
+    }
+    // 一级缓存不存在, 创建
+    return this.createBean(beanName);
+}</code></pre>
+<p>可以看到doGetBean的方法非常简单: 一级缓存存在直接取, 一级缓存不存在则通过createBean()方法创建;</p>
+<hr>
+<p><strong>④ 创建Bean</strong></p>
+<p>创建bean主要是通过createBean()方法, 其内部是通过doCreateBean()方法实现:</p>
+<pre><code class="java">@Override
+public Object createBean(String beanName) {
+    return doCreateBean(beanName);
+}
+
+@Override
+public Object doCreateBean(String beanName) {
+    synchronized (DefaultListableBeanFactory.class) {
+        // 先判断当前对象是否正在被创建
+        // 因为这是一个synchronized方法, 如果存在当前对象则说明出现了循环依赖
+        // A -&gt; B -&gt; A
+        // 包括两个判断: 二级缓存(原始的Bean[还未完全填充属性])的创建和三级缓存Bean的工厂类的缓存
+        if (earlySingletonObjects.containsKey(beanName) || singletonFactories.containsKey(beanName)) {
+            throw new RuntimeException(&quot;IOC容器中存在循环依赖异常 beanName=&quot; + beanName);
+        }
+
+        // 添加到三级缓存中，标记当前Bean正准备创建
+        singletonFactories.put(beanName, &quot;&quot;);
+        // Bean的定义元数据
+        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        if (Objects.isNull(beanDefinition)) {
+            // 无Bean的定义则直接返回
+            return null;
+        }
+
+        // 获取Bean
+        Object beanObj = null;
+        try {
+            // 通过beanDefinition获取对应类的Class, 并通过反射生成对象
+            // 此方法在JDK 9过时:
+            // beanObj = beanDefinition.getBeanClass().newInstance();
+            // 推荐使用clazz.getDeclaredConstructor().newInstance()创建
+            beanObj = beanDefinition.getBeanClass().getDeclaredConstructor().newInstance();
+
+            // 如果Bean实现了后置处理器, 添加到beanPostProcessorSet中(进行后置处理)
+            if (beanObj instanceof BeanPostProcessor) {
+                beanPostProcessorSet.add((BeanPostProcessor) beanObj);
+            }
+
+            // 添加到二级缓存中，标记当前Bean正在被创建，只是还没有完全填充属性
+            earlySingletonObjects.put(beanName, beanObj);
+            // 由于是单例, 直接删除了这个Bean的工厂类实例(因为已经创建了Bean)
+            singletonFactories.remove(beanName);
+
+            // 进行属性填充
+            // 属性填充后，有可能对象被反射之类的或者是产生了代理对象!
+            populateBean(beanObj);
+
+            // 进行Bean的后置处理器处理
+            initializeBeanPostProcessor(beanName, beanObj);
+
+            // 属性填充完毕后，保存当前对象到一级缓存中，表示当前Bean可以直接拿出来使用
+            singletonObjects.put(beanName, beanObj);
+            earlySingletonObjects.remove(beanName);
+        } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return beanObj;
+    }
+}</code></pre>
+<blockquote>
+  <br>
+
+<p>  <strong>doCreateBean()方法分析:</strong></p>
+<p>  要先说明的是doCreateBean是synchronized方法, 这样保证了并发时创建Bean的正确性</p>
+<p>  <strong>① 判断当前对象是否正在被创建</strong></p>
+<p>  方法首先判断当前对象是否正在被创建:</p>
+<p>  包括两个判断: 二级缓存(原始的Bean[还未完全填充属性])的创建和三级缓存Bean的工厂类的缓存<strong>(正准备创建的Bean在二级缓存或者三级缓存中)</strong></p>
+<p>  <font color="#f00"><strong>如果存在, 则说明当前对象已经处于正在创建的状态! 此时产生了循环依赖(注意到此方法是synchronized!), 这时应当报错!</strong></font></p>
+<p>  如果不存在, 则<strong>将beanName添加到三级缓存中，标记当前Bean正准备创建</strong></p>
+<hr>
+<p>  <strong>② 判断BeanDefinition集合中是否存在当前Bean</strong></p>
+<p>  如果不存在, 则说明无此Bean的定义, 这时无法构造此Bean, 直接返回null;</p>
+<hr>
+<p>  <strong>③ 获取Bean</strong></p>
+<p>  经过第②步, 确定了一定存在BeanDefinition这个类, 所以:</p>
+<ol>
+<li><strong>通过beanDefinition获取对应类的Class, 并通过反射生成对象</strong></li>
+<li>判断如果Bean实现了后置处理器, 添加到beanPostProcessorSet中(在后面进行后置处理)</li>
+<li>将beanName添加到二级缓存中<strong>(标记当前Bean正在被创建，只是还没有完全填充属性)</strong></li>
+<li>删除这个Bean的工厂类实例(因为已经创建了Bean, 而创建的是单例)</li>
+<li>调用populateBean()方法进行属性填充(后面会讲这个方法)</li>
+<li>调用initializeBeanPostProcessor()方法进行Bean的后置处理器处理(后面会讲这个方法)</li>
+<li>属性填充完并进行Bean的后置处理器处理后，保存当前对象到一级缓存中，表示当前Bean可以直接拿出来使用</li>
+<li>二级缓存中删除原始的Bean</li>
+<li>返回生成的Bean</li>
+</ol>
+</blockquote>
+<p>下面分析一下populateBean()和initializeBeanPostProcessor()方法, 这两个方法分别完成了: 对当前Bean进行依赖注入和完成Bean的后置处理器工作</p>
+<hr>
+<p><strong>⑤ Bean依赖注入方法</strong></p>
+<p>populateBean()方法完成了对当前bean的依赖注入:</p>
+<pre><code class="java">/**
+     * 对当前Bean进行依赖注入
+     *
+     * @param beanObj 此处返回当前Bean，后期如果有更改，可能返回是一个代理类
+     */
+private void populateBean(Object beanObj) throws IllegalAccessException {
+    // 反射获取Bean的所有属性
+    Field[] fields = beanObj.getClass().getDeclaredFields();
+
+    // 遍历属性并进行依赖注入
+    for (Field field : fields) {
+        // 将access改为true(防止private属性)
+        field.setAccessible(true);
+
+        // 判断当前属性是否需要进行依赖注入
+        // 有无@MyAutowired注解
+        if (field.isAnnotationPresent(MyAutowired.class)) {
+            // 类名首字母转小写字符串
+            String simpleName = toLowercaseIndex(field.getType().getSimpleName());
+
+            // 先判断当前属性类型名称小写是否在候选资源中
+            Set&lt;String&gt; beanDefinitionNames = beanDefinitionMap.keySet();
+            // 如果候选资源中不存在
+            if (!beanDefinitionNames.contains(simpleName)) {
+                // 通过全名寻找Bean实例
+                simpleName = toLowercaseIndex(field.getName());
+                if (!beanDefinitionNames.contains(simpleName)) {
+                    // 注入的属性的类型名称小写和属性名称都不在候选资源中
+                    throw new RuntimeException(&quot;当前类&quot; + beanObj + &quot;找不到属性类型&quot; + field.getType() + &quot;的Bean&quot;);
+                }
+            }
+
+            // 否则候选资源中存在
+            // 一级缓存查找: 判断依赖的Bean是否已经被创建好可以直接被使用了
+            if (singletonObjects.containsKey(simpleName)) {
+                field.set(beanObj, singletonObjects.get(simpleName));
+                // 查看二级缓存中是否存在
+            } else if (earlySingletonObjects.containsKey(simpleName)) {
+                field.set(beanObj, earlySingletonObjects.get(simpleName));
+            } else {
+                // 上面通过全名寻找的Bean实例(一级缓存)
+                field.set(beanObj, getBean(simpleName));
+            }
+        }
+    }
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p>方法首先通过反射获取Bean的所有属性fields;</p>
+<p>然后通过遍历属性并进行依赖注入:</p>
+<ol>
+<li>将access改为true(防止private属性)</li>
+<li>判断当前属性是否需要进行依赖注入(有无@MyAutowired注解)</li>
+<li>获取此bean当前属性类型的BeanDefinition<ul>
+<li>如果不存在, 则通过全名寻找Bean实例<font color="#f00"><strong>(此处这样设计的原因是想实现通过类的首字母小写注入和属性的名称注入两种方式；)</strong></font></li>
+<li>如果也不存在则报错(因为不存在可以@Autowired的类!)</li>
+</ul>
+</li>
+<li>经过上一步, 以及获取了当前属性的BeanDefinition, 所以根据缓存查找:<ul>
+<li>一级缓存查找: 判断依赖的Bean是否已经被创建好可以直接被使用了</li>
+<li>一级缓存不存在: 查看二级缓存中是否存在</li>
+<li>二级缓存不存在<strong>(有可能是还未创建该Bean!)</strong>: 通过getBean()方法创建该Bean;</li>
+</ul>
+</li>
+</ol>
+<p>需要特别注意的是:</p>
+<p><font color="#f00"><strong>在第四步二级缓存不存在时, 将会调用回getBean() -&gt; createBean() -&gt; doCreateBean()</strong></font></p>
+<p><font color="#f00"><strong>如果此时出现循环依赖, 就一定会在doCreateBean方法中出现重复的待初始化的Bean从而导致循环依赖被检测出来!</strong></font></p>
+<p><font color="#f00"><strong>注意到doCreateBean方法是同步的, 也可以看出synchronized是可重入的锁!</strong></font></p>
+<p><strong>上面就是Spring中检测Bean循环依赖注入的原理!</strong></p>
+</blockquote>
+<hr>
+<p><strong>⑥ 后置处理器工作方法</strong></p>
+<p>initializeBeanPostProcessor()方法对已经经过populateBean方法填充过属性的bean进行后置处理:</p>
+<pre><code class="java">/**
+     * 完成Bean的后置处理器工作
+     *
+     * @param beanName bean名称
+     * @param beanObj  操作的bean对象
+     */
+private void initializeBeanPostProcessor(String beanName, Object beanObj) {
+    // 遍历beanPostProcessorSet
+    // 完成所有(Init前)Bean的后置处理器工作
+    for (BeanPostProcessor beanPostProcessor : beanPostProcessorSet) {
+        beanObj = beanPostProcessor.postProcessBeforeInitialization(beanObj, beanName);
+    }
+
+    // 执行Bean的init方法
+    System.out.println(&quot;假设正在执行&quot; + beanName + &quot;的init方法.....&quot;);
+
+    // 遍历beanPostProcessorSet
+    // 完成所有(Init后)Bean的后置处理器工作
+    for (BeanPostProcessor beanPostProcessor : beanPostProcessorSet) {
+        beanObj = beanPostProcessor.postProcessAfterInitialization(beanObj, beanName);
+    }
+}</code></pre>
+<p>为简单起见, 这里使用System.out.println()模拟初始化方法, 实际在String中是通过反射调用Bean的Constructor实现的初始化!</p>
+<p>这也说明了:</p>
+<p><font color="#f00"><strong>postProcessBeforeInitialization() 在调用初始化方法前调用, 而postProcessAfterInitialization方法在初始化方法后调用</strong></font></p>
+<p><font color="#f00"><strong>注: 在调用Constructor方法之前Bean已经通过反射创建, 但只是放在二级缓存(未被进行属性注入!)</strong></font></p>
+<p><font color="#f00"><strong>经过此方法调用后置处理器处理后, 此方法返回, 将Bean从二级缓存删除, 加入一级缓存!</strong></font></p>
+<blockquote>
+<br>
+
+<p>至此我们的AnnotationConfigApplicationContext完成初始化!</p>
+<p>当前IOC容器中，涉及到的类和涉及到的方法在spring源码中基本都可以找到，部分实现不太一样，因为spring源码中处理的逻辑太多太多了!</p>
+</blockquote>
+<br>
+
+<p><strong>当然这里有一个小问题: @Lazy的Bean呢?</strong></p>
+<p>应该能注意到: preInstantiateSingletons方法在实例化所有单例非懒加载的bean时, 跳过了@Lazy的bean<strong>(通过BeanDefinition的isLazyInit属性)</strong></p>
+<p>而在真正时候@Lazy的Bean时, 是通过getBean()获取的, 而getBean()会通过createBean()方法进行创建, 而此时才会真正创建此Bean!</p>
+<h2 id="七-代码测试"><a href="#七-代码测试" class="headerlink" title="七. 代码测试"></a>七. 代码测试</h2><p>经过上面的对IoC容器的构建, 下面通过一个测试来验证这个结果(为了验证的简单, 这里简化了代码)</p>
+<h3 id="定义几个Service方法"><a href="#定义几个Service方法" class="headerlink" title="定义几个Service方法"></a>定义几个Service方法</h3><p>这里为了简单起见, 直接定义了XXXService为业务的实现类:</p>
+<p>LazyService.java</p>
+<pre><code class="java"> // LazyService懒加载测试
+@MyLazy
+@MyComponent
+public class LazyService {
+    public LazyService() {
+        System.out.println(&quot;测试懒加载: LazyService 的无参构造被执行&quot;);
+    }
+}</code></pre>
+<p>LazyService用于懒加载测试</p>
+<hr>
+<p>UserService.java</p>
+<pre><code class="java"> // 提供myCustomer实例
+@MyComponent
+public class UserService {
+
+    @MyAutowired
+    private CustomerService myCustomer;
+
+    public CustomerService getMyCustomer() {
+        return myCustomer;
+    }
+}</code></pre>
+<p>CustomerService.java</p>
+<pre><code class="java">@MyService(name = &quot;myCustomer&quot;)
+public class CustomerService {
+
+    @MyAutowired
+    private UserService userService;
+}</code></pre>
+<p>CustomerService指定创建的BeanName</p>
+<p>同时UserService和CustomerService验证可能出现的循环依赖问题</p>
+<hr>
+<h3 id="控制器类"><a href="#控制器类" class="headerlink" title="控制器类"></a>控制器类</h3><p>CustomerController.java</p>
+<pre><code class="java">@MyController
+public class CustomerController {
+
+    @MyAutowired
+    private UserService userService;
+}</code></pre>
+<hr>
+<h3 id="后置处理器"><a href="#后置处理器" class="headerlink" title="后置处理器"></a>后置处理器</h3><pre><code class="java">@MyComponent
+public class MyBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
+        System.out.println(&quot;正在处理&quot; + beanName + &quot;的初始化前的操作&quot;);
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        System.out.println(&quot;正在处理&quot; + beanName + &quot;的初始化后的操作&quot;);
+        return bean;
+    }
+}</code></pre>
+<hr>
+<h3 id="启动类"><a href="#启动类" class="headerlink" title="启动类"></a>启动类</h3><pre><code class="java">public class IocApplication {
+
+    public static void main(String[] args) {
+        // 在指定包下扫描, 完成Bean创建, 注入等
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(&quot;top.jasonkayzk.ioc.app&quot;);
+        System.out.println(&quot;---------------容器创建完毕-------------------&quot;);
+
+        // 测试类型首字母小写获取
+        UserService userService = (UserService) context.getBean(&quot;userService&quot;);
+        System.out.println(userService);
+
+        // 测试自定义名称
+        CustomerService customerService = (CustomerService) context.getBean(&quot;myCustomer&quot;);
+        System.out.println(customerService);
+
+        // 测试懒加载
+        Object lazyService = context.getBean(&quot;lazyService&quot;);
+        System.out.println(lazyService);
+
+        // 测试循环依赖
+        System.out.println(&quot;测试循环依赖  &quot; + (customerService == userService.getMyCustomer()));
+        System.out.println(&quot;--------------------------------------------------------&quot;);
+        Set&lt;String&gt; beanDefinitionNames = context.getBeanDefinitionNames();
+        beanDefinitionNames.forEach(System.out::println);
+    }
+}</code></pre>
+<p>允许启动类, 最终输出:</p>
+<pre><code>正在读取class文件： top.jasonkayzk.ioc.app.service.LazyService
+正在读取class文件： top.jasonkayzk.ioc.app.service.CustomerService
+正在读取class文件： top.jasonkayzk.ioc.app.service.UserService
+正在读取class文件： top.jasonkayzk.ioc.app.IocApplication
+正在读取class文件： top.jasonkayzk.ioc.app.config.MyBeanPostProcessor
+正在读取class文件： top.jasonkayzk.ioc.app.controller.CustomerController
+假设正在执行myCustomer的init方法.....
+假设正在执行userService的init方法.....
+假设正在执行customerController的init方法.....
+正在处理myBeanPostProcessor的初始化前的操作
+假设正在执行myBeanPostProcessor的init方法.....
+正在处理myBeanPostProcessor的初始化后的操作
+---------------容器创建完毕-------------------
+top.jasonkayzk.ioc.app.service.UserService@5e5792a0
+top.jasonkayzk.ioc.app.service.CustomerService@26653222
+测试懒加载: LazyService 的无参构造被执行
+正在处理lazyService的初始化前的操作
+假设正在执行lazyService的init方法.....
+正在处理lazyService的初始化后的操作
+top.jasonkayzk.ioc.app.service.LazyService@3532ec19
+测试循环依赖  true
+--------------------------------------------------------
+userService
+myCustomer
+lazyService
+customerController
+myBeanPostProcessor</code></pre><p>说明全部运行正常!</p>
+<blockquote>
+<br>
+
+<p>感谢您辛苦看到这里❤</p>
+<p>文中全部源代码: <a href="https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc</a></p>
+</blockquote>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯</p>
+<p>内容和博客同步更新~</p>
+<p>源代码: </p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/spring-ioc</a></li>
+</ul>
+<p>文章参考:</p>
+<ul>
+<li><a href="https://segmentfault.com/a/1190000015467044" target="_blank" rel="noopener">从零开始实现一个简易的Java MVC框架</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/95823916" target="_blank" rel="noopener">仿spring-framework源码实现手写一个IOC容器</a></li>
+</ul>
+<p>项目参考:</p>
+<ul>
+<li><a href="https://gitlab.com/qingsongxi/spring-ioc" target="_blank" rel="noopener">spring-ioc</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/03/02/实现一个简单的SpringIOC容器/" title="https://jasonkayzk.github.io/2020/03/02/实现一个简单的SpringIOC容器/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/03/02/实现一个简单的SpringIOC容器/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1722132898465"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

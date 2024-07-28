@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>MySQL索引 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="上一篇讲解了MySQL中的变量, 本篇讲解MySQL中的索引">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL索引">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/12/05/MySQL索引/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="上一篇讲解了MySQL中的变量, 本篇讲解MySQL中的索引">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-07-28T02:13:53.288Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL索引">
+<meta name="twitter:description" content="上一篇讲解了MySQL中的变量, 本篇讲解MySQL中的索引">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1722132904180">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>497</div>
+        <div><span>标签</span>261</div>
+        <div><span>分类</span>63</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-battlenet"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.26px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.91px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.7px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 19.13px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.83px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.35px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">33</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">56</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">23</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/07/28/简单易用的内网穿透组网工具ZeroTier/">简单易用的内网穿透组网工具ZeroTier</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/人生は一度きり。だから楽しむべきよ/">人生は一度きり。だから楽しむべきよ</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/27/解决VMWare桥接模式下无法自动获取IP的问题/">解决VMWare桥接模式下无法自动获取IP的问题</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/26/MacOS双开微信的方法/">【转】MacOS双开微信的方法</a>
+          </li>
+        
+          <li>
+            <a href="/2024/07/23/一些tg使用指南总结/">一些tg使用指南总结</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?6">
+    
+    <h1>MySQL索引</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年12月05日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.1k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 27 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/数据库/">数据库</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/MySQL/">MySQL</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-索引的管理"><span class="toc-text">一. 索引的管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#索引的创建方式"><span class="toc-text">索引的创建方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#主键索引和组合索引创建的方式"><span class="toc-text">主键索引和组合索引创建的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#删除索引"><span class="toc-text">删除索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引实例"><span class="toc-text">索引实例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cardinality关键字解析"><span class="toc-text">Cardinality关键字解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fast-Index-Creation"><span class="toc-text">Fast Index Creation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在线数据定义"><span class="toc-text">在线数据定义</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-B-树索引的使用"><span class="toc-text">二. B+ 树索引的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#联合索引"><span class="toc-text">联合索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引提示"><span class="toc-text">索引提示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引优化"><span class="toc-text">索引优化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-索引的特点、优点、缺点及适用场景"><span class="toc-text">三. 索引的特点、优点、缺点及适用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#索引的特点"><span class="toc-text">索引的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引的优点"><span class="toc-text">索引的优点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引的缺点"><span class="toc-text">索引的缺点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引的适用场景"><span class="toc-text">索引的适用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#索引失效情况"><span class="toc-text">索引失效情况</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>这篇文章不会讲解索引的基础知识，主要是关于MySQL数据库的B+树索引的相关原理，里面的一些知识都参考了MySQL技术内幕这本书，也算对于这些知识的总结</p>
+<p>本篇文章转自: <a href="https://blog.csdn.net/sihai12345/article/details/102452457" target="_blank" rel="noopener">面试官出的MySQL索引问题，这篇文章全给你解决！</a></p>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一-索引的管理"><a href="#一-索引的管理" class="headerlink" title="一. 索引的管理"></a>一. 索引的管理</h2><p>索引有很多中类型：</p>
+<ul>
+<li>普通索引(INDEX)</li>
+<li>唯一索引(UNIQUE)</li>
+<li>主键索引(PRIMARY KEY)</li>
+<li>组合索引(PRIMARY KEY(X, Y))</li>
+<li>全文索引(FULLTEXT)</li>
+</ul>
+<p>下面我们看看如何创建和删除下面这些类型的索引</p>
+<br>
+
+<h3 id="索引的创建方式"><a href="#索引的创建方式" class="headerlink" title="索引的创建方式"></a>索引的创建方式</h3><p>索引的创建是可以在很多种情况下进行的:</p>
+<p><strong>① 直接创建索引</strong></p>
+<pre><code class="mysql">CREATE [UNIQUE | FULLTEXT] INDEX index_name ON table_name(column_name(length))</code></pre>
+<blockquote>
+<br>
+
+<p><strong>说明:</strong></p>
+<p><strong>[UNIQUE | FULLTEXT]：表示可选择的索引类型，唯一索引还是全文索引，不加话就是普通索引</strong></p>
+<p><strong>table_name：表的名称，表示为哪个表添加索引</strong></p>
+<p><strong>column_name(length)：column_name是表的列名，length表示为这一列的前length行记录添加索引</strong></p>
+</blockquote>
+<br>
+
+<p><strong>② 修改表结构的方式添加索引</strong></p>
+<pre><code class="mysql">ALTER TABLE table_name ADD [UNIQUE | FULLTEXT] INDEX index_name (column(length))</code></pre>
+<br>
+
+<p><strong>③ 创建表的时候同时创建索引</strong></p>
+<pre><code class="mysql">CREATE TABLE `table` (
+    `id` int(11) NOT NULL AUTO_INCREMENT ,
+    `title` char(255) CHARACTER NOT NULL ,
+    PRIMARY KEY (`id`),
+    [UNIQUE | FULLTEXT] INDEX index_name (title(length))
+)</code></pre>
+<br>
+
+<h3 id="主键索引和组合索引创建的方式"><a href="#主键索引和组合索引创建的方式" class="headerlink" title="主键索引和组合索引创建的方式"></a>主键索引和组合索引创建的方式</h3><p>前面讲的都是<strong>普通索引、唯一索引和全文索引</strong>创建的方式，但是，<strong>主键索引和组合索引创建的方式却是有点不一样</strong>，所以单独拿出来讲一下</p>
+<p><strong>① 组合索引创建方式</strong></p>
+<ul>
+<li><strong>创建表的时候同时创建索引</strong></li>
+</ul>
+<pre><code class="mysql">CREATE TABLE `table` (
+    `id` int(11) NOT NULL AUTO_INCREMENT ,
+    `title` char(255) CHARACTER NOT NULL ,
+    PRIMARY KEY (`id`),
+    INDEX index_name(id, title) -- 创建表的时候同时创建索引
+)</code></pre>
+<ul>
+<li><strong>修改表结构的方式添加索引</strong></li>
+</ul>
+<pre><code class="mysql">ALTER TABLE table_name ADD INDEX name_city_age (name, city, age); </code></pre>
+<br>
+
+<p><strong>② 主键索引创建方式</strong></p>
+<p>主键索引是一种特殊的唯一索引，一个表只能有一个主键，不允许有空值, <strong>一般是在建表的时候同时创建主键索引</strong></p>
+<pre><code class="mysql">CREATE TABLE `table` (
+    `id` int(11) NOT NULL AUTO_INCREMENT ,
+    `title` char(255) CHARACTER NOT NULL ,
+    PRIMARY KEY (`id`)
+)</code></pre>
+<br>
+
+<h3 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h3><p>删除索引可利用<code>ALTER TABLE</code>或<code>DROP INDEX</code>语句来删除索引</p>
+<p>类似于<code>CREATE INDEX</code>语句，<code>DROP INDEX</code>可以在<code>ALTER TABLE</code>内部作为一条语句处理，语法如下:</p>
+<pre><code class="mysql">DROP INDEX index_name ON table_name
+或
+ALTER TABLE table_name DROP INDEX index_name
+
+-- 删除主键索引
+ALTER TABLE table_name DROP PRIMARY KEY</code></pre>
+<blockquote>
+<br>
+
+<p><strong>说明: 第3条语句只在删除<code>PRIMARY KEY</code>索引时使用，因为一个表只可能有一个<code>PRIMARY KEY</code>索引，因此不需要指定索引名</strong></p>
+</blockquote>
+<br>
+
+<h3 id="索引实例"><a href="#索引实例" class="headerlink" title="索引实例"></a>索引实例</h3><p>上面讲了一下基本的知识，接下来，还是通过一个具体的例子来体会一下</p>
+<p><strong>step1：创建表</strong></p>
+<pre><code class="mysql">create table table_index(
+    id int(11) not null auto_increment,
+    title char(255) not null,
+    primary key(id)
+);</code></pre>
+<p><strong>step2：添加索引</strong></p>
+<p>首先，我们使用直接添加索引的方式添加一个普通索引</p>
+<pre><code class="mysql">CREATE INDEX idx_a ON table_index(title);</code></pre>
+<p>接着，我们用修改表结构的时候添加索引</p>
+<pre><code class="mysql">ALTER TABLE table_index ADD UNIQUE INDEX idx_b (title(100));</code></pre>
+<p>最后，我们再添加一个组合索引</p>
+<pre><code class="mysql">ALTER TABLE table_index ADD INDEX idx_id_title (id,title);</code></pre>
+<p><strong>step3：使用<code>SHOW INDEX</code>命令查看索引信息</strong></p>
+<p>如果想要查看表中的索引信息，可以使用命令<code>SHOW INDEX</code>,下面的例子，我们查看表<code>table_index</code>的索引信息</p>
+<pre><code class="mysql">SHOW INDEX FROM table_index\G;</code></pre>
+<br>
+
+<pre><code class="mysql">mysql&gt; SHOW INDEX FROM table_index\G;
+*************************** 1. row ***************************
+        Table: table_index
+   Non_unique: 0
+     Key_name: PRIMARY
+ Seq_in_index: 1
+  Column_name: id
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 2. row ***************************
+        Table: table_index
+   Non_unique: 0
+     Key_name: idx_b
+ Seq_in_index: 1
+  Column_name: title
+    Collation: A
+  Cardinality: 0
+     Sub_part: 100
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 3. row ***************************
+        Table: table_index
+   Non_unique: 1
+     Key_name: idx_a
+ Seq_in_index: 1
+  Column_name: title
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+......</code></pre>
+<p>得到上面的信息，上面的信息什么意思呢？我们逐一介绍！</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Table</td>
+<td>索引所在的表</td>
+</tr>
+<tr>
+<td>Non_unique</td>
+<td>非唯一索引，如果是0，代表唯一的，也就是说如果该列索引中不包括重复的值则为0 否则为1</td>
+</tr>
+<tr>
+<td>Key_name</td>
+<td>索引的名字，如果是主键的话 则为PRIMARY</td>
+</tr>
+<tr>
+<td>Seq_in_index</td>
+<td>索引中该列的位置，从1开始,如果是组合索引 那么按照字段在建立索引时的顺序排列</td>
+</tr>
+<tr>
+<td>Collation</td>
+<td>列是以什么方式存储在索引中的。可以是A或者NULL，B+树索引总是A，排序的，</td>
+</tr>
+<tr>
+<td>Sub_part</td>
+<td>是否列的部分被索引，如果只是前100行索引，就显示100，如果是整列，就显示NULL</td>
+</tr>
+<tr>
+<td>Packed</td>
+<td>关键字是否被压缩，如果没有，为NULL</td>
+</tr>
+<tr>
+<td>Index_type</td>
+<td>索引的类型，对于InnoDB只支持B 树索引，所以都是显示BTREE</td>
+</tr>
+<tr>
+<td>Cardinality</td>
+<td>见下</td>
+</tr>
+</tbody></table>
+<p><strong>step4：删除索引</strong></p>
+<p>直接删除索引方式</p>
+<pre><code class="mysql">DROP INDEX idx_a ON table_index;</code></pre>
+<p>修改表结构时删除索引</p>
+<pre><code class="mysql">ALTER TABLE table_index DROP INDEX idx_b;</code></pre>
+<br>
+
+<h3 id="Cardinality关键字解析"><a href="#Cardinality关键字解析" class="headerlink" title="Cardinality关键字解析"></a>Cardinality关键字解析</h3><p>在上面介绍了那么多个关键字的意思，但是<code>Cardinality</code>这个关键字非常的关键: 优化器会根据这个值来判断是否使用这个索引</p>
+<p>在B+树索引中，<strong>只有高选择性的字段才是有意义的</strong>，高选择性就是这个字段的<strong>取值范围很广</strong>，比如姓名字段，会有很多的名字，可选择性就高了</p>
+<p>一般来说，<strong>判断是否需要使用索引，就可以通过Cardinality关键字来判断</strong>，<strong>如果非常接近1，说明有必要使用</strong>，如果非常小，那么就要考虑是否使用索引了</p>
+<p>需要注意的一个问题时，这个关键字不是及时更新的，需要更新的话，需要使用<code>ANALYZE TABLE</code>，例如</p>
+<pre><code class="mysql">analyze table table_index;</code></pre>
+<p>结果如下:</p>
+<pre><code class="mysql">mysql&gt; analyze table table_index;
++------------------+---------+----------+----------+
+| Table            | Op      | Msg_type | Msg_text |
++------------------+---------+----------+----------+
+| exam.table_index | analyze | status   | OK       |
++------------------+---------+----------+----------+
+1 row in set (0.07 sec)
+
+mysql&gt; show index from table_index\G;
+*************************** 1. row ***************************
+        Table: table_index
+   Non_unique: 0
+     Key_name: PRIMARY
+ Seq_in_index: 1
+  Column_name: id
+    Collation: A
+  Cardinality: 0
+     Sub_part: NULL
+       Packed: NULL
+         Null: 
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 2. row ***************************
+......</code></pre>
+<blockquote>
+<br>
+
+<p><strong>说明: 因为目前没有数据，所以，你会发现，这个值一直都是0，没有变化</strong></p>
+</blockquote>
+<blockquote>
+<br>
+
+<p><strong>补充: InnoDB存储引擎Cardinality的策略</strong></p>
+<p>在InnoDB存储引擎中，<strong>Cardinality关键字的更新发生在两个操作中：insert和update</strong></p>
+<p>但是，并<strong>不是每次都会更新</strong>，这样会增加负荷，所以，对于这个关键字的更新有它的策略：</p>
+<ul>
+<li><font color="#ff0000"><strong>表中<code>1/16</code>的数据发生变化</strong></font></li>
+<li><font color="#ff0000"><strong>InnoDB存储引擎的计数器<code>stat_modified_conter &gt; 2000000000</code></strong></font></li>
+</ul>
+<p>默认InnoDB存储引擎会对<strong>8个叶子节点进行采样</strong>，采样过程如下：</p>
+<ul>
+<li>B+树索引中叶子节点数量，记做<code>A</code></li>
+<li><strong>随机</strong>取得<strong>B+树索引中的<code>8</code>个叶子节点</strong>, 统计每个叶不同的记录个数，分别为p1-p8</li>
+<li>根据采样信息得到Cardinality的预估值：<code>(p1+p2+p3+...+p8)*A/8</code></li>
+</ul>
+<p><strong>因为随机采样，所以，每次的Cardinality值都是不一样的，只有一种情况会一样的，就是表中的叶子节点小于或者等于8</strong>，这时候，怎么随机采样都是这8个，所以也就一样的</p>
+</blockquote>
+<br>
+
+<h3 id="Fast-Index-Creation"><a href="#Fast-Index-Creation" class="headerlink" title="Fast Index Creation"></a>Fast Index Creation</h3><p>在MySQL 5.5之前，<strong>对于索引的添加或者删除，每次都需要创建一张临时表，然后导入数据到临时表，接着删除原表</strong>，如果一张大表进行这样的操作，会非常的耗时，这是一个很大的缺陷</p>
+<p>InnoDB存储引擎从1.0.x版本开始加入了一种<code>Fast Index Creation（快速索引创建）</code>的索引创建方式</p>
+<p>这种方式的策略为：<font color="#ff0000"><strong>每次为创建索引的表加上一个S锁（共享锁），在创建的时候，不需要重新建表，删除辅助索引只需要更新内部视图，并将辅助索引空间标记为可用</strong></font></p>
+<p>所以，这种效率就大大提高了</p>
+<br>
+
+<h3 id="在线数据定义"><a href="#在线数据定义" class="headerlink" title="在线数据定义"></a>在线数据定义</h3><p>MySQL 5.6 开始支持的<strong>在线数据定义操作</strong>就是：允<strong>许辅助索引创建的同时，还允许其他insert、update、delete这类DM操作</strong>，这就极大提高了数据库的可用性</p>
+<p>所以，我们可以使用新的语法进行创建索引：</p>
+<pre><code class="mysql">ALTER TABLE table_name ADD [UNIQUE|FULLTEXT] INDEX index_name (column(length))
+[ALGORITHM = {DEFAULT|INPLACE|COPY}]
+[LOCK = {DEFAULT|NONE|SHARED|EXLUSIVE}]</code></pre>
+<p><code>ALGORITHM</code>指定<strong>创建或者删除索引的算法</strong></p>
+<ul>
+<li>COPY：创建临时表的方式</li>
+<li>INPLACE：不需要创建临时表</li>
+<li>DEFAULT：根据参数<code>old_alter_table</code>参数判断，如果是<code>OFF</code>,采用<code>INPLACE</code>的方式</li>
+</ul>
+<p><code>LOCK</code>表示<strong>对表添加锁的情况</strong></p>
+<ul>
+<li>NONE：不加任何锁</li>
+<li>SHARE：加一个S锁，并发读可以进行，写操作需要等待</li>
+<li>EXCLUSIVE：加一个X锁，读写都不能并发进行</li>
+<li>DEFAULT：先判断是否可以使用<code>NONE</code>，如不能，判断是否可以使用<code>SHARE</code>，如不能，再判断是否可以使用<code>EXCLUSIVE</code>模式</li>
+</ul>
+<br>
+
+<h2 id="二-B-树索引的使用"><a href="#二-B-树索引的使用" class="headerlink" title="二. B+ 树索引的使用"></a>二. B+ 树索引的使用</h2><h3 id="联合索引"><a href="#联合索引" class="headerlink" title="联合索引"></a>联合索引</h3><p><strong>联合索引是指对表上的多个列进行索引</strong>，这一部分我们将通过几个例子来讲解联合索引的相关知识点</p>
+<p>首先，我们先创建一张表以及为这张表创建联合索引</p>
+<pre><code class="mysql">create table t_index(
+a char(2) not null default &#39;&#39;,
+b char(2) not null default &#39;&#39;,
+c char(2) not null default &#39;&#39;,
+d char(2) not null default &#39;&#39;
+) engine myisam charset utf8;</code></pre>
+<p>创建联合索引</p>
+<pre><code class="mysql">alter table t_index add index abcd(a,b,c,d);</code></pre>
+<p>插入几条测试数据</p>
+<pre><code class="mysql">insert into t_index values(&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;),
+(&#39;a2&#39;,&#39;b2&#39;,&#39;c2&#39;,&#39;d2&#39;),
+(&#39;a3&#39;,&#39;b3&#39;,&#39;c3&#39;,&#39;d3&#39;),
+(&#39;a4&#39;,&#39;b4&#39;,&#39;c4&#39;,&#39;d4&#39;),
+(&#39;a5&#39;,&#39;b5&#39;,&#39;c5&#39;,&#39;d5&#39;),
+(&#39;a6&#39;,&#39;b6&#39;,&#39;c6&#39;,&#39;d6&#39;);</code></pre>
+<p>到这一步，我们已经基本准备好了需要的数据，我们可以进行更深一步的联合索引的探讨</p>
+<br>
+
+<p><strong>我们什么时候需要创建联合索引呢</strong></p>
+<p>索引建立的主要目的就是为了提高查询的效率，那么联合索引的目的也是类似的，联合索引的目的就是<strong>为了提高存在多个查询条件的情况下的效率</strong>，就如上面建立的表一样，有多个字段，当我们需要<strong>利用多个字段进行查询的时候，我们就需要利用到联合索引</strong></p>
+<br>
+
+<p><strong>什么时候联合索引才会发挥作用呢</strong></p>
+<p>有时候，我们会用联合索引，但是，我们并不清楚其原理，不知道什么时候联合索引会起到作用，什么时候又是会失效的？</p>
+<p>带着这个问题，我们了解一下联合索引的<font color="#ff0000"><strong>最左匹配原则</strong></font></p>
+<p><font color="#ff0000"><strong>最左匹配原则</strong>：这个原则的意思就是<strong>创建组合索引，以最左边的为准，只要查询条件中带有最左边的列，那么查询就会使用到索引</strong></font></p>
+<p>下面，我们用几个例子来看看这个原则</p>
+<p><strong>① 单独使用a字段进行查询</strong></p>
+<pre><code class="mysql">mysql&gt; explain select * from t_index where a = &#39;a&#39;\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: abcd
+          key: abcd
+      key_len: 6 -- 索引长度6字节
+          ref: const
+         rows: 1 -- 可达结果被过滤为只有一个
+     filtered: 100.00
+        Extra: Using index -- 使用了索引
+1 row in set, 1 warning (0.03 sec)</code></pre>
+<p>我们看看这条语句的结果，首先，我们看到使用了索引，因为<strong>查询条件中带有最左边的列a</strong></p>
+<p>那么利用了几个索引呢？这个我们需要看<code>key_len</code>这个字段:</p>
+<p>我们知道utf-8编码的一个字符3个字节，而我们使用的数据类型是<code>char(2)</code>，占两个字节，索引就是2*3等于6个字节，所以只有一个索引起到了作用</p>
+<br>
+
+<p><strong>② 接下来单独使用b字段进行查询</strong></p>
+<pre><code class="mysql">mysql&gt; explain select * from t_index where b = &#39;b2&#39;\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: index
+possible_keys: NULL -- 为空
+          key: abcd
+      key_len: 24
+          ref: NULL
+         rows: 6 -- 行并没有被过滤
+     filtered: 16.67
+        Extra: Using where; Using index
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p> 这个语句我们可以看出，这个没有使用索引，因为<code>possible_keys</code>为空</p>
+<p>而且，从查询的行数<code>rows</code>可以看出为6（我们测试数据总共6条），说明进行了全盘扫描的，说明这种情况是<strong>不符合最左匹配原则</strong>，所以不会使用索引查询</p>
+<br>
+
+<p><strong>③ 通过a, b两个字段联合查询, 并使用d字段排序</strong></p>
+<pre><code class="mysql">mysql&gt; explain select * from t_index where a = &#39;a2&#39; and b = &#39;b2&#39; order by d \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: abcd
+          key: abcd
+      key_len: 12
+          ref: const,const
+         rows: 1
+     filtered: 100.00
+        Extra: Using where; Using index; Using filesort
+1 row in set, 1 warning (0.01 sec)</code></pre>
+<p>这种情况又有点不一样了，我们使用了一个排序，可以看出使用了索引，通过<code>key_len</code>为12可以得到使用了2个索引<code>a、b</code></p>
+<p>另外在Extra选项中可以看到使用了<code>Using filesort</code>，也就是文件排序</p>
+<blockquote>
+  <br>
+
+<p>  <strong>这里使用文件排序的原因是这样的：</strong>上面的查询使用了a、b索引，但是当我们用d字段来排序时，（a，d）或者（b，d）这两个索引是没有排序的，<strong>联合索引的使用有一个好处，就是索引的下一个字段是会自动排序的</strong>，在这里的这种情况来说，c字段就是排序的，但是d是不会</p>
+</blockquote>
+<p>如果我们用c来排序就会得到不一样的结果</p>
+<br>
+
+<p><strong>④ 通过a, b两个字段联合查询, 并使用c字段排序</strong></p>
+<pre><code class="mysql">mysql&gt; explain select * from t_index where a = &#39;a2&#39; and b = &#39;b2&#39; order by c \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: abcd
+          key: abcd
+      key_len: 12
+          ref: const,const
+         rows: 1
+     filtered: 100.00
+        Extra: Using where; Using index
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p>当我们用c进行排序的时候，因为使用了a、b索引，所以c就自动排序了，所以也就不用filesort了</p>
+<br>
+
+<p>讲到这里，我相信通过上面的几个例子，对于联合索引的相关知识已经非常的透彻清晰了，最后，我们再来聊几个常见的问题</p>
+<p><strong>Q1：为什么不对表中的每一个列创建一个索引呢</strong></p>
+<p>第一，创建索引和维护索引要耗费时间，这种时间随着数据量的增加而增加</p>
+<p>第二，索引需要占物理空间，除了数据表占数据空间之外，每一个索引还要占一定的物理空间，如果要建立聚簇索引，那么需要的空间就会更大</p>
+<p>第三，当对表中的数据进行增加、删除和修改的时候，索引也要动态的维护，这样就降低了数据的访问速度</p>
+<br>
+
+<p><strong>Q2：为什么需要使用联合索引</strong></p>
+<p><strong>减少开销</strong>: <font color="#ff0000"><strong>建一个联合索引(col1,col2,col3)，实际相当于建了(col1),(col1,col2),(col1,col2,col3)三个索引</strong></font>。每多一个索引，都会增加写操作的开销和磁盘空间的开销。对于大量数据的表，使用联合索引会大大的减少开销！</p>
+<br>
+
+<p><strong>覆盖索引</strong>: 对联合索引(col1,col2,col3)，如果有如下的sql: <code>select  col1,col2,col3 from test where col1=1 and  col2=2</code>, 那么MySQL可以直接通过遍历索引取得数据，而无需回表，这减少了很多的随机io操作</p>
+<p>减少io操作，特别的随机io其实是dba主要的优化策略。所以，在真正的实际应用中，覆盖索引是主要的提升性能的优化手段之一</p>
+<br>
+
+<p><strong>效率高</strong>: <font color="#ff0000"><strong>索引列越多，通过索引筛选出的数据越少</strong></font></p>
+<p>有1000W条数据的表，有如下sql: <code>select  from table where col1=1 and col2=2 and  col3=3</code>, 假设每个条件可以筛选出10%的数据，如果只有单值索引，那么通过该索引能筛选出1000W * 10%=100w条数据，然后再回表从100w条数据中找到符合col2=2 and col3= 3的数据，然后再排序，再分页；如果是联合索引，通过索引筛选出1000w * 10% * 10% *10%=1w，效率提升可想而知</p>
+<br>
+
+<p><strong>覆盖索引</strong></p>
+<p>覆盖索引是一种<strong>从辅助索引中就可以得到查询的记录，而不需要查询聚集索引中的记录</strong></p>
+<p>使用覆盖索引的一个好处是: 辅助索引不包含整行记录的所有信息，所以大小远小于聚集索引，因此可以大大减少IO操作</p>
+<p>覆盖索引的另外一个好处就是: 对于统计问题有优化，我们看下面的一个例子</p>
+<pre><code class="mysql">mysql&gt; explain select count(*) from t_index \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: NULL
+   partitions: NULL
+         type: NULL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: NULL
+     filtered: NULL
+        Extra: Select tables optimized away
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p>如果是myisam引擎，Extra列会输出<code>Select tables optimized away</code>语句，myisam引擎已经保存了记录的总数，直接返回结果，就不需要覆盖索引优化了</p>
+<p>如果是InnoDB引擎，Extra列会输出<code>Using index</code>语句，说明InnoDB引擎优化器使用了覆盖索引操作</p>
+<br>
+
+<h3 id="索引提示"><a href="#索引提示" class="headerlink" title="索引提示"></a>索引提示</h3><p>MySQL数据库支持索引提示功能，<strong>索引提示功能就是我们可以显式的告诉优化器使用哪个索引</strong>，一般有下面两种情况可能使用到索引提示功能（INDEX HINT）：</p>
+<ul>
+<li>MySQL数据库的<strong>优化器错误的选择了某个索引，导致SQL运行很慢</strong></li>
+<li><strong>某SQL语句可以选择的索引非常的多，这时优化器选择执行计划时间的开销可能会大于SQL语句本身</strong></li>
+</ul>
+<p>这里我们接着上面的例子来讲解，首先，我们先为上面的<code>t_index</code>表添加几个索引；</p>
+<pre><code class="mysql">alter table t_index add index a (a);
+alter table t_index add index b (b);
+alter table t_index add index c (c);</code></pre>
+<p>接着，我们执行下面的语句；</p>
+<pre><code class="mysql">mysql&gt; EXPLAIN SELECT * FROM t_index WHERE a = &#39;a&#39; AND b = &#39;b&#39; AND c = &#39;c&#39; \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: abcd,a,b,c
+          key: abcd
+      key_len: 18 -- 使用了3个索引, 其实使用单个索引即可
+          ref: const,const,const
+         rows: 1
+     filtered: 100.00
+        Extra: Using index
+1 row in set, 1 warning (0.03 sec)</code></pre>
+<p>发现这条语句就可以使用三个索引，这个时候，我们可以显式的使用索引提示来使用a这个索引，如下：</p>
+<pre><code class="mysql">mysql&gt; EXPLAIN SELECT * FROM t_index USE INDEX(a) WHERE a = &#39;a&#39; AND b = &#39;b&#39; AND c = &#39;c&#39; \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: a
+          key: a
+      key_len: 6 -- 使用了单个索引
+          ref: const
+         rows: 1
+     filtered: 16.67
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p>这样就显示的使用索引a了</p>
+<br>
+
+<p>如果这种方式有时候优化器还是没有选择你想要的索引，那么，我们可以另外一种方式<code>FORCE INDEX</code>:</p>
+<pre><code class="mysql">
+
+mysql&gt; EXPLAIN SELECT * FROM t_index FORCE INDEX(a) WHERE a = &#39;a&#39; AND b = &#39;b&#39; AND c = &#39;c&#39; \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t_index
+   partitions: NULL
+         type: ref
+possible_keys: a
+          key: a
+      key_len: 6
+          ref: const
+         rows: 1
+     filtered: 16.67
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p>这种方式则一定会选择你想要的索引</p>
+<br>
+
+<h3 id="索引优化"><a href="#索引优化" class="headerlink" title="索引优化"></a>索引优化</h3><p><strong>① Multi-Range Read 优化</strong></p>
+<p>MySQL5.6开始支持，这种优化的<strong>目的是为了减少磁盘的随机访问</strong>，并且<strong>将随机访问转化为较为顺序的数据访问</strong>，这种优化<strong>适用于range、ref、eq_ref类型的查询</strong></p>
+<p>Multi-Range Read 优化的好处：</p>
+<ul>
+<li><strong>让数据访问变得较为顺序</strong></li>
+<li><strong>减少缓冲区中页被替换的次数</strong></li>
+<li><strong>批量处理对键值的查询操作</strong></li>
+</ul>
+<p>我们可以使用参数<code>optimizer_switch</code>中的标记来控制是否开启Multi-Range Read 优化, 下面的方式将设置为总是开启状态：</p>
+<pre><code class="mysql">SET @@optimizer_switch=&#39;mrr=on,mrr_cost_based=off&#39;;</code></pre>
+<br>
+
+<p><strong>② Index Condition Pushdown（ICP） 优化</strong></p>
+<p>这种优化方式也是从MySQL5.6开始支持的, 不支持这种方式之前，当进行索引查询时，首先我们先根据索引查找记录，然后再根据where条件来过滤记录</p>
+<p>当支持ICP优化后，MySQL数据库会<strong>在取出索引的同时，判断是否可以进行where条件过滤，也就是将where过滤部分放在了存储引擎层，大大减少了上层SQL对记录的索取</strong></p>
+<p>ICP支持range、ref、eq_ref、ref_or_null类型的查询，当前支持MyISAM和InnoDB存储引擎</p>
+<p>我们可以使用下面语句开启ICP：</p>
+<pre><code class="mysql">set @@optimizer_switch = &quot;index_condition_pushdown=on&quot;</code></pre>
+<p>或者关闭：</p>
+<pre><code class="mysql">set @@optimizer_switch = &quot;index_condition_pushdown=off&quot;</code></pre>
+<p>当开启了ICP之后，在执行计划Extra可以看到<code>Using index condition</code></p>
+<br>
+
+<h2 id="三-索引的特点、优点、缺点及适用场景"><a href="#三-索引的特点、优点、缺点及适用场景" class="headerlink" title="三. 索引的特点、优点、缺点及适用场景"></a>三. 索引的特点、优点、缺点及适用场景</h2><h3 id="索引的特点"><a href="#索引的特点" class="headerlink" title="索引的特点"></a>索引的特点</h3><ul>
+<li>可以加快数据库的检索速度</li>
+<li><strong>降低数据库插入、修改、删除等维护的速度</strong></li>
+<li><strong>只能创建在表上，不能创建在视图上</strong></li>
+<li>既可以直接创建也可以间接创建</li>
+</ul>
+<h3 id="索引的优点"><a href="#索引的优点" class="headerlink" title="索引的优点"></a>索引的优点</h3><ul>
+<li>创建唯一性索引，保证数据库表中的每一行数据的唯一性</li>
+<li>大大加快数据的检索速度</li>
+<li>加快数据库表之间的连接，特别是在实现数据的参考完整性方面特别有意义</li>
+<li>在使用分组和排序字句进行数据检索时，同样可以显著减少查询的时间</li>
+<li>通过使用索引，可以在查询中使用优化隐藏器，提高系统性能</li>
+</ul>
+<h3 id="索引的缺点"><a href="#索引的缺点" class="headerlink" title="索引的缺点"></a>索引的缺点</h3><ul>
+<li>第一，创建索引和维护索引要耗费时间，这种时间随着数据量的增加而增加</li>
+<li>第二，索引需要占物理空间，除了数据表占数据空间之外，每一个索引还要占一定的物理空间，如果要建立聚簇索引，那么需要的空间就会更大</li>
+<li>第三，当对表中的数据进行增加、删除和修改的时候，索引也要动态的维护，这样就降低了数据的维护速度</li>
+</ul>
+<h3 id="索引的适用场景"><a href="#索引的适用场景" class="headerlink" title="索引的适用场景"></a>索引的适用场景</h3><ul>
+<li><strong>匹配全值</strong></li>
+</ul>
+<p>对索引中所有列都指定具体值，即是对索引中的所有列都有等值匹配的条件</p>
+<ul>
+<li><strong>匹配值的范围查询</strong></li>
+</ul>
+<p>对索引的值能够进行范围查找</p>
+<ul>
+<li><strong>匹配最左前缀</strong></li>
+</ul>
+<p><strong>仅仅使用索引中的最左边列进行查询</strong>，比如在 col1 + col2 + col3 字段上的联合索引能够被包含 col1、(col1 +  col2)、（col1 + col2 + col3）的等值查询利用到，可是<strong>不能够被 col2、（col2、col3）的等值查询利用到</strong></p>
+<p><strong>最左匹配原则可以算是 MySQL 中 B-Tree 索引使用的首要原则</strong></p>
+<ul>
+<li><strong>仅仅对索引进行查询</strong></li>
+</ul>
+<p>当查询的列都在索引的字段中时，查询的效率更高，所以应该尽量避免使用 select *，需要哪些字段，就只查哪些字段</p>
+<ul>
+<li><strong>匹配列前缀</strong></li>
+</ul>
+<p>仅仅使用索引中的第一列，并且<strong>只包含索引第一列的开头一部分进行查找</strong></p>
+<ul>
+<li><p>能够实现索引匹配部分精确而其他部分进行范围匹配</p>
+</li>
+<li><p>如果列名是索引，那么使用 column_name is null 就会使用索引，例如下面的就会使用索引：</p>
+<pre><code class="mysql">explain select * from t_index where a is null \G</code></pre>
+</li>
+<li><p><strong>经常出现在关键字order by、group by、distinct后面的字段</strong></p>
+</li>
+<li><p>在<strong>union等集合操作的结果集字段</strong></p>
+</li>
+<li><p>经常用作<strong>表连接的字段(外键)</strong></p>
+</li>
+<li><p>考虑使用索引覆盖，对数据很少被更新，如果用户经常值查询其中你的几个字段，可以考虑在这几个字段上建立索引，从而将表的扫描变为索引的扫描</p>
+</li>
+</ul>
+<h3 id="索引失效情况"><a href="#索引失效情况" class="headerlink" title="索引失效情况"></a>索引失效情况</h3><ul>
+<li><strong>以%开头的 like 查询不能利用 B-Tree 索引</strong>，执行计划中 key 的值为 null 表示没有使用索引</li>
+<li><strong>数据类型出现隐式转换的时候也不会使用索引</strong>，例如: <code>where &#39;age&#39;+10=30</code></li>
+<li>对<strong>索引列进行函数运算</strong>，原因同上</li>
+<li><strong>正则表达式不会使用索引</strong></li>
+<li><strong>字符串和数据比较不会使用索引</strong></li>
+<li>复合索引的情况下，假如查询条件不包含索引列最左边部分，即<strong>不满足最左原则 leftmost，是不会使用复合索引的</strong></li>
+<li>如果 <strong>MySQL 估计使用索引比全表扫描更慢，则不使用索引</strong></li>
+<li><strong>用 or 分割开的条件，如果 or 前的条件中的列有索引，而后面的列中没有索引，那么涉及的索引都不会被用到</strong></li>
+<li>使用<strong>负向查询（not ，not in， not like ，&lt;&gt; ,!= ,!&gt; ,!&lt; ） 不会使用索引</strong></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/12/05/MySQL索引/" title="https://jasonkayzk.github.io/2019/12/05/MySQL索引/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/12/05/MySQL索引/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1722132904290"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
