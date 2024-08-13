@@ -13,7 +13,7 @@ cover: https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/about.jpg
 </div>
 </HTML>
 
-## **博客相关**
+## **关于我和博客**
 
 **创立于：**2019年9月1日
 
@@ -23,7 +23,11 @@ cover: https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/about.jpg
 
 **主题：**https://nexmoe.com/hexo-theme-nexmoe.html
 
+**博主简介**：[《ようこそ、見知らぬ旅人》](/2020/09/12/%E3%80%90%E9%A1%B6%E3%80%91%E3%82%88%E3%81%86%E3%81%93%E3%81%9D%E3%80%81%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E6%97%85%E4%BA%BA/)
+
 ~~个人公众号: **Coder张小凯**(暂停维护)~~
+
+<br/>
 
 ## **Blog更新历史**
 
