@@ -32,6 +32,7 @@ cover: https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/about.jpg
 ## **Blog更新历史**
 
 
+*   <font color="#ff0000">**2024-08-26 新增[`跑步健身`](/running/)页面入口**</font>
 *   <font color="#ff0000">**2024-07-11 移除[`张小凯のProject`](/project/)页面入口**</font>
 *   <font color="#ff0000">**2024-07-11 移除[`日本語勉強教室`](/japanese/)页面入口**</font>
 *   <font color="#ff0000">**2024-06-21 关闭文件分享、幸运抽页面！**</font>
