@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>张小凯的博客</title>
+  <icon>https://www.gravatar.com/avatar/0a440a9619579f1429aa17ed946ce69c</icon>
+  
+  <link href="https://jasonkayzk.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://jasonkayzk.github.io/"/>
+  <updated>2024-09-11T02:34:01.160Z</updated>
+  <id>https://jasonkayzk.github.io/</id>
+  
+  <author>
+    <name>Jasonkay</name>
+    <email>jasonkayzk@gmail.com</email>
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Excel通过身份证号列计算性别</title>
+    <link href="https://jasonkayzk.github.io/2024/09/11/Excel%E9%80%9A%E8%BF%87%E8%BA%AB%E4%BB%BD%E8%AF%81%E5%8F%B7%E5%88%97%E8%AE%A1%E7%AE%97%E6%80%A7%E5%88%AB/"/>
+    <id>https://jasonkayzk.github.io/2024/09/11/Excel%E9%80%9A%E8%BF%87%E8%BA%AB%E4%BB%BD%E8%AF%81%E5%8F%B7%E5%88%97%E8%AE%A1%E7%AE%97%E6%80%A7%E5%88%AB/</id>
+    <published>2024-09-11T02:28:56.000Z</published>
+    <updated>2024-09-11T02:34:01.160Z</updated>
+    
+    <content type="html"><![CDATA[<p>Excel统计信息中有身份证号，可以通过身份证号直接生成性别列；</p><br><a id="more"></a><h1 id="Excel通过身份证号列计算性别"><a href="#Excel通过身份证号列计算性别" class="headerlink" title="Excel通过身份证号列计算性别"></a><strong>Excel通过身份证号列计算性别</strong></h1><p>例如，B2 列为身份证号所在列，则可以在性别列（如D2列）填写：</p><pre><code>=IF(MOD(MID(B2, 17, 1), 2) = 1, &quot;男&quot;, &quot;女&quot;)</code></pre><p>输入后回车计算结果即为性别；</p><p>可以下拉直接生成全部结果！</p><br><p>参考：</p><ul><li><a href="https://jingyan.baidu.com/article/5553fa8291d46b65a2393432.html" target="_blank" rel="noopener">https://jingyan.baidu.com/article/5553fa8291d46b65a2393432.html</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">Excel统计信息中有身份证号，可以通过身份证号直接生成性别列；</summary>
+    
+    
+    
+    <category term="办公" scheme="https://jasonkayzk.github.io/categories/办公/"/>
+    
+    
+    <category term="办公" scheme="https://jasonkayzk.github.io/tags/办公/"/>
+    
+    <category term="Excel" scheme="https://jasonkayzk.github.io/tags/Excel/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>开源的个人书籍管理系统Talebook</title>
+    <link href="https://jasonkayzk.github.io/2024/08/22/%E5%BC%80%E6%BA%90%E7%9A%84%E4%B8%AA%E4%BA%BA%E4%B9%A6%E7%B1%8D%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9FTalebook/"/>
+    <id>https://jasonkayzk.github.io/2024/08/22/%E5%BC%80%E6%BA%90%E7%9A%84%E4%B8%AA%E4%BA%BA%E4%B9%A6%E7%B1%8D%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9FTalebook/</id>
+    <published>2024-08-22T02:19:57.000Z</published>
+    <updated>2024-09-11T02:34:01.196Z</updated>
+    
+    <content type="html"><![CDATA[<p>我平时看的都是PDF电子书籍，但是之前没有用书籍管理，所以书籍比较乱；</p><p>比较有名的书籍管理系统有Calibre，但是Talebook支持OPDS，同时能从豆瓣导入信息，比较好用；</p><p>本文介绍了如何部署和配置Talebook；</p><p>源代码：</p><ul><li><a href="https://github.com/JasonkayZK/docker-repo/tree/talebook" target="_blank" rel="noopener">https://github.com/JasonkayZK/docker-repo/tree/talebook</a></li></ul><br><a id="more"></a><h1 id="开源的个人书籍管理系统Talebook"><a href="#开源的个人书籍管理系统Talebook" class="headerlink" title="开源的个人书籍管理系统Talebook"></a><strong>开源的个人书籍管理系统Talebook</strong></h1><h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a><strong>部署</strong></h2><p>项目地址如下：</p><ul><li><a href="https://github.com/talebook/talebook" target="_blank" rel="noopener">https://github.com/talebook/talebook</a></li></ul><p>DockerHub地址：</p><ul><li><a href="https://hub.docker.com/r/talebook/talebook" target="_blank" rel="noopener">https://hub.docker.com/r/talebook/talebook</a></li></ul><p>B站上也有UP主对Talebook做了介绍：</p><ul><li><a href="https://www.bilibili.com/video/BV1AT411S7c3/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1AT411S7c3/</a></li></ul><p>部署起来也是非常简单，先把镜像拉下来，然后 docker-compose 就行：</p><p>docker-compose.yml</p><pre><code class="yaml">version: &quot;3&quot;services:  talebook:    container_name: talebook    image: talebook/talebook:v3.8.1    volumes:      - /data/talebook:/data    ports:       - &quot;80:80&quot;       - &quot;443:443&quot;    environment:      - PUID=1000      - PGID=1000      - TZ=Asia/Shanghai      # 调整为『SSR=ON』可开启「服务器端渲染」模式，对于搜索引擎更友好，同时更消耗服务器性能      - SSR=OFF    depends_on:      - douban-rs-api    restart: always  douban-rs-api:    container_name: douban-rs-api    # https://github.com/cxfksword/douban-api-rs    image: ghcr.io/cxfksword/douban-api-rs:latest    restart: always</code></pre><p>配置都比较简单，目录挂载、端口映射直接根据自己的需求修改即可！</p><br><h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a><strong>配置</strong></h2><p>基本的配置，上面的B站UP基本上都讲了；</p><p>需要注意的是：</p><p><font color="#f00"><strong>配置豆瓣的时候，url 结尾的 <code>/</code> 要删除！否则会无法使用！</strong></font></p><blockquote><p>  参考：</p><ul><li><a href="https://github.com/talebook/talebook/issues/340#issuecomment-2097703672" target="_blank" rel="noopener">https://github.com/talebook/talebook/issues/340#issuecomment-2097703672</a></li></ul></blockquote><br><h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a><strong>其他</strong></h2><p>支持 OPDS 的 APP 推荐：</p><ul><li>安卓：静读天下</li><li>iOS、MacOS：Yomu、KyBook</li></ul><blockquote><p>  参考：</p><ul><li><a href="https://gameapp.club/post/2022-12-25-ebooks/" target="_blank" rel="noopener">https://gameapp.club/post/2022-12-25-ebooks/</a></li></ul></blockquote><p>需要注意的是：</p><p><strong>如果要使用 OPDS，需要配置：</strong></p><ul><li><strong>关闭「私人图书馆」模式。</strong></li><li><strong>打开「允许任意下载」（访客无需注册或登录）</strong></li></ul><blockquote><p>  参考：</p><ul><li><a href="https://github.com/talebook/talebook/blob/master/document/README.zh_CN.md#%E9%9D%99%E8%AF%BB%E5%A4%A9%E4%B8%8Bapp%E9%87%8C%E8%AE%BF%E9%97%AE%E4%B9%A6%E5%BA%93%E4%BC%9A%E5%A4%B1%E8%B4%A5%E6%80%8E%E4%B9%88%E5%8A%9E" target="_blank" rel="noopener">https://github.com/talebook/talebook/blob/master/document/README.zh_CN.md#%E9%9D%99%E8%AF%BB%E5%A4%A9%E4%B8%8Bapp%E9%87%8C%E8%AE%BF%E9%97%AE%E4%B9%A6%E5%BA%93%E4%BC%9A%E5%A4%B1%E8%B4%A5%E6%80%8E%E4%B9%88%E5%8A%9E</a></li></ul></blockquote><p><strong>Enjoy!</strong></p><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p><ul><li><a href="https://github.com/JasonkayZK/docker-repo/tree/talebook" target="_blank" rel="noopener">https://github.com/JasonkayZK/docker-repo/tree/talebook</a></li></ul><p>参考：</p><ul><li><a href="https://www.bilibili.com/video/BV1AT411S7c3/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1AT411S7c3/</a></li><li><a href="https://blog.hsu.life/2024/01/14/%E6%89%8B%E6%9C%BA%E5%A6%82%E4%BD%95%E6%96%B9%E4%BE%BF%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B9%A6%E5%BA%93/index.html" target="_blank" rel="noopener">https://blog.hsu.life/2024/01/14/%E6%89%8B%E6%9C%BA%E5%A6%82%E4%BD%95%E6%96%B9%E4%BE%BF%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B9%A6%E5%BA%93/index.html</a></li><li><a href="https://gameapp.club/post/2022-12-25-ebooks/" target="_blank" rel="noopener">https://gameapp.club/post/2022-12-25-ebooks/</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">我平时看的都是PDF电子书籍，但是之前没有用书籍管理，所以书籍比较乱；比较有名的书籍管理系统有Calibre，但是Talebook支持OPDS，同时能从豆瓣导入信息，比较好用；本文介绍了如何部署和配置Talebook；</summary>
+    
+    
+    
+    <category term="工具分享" scheme="https://jasonkayzk.github.io/categories/工具分享/"/>
+    
+    
+    <category term="工具分享" scheme="https://jasonkayzk.github.io/tags/工具分享/"/>
+    
+    <category term="软件推荐" scheme="https://jasonkayzk.github.io/tags/软件推荐/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>2024年安装Docker的方法</title>
+    <link href="https://jasonkayzk.github.io/2024/08/22/2024%E5%B9%B4%E5%AE%89%E8%A3%85Docker%E7%9A%84%E6%96%B9%E6%B3%95/"/>
+    <id>https://jasonkayzk.github.io/2024/08/22/2024%E5%B9%B4%E5%AE%89%E8%A3%85Docker%E7%9A%84%E6%96%B9%E6%B3%95/</id>
+    <published>2024-08-22T02:00:43.000Z</published>
+    <updated>2024-09-11T02:34:01.156Z</updated>
+    
+    <content type="html"><![CDATA[<p>阿里云的Docker源没了，本文写了在2024年如何安装Docker、配置DockerHub源；</p><p>PS：没想到2024年了，还在写Docker安装的教程…</p><br><a id="more"></a><h1 id="2024年安装Docker的方法"><a href="#2024年安装Docker的方法" class="headerlink" title="2024年安装Docker的方法"></a><strong>2024年安装Docker的方法</strong></h1><h2 id="安装Docker"><a href="#安装Docker" class="headerlink" title="安装Docker"></a><strong>安装Docker</strong></h2><p>目前（2024年8月22日），阿里云已不再提供 Docker 源的安装（404了）；</p><p>腾讯云目前还是提供的，安装教程如下：</p><ul><li><a href="https://cloud.tencent.com/document/product/213/46000#C_XgAwZpjht292j2EOU2t" target="_blank" rel="noopener">https://cloud.tencent.com/document/product/213/46000#C_XgAwZpjht292j2EOU2t</a></li></ul><p>Ubuntu的安装如下：</p><pre><code class="bash">sudo apt-get updatesudo apt-get install ca-certificates curlsudo install -m 0755 -d /etc/apt/keyrings# Debian系统将ubuntu改为debian！sudo curl -fsSL https://mirrors.cloud.tencent.com/docker-ce/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.ascsudo chmod a+r /etc/apt/keyrings/docker.asc# Debian系统将ubuntu改为debian！echo   &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://mirrors.cloud.tencent.com/docker-ce/linux/ubuntu/ \  $(. /etc/os-release &amp;&amp; echo &quot;$VERSION_CODENAME&quot;) stable&quot; |   sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/nullsudo apt-get update</code></pre><blockquote><p>  <strong>需要注意的是：如果是Debian系统，需要将上面的ubuntu改为debian即可！</strong></p></blockquote><p>安装：</p><pre><code class="bash">sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</code></pre><br><h2 id="Docker镜像源"><a href="#Docker镜像源" class="headerlink" title="Docker镜像源"></a><strong>Docker镜像源</strong></h2><p>众所周知，由于不可抗因素，国内是无法在 DockerHub 上 pull 镜像的，Github 的 <a href="https://ghcr.io/" target="_blank" rel="noopener"><strong>ghcr.io</strong></a> 也不行；</p><p>下面的网址提供了一些目前可用的镜像站：</p><ul><li><a href="https://taimatsu.xlog.app/china-mirror-proxy?locale=zh" target="_blank" rel="noopener">https://taimatsu.xlog.app/china-mirror-proxy?locale=zh</a></li><li><a href="https://qinyang.wang/china-mirror-proxy" target="_blank" rel="noopener">https://qinyang.wang/china-mirror-proxy</a></li><li><a href="https://github.com/cmliu/CF-Workers-docker.io" target="_blank" rel="noopener">https://github.com/cmliu/CF-Workers-docker.io</a></li></ul><p>以及使用 CF 搭建镜像站的教程：</p><ul><li><a href="https://www.lincol29.cn/cloudflaretodocker" target="_blank" rel="noopener">https://www.lincol29.cn/cloudflaretodocker</a></li><li><a href="https://github.com/cmliu/CF-Workers-docker.io" target="_blank" rel="noopener">https://github.com/cmliu/CF-Workers-docker.io</a></li></ul><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>参考：</p><ul><li><a href="https://cloud.tencent.com/document/product/213/46000#C_XgAwZpjht292j2EOU2t" target="_blank" rel="noopener">https://cloud.tencent.com/document/product/213/46000#C_XgAwZpjht292j2EOU2t</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">阿里云的Docker源没了，本文写了在2024年如何安装Docker、配置DockerHub源；PS：没想到2024年了，还在写Docker安装的教程...</summary>
+    
+    
+    
+    <category term="软件安装与配置" scheme="https://jasonkayzk.github.io/categories/软件安装与配置/"/>
+    
+    
+    <category term="软件安装与配置" scheme="https://jasonkayzk.github.io/tags/软件安装与配置/"/>
+    
+    <category term="Docker" scheme="https://jasonkayzk.github.io/tags/Docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Python项目Linter、Formatter和Github-Actions配置</title>
+    <link href="https://jasonkayzk.github.io/2024/08/21/Python%E9%A1%B9%E7%9B%AELinter%E3%80%81Formatter%E5%92%8CGithub-Actions%E9%85%8D%E7%BD%AE/"/>
+    <id>https://jasonkayzk.github.io/2024/08/21/Python%E9%A1%B9%E7%9B%AELinter%E3%80%81Formatter%E5%92%8CGithub-Actions%E9%85%8D%E7%BD%AE/</id>
+    <published>2024-08-21T07:26:53.000Z</published>
+    <updated>2024-09-11T02:34:01.172Z</updated>
+    
+    <content type="html"><![CDATA[<p>关于Python项目的一些配置问题，包括：</p><ul><li>Linter</li><li>Formatter</li><li>Github-Actions配置；</li></ul><p>源代码：</p><ul><li><a href="https://github.com/JasonkayZK/python-learn" target="_blank" rel="noopener">https://github.com/JasonkayZK/python-learn</a></li></ul><br><a id="more"></a><h1 id="Python项目Linter、Formatter和Github-Actions配置"><a href="#Python项目Linter、Formatter和Github-Actions配置" class="headerlink" title="Python项目Linter、Formatter和Github-Actions配置"></a><strong>Python项目Linter、Formatter和Github-Actions配置</strong></h1><h2 id="Linter"><a href="#Linter" class="headerlink" title="Linter"></a><strong>Linter</strong></h2><p>Linter 使用的是 PyCharm 自带的，符合 PEP8 规范；</p><p>也可以使用：</p><ul><li>flake8</li><li>pylint</li></ul><br><h2 id="Formatter"><a href="#Formatter" class="headerlink" title="Formatter"></a><strong>Formatter</strong></h2><p>直接用  isort 和 black 就可以了：</p><ul><li><a href="https://github.com/psf/black" target="_blank" rel="noopener">https://github.com/psf/black</a></li><li><a href="https://github.com/pycqa/isort" target="_blank" rel="noopener">https://github.com/pycqa/isort</a></li></ul><br><h2 id="项目配置"><a href="#项目配置" class="headerlink" title="项目配置"></a><strong>项目配置</strong></h2><p>Pre-Commit：</p><p>.pre-commit-config.yaml</p><pre><code class="yaml">repos:  - repo: https://github.com/psf/black    rev: 23.1.0    hooks:      - id: black  - repo: https://github.com/pycqa/isort    rev: 5.12.0    hooks:      - id: isort</code></pre><br><p>PyProject：</p><p>pyproject.toml</p><pre><code class="toml">[tool.isort]profile = &quot;black&quot;</code></pre><br><p>依赖配置：</p><p>requirements.txt</p><pre><code class="text">-e .[all]...</code></pre><p>requirements-dev.txt</p><pre><code class="text">-r requirements.txt# Ciblackisort</code></pre><br><p>Github Actions:</p><p>.github/workflows/ci.yaml</p><pre><code class="yaml">name: CIon:  workflow_dispatch:  push:  pull_request:jobs:  lint_and_test:    runs-on: ubuntu-latest    strategy:      max-parallel: 4      matrix:        python-version: [&#39;3.10&#39;, &#39;3.11&#39;, &#39;3.12&#39;]    steps:      - uses: actions/checkout@v4      - name: Set up Python ${{ matrix.python-version }}        id: setup_python        uses: actions/setup-python@v5        with:          python-version: ${{ matrix.python-version }}          cache: &#39;pip&#39;          cache-dependency-path: &#39;requirements-dev.txt&#39;      - name: Install dependencies        run: |          pip install -r requirements-dev.txt      - name: Run lint        uses: pre-commit/action@v2.0.0</code></pre><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p><ul><li><a href="https://github.com/JasonkayZK/python-learn" target="_blank" rel="noopener">https://github.com/JasonkayZK/python-learn</a></li></ul><p>参考：</p><ul><li><a href="https://v2ex.com/t/587696" target="_blank" rel="noopener">https://v2ex.com/t/587696</a></li><li><a href="https://github.com/psf/black" target="_blank" rel="noopener">https://github.com/psf/black</a></li><li><a href="https://github.com/pycqa/isort" target="_blank" rel="noopener">https://github.com/pycqa/isort</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">关于Python项目的一些配置问题，包括：Linter、Formatter和Github-Actions配置；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Zerotier配置内网流量转发</title>
+    <link href="https://jasonkayzk.github.io/2024/08/21/Zerotier%E9%85%8D%E7%BD%AE%E5%86%85%E7%BD%91%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91/"/>
+    <id>https://jasonkayzk.github.io/2024/08/21/Zerotier%E9%85%8D%E7%BD%AE%E5%86%85%E7%BD%91%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91/</id>
+    <published>2024-08-21T01:51:01.000Z</published>
+    <updated>2024-09-11T02:34:01.176Z</updated>
+    
+    <content type="html"><![CDATA[<p>在上一篇文章<a href="/2024/07/28/%E7%AE%80%E5%8D%95%E6%98%93%E7%94%A8%E7%9A%84%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%BB%84%E7%BD%91%E5%B7%A5%E5%85%B7ZeroTier/">《简单易用的内网穿透组网工具ZeroTier》</a>中，简单介绍了组网工具Zerotier；</p><p>实际上，我们可以通过Ip Forward的方式来访问组网设备内网下的其他设备！</p><br><a id="more"></a><h1 id="Zerotier配置内网流量转发"><a href="#Zerotier配置内网流量转发" class="headerlink" title="Zerotier配置内网流量转发"></a><strong>Zerotier配置内网流量转发</strong></h1><p>首先，在这台机器上配置 IP 转发：</p><pre><code class="shell">sudo sysctl -w net.ipv4.ip_forward=1sudo sysctl -p</code></pre><p>查看网卡配置：</p><pre><code class="bash">ip aens33: 192.168.117.0/24ztnfanm5kw: 192.168.196.220</code></pre><p>在zerotier网站设置转发规则：</p><p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/zerotier.jpg" alt="alipay"></p><p>在这台流量转发机器上设置环境变量：</p><pre><code class="bash">export PHY_IFACE=ens33 # 物理网卡export ZT_IFACE=ztnfanm5kw # Zerotier虚拟网卡</code></pre><p>添加规则到iptables：</p><pre><code class="bash">sudo iptables -t nat -A POSTROUTING -o $PHY_IFACE -j MASQUERADEsudo iptables -A FORWARD -i $PHY_IFACE -o $ZT_IFACE -m state --state RELATED,ESTABLISHED -j ACCEPTsudo iptables -A FORWARD -i $ZT_IFACE -o $PHY_IFACE -j ACCEPT</code></pre><blockquote><p>  这三条 <code>iptables</code> 规则用于配置网络地址转换（NAT）和数据包转发；</p><p>  含义如下：</p><ol><li><p><strong>规则 1：</strong> <code>sudo iptables -t nat -A POSTROUTING -o $PHY_IFACE -j MASQUERADE</code></p><p>这条规则在 <code>nat</code> 表的 <code>POSTROUTING</code> 链中添加了一条规则。<code>-o $PHY_IFACE</code> 表示这条规则适用于所有通过 <code>$PHY_IFACE</code> 这个网络接口（通常是物理接口）出去的数据包。<code>-j MASQUERADE</code> 指定了 NAT 操作中的伪装（masquerading）。这意味着，当数据包从 <code>$PHY_IFACE</code> 发送出去时，其源 IP 地址会被替换为 <code>$PHY_IFACE</code> 的 IP 地址。这通常用于允许内部网络通过一个公共 IP 地址进行外部通信；</p></li><li><p><strong>规则 2：</strong> <code>sudo iptables -A FORWARD -i $PHY_IFACE -o $ZT_IFACE -m state --state RELATED,ESTABLISHED -j ACCEPT</code></p><p>这条规则在 <code>filter</code> 表的 <code>FORWARD</code> 链中添加了一条规则。<code>-i $PHY_IFACE</code> 表示适用于从 <code>$PHY_IFACE</code> 这个接口进入的数据包，<code>-o $ZT_IFACE</code> 表示这些数据包要转发到 <code>$ZT_IFACE</code> 这个接口。<code>-m state --state RELATED,ESTABLISHED</code> 指定了只有那些与已有连接相关或已经建立的连接的数据包才被接受（<code>ACCEPT</code>）。这个规则通常用于允许来自外部网络的返回流量进入内部网络，从而支持诸如 HTTP 会话等；</p></li><li><p><strong>规则 3：</strong> <code>sudo iptables -A FORWARD -i $ZT_IFACE -o $PHY_IFACE -j ACCEPT</code></p><p>这条规则在 <code>filter</code> 表的 <code>FORWARD</code> 链中添加了一条规则。<code>-i $ZT_IFACE</code> 表示适用于从 <code>$ZT_IFACE</code> 这个接口进入的数据包，<code>-o $PHY_IFACE</code> 表示这些数据包要转发到 <code>$PHY_IFACE</code> 这个接口。<code>-j ACCEPT</code> 表示这些数据包会被接受并转发。这条规则允许来自 <code>$ZT_IFACE</code> 的流量经过路由器转发到 <code>$PHY_IFACE</code>，从而实现网络之间的数据传输；</p><p>总结：</p></li></ol><ul><li>第一条规则用于设置源地址伪装，允许内部网络设备通过一个公共 IP 地址进行外部通信；</li><li>第二条规则允许返回流量和已经建立的连接的数据包从外部网络进入内部网络；</li><li>第三条规则允许来自内部网络的数据包被转发到外部网络；</li></ul></blockquote><p>保存配置到文件：</p><pre><code class="bash">iptables-save</code></pre><p><strong>此时就可以用另一台加入了此Zerotier网络的机器访问内网机器的其他电脑了！</strong></p><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>文章参考：</p><ul><li><a href="https://blog.51cto.com/u_6364219/5264985" target="_blank" rel="noopener">https://blog.51cto.com/u_6364219/5264985</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">在上一篇文章《简单易用的内网穿透组网工具ZeroTier》中，简单介绍了组网工具Zerotier；实际上，我们可以通过Ip Forward的方式来访问组网设备内网下的其他设备！</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>关于说话艺术的资源</title>
+    <link href="https://jasonkayzk.github.io/2024/08/21/%E5%85%B3%E4%BA%8E%E8%AF%B4%E8%AF%9D%E8%89%BA%E6%9C%AF%E7%9A%84%E8%B5%84%E6%BA%90/"/>
+    <id>https://jasonkayzk.github.io/2024/08/21/%E5%85%B3%E4%BA%8E%E8%AF%B4%E8%AF%9D%E8%89%BA%E6%9C%AF%E7%9A%84%E8%B5%84%E6%BA%90/</id>
+    <published>2024-08-21T01:14:31.000Z</published>
+    <updated>2024-09-11T02:34:01.188Z</updated>
+    
+    <content type="html"><![CDATA[<p>一些锻炼口才、学习讲话的资源</p><br><a id="more"></a><h1 id="关于语言艺术的资源"><a href="#关于语言艺术的资源" class="headerlink" title="关于语言艺术的资源"></a><strong>关于语言艺术的资源</strong></h1><p>资源：</p><ul><li><a href="https://www.bilibili.com/video/BV1Wg4y1N7qW/" target="_blank" rel="noopener">《南开大学《口才艺术与社交礼仪》艾跃进 57集全》</a></li><li><a href="https://www.bilibili.com/video/BV1Ys411e7tZ/" target="_blank" rel="noopener">《【张雪峰】口才是如何炼成的？》</a></li><li><a href="https://www.bilibili.com/video/BV1kb4y1X7b7/" target="_blank" rel="noopener">《【艾跃进】怎么在平时练习口才和情商，必看的口才练习建议》</a></li><li><a href="https://www.bilibili.com/video/BV1qw4m1e7CC/" target="_blank" rel="noopener">《如何提高演讲口才能力？张雪峰一言以蔽之》</a></li><li><a href="https://www.ahhhhfs.com/?cat=&amp;s=%E5%8F%A3%E6%89%8D" target="_blank" rel="noopener">https://www.ahhhhfs.com/?cat=&amp;s=%E5%8F%A3%E6%89%8D</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">一些锻炼口才、学习讲话的资源</summary>
+    
+    
+    
+    <category term="程序人生" scheme="https://jasonkayzk.github.io/categories/程序人生/"/>
+    
+    
+    <category term="口才" scheme="https://jasonkayzk.github.io/tags/口才/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>安装Nvidea驱动及CUDA</title>
+    <link href="https://jasonkayzk.github.io/2024/08/20/%E5%AE%89%E8%A3%85Nvidea%E9%A9%B1%E5%8A%A8%E5%8F%8ACUDA/"/>
+    <id>https://jasonkayzk.github.io/2024/08/20/%E5%AE%89%E8%A3%85Nvidea%E9%A9%B1%E5%8A%A8%E5%8F%8ACUDA/</id>
+    <published>2024-08-20T02:32:46.000Z</published>
+    <updated>2024-09-11T02:34:01.192Z</updated>
+    
+    <content type="html"><![CDATA[<p>一些安装Nvidea驱动和CUDA的文章；</p><br><a id="more"></a><h1 id="安装Nvidea驱动及CUDA"><a href="#安装Nvidea驱动及CUDA" class="headerlink" title="安装Nvidea驱动及CUDA"></a><strong>安装Nvidea驱动及CUDA</strong></h1><p>参考：</p><ul><li><a href="https://linuxconfig.org/how-to-install-nvidia-driver-on-debian-12-bookworm-linux" target="_blank" rel="noopener">https://linuxconfig.org/how-to-install-nvidia-driver-on-debian-12-bookworm-linux</a></li><li><a href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;Distribution=Debian&amp;target_version=12&amp;target_type=deb_local" target="_blank" rel="noopener">https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;Distribution=Debian&amp;target_version=12&amp;target_type=deb_local</a></li><li><a href="https://www.cnblogs.com/wuliytTaotao/p/11453265.html" target="_blank" rel="noopener">https://www.cnblogs.com/wuliytTaotao/p/11453265.html</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">一些安装Nvidea驱动和CUDA的文章；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>两分钟逐字稿</title>
+    <link href="https://jasonkayzk.github.io/2024/08/13/%E4%B8%A4%E5%88%86%E9%92%9F%E9%80%90%E5%AD%97%E7%A8%BF/"/>
+    <id>https://jasonkayzk.github.io/2024/08/13/%E4%B8%A4%E5%88%86%E9%92%9F%E9%80%90%E5%AD%97%E7%A8%BF/</id>
+    <published>2024-08-13T09:24:08.000Z</published>
+    <updated>2024-09-11T02:34:01.184Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文总结了备课逐字稿写作的一些方法，核心为“目容方气构态语书”；</p><p>参考：</p><ul><li><a href="https://www.bilibili.com/video/BV1Bh411V7k1/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1Bh411V7k1/</a></li><li><a href="https://www.bilibili.com/video/BV138411p7hZ/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV138411p7hZ/</a></li></ul><br><a id="more"></a><h1 id="两分钟逐字稿"><a href="#两分钟逐字稿" class="headerlink" title="两分钟逐字稿"></a><strong>两分钟逐字稿</strong></h1><p>教学的<strong>核心要求</strong>为：</p><p><font color="#f00"><strong>“目容方气构态语书”</strong></font></p><br><h2 id="要求"><a href="#要求" class="headerlink" title="要求"></a>要求</h2><h3 id="目的明确"><a href="#目的明确" class="headerlink" title="目的明确"></a>目的明确</h3><p>上完这堂课，学生能：</p><ul><li>明白、理解、掌握什么</li><li>重难点</li></ul><br><h3 id="内容正确"><a href="#内容正确" class="headerlink" title="内容正确"></a>内容正确</h3><p>讲解的内容必须是正确的，不能讲错</p><br><h3 id="方法恰当"><a href="#方法恰当" class="headerlink" title="方法恰当"></a>方法恰当</h3><p>讲授法、讨论法、问答法…</p><br><h3 id="气氛热烈"><a href="#气氛热烈" class="headerlink" title="气氛热烈"></a>气氛热烈</h3><p>和学生的互动</p><p>讲课的激情</p><br><h3 id="结构合理"><a href="#结构合理" class="headerlink" title="结构合理"></a>结构合理</h3><p>不能想一出是一出、不能想到哪讲到哪</p><p>包括：</p><ul><li>导入</li><li>新授</li><li>巩固</li><li>小结</li><li>作业</li></ul><br><h3 id="态度从容"><a href="#态度从容" class="headerlink" title="态度从容"></a>态度从容</h3><p>老师授课态度</p><br><h3 id="语言艺术"><a href="#语言艺术" class="headerlink" title="语言艺术"></a>语言艺术</h3><p>语言优美</p><p>表达和蔼可亲</p><p>情感</p><p>夸奖学生</p><br><h3 id="板书有序"><a href="#板书有序" class="headerlink" title="板书有序"></a>板书有序</h3><p>主板书、副板书</p><p>主板书（中间位置）：</p><ul><li>课题</li><li>重点要点</li></ul><p>副板书（两边位置）：</p><ul><li>布置作业</li><li>交代事项</li></ul><br><h2 id="如何将要求融入课堂"><a href="#如何将要求融入课堂" class="headerlink" title="如何将要求融入课堂"></a>如何将要求融入课堂</h2><p>导入</p><p>新授</p><p>巩固</p><p>总结</p><p>作业</p><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>视频参考：</p><ul><li><a href="https://www.bilibili.com/video/BV1Bh411V7k1/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1Bh411V7k1/</a></li><li><a href="https://www.bilibili.com/video/BV138411p7hZ/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV138411p7hZ/</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">本文总结了备课逐字稿写作的一些方法，核心为“目容方气构态语书”；</summary>
+    
+    
+    
+    <category term="教师" scheme="https://jasonkayzk.github.io/categories/教师/"/>
+    
+    
+    <category term="教师" scheme="https://jasonkayzk.github.io/tags/教师/"/>
+    
+    <category term="教案" scheme="https://jasonkayzk.github.io/tags/教案/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>两分钟教案</title>
+    <link href="https://jasonkayzk.github.io/2024/08/13/%E4%B8%A4%E5%88%86%E9%92%9F%E6%95%99%E6%A1%88/"/>
+    <id>https://jasonkayzk.github.io/2024/08/13/%E4%B8%A4%E5%88%86%E9%92%9F%E6%95%99%E6%A1%88/</id>
+    <published>2024-08-13T09:20:24.000Z</published>
+    <updated>2024-09-11T02:34:01.184Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文总结了教案写作的一些方法，主要是五大五小原则。</p><p>参考：</p><ul><li><a href="https://www.bilibili.com/video/BV12a4y1V7YD" target="_blank" rel="noopener">https://www.bilibili.com/video/BV12a4y1V7YD</a></li></ul><br><a id="more"></a><h1 id="两分钟教案"><a href="#两分钟教案" class="headerlink" title="两分钟教案"></a><strong>两分钟教案</strong></h1><h2 id="五大五小原则"><a href="#五大五小原则" class="headerlink" title="五大五小原则"></a><strong>五大五小原则</strong></h2><h3 id="五大步骤"><a href="#五大步骤" class="headerlink" title="五大步骤"></a>五大步骤</h3><h4 id="1、教学目标"><a href="#1、教学目标" class="headerlink" title="1、教学目标"></a>1、教学目标</h4><p>三维、四维</p><p>三维：</p><ul><li>知识与技能<ul><li>学生了解…、理解…、掌握…</li></ul></li><li>过程与方法<ul><li>通过小组讨论、自主探究…方法</li></ul></li><li>情态价值观<ul><li>心得体会、收获…</li></ul></li></ul><br><h4 id="2、教学重难点"><a href="#2、教学重难点" class="headerlink" title="2、教学重难点"></a>2、教学重难点</h4><p>重点：知识与技能：</p><ul><li>掌握…</li></ul><p>难点：难以理解、抽象：</p><ul><li>理解、领悟…</li></ul><br><h4 id="3、教学方法"><a href="#3、教学方法" class="headerlink" title="3、教学方法"></a>3、教学方法</h4><p>讲授法</p><p>讨论法</p><p>问答法</p><p>读书指导法</p><br><h4 id="4、新课讲授（五小）"><a href="#4、新课讲授（五小）" class="headerlink" title="4、新课讲授（五小）"></a>4、新课讲授（五小）</h4><p>导入：</p><ul><li>多媒体导入：视频、图片</li><li>故事导入</li><li>温故导入：复习</li></ul><p>新授</p><ul><li>教学重难点：</li><li>教学方法：</li><li>板书</li></ul><p>巩固</p><ul><li>探讨</li><li>提问</li><li>当堂出题</li><li>板演</li></ul><p>小结</p><ul><li>学生总结、教师补充</li><li>教师总结</li><li>补充板书</li></ul><p>布置作业</p><ul><li>当堂出题</li><li>书本课后练习</li></ul><br><h4 id="5、板书设计"><a href="#5、板书设计" class="headerlink" title="5、板书设计"></a>5、板书设计</h4><p>主板书、副板书</p><p>主板书（中间位置）：</p><ul><li>课题</li><li>重点要点</li></ul><p>副板书（两边位置）：</p><ul><li>布置作业</li><li>交代事项</li></ul><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>视频参考：</p><ul><li><a href="https://www.bilibili.com/video/BV12a4y1V7YD" target="_blank" rel="noopener">https://www.bilibili.com/video/BV12a4y1V7YD</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">本文总结了教案写作的一些方法，主要是五大五小原则。</summary>
+    
+    
+    
+    <category term="教师" scheme="https://jasonkayzk.github.io/categories/教师/"/>
+    
+    
+    <category term="教师" scheme="https://jasonkayzk.github.io/tags/教师/"/>
+    
+    <category term="教案" scheme="https://jasonkayzk.github.io/tags/教案/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>简单易用的内网穿透组网工具ZeroTier</title>
+    <link href="https://jasonkayzk.github.io/2024/07/28/%E7%AE%80%E5%8D%95%E6%98%93%E7%94%A8%E7%9A%84%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%BB%84%E7%BD%91%E5%B7%A5%E5%85%B7ZeroTier/"/>
+    <id>https://jasonkayzk.github.io/2024/07/28/%E7%AE%80%E5%8D%95%E6%98%93%E7%94%A8%E7%9A%84%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%BB%84%E7%BD%91%E5%B7%A5%E5%85%B7ZeroTier/</id>
+    <published>2024-07-28T01:32:46.000Z</published>
+    <updated>2024-09-11T02:34:01.200Z</updated>
+    
+    <content type="html"><![CDATA[<p>ZeroTier 是一款非常简单易用的内网穿透工具，不需要配置，就能实现虚拟局域网的组建，让你可以在外也能连回家中、学校、办公室的电脑获取资料，数据；</p><p>配置与使用都非常简单，堪称「 无配置，零基础」；</p><br><a id="more"></a><h1 id="简单易用的内网穿透组网工具ZeroTier"><a href="#简单易用的内网穿透组网工具ZeroTier" class="headerlink" title="简单易用的内网穿透组网工具ZeroTier"></a><strong>简单易用的内网穿透组网工具ZeroTier</strong></h1><blockquote><p>  项目地址：<a href="https://github.com/zerotier/ZeroTierOne" target="_blank" rel="noopener">https://github.com/zerotier/ZeroTierOne</a></p><p>  官网：<a href="https://www.zerotier.com/" target="_blank" rel="noopener">https://www.zerotier.com/</a></p></blockquote><h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a><strong>使用方法</strong></h2><ol><li><a href="https://my.zerotier.com/" target="_blank" rel="noopener">注册 ZeroTier</a>，获得 Internal ID；</li><li>创建私有局域网，获得 Network ID；</li><li>安装客户端，加入 Network ID（或邀请 Internal ID 加入）；</li><li>连接；</li></ol><blockquote><p>  安装步骤参考官网即可：</p><ul><li><p><a href="https://www.zerotier.com/download/" target="_blank" rel="noopener">https://www.zerotier.com/download/</a></p><p>创建和网络配置方法基本上默认的就行，比较简单，这里不再赘述～</p></li></ul></blockquote><p>需要注意的是，在使用客户端加入网络时，首先执行：</p><pre><code class="bash">zerotier-cli join &lt;network-id&gt;</code></pre><p>随后还需要在网页的控制台上授权使用，例如：</p><p><img src="https://www.netopt.net/group1/M00/00/A9/rBEADGNzljiACLJVAABPyE1wl0E887.png" alt></p><p>设置好以后，可以看到有分配IP了，就可以像访问你自己的本地网络一样去访问你远端的计算机了；</p><blockquote><p>  小技巧：</p><p>  在上面的设置中，可以：</p><ul><li><strong>修改 <code>short-name</code>，添加各个设备的tag；</strong></li><li><strong>开启 <code>Do Not Auto-Assign IPs</code>，然后通过右侧手动分配静态的IP地址；</strong></li></ul></blockquote><br><p>参考文章：</p><ul><li><a href="https://zhuanlan.zhihu.com/p/422171986" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/422171986</a></li><li><a href="https://www.appinn.com/zerotier-one/" target="_blank" rel="noopener">https://www.appinn.com/zerotier-one/</a></li><li><a href="https://post.smzdm.com/p/awkom242/" target="_blank" rel="noopener">https://post.smzdm.com/p/awkom242/</a></li><li><a href="https://netopt.net/topic/c7d7ce1aff79bbd26ca53f7dc3431b4b" target="_blank" rel="noopener">https://netopt.net/topic/c7d7ce1aff79bbd26ca53f7dc3431b4b</a></li><li><a href="https://juejin.cn/post/7161224755519946759" target="_blank" rel="noopener">https://juejin.cn/post/7161224755519946759</a></li><li><a href="https://muzihuaner.github.io/2021/09/22/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%A5%9E%E5%99%A8ZeroTier%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" target="_blank" rel="noopener">https://muzihuaner.github.io/2021/09/22/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%A5%9E%E5%99%A8ZeroTier%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">ZeroTier 是一款非常简单易用的内网穿透工具，不需要配置，就能实现虚拟局域网的组建，让你可以在外也能连回家中、学校、办公室的电脑获取资料，数据。配置与使用都非常简单，堪称「 无配置，零基础」；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>人生は一度きり。だから楽しむべきよ</title>
+    <link href="https://jasonkayzk.github.io/2024/07/27/%E4%BA%BA%E7%94%9F%E3%81%AF%E4%B8%80%E5%BA%A6%E3%81%8D%E3%82%8A%E3%80%82%E3%81%A0%E3%81%8B%E3%82%89%E6%A5%BD%E3%81%97%E3%82%80%E3%81%B9%E3%81%8D%E3%82%88/"/>
+    <id>https://jasonkayzk.github.io/2024/07/27/%E4%BA%BA%E7%94%9F%E3%81%AF%E4%B8%80%E5%BA%A6%E3%81%8D%E3%82%8A%E3%80%82%E3%81%A0%E3%81%8B%E3%82%89%E6%A5%BD%E3%81%97%E3%82%80%E3%81%B9%E3%81%8D%E3%82%88/</id>
+    <published>2024-07-27T09:46:54.000Z</published>
+    <updated>2024-09-11T02:34:01.184Z</updated>
+    
+    <content type="html"><![CDATA[<p>ココシャネルの人生に関する名言</p><br><a id="more"></a><h1 id="人生は一度きり。だから楽しむべきよ"><a href="#人生は一度きり。だから楽しむべきよ" class="headerlink" title="人生は一度きり。だから楽しむべきよ"></a><strong>人生は一度きり。だから楽しむべきよ</strong></h1><p>「みんな、私の着ているものを見て笑ったわ。でもそれが私の成功の鍵。みんなと同じ格好をしなかったからよ」</p><p>「私は好きなことしかしない。私は自分の人生を、自分が好きなことだけで切り開いてきたの」</p><p>「実際にどう生きたかということは大した問題ではないのです。大切なのは、どんな人生を夢見たかということだけ。なぜって、夢はその人が死んだ後もいき続けるのですから」</p><p>「失敗しなくちゃ、成功はしないわよ」</p><p>「人生は一度きり。 だから楽しむべきよ」</p><p>​    —— ココシャネル</p><blockquote><p>  <strong>Reference:</strong></p><ul><li><a href="https://newsphere.jp/national/coco-chanel-quote/" target="_blank" rel="noopener">https://newsphere.jp/national/coco-chanel-quote/</a></li></ul></blockquote><br><h2 id="時間は有限"><a href="#時間は有限" class="headerlink" title="時間は有限"></a><strong>時間は有限</strong></h2><p><strong>ジャンヌ・ダルク</strong>　「一度だけの人生。それが私たちの持つ人生すべてだ。」</p><p><strong>パリス・ヒルトン</strong>　「人生はたった一度きり。だから、幸せになれることをやり、笑顔になれる人と一緒にいること。」</p><p><strong>ココ・シャネル</strong> 「人生は一度きり。だから楽しむべきよ。」</p><p>1日は24時間、1年は365日。</p><p>その１日は人生に一度しか訪れる事はありません。そう考えると、</p><p><strong>“悔いのない１日にしよう！！”</strong></p><p><strong>“自分の最大限のパフォーマンスを発揮しよう！！”</strong></p><p>と思うようになりました。言葉の影響力は本当に凄いと思います。</p><p>皆さんも自分の好きな言葉でたくさんの挑戦をし、経験を積んで</p><p>悔いのない人生にしてほしいと思い、本日はこの言葉を紹介させていただきました♪</p><p>自分が楽しいと思う生き方をして常に笑顔で居たいなと私は思っています(*^◯^*)</p><p>まだまだ、私自身の目的や目標は明確ではないので、</p><p>色々な事にチャレンジしながら明確にしていきます！！！！</p><blockquote><p>  <strong>Reference:</strong></p><ul><li><a href="https://keioh.ne.jp/time-is-finite1802-2" target="_blank" rel="noopener">https://keioh.ne.jp/time-is-finite1802-2</a></li></ul></blockquote><br>]]></content>
+    
+    
+    <summary type="html">ココシャネルの人生に関する名言。</summary>
+    
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/categories/日本語/"/>
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/tags/日本語/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>解决VMWare桥接模式下无法自动获取IP的问题</title>
+    <link href="https://jasonkayzk.github.io/2024/07/27/%E8%A7%A3%E5%86%B3VMWare%E6%A1%A5%E6%8E%A5%E6%A8%A1%E5%BC%8F%E4%B8%8B%E6%97%A0%E6%B3%95%E8%87%AA%E5%8A%A8%E8%8E%B7%E5%8F%96IP%E7%9A%84%E9%97%AE%E9%A2%98/"/>
+    <id>https://jasonkayzk.github.io/2024/07/27/%E8%A7%A3%E5%86%B3VMWare%E6%A1%A5%E6%8E%A5%E6%A8%A1%E5%BC%8F%E4%B8%8B%E6%97%A0%E6%B3%95%E8%87%AA%E5%8A%A8%E8%8E%B7%E5%8F%96IP%E7%9A%84%E9%97%AE%E9%A2%98/</id>
+    <published>2024-07-27T08:17:11.000Z</published>
+    <updated>2024-09-11T02:34:01.200Z</updated>
+    
+    <content type="html"><![CDATA[<p>当配置VMWare虚拟机网络为桥接模式时，可能会出现无法获取到IP的情况；</p><p>主要是因为桥接模式自动分配的网卡不对；</p><br><a id="more"></a><h1 id="解决VMWare桥接模式下无法自动获取IP的问题"><a href="#解决VMWare桥接模式下无法自动获取IP的问题" class="headerlink" title="解决VMWare桥接模式下无法自动获取IP的问题"></a><strong>解决VMWare桥接模式下无法自动获取IP的问题</strong></h1><p>解决：</p><p>1、Edit–Virtual Network Editor…</p><p>2、点选VMnet0，在VMnet Information里面，点击“Bridged to: ”后面的“Automatic”下拉菜单，将“Automatic”更换为实际的物理网卡即可！</p><blockquote><p>  <strong>参考：</strong></p><p>  <a href="https://www.cnblogs.com/qmfsun/p/6109766.html" target="_blank" rel="noopener">https://www.cnblogs.com/qmfsun/p/6109766.html</a></p></blockquote><br>]]></content>
+    
+    
+    <summary type="html">当配置VMWare虚拟机网络为桥接模式时，可能会出现无法获取到IP的情况；主要是因为桥接模式自动分配的网卡不对；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+    <category term="VMWare" scheme="https://jasonkayzk.github.io/tags/VMWare/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>【转】MacOS双开微信的方法</title>
+    <link href="https://jasonkayzk.github.io/2024/07/26/MacOS%E5%8F%8C%E5%BC%80%E5%BE%AE%E4%BF%A1%E7%9A%84%E6%96%B9%E6%B3%95/"/>
+    <id>https://jasonkayzk.github.io/2024/07/26/MacOS%E5%8F%8C%E5%BC%80%E5%BE%AE%E4%BF%A1%E7%9A%84%E6%96%B9%E6%B3%95/</id>
+    <published>2024-07-26T10:03:33.000Z</published>
+    <updated>2024-09-11T02:34:01.172Z</updated>
+    
+    <content type="html"><![CDATA[<p>通常情况下，Mac上只能打开单个微信，本文介绍了如何打开两个微信；</p><br><a id="more"></a><h1 id="MacOS双开微信的方法"><a href="#MacOS双开微信的方法" class="headerlink" title="MacOS双开微信的方法"></a><strong>MacOS双开微信的方法</strong></h1><p>TL;DR:</p><p>在打开一个微信的前提下：</p><ol><li>打开「访达」，在左侧的「应用程序」中找到微信</li><li>右键「微信」，选择「显示包内容」</li><li>双击进入「Contents」、「MacOS」</li><li>双击打开「WeChat」</li></ol><p><strong>需要注意：</strong></p><ol><li>双击打开「WeChat」之后，会先弹出「终端」，再弹出「微信」，正常用另一个号登录微信后，「终端」窗口不可关闭，点击最小化即可。</li><li>本方法仅适用于两个手机想要在同一台 Mac 上双开微信的情况，一个 iPhone 想要在登陆一个号后，使用切换账号再登陆微信会挤掉已经登陆的微信号。</li></ol><blockquote><p>  原文出处：</p><ul><li><a href="https://sspai.com/post/69424" target="_blank" rel="noopener">https://sspai.com/post/69424</a></li></ul></blockquote><br>]]></content>
+    
+    
+    <summary type="html">通常情况下，Mac上只能打开单个微信，本文介绍了如何打开两个微信；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一些tg使用指南总结</title>
+    <link href="https://jasonkayzk.github.io/2024/07/23/%E4%B8%80%E4%BA%9Btg%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97%E6%80%BB%E7%BB%93/"/>
+    <id>https://jasonkayzk.github.io/2024/07/23/%E4%B8%80%E4%BA%9Btg%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97%E6%80%BB%E7%BB%93/</id>
+    <published>2024-07-23T00:21:19.000Z</published>
+    <updated>2024-09-11T02:34:01.184Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文总结了一些关于TG使用相关的文章；</p><br><a id="more"></a><h1 id="一些tg使用指南总结"><a href="#一些tg使用指南总结" class="headerlink" title="一些tg使用指南总结"></a><strong>一些tg使用指南总结</strong></h1><p>总结：</p><ul><li><a href="https://www.tingtalk.me/telegram/" target="_blank" rel="noopener">https://www.tingtalk.me/telegram/</a></li><li><a href="https://www.ahhhhfs.com/34577/" target="_blank" rel="noopener">https://www.ahhhhfs.com/34577/</a></li></ul><p>机器人：</p><ul><li><a href="https://sendpulse.com/knowledge-base/chatbot/telegram/create-telegram-chatbot" target="_blank" rel="noopener">https://sendpulse.com/knowledge-base/chatbot/telegram/create-telegram-chatbot</a></li><li><a href="https://telegram.org/blog/bot-revolution" target="_blank" rel="noopener">https://telegram.org/blog/bot-revolution</a></li><li><a href="https://help.nethunt.com/en/articles/6467726-how-to-create-a-telegram-bot-and-use-it-to-post-in-telegram-channels" target="_blank" rel="noopener">https://help.nethunt.com/en/articles/6467726-how-to-create-a-telegram-bot-and-use-it-to-post-in-telegram-channels</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">本文总结了一些关于TG使用相关的文章；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+    <category term="Telegram" scheme="https://jasonkayzk.github.io/tags/Telegram/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>DockerHub被墙之后的一些替代方案汇总</title>
+    <link href="https://jasonkayzk.github.io/2024/07/23/DockerHub%E8%A2%AB%E5%A2%99%E4%B9%8B%E5%90%8E%E7%9A%84%E4%B8%80%E4%BA%9B%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88%E6%B1%87%E6%80%BB/"/>
+    <id>https://jasonkayzk.github.io/2024/07/23/DockerHub%E8%A2%AB%E5%A2%99%E4%B9%8B%E5%90%8E%E7%9A%84%E4%B8%80%E4%BA%9B%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88%E6%B1%87%E6%80%BB/</id>
+    <published>2024-07-23T00:06:53.000Z</published>
+    <updated>2024-09-11T02:34:01.156Z</updated>
+    
+    <content type="html"><![CDATA[<p>DockerHub在国内已经无法使用了，这里有几篇文章提供了一些替代方法，可以参考；</p><br><a id="more"></a><h1 id="DockerHub被墙之后的一些替代方案汇总"><a href="#DockerHub被墙之后的一些替代方案汇总" class="headerlink" title="DockerHub被墙之后的一些替代方案汇总"></a><strong>DockerHub被墙之后的一些替代方案汇总</strong></h1><h2 id="使用免费的镜像代理"><a href="#使用免费的镜像代理" class="headerlink" title="使用免费的镜像代理"></a><strong>使用免费的镜像代理</strong></h2><p>目前能过使用的：</p><pre><code>https://dockerhub.o0o.us.kg</code></pre><p>例如：</p><pre><code>docker pull dockerhub.o0o.us.kg/library/alpine:latest # 拉取 library 镜像docker pull dockerhub.o0o.us.kg/coredns/coredns:latest # 拉取 coredns 镜像</code></pre><p>镜像拉取后，可以通过 re-tag 的方式修改：</p><pre><code>docker tag dockerhub.o0o.us.kg/coredns/coredns:latest coredns:latestdocker rmi dockerhub.o0o.us.kg/coredns/coredns:latest</code></pre><p>参考：</p><ul><li><a href="http://dockerhub.o0o.us.kg/" target="_blank" rel="noopener">http://dockerhub.o0o.us.kg/</a></li><li><a href="https://dockerproxy.com/" target="_blank" rel="noopener">https://dockerproxy.com/</a></li></ul><br><h2 id="自建代理"><a href="#自建代理" class="headerlink" title="自建代理"></a><strong>自建代理</strong></h2><p>自建代理可以参考：</p><ul><li><a href="https://zhangzhuo.ltd/articles/2024/07/15/1721034528395.html" target="_blank" rel="noopener">https://zhangzhuo.ltd/articles/2024/07/15/1721034528395.html</a></li><li><a href="https://zhpengfei.com/dockerhub-in-china-via-cloudflare-workers/#comments" target="_blank" rel="noopener">https://zhpengfei.com/dockerhub-in-china-via-cloudflare-workers/#comments</a></li><li><a href="https://51.ruyo.net/18687.html" target="_blank" rel="noopener">https://51.ruyo.net/18687.html</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">DockerHub在国内已经无法使用了，这里有几篇文章提供了一些替代方法，可以参考；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="Docker" scheme="https://jasonkayzk.github.io/tags/Docker/"/>
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+    <category term="DockerHub" scheme="https://jasonkayzk.github.io/tags/DockerHub/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>【转】關於日文漢字與平假名的使用</title>
+    <link href="https://jasonkayzk.github.io/2024/07/21/%E3%80%90%E8%BD%AC%E3%80%91%E9%97%9C%E6%96%BC%E6%97%A5%E6%96%87%E6%BC%A2%E5%AD%97%E8%88%87%E5%B9%B3%E5%81%87%E5%90%8D%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
+    <id>https://jasonkayzk.github.io/2024/07/21/%E3%80%90%E8%BD%AC%E3%80%91%E9%97%9C%E6%96%BC%E6%97%A5%E6%96%87%E6%BC%A2%E5%AD%97%E8%88%87%E5%B9%B3%E5%81%87%E5%90%8D%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
+    <published>2024-07-21T03:11:34.000Z</published>
+    <updated>2024-09-11T02:34:01.184Z</updated>
+    
+    <content type="html"><![CDATA[<p>大家有好奇過「子供」跟「子ども」有什麼差異嗎？「時」跟「とき」又有什麼不同呢？什麼時候寫漢字，什麼時候寫平假名呢？</p><p>本文分享了一篇文章来回答这个问题。</p><br><a id="more"></a><h1 id="【转】關於日文漢字與平假名的使用"><a href="#【转】關於日文漢字與平假名的使用" class="headerlink" title="【转】關於日文漢字與平假名的使用"></a><strong>【转】關於日文漢字與平假名的使用</strong></h1><p>文章：</p><ul><li><a href="https://www.sigure.tw/learn-japanese/mix/knowledge/kanji-hiragana" target="_blank" rel="noopener">《關於日文漢字與平假名的使用》</a></li></ul><p>此外分享这个学日语的网站：</p><ul><li><a href="https://www.sigure.tw/" target="_blank" rel="noopener">https://www.sigure.tw/</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">大家有好奇過「子供」跟「子ども」有什麼差異嗎？「時」跟「とき」又有什麼不同呢？什麼時候寫漢字，什麼時候寫平假名呢？本文分享了一篇文章来回答这个问题。</summary>
+    
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/categories/日本語/"/>
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/tags/日本語/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>日语时态总结</title>
+    <link href="https://jasonkayzk.github.io/2024/07/21/%E6%97%A5%E8%AF%AD%E6%97%B6%E6%80%81%E6%80%BB%E7%BB%93/"/>
+    <id>https://jasonkayzk.github.io/2024/07/21/%E6%97%A5%E8%AF%AD%E6%97%B6%E6%80%81%E6%80%BB%E7%BB%93/</id>
+    <published>2024-07-21T02:47:05.000Z</published>
+    <updated>2024-09-11T02:34:01.196Z</updated>
+    
+    <content type="html"><![CDATA[<p>一张图片总结日语的时态！</p><br><a id="more"></a><h1 id="日语时态总结"><a href="#日语时态总结" class="headerlink" title="日语时态总结"></a><strong>日语时态总结</strong></h1><p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/japanese_time.jpeg" alt="japanese_time.jpeg"></p><p>补（过去时）: </p><ul><li><a href="https://www.perplexity.ai/search/jie-shao-yi-xia-ri-yu-de-guo-q-rZujpbjxS5adjzFJETBroQ" target="_blank" rel="noopener">https://www.perplexity.ai/search/jie-shao-yi-xia-ri-yu-de-guo-q-rZujpbjxS5adjzFJETBroQ</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">一张图片总结日语的时态！</summary>
+    
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/categories/日本語/"/>
+    
+    
+    <category term="日本語" scheme="https://jasonkayzk.github.io/tags/日本語/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内网穿透或联机系列文章汇总</title>
+    <link href="https://jasonkayzk.github.io/2024/07/20/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%88%96%E8%81%94%E6%9C%BA%E7%B3%BB%E5%88%97%E6%96%87%E7%AB%A0%E6%B1%87%E6%80%BB/"/>
+    <id>https://jasonkayzk.github.io/2024/07/20/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%88%96%E8%81%94%E6%9C%BA%E7%B3%BB%E5%88%97%E6%96%87%E7%AB%A0%E6%B1%87%E6%80%BB/</id>
+    <published>2024-07-20T03:53:04.000Z</published>
+    <updated>2024-09-11T02:34:01.188Z</updated>
+    
+    <content type="html"><![CDATA[<p>目前在用的是Zerotier，但是之前收藏了一些相关文章，这里做一下汇总；</p><br><a id="more"></a><h1 id="内网穿透或联机系列文章汇总"><a href="#内网穿透或联机系列文章汇总" class="headerlink" title="内网穿透或联机系列文章汇总"></a><strong>内网穿透或联机系列文章汇总</strong></h1><p><a href="http://www.senra.me/nat-traversal-series-selfhosted-ngrok-a-well-known-solution/" target="_blank" rel="noopener">内网穿透系列——ngrok （老牌开源内网穿透工具）</a></p><p><a href="http://www.senra.me/nat-traversal-series-frp-next-generation-high-performance-ngrok-alternative/" target="_blank" rel="noopener">内网穿透系列——frp （新一代高性能内网穿透工具）</a></p><p><a href="http://www.senra.me/nat-traversal-series-ssh-reverse-tunnel-the-easies-solution/" target="_blank" rel="noopener">内网穿透系列——SSH反向隧道 （最简单的内网穿透方案）</a></p><p><a href="http://www.senra.me/nat-traversal-series-n2n-a-easy-p2p-vpn-solution/" target="_blank" rel="noopener">内网穿透系列——N2N（简单的P2P组网方案）</a></p><p><a href="http://www.senra.me/nat-traversal-series-wireguard-fast-secure-kernelspace-network-tunnel/" target="_blank" rel="noopener">内网穿透系列——WireGuard (快速, 安全的下一代隧道程序)</a></p><p><a href="http://www.senra.me/nat-traversal-series-zerotier-p2p-vpn-can-be-used-in-container-without-tuntap/" target="_blank" rel="noopener">内网穿透系列——ZeroTier（能在容器中不依赖TUN/TAP使用的P2P VPN）</a></p><p><a href="http://www.senra.me/nat-traversal-series-dogtunnel-efficient-p2p-and-cs-tunnel-support-kcp/" target="_blank" rel="noopener">内网穿透系列——Dog Tunnel ( 狗洞，支持KCP，高效快速的P2P隧道 )</a></p><p><a href="http://www.senra.me/nat-traversal-series-summary/" target="_blank" rel="noopener">内网穿透系列——总结&amp;预告</a></p><p><a href="https://sspai.com/post/60852" target="_blank" rel="noopener">用开源免费的内网穿透工具 frp，实现远程桌面和文件传输</a></p><p><a href="https://www.appinn.com/wangyunchuan/" target="_blank" rel="noopener">最简洁免费内网穿透教程：纯干货，一键穿透网站、文件共享、游戏联机、远程桌面</a></p><br>]]></content>
+    
+    
+    <summary type="html">目前在用的是Zerotier，但是之前收藏了一些相关文章，这里做一下汇总；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>使用nmtui配置wifi连接</title>
+    <link href="https://jasonkayzk.github.io/2024/07/18/%E4%BD%BF%E7%94%A8nmtui%E9%85%8D%E7%BD%AEwifi%E8%BF%9E%E6%8E%A5/"/>
+    <id>https://jasonkayzk.github.io/2024/07/18/%E4%BD%BF%E7%94%A8nmtui%E9%85%8D%E7%BD%AEwifi%E8%BF%9E%E6%8E%A5/</id>
+    <published>2024-07-18T00:25:47.000Z</published>
+    <updated>2024-09-11T02:34:01.188Z</updated>
+    
+    <content type="html"><![CDATA[<p>笔记本作为服务器，可以通过使用nmtui来配置wifi实现网络连接；</p><br><a id="more"></a><h1 id="使用nmtui配置wifi连接"><a href="#使用nmtui配置wifi连接" class="headerlink" title="使用nmtui配置wifi连接"></a><strong>使用nmtui配置wifi连接</strong></h1><p>首先安装 nmtui，然后直接输入 nmtui 命令配置连接即可；</p><p>配置参考：</p><ul><li><a href="https://ubunlog.com/zh-CN/nmtui%E6%88%96nmcli%E4%BB%8E%E7%BB%88%E7%AB%AF%E5%BB%BA%E7%AB%8BWi-Fi%E8%BF%9E%E6%8E%A5/" target="_blank" rel="noopener">https://ubunlog.com/zh-CN/nmtui%E6%88%96nmcli%E4%BB%8E%E7%BB%88%E7%AB%AF%E5%BB%BA%E7%AB%8BWi-Fi%E8%BF%9E%E6%8E%A5/</a></li></ul><p>需要注意：</p><p><strong>1、需要正确安装无线网卡驱动，否则可能搜索不到Wifi；</strong></p><br><p><strong>2、配置Wifi后可能也会出现<code>temporary failure in name resolution</code>错误；</strong></p><p>可能是没有正确配置 DNS 解析；</p><p>修改：</p><p>/etc/resolv.conf</p><pre><code>nameserver 114.114.114.114nameserver 8.8.8.8</code></pre><p>重启解析服务：</p><pre><code>systemctl restart systemd-resolved.service</code></pre><p>即可！</p><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>文章参考：</p><ul><li><a href="https://docs.redhat.com/zh_hans/documentation/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/proc_configuring-a-wifi-connection-by-using-nmtui_assembly_managing-wifi-connections" target="_blank" rel="noopener">https://docs.redhat.com/zh_hans/documentation/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/proc_configuring-a-wifi-connection-by-using-nmtui_assembly_managing-wifi-connections</a></li><li><a href="https://ubunlog.com/zh-CN/nmtui%E6%88%96nmcli%E4%BB%8E%E7%BB%88%E7%AB%AF%E5%BB%BA%E7%AB%8BWi-Fi%E8%BF%9E%E6%8E%A5/" target="_blank" rel="noopener">https://ubunlog.com/zh-CN/nmtui%E6%88%96nmcli%E4%BB%8E%E7%BB%88%E7%AB%AF%E5%BB%BA%E7%AB%8BWi-Fi%E8%BF%9E%E6%8E%A5/</a></li><li><a href="https://www.redswitches.com/blog/fix-temporary-failure-in-name-resolution/" target="_blank" rel="noopener">https://www.redswitches.com/blog/fix-temporary-failure-in-name-resolution/</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">笔记本作为服务器，可以通过使用nmtui来配置wifi实现网络连接；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>老旧笔记本安装Debian系统后Broadcom驱动缺失解决方法</title>
+    <link href="https://jasonkayzk.github.io/2024/07/18/%E8%80%81%E6%97%A7%E7%AC%94%E8%AE%B0%E6%9C%AC%E5%AE%89%E8%A3%85Debian%E7%B3%BB%E7%BB%9F%E5%90%8EBroadcom%E9%A9%B1%E5%8A%A8%E7%BC%BA%E5%A4%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
+    <id>https://jasonkayzk.github.io/2024/07/18/%E8%80%81%E6%97%A7%E7%AC%94%E8%AE%B0%E6%9C%AC%E5%AE%89%E8%A3%85Debian%E7%B3%BB%E7%BB%9F%E5%90%8EBroadcom%E9%A9%B1%E5%8A%A8%E7%BC%BA%E5%A4%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</id>
+    <published>2024-07-18T00:04:29.000Z</published>
+    <updated>2024-09-11T02:34:01.200Z</updated>
+    
+    <content type="html"><![CDATA[<p>老旧笔记本如果使用的是Broadcom无线网卡，安装完Debian系统之后可能是没有Broadcom驱动，导致无法连接Wifi的；</p><p>本文讲述了如何在Debian12下（旧版本应该也可以）安装Broadcom驱动；</p><br><a id="more"></a><h1 id="老旧笔记本安装Debian系统后Broadcom驱动缺失解决方法"><a href="#老旧笔记本安装Debian系统后Broadcom驱动缺失解决方法" class="headerlink" title="老旧笔记本安装Debian系统后Broadcom驱动缺失解决方法"></a><strong>老旧笔记本安装Debian系统后Broadcom驱动缺失解决方法</strong></h1><p>如果是 Debian12，通常情况下会包含一个 non-free 的源，但是这个源不包括：``broadcom-sta-dkms` 软件包！</p><p>添加一个源：</p><p>/etc/apt/sources.list</p><pre><code>deb http://deb.debian.org/debian/ stable main contrib non-free</code></pre><p>然后更新后安装：</p><pre><code class="bash">sudo apt updateapt install broadcom-sta-dkms</code></pre><p>即可！</p><br><h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>参考文章：</p><ul><li><a href="https://www.reddit.com/r/debian/comments/173i1uc/cant_get_wifi_to_work_on_debian_12/" target="_blank" rel="noopener">https://www.reddit.com/r/debian/comments/173i1uc/cant_get_wifi_to_work_on_debian_12/</a></li><li><a href="https://forums.debian.net/viewtopic.php?p=773939&amp;sid=93648e6d83030e517f223f9f9404a8d5#p773939" target="_blank" rel="noopener">https://forums.debian.net/viewtopic.php?p=773939&amp;sid=93648e6d83030e517f223f9f9404a8d5#p773939</a></li></ul><br>]]></content>
+    
+    
+    <summary type="html">老旧笔记本如果使用的是Broadcom无线网卡，安装完Debian系统之后可能是没有Broadcom驱动，导致无法连接Wifi的；本文讲述了如何在Debian12下（旧版本应该也可以）安装Broadcom驱动；</summary>
+    
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/categories/技术杂谈/"/>
+    
+    
+    <category term="技术杂谈" scheme="https://jasonkayzk.github.io/tags/技术杂谈/"/>
+    
+  </entry>
+  
+</feed>

@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>使用Rust实现跳表Skiplist - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="Skiplist是一种数据结构，它允许快速查询一个有序连续元素的数据链表，跳跃列表的平均查找和插入时间复杂度都是O(logn)，优于普通队列的O(n)；Skiplist被用在Redis、LevelDb中；本文首先讲解了Skiplist，随后给出了Rust实现；">
+<meta name="keywords" content="Rust,Skiplist">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Rust实现跳表Skiplist">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/12/16/使用Rust实现跳表Skiplist/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="Skiplist是一种数据结构，它允许快速查询一个有序连续元素的数据链表，跳跃列表的平均查找和插入时间复杂度都是O(logn)，优于普通队列的O(n)；Skiplist被用在Redis、LevelDb中；本文首先讲解了Skiplist，随后给出了Rust实现；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-1.jpg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-2.jpg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-3.jpg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-5.jpg">
+<meta property="og:updated_time" content="2024-09-11T02:34:01.188Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Rust实现跳表Skiplist">
+<meta name="twitter:description" content="Skiplist是一种数据结构，它允许快速查询一个有序连续元素的数据链表，跳跃列表的平均查找和插入时间复杂度都是O(logn)，优于普通队列的O(n)；Skiplist被用在Redis、LevelDb中；本文首先讲解了Skiplist，随后给出了Rust实现；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-1.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1726022077049">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script><!-- End Cloudflare Web Analytics -->
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>506</div>
+        <div><span>标签</span>266</div>
+        <div><span>分类</span>65</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.83px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.83px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.42px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.42px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.83px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.42px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.67px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.08px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.42px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.42px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.42px;">DLL</a> <a href="/tags/Docker/" style="font-size: 17.92px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.42px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.83px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.75px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.42px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.42px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.33px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.75px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.33px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.83px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.42px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.42px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.42px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.08px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.67px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.08px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.25px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.42px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.83px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.83px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.42px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.25px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.08px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.67px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.33px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.83px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.83px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.08px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.25px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.42px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.42px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.83px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.42px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.42px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.17px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.75px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.42px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.83px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.67px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.42px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.5px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.42px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.83px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.83px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.42px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.42px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.42px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.42px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.42px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.83px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.25px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.5px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.67px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.42px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.08px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.42px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.42px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.42px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.42px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 12.92px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.42px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.17px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.42px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.42px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.67px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.83px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.42px;">教师</a> <a href="/tags/教案/" style="font-size: 10.42px;">教案</a> <a href="/tags/数学/" style="font-size: 12.5px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.58px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.33px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.75px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.42px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.83px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.83px;">查找</a> <a href="/tags/栈/" style="font-size: 10.83px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.83px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.5px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.5px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.58px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.42px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.83px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.42px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.42px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.08px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.42px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.08px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.58px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.42px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.42px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.42px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.33px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.75px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.58px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.83px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.83px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.25px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/2024年安装Docker的方法/">2024年安装Docker的方法</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/21/Python项目Linter、Formatter和Github-Actions配置/">Python项目Linter、Formatter和Github-Actions配置</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/21/Zerotier配置内网流量转发/">Zerotier配置内网流量转发</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?22">
+    
+    <h1>使用Rust实现跳表Skiplist</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年12月16日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.7k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 33 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Skiplist/">Skiplist</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#使用Rust实现跳表Skiplist"><span class="toc-text">使用Rust实现跳表Skiplist</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Skiplist原理"><span class="toc-text">Skiplist原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Skiplist结构"><span class="toc-text">Skiplist结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Skiplist构建（随机化）"><span class="toc-text">Skiplist构建（随机化）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现"><span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#结构定义"><span class="toc-text">结构定义</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#单个节点SkipNode"><span class="toc-text">单个节点SkipNode</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#跳表结构OrdSkipList"><span class="toc-text">跳表结构OrdSkipList</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#层数生成器LevelGenerator"><span class="toc-text">层数生成器LevelGenerator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#初始化"><span class="toc-text">初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化参数Options"><span class="toc-text">初始化参数Options</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化有序类型元素"><span class="toc-text">初始化有序类型元素</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#通用初始化方法"><span class="toc-text">通用初始化方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#元素存在Contains"><span class="toc-text">元素存在Contains</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#首个元素Peek、Pop操作"><span class="toc-text">首个元素Peek、Pop操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#插入元素Insert"><span class="toc-text">插入元素Insert</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#移除元素Remove"><span class="toc-text">移除元素Remove</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#迭代器Iterator"><span class="toc-text">迭代器Iterator</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#实现Iter和IterMut"><span class="toc-text">实现Iter和IterMut</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现IntoIter"><span class="toc-text">实现IntoIter</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#释放空间-所有权-Drop"><span class="toc-text">释放空间(所有权)Drop</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#测试用例"><span class="toc-text">测试用例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis中选择SkipList的原因"><span class="toc-text">Redis中选择SkipList的原因</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>Skiplist是一种数据结构，它允许快速查询一个有序连续元素的数据链表，跳跃列表的平均查找和插入时间复杂度都是O(logn)，优于普通队列的O(n)，Skiplist被用在Redis、LevelDb中；</p>
+<p>本文首先讲解了Skiplist，随后给出了Rust实现；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/boost-rs/blob/main/boost-rs/src/collection/linkedlist.rs" target="_blank" rel="noopener">https://github.com/JasonkayZK/boost-rs/blob/main/boost-rs/src/collection/linkedlist.rs</a></li>
+<li><a href="https://github.com/JasonkayZK/boost-rs/tree/main/boost-rs/src/collection/skiplist" target="_blank" rel="noopener">https://github.com/JasonkayZK/boost-rs/tree/main/boost-rs/src/collection/skiplist</a></li>
+</ul>
+<p>关联文章：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/">《使用Rust实现一个双向链表》</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="使用Rust实现跳表Skiplist"><a href="#使用Rust实现跳表Skiplist" class="headerlink" title="使用Rust实现跳表Skiplist"></a><strong>使用Rust实现跳表Skiplist</strong></h1><h2 id="Skiplist原理"><a href="#Skiplist原理" class="headerlink" title="Skiplist原理"></a><strong>Skiplist原理</strong></h2><h3 id="Skiplist结构"><a href="#Skiplist结构" class="headerlink" title="Skiplist结构"></a><strong>Skiplist结构</strong></h3><blockquote>
+<p>  <strong>关于Skiplist的原理，这篇文章讲的非常清楚：</strong></p>
+<ul>
+<li><a href="https://writings.sh/post/data-structure-skiplist" target="_blank" rel="noopener">https://writings.sh/post/data-structure-skiplist</a></li>
+</ul>
+<p>  <strong>这里为了方便下文讲述，进行了部分引用；</strong></p>
+</blockquote>
+<p>跳表（Skip List）是由 William Pugh 发明的一种动态数据结构，支持对数据的快速查找，插入和删除；</p>
+<p>并且跳表的各方面性能都十分优秀，甚至可以媲美<strong>红黑树，跳表本身是对有序链表的改进；</strong></p>
+<p>首先，让我们先回顾一下链表：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-1.jpg" alt="img"></p>
+<p>上图是一个有序链表，在链表中的查找、插入以及删除操作的时间复杂度均为O(N)；</p>
+<p><font color="#f00"><strong>跳表设计的理念就是：在有序链表的基础上，引入“索引”的概念，即：每两个节点提取一个节点到上一级，抽出来的那一级叫做索引层；</strong></font></p>
+<p>如此一来，查找一个值，最坏情况下总共需要考察 (n/2)+1 个节点；</p>
+<p><font color="#f00"><strong>具体的查找方法是：从左上角的节点出发，向右考察每个节点，如果右边节点比目标值小， 则继续向右，否则，进入下一层继续，直到最底层；</strong></font></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-2.jpg" alt="img"></p>
+<p>沿着这一思路，再每隔一个节点，搭一条线， 此时，查找一个元素最多需要考察 (n/4)+2 个节点！</p>
+<p>可以推测，盖楼达到 <code>k</code> 层时，查找目标需要考察 <code>2^−k+k</code>个节点；</p>
+<p>直到，没有节点可以继续盖楼；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-3.jpg" alt="img"></p>
+<p>在 n 足够大的时候，考察次数 <code>2^−k+k</code> 近似为 k ，即 log(n)， 所以在这个思路下，查找的时间复杂度，从 O(n) 降低为了 O(logn)；</p>
+<blockquote>
+<p>  <strong>由于链表不像数组，不支持直接通过 index 定位到某个元素，因此需要增加链接来实现类似于数组中二分的效果！</strong></p>
+</blockquote>
+<p>像上面我们描述的，这种<strong>链表加上多级索引</strong>的数据结构，就是跳表；</p>
+<br>
+
+<h3 id="Skiplist构建（随机化）"><a href="#Skiplist构建（随机化）" class="headerlink" title="Skiplist构建（随机化）"></a><strong>Skiplist构建（随机化）</strong></h3><p>在实际实现时，跳表的结构更像是下面这样的：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-4.png" alt="image-20221219163705827"></p>
+<p><strong>跳表中的节点 <code>Node</code> 除了存储元素值 <code>e</code> 以外，还要存储一个数组 <code>Node[] next</code> 来保存索引信息；</strong></p>
+<p><font color="#f00"><strong>在“真实的”跳表中：每个节点的“索引”在“索引层”的分布并不是均衡的，各个节点的“索引高度”也是参差不齐（索引高度就是 <code>next.length</code>）；</strong></font></p>
+<p><font color="#f00"><strong>这是因为：想要维护一个层与层之间，从下层的每两个节点抽取出一个放在上层的完美结构几乎是不可能的！即便维持了那样的结构，提升了查找元素的效率，要向跳表中添加或删除一个元素，索引层就要重新调整，这个过程的开销将会是巨大的！</strong></font></p>
+<p>那么，该如何确定一个节点的“索引高度”呢？</p>
+<ul>
+<li><strong>既要保证跳表索引大小与数据大小的平衡性，如果每个节点的“索引高度”过低，跳表的性能就会严重退化；</strong></li>
+<li><strong>也要保证跳表各个节点的“索引高度”的平衡性，如果每个节点的“索引高度”几乎一致，那么性能也会严重退化；</strong></li>
+</ul>
+<p><font color="#f00"><strong>为了解决这个问题，跳表通常都使用了随机数发生器（random number generator）来生成“索引高度”！</strong></font></p>
+<p>一个随机数生成器的代码用例如下：</p>
+<pre><code class="java">private int generateRandomLevel() {
+    int level = 1;
+    for (int i = 1; i &lt; MAX_LEVEL; i++) {
+        if (random.nextInt() % 2 == 1) {
+            level++;
+        }
+    }
+    return level;
+}</code></pre>
+<p>方法中，<code>MAX_LEVEL</code> 表示 Skiplist 中定义的索引的最大高度，因为在阶数比较大之后，盖更高的楼对查找时间的优化作用会越来越小， 考虑到内存占用因素，实践中常限定一个最高阶数；</p>
+<p>同时，函数通过随机的方式来生成当前节点的层数：</p>
+<p><font color="#f00"><strong>这个函数可以理解为不断抛硬币的过程：每次抛硬币，有一半的概率可以再抛一次，那么最终抛 k 次的概率就是 1/(2^k)；</strong></font></p>
+<p><font color="#f00"><strong>在平均情形下，第 <code>k</code> 层的节点大约有 <code>n/(2^k)</code> 个，且每一层的节点预期分布大致均匀， 相比原来非随机化的情况，查找一个目标的平均时间复杂度并无变化，仍然是 <code>O(logn)</code>；但是插入一个新元素则却变简单了，不必繁琐地维护严格的 “间隔搭线” 的规则！</strong></font></p>
+<blockquote>
+<p>  <strong>是不是这个实现非常有创意？</strong></p>
+</blockquote>
+<p>不过， 跳跃表并不提供对最坏情形的性能保证，因为并不能排除非常小的概率下会生成一个极不平衡的跳跃表；</p>
+<p>那时，查找一个元素的时间将退化为 O(n)！</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images//skiplist-5.jpg" alt="img"></p>
+<br>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a><strong>实现</strong></h2><blockquote>
+<p>  <strong>由于Skiplist的实现依赖双向链表，而在Rust中实现双向链表并非一个简单的内容；</strong></p>
+<p>  <strong>因此在阅读下面的实现前，强烈建议先阅读我的这篇文章：</strong></p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/">《使用Rust实现一个双向链表》</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="结构定义"><a href="#结构定义" class="headerlink" title="结构定义"></a><strong>结构定义</strong></h3><h4 id="单个节点SkipNode"><a href="#单个节点SkipNode" class="headerlink" title="单个节点SkipNode"></a><strong>单个节点SkipNode</strong></h4><p>跳表中单个节点 SkipNode 的定义如下：</p>
+<pre><code class="rust">pub(crate) type Link&lt;T&gt; = Option&lt;NonNull&lt;SkipNode&lt;T&gt;&gt;&gt;;
+
+#[derive(Clone, Debug)]
+pub(crate) struct SkipNode&lt;T&gt; {
+    // item should never be None, unless the node is a head.
+    pub(crate) val: Option&lt;T&gt;,
+
+    // how high the current node reaches.
+    pub(crate) level: usize,
+
+    // Vector of links to the next node at the respective level. This vector
+    // *must* be of length `self.level + 1`.  links[0] stores a pointer to the
+    // next node, which will have to be dropped.
+    pub(crate) next: Vec&lt;Link&lt;T&gt;&gt;,
+}
+
+impl&lt;T&gt; SkipNode&lt;T&gt; {
+    /// Create a new head node.
+    pub fn head(level_bound: usize) -&gt; Self {
+        SkipNode {
+            val: None,
+            level: level_bound - 1, // The head node has `level_bound-1` levels(highest level)
+            next: iter::repeat(None).take(level_bound).collect(),
+        }
+    }
+
+    /// Create a new SkipNode with the given item..
+    /// All pointers default to null.
+    pub fn new(item: T, level: usize) -&gt; Self {
+        SkipNode {
+            val: Some(item),
+            level,
+            next: iter::repeat(None).take(level + 1).collect(),
+        }
+    }
+
+    pub fn into_val(self) -&gt; Option&lt;T&gt; {
+        self.val
+    }
+}</code></pre>
+<p>这里定义的节点：</p>
+<ul>
+<li>既有可能是每一层的头节点（不存实际数据），此时 val 为 None；</li>
+<li>也有可能是中间节点，此时 val 和 next 一定都不为空；</li>
+<li>还有可能是尾节点，此时 next 为空；</li>
+</ul>
+<blockquote>
+<p>  <strong>对于 <code>Option&lt;NonNull&lt;SkipNode&lt;T&gt;&gt;&gt;</code> 的结构形式，看过双向链表实现的都不会疑惑，这里简单说一下为什么要用裸指针：</strong></p>
+<p>  <font color="#f00"><strong>由于在 Skiplist 中的多个层都存在指向下一个节点的指针，因此在修改时不可避免的会存在节点的可变引用和多个不可变引用，所以需要使用 unsafe 来手动管理，所以需要使用裸指针；</strong></font></p>
+</blockquote>
+<p><strong>level 字段定义了当前节点的层数；对应的，next 字段中存放了当前节点指向的下一个节点；</strong></p>
+<p><font color="#f00"><strong>需要注意的是：和前面的介绍相对应的，<code>next[0]</code> 中存放了实际的节点，其他层只是存放下一个节点的指针（虽然存放的类型是一样的）；释放空间时，只需释放 <code>next[0]</code> 的空间即可，否则会 <code>double free</code>！</strong></font></p>
+<p>对于方法：</p>
+<ul>
+<li>head：创建一个头节点；</li>
+<li>new：创建一个中间节点；</li>
+</ul>
+<p>逻辑非常简单，不再赘述；</p>
+<br>
+
+<h4 id="跳表结构OrdSkipList"><a href="#跳表结构OrdSkipList" class="headerlink" title="跳表结构OrdSkipList"></a><strong>跳表结构OrdSkipList</strong></h4><p>跳表 OrdSkipList 的定义如下：</p>
+<pre><code class="rust">/// The inner comparator in skiplist
+type Comparator&lt;T&gt; = Box&lt;dyn Fn(&amp;T, &amp;T) -&gt; Ordering&gt;;
+
+pub struct OrdSkipList&lt;T&gt; {
+    length: usize,
+    head: NonNull&lt;SkipNode&lt;T&gt;&gt;,
+    cmp: Comparator&lt;T&gt;,
+    level_generator: Box&lt;dyn GenerateLevel&gt;,
+    _marker: PhantomData&lt;Box&lt;SkipNode&lt;T&gt;&gt;&gt;,
+}</code></pre>
+<p>由于跳表是一个有序的结构，因此：我们定义了 <code>Comparator&lt;T&gt; = Box&lt;dyn Fn(&amp;T, &amp;T) -&gt; Ordering&gt;</code> 类型用于自定义比较顺序，这个比较顺序也决定了 Skiplist 底层的存储；</p>
+<p>OrdSkipList 中定义了：</p>
+<ul>
+<li><code>length</code>：当前跳表中存储的元素个数；</li>
+<li><code>head</code>：跳表头节点，包含了 <code>MAX_LEVEL</code> 个指向下一层的节点；</li>
+<li><code>cmp</code>：比较函数，用于指定跳表中的比较顺序；</li>
+<li><code>level_generator</code>：节点层数生成器，和前面的<code>随机化</code>内容对应，可以是任意实现了 GenerateLevel Trait 的对象；</li>
+<li><code>_marker</code>：用于什么我们的 OrdSkipList 对 SkipNode 类型的所有权；</li>
+</ul>
+<br>
+
+<h3 id="层数生成器LevelGenerator"><a href="#层数生成器LevelGenerator" class="headerlink" title="层数生成器LevelGenerator"></a><strong>层数生成器LevelGenerator</strong></h3><p>前面说到，在向跳表中加入新节点时，要按照概率随机生成这个节点的层数，这个生成器在 OrdSkipList 的 level_generator 中使用；</p>
+<p>为了提高灵活性，<code>level_generator</code> 可以是任何实现了 GenerateLevel Trait 的对象；</p>
+<p>GenerateLevel Trait 定义如下：</p>
+<p>boost-rs/src/collection/skiplist/level_generator.rs</p>
+<pre><code class="rust">/// Upon the insertion of a new node in the list, the node is replicated to high
+/// levels with a certain probability as determined by a `LevelGenerator`.
+pub trait GenerateLevel {
+    /// The max number of levels that are assumed to exist for this level
+    /// generator.
+    /// MAX_LEVEL = level_bound()-1
+    fn level_bound(&amp;self) -&gt; usize;
+    /// Generate a random level for a new node in the range `[0, level_bound)`.
+    ///
+    /// This must never return a level that is `&gt;= self.level_bound)`.
+    fn random(&amp;mut self) -&gt; usize;
+}</code></pre>
+<p>主要是获取最大的 level 层数，以及生成当前节点的 level 层数；</p>
+<p>这里也提供了层数生成器的默认实现 DefaultLevelGenerator，定义如下：</p>
+<p>boost-rs/src/collection/skiplist/level_generator.rs</p>
+<pre><code class="rust">pub struct DefaultLevelGenerator {
+    level_bound: usize,
+    p: f64,
+    rng: SmallRng,
+}
+
+impl Default for DefaultLevelGenerator {
+    fn default() -&gt; Self {
+        DefaultLevelGenerator::new(16, 1.0 / 2.0).unwrap()
+    }
+}
+
+impl DefaultLevelGenerator {
+    pub fn new(level_bound: usize, p: f64) -&gt; Result&lt;Self, CollectionError&gt; {
+        if level_bound == 0 {
+            return Err(CollectionError::InvalidParameter(
+                &quot;total must be non-zero.&quot;.to_string(),
+            ));
+        }
+        if (p - 0.0).abs() &lt; 1e-3 || (p - 1.0).abs() &lt; 1e-3 {
+            return Err(CollectionError::InvalidParameter(
+                &quot;p must be in (0,1).&quot;.to_string(),
+            ));
+        }
+        Ok(DefaultLevelGenerator {
+            level_bound,
+            p,
+            // unit_range: distributions::Range::new(0.0f64, 1.0),
+            rng: SmallRng::from_rng(thread_rng()).unwrap(),
+        })
+    }
+}</code></pre>
+<p>定义了：</p>
+<ul>
+<li><code>level_bound</code>：最大层的边界，和 GenerateLevel Trait 中的 level_bound 方法对应；</li>
+<li><code>p</code>：进入下一层的概率，和生成层数逻辑有关；</li>
+<li><code>rng</code>：随机数生成器；</li>
+</ul>
+<p>对应的构造函数逻辑很简单，不再赘述；</p>
+<p>实现 GenerateLevel Trait 的逻辑：</p>
+<p>boost-rs/src/collection/skiplist/level_generator.rs</p>
+<pre><code class="rust">impl GenerateLevel for DefaultLevelGenerator {
+    fn level_bound(&amp;self) -&gt; usize {
+        self.level_bound
+    }
+
+    fn random(&amp;mut self) -&gt; usize {
+        let mut level = 0;
+        let mut x = self.p;
+        let f = 1.0 - self.rng.gen::&lt;f64&gt;();
+        while x &gt; f &amp;&amp; level + 1 &lt; self.level_bound {
+            level += 1;
+            x *= self.p
+        }
+        level
+    }
+}</code></pre>
+<p>重点来看 random 方法：默认情况下节点处于 0 层，也就是最底层（<strong>跳表的最底层就是一个单向链表</strong>）；</p>
+<p>每当随机数大于给定的 p 后，level 提升一层，同时更新 p 的值；</p>
+<p>例如，当 p 取值为 0.5 时：</p>
+<ul>
+<li><code>level=0</code>：有 <code>0.5</code> 的概率提升到 <code>level=1</code>；</li>
+<li><code>level=1</code>：有 <code>0.5*0.5=0.25</code> 的概率提升到 <code>level=2</code>；</li>
+<li><code>level=2</code>：有 <code>0.5*0.5*0.5=0.125</code> 的概率提升到 <code>level=3</code>；</li>
+<li>……</li>
+</ul>
+<p>符合前面所说的概率；</p>
+<br>
+
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a><strong>初始化</strong></h3><h4 id="初始化参数Options"><a href="#初始化参数Options" class="headerlink" title="初始化参数Options"></a><strong>初始化参数Options</strong></h4><p>考虑到有多种初始化的场景，例如：</p>
+<ul>
+<li>使用默认 LevelGenerator；</li>
+<li>使用默认 LevelGenerator、但自定义 LevelBound；</li>
+<li>自定义比较顺序等；</li>
+</ul>
+<p>因此定义了 Options：</p>
+<pre><code class="rust">/// The options to create a skip list
+pub struct Options&lt;T: &#39;static&gt; {
+    // Custom comparator
+    pub cmp: Option&lt;Comparator&lt;T&gt;&gt;,
+    // Use default level generator, but set different max level(default is 16)
+    pub level_bound: Option&lt;usize&gt;,
+    // Use custom level generator
+    pub level_generator: Option&lt;Box&lt;dyn GenerateLevel&gt;&gt;,
+}
+</code></pre>
+<p>分别对应不同的初始化参数；</p>
+<p>同时，为了方便使用，为 Options 提供了多个 take 方法，用于将具体的参数构建成对应结构并移除所有权：</p>
+<pre><code class="rust">impl&lt;T&gt; Options&lt;T&gt; {
+    pub fn take_level_generator(&amp;mut self) -&gt; Result&lt;Box&lt;dyn GenerateLevel&gt;, CollectionError&gt; {
+        match self.level_generator.take() {
+            Some(g) =&gt; Ok(g),
+            None =&gt; {
+                let g = match self.level_bound {
+                    Some(level_bound) =&gt; DefaultLevelGenerator::new(level_bound, 1.0 / 2.0)?,
+                    None =&gt; DefaultLevelGenerator::default(),
+                };
+                Ok(Box::new(g))
+            }
+        }
+    }
+
+    pub fn take_comparator(&amp;mut self) -&gt; Result&lt;Comparator&lt;T&gt;, CollectionError&gt; {
+        match self.cmp.take() {
+            Some(cmp) =&gt; Ok(Box::new(cmp)),
+            None =&gt; Err(CollectionError::InvalidParameter(
+                &quot;comparator must be provided&quot;.to_string(),
+            )),
+        }
+    }
+}</code></pre>
+<p>通过调用 <code>Option.take</code> 方法，我们可以直接获得 Option 中存放的元素的所有权；</p>
+<p>然后进行 match 匹配：</p>
+<ul>
+<li>如果提供了对应参数，则直接使用对应的参数构建并返回；</li>
+<li>否则使用默认的构造器构造；</li>
+</ul>
+<p>逻辑比较简单，这里不再赘述；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>在 Rust 中，移出结构体中某个字段的所有权，不会影响其他字段；</strong></font></p>
+<p>  例如，下面的代码可以正常编译；</p>
+<pre><code class="rust">  #[derive(Debug)]
+  struct Foo {
+      pub a: String,
+      pub b: String,
+  }
+
+  fn main() {
+      let x = Foo {
+          a: &quot;a&quot;.to_string(),
+          b: &quot;b&quot;.to_string(),
+      };
+
+      let x_a = x.a;
+      println!(&quot;{:?}&quot;, x_a);
+      // println!(&quot;{:?}&quot;, x.a);
+
+      let x_b = x.b;
+      println!(&quot;{:?}&quot;, x_b);
+      // println!(&quot;{:?}&quot;, x.b);
+
+      // println!(&quot;{:?}&quot;, x);
+  }</code></pre>
+<p>  但是去除任何一个注释，都会导致编译失败！</p>
+<p>  playground：</p>
+<ul>
+<li><a href="https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2021&amp;gist=972589affa57badffecc758e4d635335" target="_blank" rel="noopener">https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2021&amp;gist=972589affa57badffecc758e4d635335</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="初始化有序类型元素"><a href="#初始化有序类型元素" class="headerlink" title="初始化有序类型元素"></a><strong>初始化有序类型元素</strong></h4><p>绝大多数 Rust 内置的类型都实现了 Ord Trait（除了浮点数类型），用于进行全序的比较；</p>
+<blockquote>
+<p>  <strong>关于 Ord 和 ParialOrd Trait：</strong></p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2022/11/23/Rust中的比较/">《Rust中的比较》</a></li>
+</ul>
+</blockquote>
+<p>因此，我们可以为实现了 Ord Trait 的类型单独实现一些方法，这样就不需要再指定比较顺序了；</p>
+<p>如下：</p>
+<pre><code class="rust">impl&lt;T: Ord&gt; OrdSkipList&lt;T&gt; {
+    pub fn new() -&gt; Self {
+        let g = DefaultLevelGenerator::default();
+        Self {
+            length: 0,
+            cmp: Box::new(|x, y| x.cmp(y)),
+            head: NonNull::new(Box::into_raw(Box::new(SkipNode::head(g.level_bound())))).unwrap(),
+            level_generator: Box::new(g),
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn ord_with_options(mut options: Options&lt;T&gt;) -&gt; Result&lt;Self, CollectionError&gt; {
+        if options.cmp.is_none() {
+            options.cmp = Some(Box::new(|x, y| x.cmp(y)))
+        }
+        Self::with_options(options)
+    }
+}
+
+impl&lt;T: Ord&gt; Default for OrdSkipList&lt;T&gt; {
+    fn default() -&gt; Self {
+        let g = DefaultLevelGenerator::default();
+        Self {
+            length: 0,
+            cmp: Box::new(|x, y| x.cmp(y)),
+            head: NonNull::new(Box::into_raw(Box::new(SkipNode::head(g.level_bound())))).unwrap(),
+            level_generator: Box::new(g),
+            _marker: PhantomData,
+        }
+    }
+}</code></pre>
+<p>由于 Ord Trait 中已经存在了比较顺序，因此可以直接使用：<code>|x, y| x.cmp(y)</code> 作为 Skiplist 的比较函数；</p>
+<p>其他的逻辑非常简单，这里不再赘述；</p>
+<br>
+
+<h4 id="通用初始化方法"><a href="#通用初始化方法" class="headerlink" title="通用初始化方法"></a><strong>通用初始化方法</strong></h4><p>有时某些类型没有实现 Ord Trait，但是也可以指定对应的比较函数来指定顺序；</p>
+<p>此时也需要为这些类型实现通用的初始化方法：</p>
+<pre><code class="rust">impl&lt;T&gt; OrdSkipList&lt;T&gt; {
+    pub fn with_options(mut options: Options&lt;T&gt;) -&gt; Result&lt;Self, CollectionError&gt; {
+        let g = options.take_level_generator()?;
+        Ok(Self {
+            length: 0,
+            head: NonNull::new(Box::into_raw(Box::new(SkipNode::head(g.level_bound())))).unwrap(),
+            cmp: options.take_comparator()?,
+            level_generator: g,
+            _marker: PhantomData,
+        })
+    }
+}</code></pre>
+<p>直接通过前面 Options 中定义的 <code>take_level_generator</code> 和 <code>take_comparator</code> 获取参数即可！</p>
+<p>实现非常简洁！</p>
+<br>
+
+<h3 id="元素存在Contains"><a href="#元素存在Contains" class="headerlink" title="元素存在Contains"></a><strong>元素存在Contains</strong></h3><p><code>contains</code> 方法用来检测一个元素是否存在；</p>
+<p>前面说到，在查询时，我们从最高层开始，从前向后比较：</p>
+<ul>
+<li>如果当前值等于 v，直接返回；</li>
+<li>如果当前值小于 v，则继续向后；</li>
+<li>如果当前值大于 v，则向下一级，然后重复上面的步骤；</li>
+</ul>
+<p>实现的代码如下：</p>
+<pre><code class="rust">/// Returns true if the value is contained in the skiplist.
+pub fn contains(&amp;self, v: &amp;T) -&gt; bool {
+  unsafe {
+    let mut cur = self.head.as_ref();
+
+    for i in (0..=cur.level).rev() {
+      while let Some(next_node) = cur.next[i] {
+        let next_node = next_node.as_ref();
+        if (self.cmp)(next_node.val.as_ref().unwrap(), v) == Ordering::Less {
+          cur = next_node;
+        } else {
+          break;
+        }
+      }
+      if cur.next[i].is_some()
+      &amp;&amp; (self.cmp)(cur.next[i].unwrap().as_ref().val.as_ref().unwrap(), v)
+      == Ordering::Equal
+      {
+        return true;
+      }
+    }
+  }
+  false
+}</code></pre>
+<p>首先，通过 <code>(0..=cur.level).rev()</code> 创建当前节点 <code>[level, 0]</code> 的 level 区间从上到下遍历；</p>
+<p>随后，在每一层中通过 <code>while let</code> 匹配当前 level 中下一个非空节点，并使用 cmp 函数进行比较；</p>
+<p>和之前讲述对应的：</p>
+<ul>
+<li>如果当前值小于 v，则继续向后移动：<code>cur = next_node</code>；</li>
+<li>否则，break 当前 while 循环，继续向下执行；</li>
+</ul>
+<p>跳出循环后有两种可能：</p>
+<ul>
+<li>当前值等于 v，说明找到了 v 返回 true；</li>
+<li>否则，继续下一个 for 循环，此时 level 下降，继续寻找下一层；</li>
+</ul>
+<br>
+
+<h3 id="首个元素Peek、Pop操作"><a href="#首个元素Peek、Pop操作" class="headerlink" title="首个元素Peek、Pop操作"></a><strong>首个元素Peek、Pop操作</strong></h3><p>首个元素的 peek_front 操作实现如下：</p>
+<pre><code class="rust">pub fn peek_front(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+  unsafe {
+    let first_node = self.head.as_ref().next[0].as_ref();
+    match first_node {
+      Some(node) =&gt; node.as_ref().val.as_ref(),
+      None =&gt; None,
+    }
+  }
+}</code></pre>
+<p>实现非常简单：<strong>因为 Skiplist 的最底层 <code>next[0]</code> 构成了一个单向链表，所以我们只需要取到 <code>head.next[0]</code> 即可！</strong></p>
+<p>pop_front 操作也非常简单，只需要使用 remove 方法将首个节点移除即可！</p>
+<pre><code class="rust">pub fn pop_front(&amp;mut self) -&gt; Option&lt;T&gt; {
+  unsafe {
+    let first_node = self.head.as_ref().next[0].as_ref();
+    match first_node {
+      Some(node) =&gt; self.remove(node.as_ref().val.as_ref().unwrap()),
+      None =&gt; None,
+    }
+  }
+}</code></pre>
+<p>remove 方法下文会讲；</p>
+<br>
+
+<h3 id="插入元素Insert"><a href="#插入元素Insert" class="headerlink" title="插入元素Insert"></a><strong>插入元素Insert</strong></h3><p>插入元素 insert 方法的实现逻辑如下：</p>
+<pre><code class="rust">pub fn insert(&amp;mut self, data: T) -&gt; Result&lt;(), CollectionError&gt; {
+  if self.contains(&amp;data) {
+    return Err(CollectionError::DuplicateKey);
+  }
+
+  let level = self.level_generator.random();
+  let new_node = Box::new(SkipNode::new(data, level));
+  let mut new_node = NonNull::new(Box::into_raw(new_node));
+
+  unsafe {
+    let mut cur = self.head.as_mut();
+    for i in (0..=cur.level).rev() {
+      while let Some(mut next_node) = cur.next[i] {
+        let next_node = next_node.as_mut();
+        if (self.cmp)(
+          next_node.val.as_ref().unwrap(),
+          new_node.as_ref().unwrap().as_ref().val.as_ref().unwrap(),
+        ) == Ordering::Less
+        {
+          cur = next_node;
+        } else {
+          break;
+        }
+      }
+
+      if level &gt;= i {
+        match cur.next[i] {
+          Some(next) =&gt; {
+            cur.next[i] = new_node;
+            new_node.as_mut().unwrap().as_mut().next[i] = Some(next);
+          }
+          None =&gt; {
+            cur.next[i] = new_node;
+          }
+        }
+      }
+    }
+  }
+
+  self.length += 1;
+
+  Ok(())
+}</code></pre>
+<p>首先，判断了当前 Skiplist 中不包含此元素（为了简单起见，本实现不能插入相同的元素），如果存在则报错；</p>
+<p>随后，通过 level_generator 为将要插入的结点生成随机的层数，然后通过 SkipNode 构建节点，并转为裸指针；</p>
+<p>随后遍历各层，找到要插入的节点的前一个位置 <code>cur</code>；</p>
+<p>随后，如果 <code>level &gt;= 当前层</code>，将当前节点插入当前层；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>相当于对 <code>0～new_node.level</code> 的每一层都做了一次链表的插入操作！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="移除元素Remove"><a href="#移除元素Remove" class="headerlink" title="移除元素Remove"></a><strong>移除元素Remove</strong></h3><p>Remove 方法实现如下：</p>
+<pre><code class="rust">pub fn remove(&amp;mut self, val: &amp;T) -&gt; Option&lt;T&gt; {
+  if !self.contains(val) {
+    return None;
+  }
+
+  let mut cur = unsafe { self.head.as_mut() };
+  let max_level = cur.level;
+  let mut update: Vec&lt;Option&lt;*mut SkipNode&lt;T&gt;&gt;&gt; = vec![None; max_level + 1];
+  let ret_val;
+  unsafe {
+    for i in (0..=max_level).rev() {
+      while let Some(mut next_node) = cur.next[i] {
+        let next_node = next_node.as_mut();
+        if (self.cmp)(next_node.val.as_ref().unwrap(), val) == Ordering::Less {
+          cur = next_node;
+        } else {
+          break;
+        }
+      }
+      update[i] = Some(cur as *mut SkipNode&lt;T&gt;);
+    }
+
+    let mut ret_val_ref = None;
+    if cur.next[0].is_some()
+    &amp;&amp; (self.cmp)(cur.next[0].unwrap().as_ref().val.as_ref().unwrap(), val)
+    == Ordering::Equal
+    {
+      ret_val_ref = cur.next[0];
+      for i in (0..=max_level).rev() {
+        if update[i].is_some()
+        &amp;&amp; (*update[i].unwrap()).next[i].is_some()
+        &amp;&amp; (self.cmp)(
+          (*update[i].unwrap()).next[i]
+          .unwrap()
+          .as_mut()
+          .val
+          .as_ref()
+          .unwrap(),
+          val,
+        ) == Ordering::Equal
+        {
+          (*update[i].unwrap()).next[i] =
+          (*update[i].unwrap()).next[i].unwrap().as_mut().next[i];
+        }
+      }
+    }
+    ret_val = match ret_val_ref {
+      None =&gt; None,
+      Some(ret) =&gt; Box::from_raw(ret.as_ptr()).into_val(),
+    }
+  }
+
+  self.length -= 1;
+
+  ret_val
+}</code></pre>
+<p>和前面 Insert 方法类似，首先也是判断是否存在对应 value，如果不存在直接返回 None 即可！</p>
+<p>否则，创建一个用来存放各个层中将要移除的前一个节点的数组 <code>update</code>；</p>
+<p>首先，遍历所有层，然后找到每一层中将要移除的前一个节点，加入 <code>update</code> 数组中；</p>
+<p>随后，判断如果确实存在将要移除的节点，则遍历 <code>update</code> 数：移除每一层中指定的节点；</p>
+<p>最后，使用 <code>Box::from_raw</code> 恢复裸指针，并返回移除的节点的数据以及所有权；</p>
+<br>
+
+<h3 id="迭代器Iterator"><a href="#迭代器Iterator" class="headerlink" title="迭代器Iterator"></a><strong>迭代器Iterator</strong></h3><p>复习一下，Rust 中存在三种迭代器：Iter、IterMut、IntoIter；</p>
+<p>Iter、IterMut 可以通过 iter、iter_mut 方法返回对应迭代器：</p>
+<pre><code class="rust">pub fn iter(&amp;self) -&gt; Iter&lt;T&gt; {
+  let node = unsafe { self.head.as_ref().next[0] };
+
+  Iter {
+    head: node,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}
+
+pub fn iter_mut(&amp;mut self) -&gt; IterMut&lt;T&gt; {
+  let node = unsafe { self.head.as_ref().next[0] };
+
+  IterMut {
+    head: node,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}</code></pre>
+<p>同时为 OrdSkipList 实现了 IntoIterator trait 提供了 IntoIter；</p>
+<p>下面分别来看；</p>
+<br>
+
+<h4 id="实现Iter和IterMut"><a href="#实现Iter和IterMut" class="headerlink" title="实现Iter和IterMut"></a><strong>实现Iter和IterMut</strong></h4><p>在实现时，Iter 和 IterMut 的差距就是 mut 的类型的差别；</p>
+<p>为了避免重复，这里只讲 IterMut 的实现：</p>
+<pre><code class="rust">pub struct IterMut&lt;&#39;a, T: &#39;a&gt; {
+  head: Link&lt;T&gt;,
+  len: usize,
+  _marker: PhantomData&lt;&amp;&#39;a mut SkipNode&lt;T&gt;&gt;,
+}
+
+impl&lt;&#39;a, T&gt; Iterator for IterMut&lt;&#39;a, T&gt; {
+  type Item = &amp;&#39;a mut T;
+
+  #[inline]
+  fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+    if self.len == 0 {
+      None
+    } else {
+      match self.head {
+        Some(node) =&gt; {
+          self.len -= 1;
+
+          unsafe {
+            let node = &amp;mut *node.as_ptr();
+            self.head = node.next[0];
+            node.val.as_mut()
+          }
+        }
+        None =&gt; None,
+      }
+    }
+  }
+
+  #[inline]
+  fn size_hint(&amp;self) -&gt; (usize, Option&lt;usize&gt;) {
+    (self.len, Some(self.len))
+  }
+}</code></pre>
+<p>实际上 IterMut 的实现就行通过修改内部的 head，去遍历 level 0 层即可！</p>
+<br>
+
+<h4 id="实现IntoIter"><a href="#实现IntoIter" class="headerlink" title="实现IntoIter"></a><strong>实现IntoIter</strong></h4><p>IntoIter 的实现就更简单了，只需要调用 pop_front 即可！</p>
+<p>我们为 OrdSkipList 实现了 IntoIterator Trait：</p>
+<pre><code class="rust">pub struct IntoIter&lt;T&gt; {
+  list: OrdSkipList&lt;T&gt;,
+}
+
+impl&lt;T&gt; Iterator for IntoIter&lt;T&gt; {
+  type Item = T;
+
+  #[inline]
+  fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+    self.list.pop_front()
+  }
+
+  #[inline]
+  fn size_hint(&amp;self) -&gt; (usize, Option&lt;usize&gt;) {
+    (self.list.length, Some(self.list.length))
+  }
+}
+
+impl&lt;T&gt; IntoIterator for OrdSkipList&lt;T&gt; {
+  type Item = T;
+  type IntoIter = IntoIter&lt;T&gt;;
+
+  fn into_iter(self) -&gt; Self::IntoIter {
+    IntoIter { list: self }
+  }
+}
+
+impl&lt;T&gt; Drop for IntoIter&lt;T&gt; {
+  fn drop(&amp;mut self) {
+    // only need to ensure all our elements are read;
+    // buffer will clean itself up afterwards.
+    for _ in &amp;mut *self {}
+  }
+}</code></pre>
+<p>逻辑非常简单，这里不再赘述！</p>
+<br>
+
+<h3 id="释放空间-所有权-Drop"><a href="#释放空间-所有权-Drop" class="headerlink" title="释放空间(所有权)Drop"></a><strong>释放空间(所有权)Drop</strong></h3><p>显而易见的，Skiplist 拥有其内部所有数据的所有权，而由于我们是使用裸指针手动管理的空间，因此需要在 Skiplist 退出作用域后处理对裸指针分配的空间（对应于 C++ 中的析构函数）；</p>
+<p>得益于我们之前的实现，我们可以使用 <code>pop_front</code> 逐个的将存储的元素通过 <code>Box::from_raw</code> 恢复后释放；</p>
+<p><strong>需要稍微注意的是：我们的 header 正好也是不存放任何数据的！</strong></p>
+<p>实现如下：</p>
+<pre><code class="rust">impl&lt;T&gt; Drop for OrdSkipList&lt;T&gt; {
+  fn drop(&amp;mut self) {
+    struct DropGuard&lt;&#39;a, T&gt;(&amp;&#39;a mut OrdSkipList&lt;T&gt;);
+
+    impl&lt;&#39;a, T&gt; Drop for DropGuard&lt;&#39;a, T&gt; {
+      fn drop(&amp;mut self) {
+        // Continue the same loop we do below. This only runs when a destructor has
+        // panicked. If another one panics this will abort.
+        while self.0.pop_front().is_some() {}
+      }
+    }
+
+    while let Some(node) = self.pop_front() {
+      let guard = DropGuard(self);
+      drop(node);
+      mem::forget(guard);
+    }
+  }
+}</code></pre>
+<p>这里的 DropGuard 可以防止在调用 drop 时发生了 panic ；</p>
+<p>此时 DropGuard 也被释放，会再次尝试释放元素的空间；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>在标准库的 LinkedList 实现中也使用了完全相同的技巧！</strong></font></p>
+</blockquote>
+<br>
+
+<h2 id="测试用例"><a href="#测试用例" class="headerlink" title="测试用例"></a><strong>测试用例</strong></h2><p>编写完成后，来加入一些测试用例：</p>
+<pre><code class="rust">#[cfg(test)]
+mod tests {
+    use crate::collection::skiplist::level_generator::DefaultLevelGenerator;
+    use crate::collection::skiplist::{Options, OrdSkipList};
+
+    #[test]
+    fn new() {
+        let sl: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        assert_eq!(sl.length, 0);
+    }
+
+    #[test]
+    fn ord_with_options_cmp() {
+        let sl: OrdSkipList&lt;i32&gt; = OrdSkipList::with_options(Options {
+            cmp: Some(Box::new(|x: &amp;i32, y: &amp;i32| y.cmp(x))),
+            level_bound: None,
+            level_generator: None,
+        })
+        .unwrap();
+        assert_eq!(sl.length, 0);
+    }
+
+    #[test]
+    fn ord_with_options_level_bound() {
+        let sl: OrdSkipList&lt;i32&gt; = OrdSkipList::ord_with_options(Options {
+            cmp: None,
+            level_bound: Some(1024),
+            level_generator: None,
+        })
+        .unwrap();
+        assert_eq!(sl.length, 0);
+    }
+
+    #[test]
+    fn ord_with_options_level_generator() {
+        let g = DefaultLevelGenerator::new(4, 0.5).unwrap();
+        let sl: OrdSkipList&lt;i32&gt; = OrdSkipList::ord_with_options(Options {
+            cmp: None,
+            level_bound: None,
+            level_generator: Some(Box::new(g)),
+        })
+        .unwrap();
+        assert_eq!(sl.length, 0);
+    }
+
+    #[test]
+    fn with_options() {
+        struct Foo {
+            id: usize,
+            data: String,
+        }
+
+        let mut sl: OrdSkipList&lt;Foo&gt; = OrdSkipList::with_options(Options {
+            cmp: Some(Box::new(|x: &amp;Foo, y: &amp;Foo| y.id.cmp(&amp;x.id))),
+            level_bound: None,
+            level_generator: None,
+        })
+        .unwrap();
+        assert_eq!(sl.length, 0);
+
+        sl.insert(Foo {
+            id: 2,
+            data: &quot;2&quot;.to_string(),
+        })
+        .unwrap();
+        sl.insert(Foo {
+            id: 1,
+            data: &quot;1&quot;.to_string(),
+        })
+        .unwrap();
+
+        let first = sl.iter().next().unwrap();
+        assert_eq!(first.id, 2);
+        assert_eq!(first.data, &quot;2&quot;.to_string());
+    }
+
+    #[test]
+    fn contains() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::ord_with_options(Options {
+            cmp: None,
+            level_bound: Some(16),
+            level_generator: None,
+        })
+        .unwrap();
+
+        let test_len = 10000;
+        for i in 0..test_len {
+            l.insert(i).unwrap();
+        }
+        assert_eq!(l.length(), test_len as usize);
+
+        for i in 0..test_len {
+            assert!(l.contains(&amp;i));
+        }
+    }
+
+    #[test]
+    fn remove() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        l.insert(12).unwrap();
+        assert_eq!(l.length(), 1);
+        assert!(l.contains(&amp;12));
+
+        l.remove(&amp;12).unwrap();
+        assert_eq!(l.length(), 0);
+        assert!(!l.contains(&amp;12));
+
+        l.insert(13).unwrap();
+        assert_eq!(l.length(), 1);
+        assert!(l.contains(&amp;13));
+    }
+
+    #[test]
+    fn iter() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        for i in 0..100 {
+            l.insert(i).unwrap();
+        }
+
+        let mut x = 0;
+        l.iter().for_each(|i| {
+            assert_eq!(i, &amp;x);
+            x += 1;
+        });
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        for i in 0..100 {
+            l.insert(i).unwrap();
+        }
+        l.iter_mut().for_each(|node_val| *node_val += 1);
+        for x in 1..101 {
+            assert_eq!(x, l.pop_front().unwrap());
+        }
+    }
+
+    #[test]
+    fn clear() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        for i in 0..100 {
+            l.insert(i).unwrap();
+        }
+        assert_eq!(l.length(), 100);
+
+        l.clear();
+        assert_eq!(l.length(), 0);
+        for i in 0..100 {
+            assert!(!l.contains(&amp;i));
+        }
+    }
+
+    #[test]
+    fn into_iter() {
+        let mut l: OrdSkipList&lt;i32&gt; = OrdSkipList::new();
+        for i in 0..10 {
+            l.insert(i).unwrap();
+        }
+        assert_eq!(l.length(), 10);
+
+        let mut l_to_string = l
+            .into_iter()
+            .map(|x| x.to_string())
+            .collect::&lt;Vec&lt;String&gt;&gt;();
+        println!(
+            &quot;transform l into String vec, l_to_string: {:?}&quot;,
+            l_to_string
+        );
+
+        for i in (0..10).rev() {
+            assert_eq!(i.to_string(), l_to_string.pop().unwrap());
+        }
+        // Compiling err:
+        // l.print();
+    }
+}</code></pre>
+<p>再来比较一下 Skiplist 和传统的双向链表的查询效率：</p>
+<pre><code class="rust">use std::collections::LinkedList;
+
+use rand::Rng;
+
+use boost_rs::collection::skiplist::OrdSkipList;
+use boost_rs_macros::elapsed;
+
+#[elapsed]
+fn skiplist_random_test(l: &amp;OrdSkipList&lt;i32&gt;, search_val: &amp;Vec&lt;i32&gt;) {
+    for i in search_val {
+        l.contains(i);
+    }
+}
+
+#[elapsed]
+fn linkedlist_random_test(l: &amp;LinkedList&lt;i32&gt;, search_val: &amp;Vec&lt;i32&gt;) {
+    for i in search_val {
+        l.contains(i);
+    }
+}
+
+fn gen_random(cap: usize, search_cap: usize) -&gt; Vec&lt;i32&gt; {
+    let mut v = vec![];
+    for _ in 0..search_cap {
+        let mut rng = rand::thread_rng();
+        v.push(rng.gen_range(0..cap) as i32);
+    }
+    v
+}
+
+fn main() {
+    let mut sl = OrdSkipList::default();
+    let mut ll = LinkedList::new();
+    let cap = 100000;
+    let search_cap = 10000;
+    let search_val = gen_random(cap, search_cap);
+
+    for x in 0..cap {
+        let x = x as i32;
+        sl.insert(x).unwrap();
+        ll.push_back(x);
+    }
+
+    skiplist_random_test(&amp;sl, &amp;search_val);
+    linkedlist_random_test(&amp;ll, &amp;search_val);
+}</code></pre>
+<p>在上面的例子中，首先生成了 10000 个 <code>0~100000</code> 的随机数，随后使用 container 方法进行访问；</p>
+<p>输出的结果如下：</p>
+<pre><code class="rust">Run in &quot;skiplist_random_test&quot; cost time: 23.069291ms
+Run in &quot;linkedlist_random_test&quot; cost time: 6.050070916s</code></pre>
+<p>差距是非常巨大的！</p>
+<br>
+
+<h2 id="Redis中选择SkipList的原因"><a href="#Redis中选择SkipList的原因" class="headerlink" title="Redis中选择SkipList的原因"></a><strong><code>Redis</code>中选择SkipList的原因</strong></h2><blockquote>
+<p>  There are a few reasons:</p>
+<p>  1.They are not very memory intensive. It’s up to you basically. Changing parameters about the probability of a node to have a given number of levels will make then less memory intensive than btrees.</p>
+<p>  2.A sorted set is often target of many ZRANGE or ZREVRANGE operations, that is, traversing the skip list as a linked list. With this operation the cache locality of skip lists is at least as good as with other kind of balanced trees.</p>
+<p>  3.They are simpler to implement, debug, and so forth. For instance thanks to the skip list simplicity I received a patch (already in Redis master) with augmented skip lists implementing ZRANK in O(log(N)). It required little changes to the code.</p>
+</blockquote>
+<p>我们知道 Redis 中有序集合就是通过跳表 + 散列表来实现的。Redis 中有序集合支持的核心操作主要有这么几个：</p>
+<ul>
+<li>插入一个数据</li>
+<li>删除一个数据</li>
+<li>查找一个数据</li>
+<li>按照区间查找数据（比如查找值在 [100,356] 之间的数据）</li>
+<li>迭代输出有序序列</li>
+</ul>
+<p>其中，插入、删除、查找以及迭代输出有序序列这几个操作，红黑树也可以完成，时间复杂度跟跳表是一样的；但是，按照区间来查找数据这个操作，红黑树的效率没有跳表高；</p>
+<p>对于按照区间查找数据这个操作，跳表可以做到 O(logn) 的时间复杂度定位区间的起点，然后在原始链表中顺序往后遍历就可以了，这样做非常高效；</p>
+<p>当然，Redis 之所以用跳表来实现有序集合，还有其他原因，比如：</p>
+<ul>
+<li>跳表比起红黑树的实现简直是容易多了，而简单就意味着可读性好，不容易出错；</li>
+<li>跳表更加灵活，它可以通过改变索引构建策略，有效平衡执行效率和内存消耗；</li>
+</ul>
+<br>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>本文首先讲解了 Skiplist 的基本原理、构建过程以及随机化；</p>
+<p>然后使用 Rust 实现了一个 Skiplist，对于更加复杂的跳表实现起来也是基本类似；</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/boost-rs/blob/main/boost-rs/src/collection/linkedlist.rs" target="_blank" rel="noopener">https://github.com/JasonkayZK/boost-rs/blob/main/boost-rs/src/collection/linkedlist.rs</a></li>
+<li><a href="https://github.com/JasonkayZK/boost-rs/tree/main/boost-rs/src/collection/skiplist" target="_blank" rel="noopener">https://github.com/JasonkayZK/boost-rs/tree/main/boost-rs/src/collection/skiplist</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://juejin.cn/post/7000940966995558431" target="_blank" rel="noopener">https://juejin.cn/post/7000940966995558431</a></li>
+<li><a href="https://snayan.github.io/post/2019/algorithm_skip_list/" target="_blank" rel="noopener">https://snayan.github.io/post/2019/algorithm_skip_list/</a></li>
+<li><a href="https://writings.sh/post/data-structure-skiplist" target="_blank" rel="noopener">https://writings.sh/post/data-structure-skiplist</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/101143158" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/101143158</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/12/16/使用Rust实现跳表Skiplist/" title="https://jasonkayzk.github.io/2022/12/16/使用Rust实现跳表Skiplist/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/12/16/使用Rust实现跳表Skiplist/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1726022077163"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

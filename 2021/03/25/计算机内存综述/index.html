@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>计算机内存综述 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="上一篇文章讲解了操作系统的内存管理，这篇让我们从上到下看内存；">
+<meta name="keywords" content="技术杂谈,操作系统,内存管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机内存综述">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/03/25/计算机内存综述/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="上一篇文章讲解了操作系统的内存管理，这篇让我们从上到下看内存；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/DMAC.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/windows%E5%86%85%E5%AD%98%E5%88%86%E7%B1%BB.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mmap%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6.png">
+<meta property="og:updated_time" content="2024-09-11T02:34:01.204Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机内存综述">
+<meta name="twitter:description" content="上一篇文章讲解了操作系统的内存管理，这篇让我们从上到下看内存；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/DMAC.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1726022091965">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script><!-- End Cloudflare Web Analytics -->
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>506</div>
+        <div><span>标签</span>266</div>
+        <div><span>分类</span>65</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.83px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.83px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.42px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.42px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.83px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.42px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.67px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.08px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.42px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.42px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.42px;">DLL</a> <a href="/tags/Docker/" style="font-size: 17.92px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.42px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.83px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.75px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.42px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.42px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.33px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 13.75px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.33px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.83px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.42px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.42px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.42px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.08px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.67px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.08px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.25px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.42px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.83px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.83px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.42px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.25px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.08px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.67px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.33px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.83px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.83px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.08px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.25px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.42px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.42px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.83px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.42px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.42px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.17px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.75px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.42px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.83px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.67px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.42px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.5px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.42px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.83px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.83px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.42px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.42px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.42px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.42px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.42px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.83px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.25px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.5px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.67px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.42px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.08px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.42px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.42px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.42px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.42px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 12.92px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.42px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.17px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.42px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.42px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.67px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.83px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.42px;">教师</a> <a href="/tags/教案/" style="font-size: 10.42px;">教案</a> <a href="/tags/数学/" style="font-size: 12.5px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.58px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.33px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.75px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.42px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.83px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.83px;">查找</a> <a href="/tags/栈/" style="font-size: 10.83px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.83px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/程序人生/" style="font-size: 17.5px;">程序人生</a> <a href="/tags/算法/" style="font-size: 12.5px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.58px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.42px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.83px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.42px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.42px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.08px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.42px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.08px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.58px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.42px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.42px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.42px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.33px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.75px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.58px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.83px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.83px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.25px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/程序人生/">程序人生</a>
+          <span class="category-list-count">24</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/2024年安装Docker的方法/">2024年安装Docker的方法</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/21/Python项目Linter、Formatter和Github-Actions配置/">Python项目Linter、Formatter和Github-Actions配置</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/21/Zerotier配置内网流量转发/">Zerotier配置内网流量转发</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2024 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?23">
+    
+    <h1>计算机内存综述</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年03月25日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 18 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/技术杂谈/">技术杂谈</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/内存管理/">内存管理</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/技术杂谈/">技术杂谈</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/操作系统/">操作系统</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#计算机内存综述"><span class="toc-text">计算机内存综述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#DMA"><span class="toc-text">DMA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OS内存管理与分类"><span class="toc-text">OS内存管理与分类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-Linux下内存分类"><span class="toc-text">① Linux下内存分类</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#②-Windows下内存分类"><span class="toc-text">② Windows下内存分类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#内存相关的系统调用"><span class="toc-text">内存相关的系统调用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-系统调用brk"><span class="toc-text">① 系统调用brk</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-系统调用mmap"><span class="toc-text">② 系统调用mmap</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#扩展阅读"><span class="toc-text">扩展阅读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-mmap"><span class="toc-text">① mmap</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-read"><span class="toc-text">② read</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-sendfile"><span class="toc-text">③ sendfile</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>上一篇<a href="/2021/03/25/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%AE%80%E8%BF%B0/">操作系统内存管理简述</a>的文章中讲解了操作系统的内存管理，这篇让我们从上到下看内存；</p>
+<p>视频参考：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1454y1X7rk" target="_blank" rel="noopener">【计算机知识串讲】从下到上看内存</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/self-cultivation-in-programmer/tree/system-memory-malloc-demo" target="_blank" rel="noopener">https://github.com/JasonkayZK/self-cultivation-in-programmer/tree/system-memory-malloc-demo</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="/2021/03/25/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%AE%80%E8%BF%B0/">操作系统内存管理简述</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="计算机内存综述"><a href="#计算机内存综述" class="headerlink" title="计算机内存综述"></a><strong>计算机内存综述</strong></h2><h3 id="DMA"><a href="#DMA" class="headerlink" title="DMA"></a><strong>DMA</strong></h3><p>内存与CPU之间是通过总线进行交互的；</p>
+<p>而为了提高CPU的效率，在主板的南桥芯片上嵌入了DMA控制器(Direct Memory Access)；</p>
+<blockquote>
+<p>  <strong>南桥芯片上主要接入一些如：USB、硬盘、网卡、声卡等低速的外接设备；</strong></p>
+</blockquote>
+<p>我们先考虑这么一个情况：</p>
+<p>当我们使用Node.js读取一个文件时，尽管文件没有读取完，Node却可以继续执行其他的操作，当文件读取完成后，会执行相应的回调；</p>
+<p>但是Node是一个单线程的，如果CPU在读取文件期间都在等待内存读取，那么其他程序是不能被执行的，所以这里就使用到了DMA控制器(DMA Controller)；</p>
+<p>CPU使用DMAC进行读取的图如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/DMAC.png" alt="DMAC.png"></p>
+<p>首先，CPU向DMAC发出信号，要求读取，随后CPU就执行其他指令；</p>
+<p>随后，DMA使用CPU让出的数据总线将磁盘中的数据读入内存；</p>
+<p>文件读入完毕后，DMAC通过系统中断通知CPU，进行回调处理；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注：在实现DMA传输时，是由<a href="https://baike.baidu.com/item/DMA控制器/921346" target="_blank" rel="noopener">DMA控制器</a>直接掌管总线，因此，存在着一个总线控制权转移问题。即DMA传输前，CPU要把总线控制权交给DMA控制器，而在结束DMA传输后，DMA控制器应立即把总线控制权再交回给CPU；</strong></font></p>
+<p>  <strong>一个完整的DMA传输过程必须经过DMA请求、DMA响应、DMA传输、DMA结束4个步骤；</strong></p>
+</blockquote>
+<br>
+
+<h3 id="OS内存管理与分类"><a href="#OS内存管理与分类" class="headerlink" title="OS内存管理与分类"></a><strong>OS内存管理与分类</strong></h3><p>关于操作系统中的内存管理，可以先看一下这篇文章：</p>
+<ul>
+<li><a href="/2021/03/25/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%AE%80%E8%BF%B0/">操作系统内存管理简述</a></li>
+</ul>
+<p>接下来来看内存的分类；</p>
+<h4 id="①-Linux下内存分类"><a href="#①-Linux下内存分类" class="headerlink" title="① Linux下内存分类"></a><strong>① Linux下内存分类</strong></h4><p>在Linux中通过<code>free</code>命令查看：</p>
+<pre><code class="bash">$ free -h
+              total        used        free      shared  buff/cache   available
+Mem:           15Gi       665Mi        14Gi       7.0Mi       898Mi        14Gi
+Swap:         2.0Gi          0B       2.0Gi</code></pre>
+<p>其中Mem代表内存，Swap代表交换分区（即Page Table映射到的磁盘分区）；</p>
+<p>其余：</p>
+<ul>
+<li>total：总大小；</li>
+<li>used：使用大小；</li>
+<li>free：空闲大小；</li>
+<li>shared：共享内存（库函数等）；</li>
+<li>buff/cache：文件磁盘缓存；</li>
+<li>available：可用；</li>
+</ul>
+<p>total = used（含shared） + free  + buff/cache</p>
+<p>在一般情况下，used是包含shared的大小的；</p>
+<p>free就是真正的空闲内存，即：根本没有被申请过的空间；</p>
+<p>available就是实际内存真正剩余的空间；</p>
+<p>buff/cache就是读过的文件被缓存在内存中的大小，这部分空间可以根据需要而被释放（如，其他程序需要开辟大量空间时）；</p>
+<blockquote>
+<p>  <strong>buff和cache：</strong></p>
+<p>  在较早的内核中，buff和cache是分开的两个区域：buffer cache和page cache，都是对磁盘的缓存；</p>
+<p>  其中：</p>
+<ul>
+<li><strong>buffer cache是硬件层面，对磁盘块中的数据进行缓存，缓存的单位当然也是块；</strong></li>
+<li><strong>而page cache是文件系统层面，对文件进行缓存，缓存单位就是页；</strong></li>
+</ul>
+<p>  <strong>buffer cache的提出非常的早，两者并存时会遇到重复缓存了相同的内容的情况；</strong></p>
+<p>  较新的内核已经将两者合并，或者说将buffer cache合到了page cache，虽然也还是能缓存磁盘块，但是存储单位也是页了，并且buffer使用前会先检查page cahce是否已经缓存了对应内容，如果是则直接指过去；</p>
+<p>  详细见：</p>
+<ul>
+<li><a href="https://lday.me/2019/09/09/0023_linux_page_cache_and_buffer_cache/" target="_blank" rel="noopener">Linux内核Page Cache和Buffer Cache关系及演化历史</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="②-Windows下内存分类"><a href="#②-Windows下内存分类" class="headerlink" title="② Windows下内存分类"></a><strong>② Windows下内存分类</strong></h3><p>windows的内存分类如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/windows%E5%86%85%E5%AD%98%E5%88%86%E7%B1%BB.png" alt="windows内存分类.png"></p>
+<p>从上面可以看到内存的总大小为32GB，目前已经使用了12.4GB，可用就是19.4GB；</p>
+<p><strong>已提交的意思是：程序已经向操作系统申请了这么多的内存，操作系统可能已经给了这么多内存了，但是也可能没有给那么多（映射到了磁盘）；</strong></p>
+<p><strong>即已提交中的34GB相当于Linux中的Swap + Mem，但是在Windows中，Swap对应了C盘下的pagefile.sys文件（通常不可见！）；</strong></p>
+<p><strong>已提交中的22.4GB代表程序已经向操作系统申请了22.4GB的内存，但是操作系统并不会直接给程序开辟申请的空间；</strong></p>
+<blockquote>
+<p>  <font color="#f00"><strong>如：在C语言中使用malloc开辟了1024MB的空间，但是只使用了1MB的空间；则此时已提交为1GB，但是实际上程序只使用了1MB空间，剩余的1023MB空间，操作系统不会分配；</strong></font></p>
+</blockquote>
+<p><strong>已缓冲：对应于Linux中的buffer cache，即对文件的缓冲；</strong></p>
+<blockquote>
+<p>  <strong>分页缓冲池/非分页缓冲池：</strong></p>
+<p>  对应于内核以及驱动设备的资源；</p>
+<p>  详见：</p>
+<ul>
+<li><a href="https://docs.microsoft.com/zh-cn/archive/blogs/markrussinovich/pushing-the-limits-of-windows-paged-and-nonpaged-pool" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/archive/blogs/markrussinovich/pushing-the-limits-of-windows-paged-and-nonpaged-pool</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="内存相关的系统调用"><a href="#内存相关的系统调用" class="headerlink" title="内存相关的系统调用"></a><strong>内存相关的系统调用</strong></h3><p>接下来讲解内存相关的系统调用；</p>
+<p>系统调用即：用户态切换至内核态的方式之一（另外两种是中断和异常），而在申请内存时就需要使用系统调用；</p>
+<blockquote>
+<p>  <strong>为了安全起见，用户是无法直接操纵硬件的，所以需要通过系统调用使用内核操作；</strong></p>
+</blockquote>
+<p>本节以malloc为例，进行讲解；</p>
+<blockquote>
+<p>  <strong>malloc在C语言中用于申请内存空间；</strong></p>
+<p>  <font color="#f00"><strong>malloc本身不是系统调用，但是malloc是brk和mmap系统调用的封装；</strong></font></p>
+<ul>
+<li><font color="#f00"><strong>在128KB以内，默认使用的是brk系统调用，进行内存申请；</strong></font></li>
+<li><font color="#f00"><strong>在128KB以上，使用mmap进行内存申请；</strong></font></li>
+</ul>
+</blockquote>
+<h4 id="①-系统调用brk"><a href="#①-系统调用brk" class="headerlink" title="① 系统调用brk"></a><strong>① 系统调用brk</strong></h4><p>malloc小于128K（阈值可修改）的内存时，用的是brk；</p>
+<p>在C语言的<code>unistd.h</code>头文件中有一个sbrk的库函数，是对brk的封装；</p>
+<p>brk_demo.c</p>
+<pre><code class="c">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+
+int main() {
+    void *first = sbrk(0);
+    void *second = sbrk(1);
+    void *third = sbrk(0);
+
+    printf(&quot;%p\n&quot;, first);
+    printf(&quot;%p\n&quot;, second);
+    printf(&quot;%p\n&quot;, third);
+}
+</code></pre>
+<p>代码解释：</p>
+<p>首先，申请0个字节空间给first，再申请一个字节给second，最后申请0个字节给third；</p>
+<p>程序输出如下：</p>
+<pre><code>0x800040000
+0x800040000
+0x800040001</code></pre><p>由于second申请的一个字节返回的是空间的头，所以和first地址相同；</p>
+<p>而third在申请时，由于已经被second占用，所以输出为后一个内存区域；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>从上面的代码可以看出，brk在申请内存时，是连续申请的，所以虚拟地址是连续分配的，<code>brk其实就是向上扩展heap的上界</code>；</strong><font></font></font></p>
+</blockquote>
+<p>修改程序，仅申请一个字节，并把指针强转为int类型：</p>
+<p>brk_demo2.c</p>
+<pre><code class="c">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+
+int main() {
+    int *first = (int *)sbrk(1);
+    *(first + 1) = 123;
+    printf(&quot;%d\n&quot;, *(first + 1));
+}
+</code></pre>
+<p>此时，first+1实际上是位于第五个字节（int本身是四个字节！）；</p>
+<p>所以<code>*(first + 1) = 123</code>实际上是对5~8字节赋值为123；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：我们申请的是第0个字节的区域，但是却给5~8字节进行赋值了！</strong></font></p>
+</blockquote>
+<p>执行程序，输出结果如下：</p>
+<pre><code>123</code></pre><p>执行没有报错的原因在于：<font color="#f00"><strong>在进行brk时，申请的内存最小空间是一页，即4KB；所以，brk看似是申请了一个字节，实际上是申请了4KB的大小吗，即4096Byte！所以在赋值时，还是在当页进行赋值的，所以不会报错！</strong></font></p>
+<p>再次修改代码，使用4K区域之后的内存空间：</p>
+<p>brk_demo3.c</p>
+<pre><code class="c">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+
+int main() {
+    int *first = (int *)sbrk(1);
+    *first = 1;
+    *(first + 1024) = 123;
+    printf(&quot;%d\n&quot;, *(first + 1024));
+}
+</code></pre>
+<p>编译并执行：</p>
+<pre><code class="bash">jasonkay@jasonkayPC:~/workspace$ gcc test.c -o test.out
+jasonkay@jasonkayPC:~/workspace$ ./test.out 
+Segmentation fault (core dumped)</code></pre>
+<p>可以发现，由于在新的一页进行分配，直接报了<code>Segment Fault</code>错误；</p>
+<blockquote>
+<p>  <strong>这是由于没有申请新的一页，却直接用了！</strong></p>
+</blockquote>
+<blockquote>
+<p>  <font color="#f00"><strong>注：上述的实验是在Linux环境下进行了，在Windows下并未复现Segment Fault！</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="②-系统调用mmap"><a href="#②-系统调用mmap" class="headerlink" title="② 系统调用mmap"></a><strong>② 系统调用mmap</strong></h4><p>当malloc申请大于128K的内存时，用的是mmap；</p>
+<p>在C语言中对应的申请和释放函数如下所示：</p>
+<pre><code class="c">#include&lt;sys/mman.h&gt;
+
+// addr传NULL则不关心起始地址
+// 关心地址的话应传个4k的倍数，不然也会归到4k倍数的起始地址;
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+//释放内存munmap
+int munmap(void *addr, size_t length);</code></pre>
+<p>其中：</p>
+<ul>
+<li>addr：申请地址的起始位置，如果不关心起始地址，可以传null；</li>
+<li>length：申请内存大小，必定不能传0；</li>
+<li>prot：权限标志位，PROT_READ映射区读权限，PROT_WRITE写权限，读写都指定时：PROT_READ|PROT_WRITE；</li>
+<li>flags：标志位参数，MAP_SHARED:修改了内存数据，会同步到磁盘，MAP_PRIVATE:修改了内存数据，不会同步到磁盘；</li>
+<li>fd：文件描述符，要映射的文件对应的fd，使用时通过fd打开这个文件；<strong>由于mmap本身是将文件映射到内存，所以如果需要直接申请空间，可以传入-1；</strong></li>
+<li>off_t：映射文件的偏移量，作用：映射的时候文件指针的偏移量,必须是4k的整数倍,通常指定0，不偏移；fd如果是-1，off_t直接取0即可；</li>
+</ul>
+<p>函数返回值：调用成功返回映射区的首地址，调用失败返回MAP_FAILED宏（实际上是(void*)-1）；</p>
+<blockquote>
+<p>  <strong>munmap函数：</strong></p>
+<p>  函数作用：释放内存映射区；</p>
+<p>  函数原型及参数：</p>
+<pre><code class="c">  int munmap(void *addr, size_t length);</code></pre>
+<ul>
+<li><p>addr：mmap函数的返回值；</p>
+</li>
+<li><p>length：mmap的第二个参数，映射区的长度 ；</p>
+<p>函数返回值：成功时，munmap()返回0；失败时返回-1（and errno is set (probably to EINVAL)）；</p>
+</li>
+</ul>
+</blockquote>
+<p>mmap申请内存的代码如下：</p>
+<p>mmap_demo.c</p>
+<pre><code class="c">#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/mman.h&gt;
+
+int main() {
+    // 使用mmap申请100页（100 * 4KB）
+    int *a = (int *) mmap(NULL, 100 * 4096,
+                          PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS,
+                          -1, 0);
+    int *b = a;
+    // 100页中的每一页都进行赋值（否则，如果申请的没有被使用，操作系统不会分配）
+    for (int i = 0; i &lt; 100; ++i) {
+        b = (void *) a + (i * 4096);
+        // 每一页第一个地址赋值为1
+        *b = 1;
+    }
+    while (1) {
+        sleep(1);
+    }
+}
+</code></pre>
+<p>在代码中，我们申请了100页的内存，并且对每一页进行赋值；</p>
+<p>并使用pidstat对进程进行监控；</p>
+<blockquote>
+<p>  pidstat可以通过<code>sudo apt install sysstat</code>安装；</p>
+</blockquote>
+<p>使用pidstat对进程监控，并编译和执行上述程序：</p>
+<pre><code class="bash">pidstat -r 1 300</code></pre>
+<ul>
+<li>-r表示：内存监控；</li>
+<li>1 300表示：每一秒监控一次，共300秒；</li>
+</ul>
+<p>编译执行：</p>
+<pre><code class="bash">gcc test.c -o a.out
+./a.out</code></pre>
+<p>结果如下：</p>
+<pre><code>08时51分00秒   UID       PID  minflt/s  majflt/s     VSZ     RSS   %MEM  Command
+08时51分01秒  1000      7497    100.00      0.00    2756    1236   0.01  test.out</code></pre><p>可以看出，监控中出现了100次的min fault，代表了内存的小错误：</p>
+<p>因为在赋值时，每一页并没有分配空间，所以需要缺页错误；</p>
+<blockquote>
+<p>  <strong>缺页不是严重的错误，因为这个缺页对应的不是磁盘内容；</strong></p>
+</blockquote>
+<br>
+
+<p>下面使用mmap将一个文件映射至内存；</p>
+<p>mmap_demo2.c</p>
+<pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/mman.h&gt;
+
+int main() {
+    sleep(4);
+
+    // 打开文件，获取文件描述符
+    int fd = open(&quot;.\\1.txt&quot;, O_RDONLY, S_IRUSR|S_IWUSR);
+    struct stat sb;
+    if (fstat(fd, &amp;sb) == -1) {
+        perror(&quot;cannot get file size\n&quot;);
+    }
+    printf(&quot;file size is %ld\n&quot;, sb.st_size);
+
+    // 映射文件到内存中
+    char *file_in_memory = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+    // 打印文件
+    for (int i = 0; i &lt; sb.st_size; ++i) {
+        printf(&quot;%c&quot;, file_in_memory[i]);
+    }
+
+    // 关闭
+    munmap(file_in_memory, sb.st_size);
+    close(fd);
+}
+</code></pre>
+<p>再次通过pidstat监控，结果如下：</p>
+<pre><code>09时14分03秒   UID       PID  minflt/s  majflt/s     VSZ     RSS   %MEM  Command
+09时14分04秒  1000      7625     64.00      1.00    2356     516   0.00  a.out
+09时14分04秒  1000      7625     24.00      0.00    2356     516   0.00  a.out
+09时14分04秒  1000      7625     14.00      0.00    2356     516   0.00  a.out
+09时14分04秒  1000      7625     34.00      0.00    2356     516   0.00  a.out</code></pre><p>可以看到，首先会触发一次major fault，将文件读入内存；</p>
+<blockquote>
+<p>  <strong>如果mmap是映射的磁盘文件，也会惰性加载，在初次加载或者页被逐出后再加载的时候，也会缺页，此时为major fault；</strong></p>
+</blockquote>
+<blockquote>
+<p>  使用read也可以读取文件：</p>
+<p>  <font color="#f00"><strong>但是使用read系统调用进行文件读取时，会从用户态进入内核态，随后由内核将文件读入内核空间，再由内核空间复制到用户的内存空间；之后再从内核态切换为用户态，继续执行用户程序；</strong></font></p>
+<p>  <font color="#f00"><strong>而mmap是空间的直接映射：首先将Page Table中的空间映射至磁盘（惰性加载），而在第一次读文件时，发现映射是磁盘空间，进而引起major fault缺页中断，将文件直接读入内存空间，并产生内核空间和用户空间的直接映射；</strong></font></p>
+<p>  流程图如下：</p>
+<p>  <img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mmap%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6.png" alt="mmap读取文件.png"></p>
+<p>  <strong>所以mmap省去了内核空间→用户空间的拷贝的过程；</strong></p>
+<p>  <strong>虽然mmap实现了零拷贝，但是mmap无法利用buffer/cache内存区域，并且mmap引发的缺页异常和read函数的耗时并无绝对的性能优势，所以read函数和mmap都有各自的应用场景；</strong></p>
+</blockquote>
+<br>
+
+<h3 id="扩展阅读"><a href="#扩展阅读" class="headerlink" title="扩展阅读"></a><strong>扩展阅读</strong></h3><p>mmap、sendfile和splice是常见的零拷贝的系统调用；</p>
+<blockquote>
+<p>  说到零拷贝，就要提一下用户态和内核态、用户空间和内核空间；</p>
+<p>  内核空间就是位于内存高位的kernel的那部分内存，其他部分是用户空间；而内核态指的是一种状态，就是把cpu掌控权交给内核；</p>
+<p>  为什么要有内核态呢？因为所有的设备都不允许用户直接控制，包括内存条、硬盘、甚至是屏幕、usb外设，都是需要内核统一控制，如果用户程序想用这些设备必须进入内核态；</p>
+<p>  有三种方式进入内核态：中断、异常和系统调用；</p>
+<p>  中断和异常界限不是特别明显，上文多次提到缺页异常（有时候也叫缺页中断）就是用户态进入内核态的一种；系统调用上面也提到过了，mmap、brk这些都是系统调用，比较熟悉的比如read/write/select/poll/epoll也是系统调用；</p>
+</blockquote>
+<h4 id="①-mmap"><a href="#①-mmap" class="headerlink" title="① mmap"></a><strong>① mmap</strong></h4><p>mmap的作用第一个是<strong>将文件映射到内存中，映射的区域是堆和栈之间的lib区，是用户空间的一部分内存；</strong></p>
+<p>这时候我们其实通过系统调用将硬盘的内容直接放到了用户空间中，当然了在初次访问或者被逐出后的初次访问时，仍旧会触发缺页，导致读取很慢，但是在页填充好之后的读取是很快的；</p>
+<p>但是前面说过只有内核有资格直接和文件交互，所以其实这里映射到用户空间的这部分物理内存，在内核中同时也做了映射，即用户和内核共享了这部分物理内存（注意不是虚拟内存）；</p>
+<br>
+
+<h4 id="②-read"><a href="#②-read" class="headerlink" title="② read"></a><strong>② read</strong></h4><p>通过read这个系统调用读文件（fread是read封装好的库函数），是将文件内容读到内核空间，再从内核空间拷贝到用户空间，<strong>这个过程中，对文件的读写，必须经过内核空间，所以需要频繁的内核空间和用户空间的拷贝；</strong></p>
+<p>用MMAP可以将文件直接映射到用户空间内存，省去了拷贝，所以mmap是零拷贝的一种实现形式；</p>
+<blockquote>
+<p>  上面一直说的是文件，其实linux下一切皆是文件，网络接收数据的套接字也是文件描述符fd；</p>
+<p>  例如，我们读取文件再通过网卡发送的过程中，其实是有磁盘IO和网络IO本就是很慢的，再加上多次的拷贝；</p>
+<p>  <strong>所以这种场景下一般都用零拷贝来搞，一般使用的是支持scatter/gather的DMA控制器，外加sendfile系统调用来做到最少次数的拷贝和状态切换；</strong></p>
+</blockquote>
+<p>mmap可以简单的把文件和网卡都映射到用户空间，并像操作普通内存一样实现转发；</p>
+<p><font color="#f00"><strong>但是不确定的缺页异常触发会使得性能不好评估；</strong></font></p>
+<br>
+
+<h4 id="③-sendfile"><a href="#③-sendfile" class="headerlink" title="③ sendfile"></a><strong>③ sendfile</strong></h4><p>sendfile则针对性的进行了函数上的简化，为“零拷贝”而生；</p>
+<pre><code class="c">ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);</code></pre>
+<p>按照维基百科的说法：</p>
+<p><strong>零拷贝协议对于网络链接容量接近或超过CPU处理能力的高速网络尤其重要；在这种情况下，CPU几乎将所有时间都花在复制传输的数据上，因此成为瓶颈，将通信速率限制为低于链接的容量；</strong></p>
+<p>下面这篇文章，解释了普通read/write、sendfile和mmap实现上面网络转发场景的详细过程；</p>
+<ul>
+<li><a href="https://medium.com/@xunnan.xu/its-all-about-buffers-zero-copy-mmap-and-java-nio-50f2a1bfc05c" target="_blank" rel="noopener">It’s all about buffers: zero-copy, mmap and Java NIO</a></li>
+</ul>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h2><p>视频参考：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1454y1X7rk" target="_blank" rel="noopener">【计算机知识串讲】从下到上看内存</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/self-cultivation-in-programmer/tree/system-memory-malloc-demo" target="_blank" rel="noopener">https://github.com/JasonkayZK/self-cultivation-in-programmer/tree/system-memory-malloc-demo</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="/2021/03/25/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%AE%80%E8%BF%B0/">操作系统内存管理简述</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/03/25/计算机内存综述/" title="https://jasonkayzk.github.io/2021/03/25/计算机内存综述/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/03/25/计算机内存综述/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1726022092079"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
