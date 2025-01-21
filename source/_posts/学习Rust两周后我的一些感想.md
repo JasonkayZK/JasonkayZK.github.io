@@ -4,7 +4,7 @@ toc: true
 cover: 'https://img.paulzzh.com/touhou/random?55'
 date: 2021-06-16 09:44:24
 categories: Rust
-tags: [Rust, 程序人生]
+tags: [Rust, 人生日记]
 description: 学习Rust零零碎碎已经有两周的时间了，老实说最开始其实是本着学习好C++的态度打算好好学习C++的；但是个人对自己的代码能力并没有什么自信，因为C++实在太太太太太容易写出Memory-Leak的代码了！最后，就打算试一试Rust这门语言。用过之后不得不说，Rust应该是神级的Program Language了，编译检查简直严格到变态！本文主要想谈一谈我在学习了Rust两周后的一些感受；
 ---
 

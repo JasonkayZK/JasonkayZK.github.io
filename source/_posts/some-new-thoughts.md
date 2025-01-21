@@ -3,8 +3,8 @@ title: Some new thoughts
 toc: true
 cover: 'https://img9.doubanio.com/view/photo/l/public/p2568985205.webp'
 date: 2022-08-07 15:26:24
-categories: 程序人生
-tags: [程序人生]
+categories: 人生日记
+tags: [人生日记]
 description: Long time no see.
 ---
 

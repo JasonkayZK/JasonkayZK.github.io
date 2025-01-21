@@ -3,8 +3,8 @@ title: 购买了新的CVM
 toc: true
 cover: 'https://img.paulzzh.com/touhou/random?43'
 date: 2021-03-10 18:48:29
-categories: 程序人生
-tags: [程序人生, 技术杂谈]
+categories: 人生日记
+tags: [人生日记, 技术杂谈]
 description: 之前购买的良心云学生服务器已经到期，并且续费次数也用完了。正好最近有免费升级活动，2C4G6M的机器3年才400块钱，就入手了。本文记录了在新服务器上一些安装软件的过程和旧服务器数据迁移过程；
 ---
 

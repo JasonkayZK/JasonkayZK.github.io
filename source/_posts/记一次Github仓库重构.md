@@ -3,8 +3,8 @@ title: 记一次Github仓库重构
 cover: https://img.paulzzh.com/touhou/random?7
 toc: true
 date: 2020-03-03 21:56:04
-categories: 程序人生
-tags: [程序人生]
+categories: 人生日记
+tags: [人生日记]
 description: 今天打算投稿给HelloGitHub一个仓库, 所以把一个仓库重构了代码, 创建了大量分支. 可惜最后还是没有被录用. 没事, 继续努力吧~
 ---
 

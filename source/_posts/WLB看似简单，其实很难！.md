@@ -3,8 +3,8 @@ title: WLB看似简单，其实很难！
 toc: true
 cover: 'https://img.paulzzh.com/touhou/random?23'
 date: 2021-08-01 22:30:09
-categories: 程序人生
-tags: [程序人生]
+categories: 人生日记
+tags: [人生日记]
 description: 入职快要一个月了，由于工作比较忙，基本上都没有时间写博客了；所以就趁着封培的晚上比较闲，说一下最近的一些体会吧！
 ---
 

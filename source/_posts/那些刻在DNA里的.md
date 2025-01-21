@@ -3,8 +3,8 @@ title: 那些刻在DNA里的
 toc: true
 cover: 'https://img.paulzzh.com/touhou/random?54'
 date: 2021-02-17 14:15:18
-categories: 程序人生
-tags: 程序人生
+categories: 人生日记
+tags: 人生日记
 description: 今天看到了关于DNA的一些知识，有那么一点感想；
 ---
 
