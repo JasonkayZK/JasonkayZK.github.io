@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java并发编程-2 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="Java并发编程之美之二">
+<meta name="keywords" content="并发编程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java并发编程-2">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/11/Java并发编程-2/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="Java并发编程之美之二">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568200735073&di=df31eab982e669d5d583b349893bbcc4&imgtype=0&src=http%3A%2F%2Fstatic.jointforce.com%2Fjfperiodical_prod%2Fattached%2Fimage%2F20171009%2F1924535125.jpg">
+<meta property="og:image" content="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1148586582,4011720927&fm=26&gp=0.jpg">
+<meta property="og:image" content="https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2559964246,1177664816&fm=26&gp=0.jpg">
+<meta property="og:image" content="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=691099822,286084129&fm=26&gp=0.jpg">
+<meta property="og:updated_time" content="2025-01-30T03:58:33.243Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java并发编程-2">
+<meta name="twitter:description" content="Java并发编程之美之二">
+<meta name="twitter:image" content="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568200735073&di=df31eab982e669d5d583b349893bbcc4&imgtype=0&src=http%3A%2F%2Fstatic.jointforce.com%2Fjfperiodical_prod%2Fattached%2Fimage%2F20171009%2F1924535125.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1738209594651">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script><!-- End Cloudflare Web Analytics -->
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567750837551&di=fae22e8ce73ecbc87820964da733b106&imgtype=0&src=http%3A%2F%2Fimg3m1.ddimg.cn%2F31%2F20%2F1465705921-1_u_1.jpg">
+    
+    <h1>Java并发编程-2</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月11日</a>
+    <a><i class="nexmoefont icon-areachart"></i>5.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 24 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/并发编程/">并发编程</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/并发编程/">并发编程</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#二-并发编程的其他基础知识"><span class="toc-text">二. 并发编程的其他基础知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-并发与并行"><span class="toc-text">1. 并发与并行</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-区别"><span class="toc-text">1): 区别</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Java中的线程安全问题"><span class="toc-text">3. Java中的线程安全问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Java中共享变量的内存可见性问题"><span class="toc-text">4. Java中共享变量的内存可见性问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#内存不可见性导致的问题"><span class="toc-text">内存不可见性导致的问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-Java中的synchronized关键字"><span class="toc-text">5. Java中的synchronized关键字</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-synchronized关键字"><span class="toc-text">1). synchronized关键字</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-synchronized内存语义"><span class="toc-text">2): synchronized内存语义</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-Java的volatile关键字"><span class="toc-text">6. Java的volatile关键字</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-volatile与synchronized"><span class="toc-text">1): volatile与synchronized</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-volatile使用场景"><span class="toc-text">2): volatile使用场景</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-Java中的原子性操作"><span class="toc-text">7. Java中的原子性操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-原子性操作"><span class="toc-text">1): 原子性操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-保证线程安全之使用synchronized"><span class="toc-text">2): 保证线程安全之使用synchronized</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-Java中的CAS操作"><span class="toc-text">8. Java中的CAS操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-基本的ABA问题"><span class="toc-text">1): 基本的ABA问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-与内存模型相关的ABA问题"><span class="toc-text">2): 与内存模型相关的ABA问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-基本的ABA问题举例"><span class="toc-text">3): 基本的ABA问题举例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-ABA问题的解决"><span class="toc-text">4): ABA问题的解决</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-Unsafe类-Java中的指针"><span class="toc-text">9. Unsafe类(Java中的指针)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Unsafe中提供的接个主要的方法"><span class="toc-text">1): Unsafe中提供的接个主要的方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-如何使用Unsafe类"><span class="toc-text">2): 如何使用Unsafe类</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-Java指令重排列"><span class="toc-text">10. Java指令重排列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-伪共享"><span class="toc-text">11. 伪共享</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-什么是伪共享"><span class="toc-text">1): 什么是伪共享</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-出现伪共享的原因"><span class="toc-text">2): 出现伪共享的原因</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-避免伪共享"><span class="toc-text">3): 避免伪共享</span></a></li></ol></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>Java并发编程之美第二章总结: 并发编程的其他基础知识</p>
+<a id="more"></a>
+
+<h2 id="二-并发编程的其他基础知识"><a href="#二-并发编程的其他基础知识" class="headerlink" title="二. 并发编程的其他基础知识"></a>二. 并发编程的其他基础知识</h2><h3 id="1-并发与并行"><a href="#1-并发与并行" class="headerlink" title="1. 并发与并行"></a>1. 并发与并行</h3><ul>
+<li><em>并发:</em> <font color="#0000ff">同一个时间段内多个任务同时都在执行, 并且都没有结束;</font></li>
+<li><em>并行:</em> <font color="#0000ff">单位时间内多个任务同时在执行</font></li>
+</ul>
+<h4 id="1-区别"><a href="#1-区别" class="headerlink" title="1): 区别"></a>1): 区别</h4><p><font color="#ff0000"><code>并发</code>强调一个时间段内同时执行, 而单位时间段内不一定同时执行!</font></p>
+<p><font color="#ff0000"><code>并行</code>时同一时刻有多个任务同时执行!</font></p>
+<p>一般线程的个数都多于CPU个数, 所以一般都称为<strong>多线程并发编程</strong>.</p>
+<hr>
+<h3 id="3-Java中的线程安全问题"><a href="#3-Java中的线程安全问题" class="headerlink" title="3. Java中的线程安全问题"></a>3. Java中的线程安全问题</h3><ul>
+<li><em>共享资源</em>: 该资源被多个线程所持有/多个线程都可以去访问该资源!</li>
+<li><em>线程安全问题</em>: 当多个线程同时读写一个共享资源并且没有任何的同步措施时, 导致出现脏数据或者其他不可预见的结果的问题!</li>
+</ul>
+<p>最常见的线程安全问题为: <strong>计数器类(这里略)</strong></p>
+<hr>
+<h3 id="4-Java中共享变量的内存可见性问题"><a href="#4-Java中共享变量的内存可见性问题" class="headerlink" title="4. Java中共享变量的内存可见性问题"></a>4. Java中共享变量的内存可见性问题</h3><p>下图为多线程下处理共享变量时的Java内存模型:</p>
+<p><img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1568200735073&di=df31eab982e669d5d583b349893bbcc4&imgtype=0&src=http%3A%2F%2Fstatic.jointforce.com%2Fjfperiodical_prod%2Fattached%2Fimage%2F20171009%2F1924535125.jpg" alt="Java内存模型"></p>
+<p>Java内存模型规定:</p>
+<p><font color="#ff0000">所有的变量都保存在主内存中(堆内存). 当线程使用变量时, *会把主内存里面的变量复制到自己的工作空间(工作内存), 线程读写的是自己工作内存中的变量!</font></p>
+<p>下图所示是一个双核CPU系统架构:</p>
+<p><img src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1148586582,4011720927&fm=26&gp=0.jpg" alt="双核CPU系统架构"></p>
+<p>其中每个核有自己的一级缓存, 有一些架构里面还有所有CPU共享的二级缓存. Java内存模型中的工作内存, 就对应于<em>L1/L2缓存或者CPU的寄存器</em>.</p>
+<p>当一个线程操作共享变量时,<font color="#0000ff">首先从主内存复制共享变量到自己的工作内存, 然后对工作内存里的变量进行处理, 处理完成后将变量值更新到主内存!</font></p>
+<h4 id="内存不可见性导致的问题"><a href="#内存不可见性导致的问题" class="headerlink" title="内存不可见性导致的问题"></a><em>内存不可见性导致的问题</em></h4><p>假设线程A与线程B同时处理一个共享变量. 并假设线程A与线程B使用不同的CPU执行, 且最开始两级Cache都为空! <strong>这时由于Cache的存在, 将会导致内存不可见问题!</strong></p>
+<ul>
+<li>线程A获得资源X的值, 由于两级缓存都没有命中, 所以加载主内存中X的值(假设X=0); 然后把<code>X=0</code>缓存到两级缓存.</li>
+<li>线程A修改X的值为1, 然后写入两级Cache, 并刷新主存. </li>
+</ul>
+<p>操作完毕后, 线程A所在的CPU的两级Cache和主存中的X值均为1;</p>
+<ul>
+<li>线程B获取X的值, 首先一级缓存未命中, 二级缓存命中所以返回1;</li>
+</ul>
+<p>到这里一切都是正常的!</p>
+<ul>
+<li>然后线程B修改X的值为2, 并将其存放到线程B所在的一级和共享二级缓存中, 最后更新主存中X的值为2;</li>
+</ul>
+<p>到这里也是正常的!</p>
+<ul>
+<li>线程A这次又要修改X的值. 获取时<font color="#ff0000">一级缓存命中, 并且<code>X=1</code>. </font></li>
+</ul>
+<p><font color="#0000ff">到这里问题出现了! 线程B将共享变量修改为了2, 但是线程A读入的值还为1! 这就是共享变量的内存不可见问题: <em>线程B写入的值对线程A不可见!</em></font>(可以使用Java的<code>volatile</code>关键字解决)</p>
+<hr>
+<h3 id="5-Java中的synchronized关键字"><a href="#5-Java中的synchronized关键字" class="headerlink" title="5. Java中的synchronized关键字"></a>5. Java中的synchronized关键字</h3><h4 id="1-synchronized关键字"><a href="#1-synchronized关键字" class="headerlink" title="1). synchronized关键字"></a>1). synchronized关键字</h4><p><code>synchronize块</code>是Java提供的一种<strong>原子性内置锁</strong>, <font color="#ff0000">Java中的每一个对象都可以被当做一个同步锁使用!</font>这些Java内置的使用者看不到的锁被称为: <em>内部锁</em>, 或者<em>监视器锁</em>.</p>
+<p><font color="#0000ff">线程执行的代码在进入synchronized代码块之前, 会自动获取到内部锁, 这时, 其他线程访问该同步代码块的时候会被阻塞挂起. 拿到了内部锁的线程会在<code>正常退出/抛出异常/同步块内调用wait</code>时释放内置锁. </font></p>
+<p><font color="#0000ff">内置锁是<code>排它锁</code>: 当一个线程获取这个锁后, 其他线程<em>必须</em>等待该线程释放锁后才能获取该锁!</font></p>
+<p><font color="#ff0000">此外, Java中的线程与操作系统的原生线程一一对应! 所以当阻塞一个线程时, <em>需要从用户态切换到内核态执行阻塞操作</em>, 这个是很耗时的操作, 而且synchronized的使用还会导致上下文切换!</font></p>
+<h4 id="2-synchronized内存语义"><a href="#2-synchronized内存语义" class="headerlink" title="2): synchronized内存语义"></a>2): synchronized内存语义</h4><p>进入synchronized块的内存语义就是: </p>
+<ul>
+<li><font color="#ff0000">把在synchronized块内使用到的变量从线程的工作内存中清除, 这样在synchronized块中使用的变量不会从线程的工作内存中获取, 而是<em>直接从主内存中获取</em>.</font></li>
+</ul>
+<p>退出synchronized块的语义就是:</p>
+<ul>
+<li><font color="#ff0000">把在synchronized块内对共享变量的修改刷新到主内存中</font></li>
+</ul>
+<p>除了解决共享变量内存可见性问题, synchronized经常被用来实现原子操作.</p>
+<hr>
+<h3 id="6-Java的volatile关键字"><a href="#6-Java的volatile关键字" class="headerlink" title="6. Java的volatile关键字"></a>6. Java的volatile关键字</h3><p>除了使用较为笨重的锁的形式解决共享变量的内存可见性问题, Java还提供了一种<em>弱形式的同步</em>.</p>
+<p><font color="#0000ff">该关键字可以确保, 对一个变量的更新对其他线程马上可见! </font></p>
+<p><font color="#ff0000">当一个变量被声明为<code>volatile</code>时, 线程在写入变量时, <em>不会</em>把值缓存在寄存器或者其他地方, 而是会把值刷新回主内存. 当其他线程读取该变量的值时, 会从主内存重新获取值, 而不是使用当前线程的工作内存中的值.</font></p>
+<h4 id="1-volatile与synchronized"><a href="#1-volatile与synchronized" class="headerlink" title="1): volatile与synchronized"></a>1): volatile与synchronized</h4><p>当线程写入了volatile变量值时, 就等价于线程退出synchronized同步块(把写入工作内存中的变量值刷新到主内存);</p>
+<p>读取volatile变量时, 就相当于进入同步块(先清空本地内存变量值, 在从主内存获取最新值).</p>
+<p>*<em>例: *</em></p>
+<pre><code class="java">// 线程不安全
+public class ThreadNotSafeInteger {
+    private int value;
+
+    public int get() {
+        return value;
+    }
+
+    public void set(int value) {
+        this.value = value;
+    }
+}
+</code></pre>
+<p>使用synchronized进行同步的方法</p>
+<pre><code class="java">public class ThreadSafeInteger {
+    private int value;
+
+    public synchronized int get() {
+        return value;
+    }
+
+    public synchronized void set(int value) {
+        this.value = value;
+    }
+
+}</code></pre>
+<p>使用volatile</p>
+<pre><code class="java">public class ThreadNotSafeInteger {
+    private volatile int value;
+
+    public int get() {
+        return value;
+    }
+
+    public void set(int value) {
+        this.value = value;
+    }
+}
+</code></pre>
+<p>上面使用<code>synchronized</code>和<code>volatile</code>都解决了value的内存可见性问题, 但是前者是独占锁, 同时只能有一个线程调用get方法, 同时存在线程上下文切换和线程重新调度的开销. 而volatile是非阻塞算法!</p>
+<p>但<code>synchronized</code>和<code>volatile</code>并非等价!</p>
+<p><code>volatile</code>虽然提供了内存可见性, 但是<font color="#ff0000">不能保证操作原子性!</font></p>
+<h4 id="2-volatile使用场景"><a href="#2-volatile使用场景" class="headerlink" title="2): volatile使用场景"></a>2): volatile使用场景</h4><ul>
+<li><p><font color="#0000ff">写入变量值不依赖变量的当前值时.</font></p>
+<p>因为如果依赖当前值, 将是 获取–计算–写入三步操作, 这三步不是原子性的, 而volatile不保证原子性!</p>
+</li>
+<li><p><font color="#0000ff">读写变量值时没有加锁.</font></p>
+<p>因为加锁本身已经保证了内存可见性, 这时已经不需要声明为volatile.</p>
+</li>
+</ul>
+<hr>
+<h3 id="7-Java中的原子性操作"><a href="#7-Java中的原子性操作" class="headerlink" title="7. Java中的原子性操作"></a>7. Java中的原子性操作</h3><h4 id="1-原子性操作"><a href="#1-原子性操作" class="headerlink" title="1): 原子性操作"></a>1): 原子性操作</h4><p>所谓原子性操作: <font color="#0000ff">在执行一系列操作时, 这些操作要么全部执行, 要么全部不执行, 不存在只执行其中一部分的情况!</font></p>
+<p>*<em>如下: *</em></p>
+<pre><code class="java">public class ThreadNotSafeCounter {
+    private Long value;
+
+    public Long getCount() {
+        return value;
+    }
+
+    public void inc() {
+        ++value;
+    }
+}</code></pre>
+<p>这个计数器将会<font color="#00ff00">先读取当前值, 然后+1, 在更新. 这个过程是读–写–改的过程.</font>如果无法保证这个过程是原子性的, 会出现线程安全问题!</p>
+<h4 id="2-保证线程安全之使用synchronized"><a href="#2-保证线程安全之使用synchronized" class="headerlink" title="2): 保证线程安全之使用synchronized"></a>2): 保证线程安全之使用synchronized</h4><p>修改代码如下:</p>
+<pre><code class="java">public class ThreadNotSafeCounter {
+    private Long value;
+
+    public synchronized Long getCount() {
+        return value;
+    }
+
+    public synchronized void inc() {
+        ++value;
+    }
+}</code></pre>
+<p><strong>问: 对于getCount()而言, 只是只读操作可否删去synchronized关键字?</strong></p>
+<p>不可以! <font color="#ff0000">这里还要靠synchronized实现value的内存可见性!</font></p>
+<hr>
+<h3 id="8-Java中的CAS操作"><a href="#8-Java中的CAS操作" class="headerlink" title="8. Java中的CAS操作"></a>8. Java中的CAS操作</h3><p><font color="#0000ff"><code>CAS(Compare and Swap)</code>是JDK提供的非阻塞原子性操作, 通过硬件保证了<em>比较–更新</em>的原子性!</font></p>
+<p>在JDK中的<code>Unsafe类</code>提供了一系列的<code>compareAndSwap*方法</code>, 以<code>compareAndSwapLong方法</code>为例:</p>
+<ul>
+<li><p>boolean compareAndSwapLong(Object obj, long valueOffset, long expect, long update)方法:</p>
+<p>其中compareAndSwap的意思是: <em>比较并交换.</em></p>
+<p>CAS有四个操作数: <font color="#0000ff">对象的内存位置, 对象中的变量的偏移量, 变量预期值, 新的值.</font></p>
+<p>操作含义: <font color="#0000ff">若对象obj中内存偏移量为<code>valueOffset</code>的变量值为<code>expect</code>, 则使用新的值<code>update</code>替换旧的值<code>expect</code>.</font></p>
+<p><font color="#ff0000">这是处理器提供的原子性命令!</font></p>
+</li>
+</ul>
+<h4 id="1-基本的ABA问题"><a href="#1-基本的ABA问题" class="headerlink" title="1): 基本的ABA问题"></a>1): 基本的ABA问题</h4><p>在CAS算法中，需要取出内存中某时刻的数据（由用户完成），在下一时刻比较并替换（由CPU完成，该操作是原子的）。这个时间差中，会导致数据的变化。</p>
+<p>假设如下事件序列：</p>
+<ol>
+<li>线程 1 从内存位置V中取出A。</li>
+<li>线程 2 从位置V中取出A。</li>
+<li>线程 2 进行了一些操作，将B写入位置V。</li>
+<li>线程 2 将A再次写入位置V。</li>
+<li>线程 1 进行CAS操作，发现位置V中仍然是A，操作成功。</li>
+</ol>
+<p>尽管线程 1 的CAS操作成功，但不代表这个过程没有问题——<em>对于线程 1 ，线程 2 的修改已经丢失</em>!</p>
+<h4 id="2-与内存模型相关的ABA问题"><a href="#2-与内存模型相关的ABA问题" class="headerlink" title="2): 与内存模型相关的ABA问题"></a>2): 与内存模型相关的ABA问题</h4><p>在没有垃圾回收机制的内存模型中（如C++），程序员可随意释放内存。</p>
+<p>假设如下事件序列：</p>
+<ol>
+<li>线程 1 从内存位置V中取出A，A指向内存位置W。</li>
+<li>线程 2 从位置V中取出A。</li>
+<li>线程 2 进行了一些操作，释放了A指向的内存。</li>
+<li>线程 2 重新申请内存，并恰好申请了内存位置W，将位置W存入C的内容。</li>
+<li>线程 2 将内存位置W写入位置V。</li>
+<li>线程 1 进行CAS操作，发现位置V中仍然是A指向的即内存位置W，操作成功</li>
+</ol>
+<p>这里比问题 1.1 的后果更严重，实际内容已经被修改了，但<em>线程 1 无法感知到线程 2 的修改</em>。</p>
+<p>更甚，如果线程 2 只释放了A指向的内存，而线程 1 在 CAS之前还要访问A中的内容，那么线程 1 将访问到一个<code>野指针</code>。</p>
+<h4 id="3-基本的ABA问题举例"><a href="#3-基本的ABA问题举例" class="headerlink" title="3): 基本的ABA问题举例"></a>3): 基本的ABA问题举例</h4><p>如果位置V存储的是链表的头结点，那么发生ABA问题的链表中，原头结点是node1，线程 2 操作头结点变化了两次，很可能是先修改头结点为node2，再将node1（在C++中，也可是重新分配的节点node3，但恰好其指针等于已经释放掉的node1）插入表头成为新的头结点。</p>
+<p>对于线程 1 ，头结点仍旧为 node1（或者说头结点的值，因为在C++中，虽然地址相同，但其内容可能变为了node3），CAS操作成功，但头结点之后的子链表的状态已不可预知!</p>
+<h4 id="4-ABA问题的解决"><a href="#4-ABA问题的解决" class="headerlink" title="4): ABA问题的解决"></a>4): ABA问题的解决</h4><p><font color="#0000ff">ABA问题的产生是因为变量的状态值产生了环形转换, 即变量的值可以A–B–A. 若变量的值只能朝着一个方向转换就不会存在问题!</font></p>
+<p><font color="#ff0000">Java的垃圾回收机制已经帮我们解决了问题 1.2；至于问题 1.1，加入版本号即可解决!</font></p>
+<p>JDK中的<code>AtomicStampedReference类</code>给每一个变量的状态值都配备了一个时间戳从而避免了ABA问题!</p>
+<h3 id="9-Unsafe类-Java中的指针"><a href="#9-Unsafe类-Java中的指针" class="headerlink" title="9. Unsafe类(Java中的指针)"></a>9. Unsafe类(Java中的指针)</h3><p>JDK中的<code>rt.jar</code>包中的<code>Unsafe类</code>提供了硬件级别的原子性操作, <font color="#ff0000">Unsafe类中的方法都是<em>native</em>方法, 使用JNI的方式访问本地C++实现库!</font></p>
+<h4 id="1-Unsafe中提供的接个主要的方法"><a href="#1-Unsafe中提供的接个主要的方法" class="headerlink" title="1): Unsafe中提供的接个主要的方法"></a>1): Unsafe中提供的接个主要的方法</h4><ul>
+<li><p><code>long objectFieldOffset(Field field)</code>方法: </p>
+<p>返回指定的变量在所属类中的内存偏移地址, 该偏移地址仅仅在该Unsafe函数中访问指定字段时使用</p>
+<p>例:</p>
+<pre><code class="java">static {
+    try {
+        valueOffset = unsafe.objectFieldOffset(AtomicLong.class.getDeclaredField(&quot;value&quot;));
+    } catch(....) {
+        .....
+    }
+}</code></pre>
+<p>获取了变量<code>value</code>在<code>AtomicLong</code>对象中的内存偏移量!</p>
+<br>
+</li>
+<li><p><code>int arrayBaseOffset(Class arrayClass)</code>方法:</p>
+<p>获取数组中第一个元素的地址</p>
+<br>
+</li>
+<li><p><code>int arrayIndexScale(Class arrayClass)</code>方法:</p>
+<p>获取数组中第一个元素占用的字节数</p>
+<br>
+</li>
+<li><p><code>boolean compareAndSwapLong(Object obj, long valueOffset, long expect, long update)</code>方法</p>
+<p>比较对象obj中<em>偏移量为offset</em>的变量的值是否与expect相等, 若相等则使用update更新, 然后返回<code>true</code>, 否则返回<code>false</code>.</p>
+<br>
+</li>
+<li><p><code>public native long getLongvolatile(Object obj, long offset)</code>方法</p>
+<p>获取对象obj中偏移量为Offset的变量对应volatile语义的值</p>
+<br>
+</li>
+<li><p><code>void putLongvolatile(Object obj, long offset, long value)</code>方法</p>
+<p>设置obj对象中offset偏移的类型为long的field的值为value, 支持volatile语义</p>
+<br>
+</li>
+<li><p><code>void putOrderedLong(Object obj, long offset, long value)</code>方法</p>
+<p>设置obj对象中offset偏移地址对应的long型的field的值为value. <font color="#0000ff">这是一个有延迟的<code>putLongvolatile</code>方法, 并且不保证值修改对其他线程立即可见! 只有当变量使用volatile修饰, 并且预计会被意外修改时才使用此方法!</font></p>
+<br>
+</li>
+<li><p><code>void park(boolean isAbsolute, long time)</code>方法</p>
+<p><font color="#0000ff">阻塞当前线程.</font></p>
+<p>其中:</p>
+<ul>
+<li><p>参数<code>isAbsolute == false &amp;&amp; time=0</code>表示一直阻塞;</p>
+</li>
+<li><p><code>time &gt; 0</code>表示等待指定的time后阻塞线程被唤醒, 这个time是一个相对值: 相对当前时间累加time后被唤醒;</p>
+</li>
+<li><p><code>isAbsolute == true &amp;&amp; time &gt; 0</code>表示阻塞线程到指定的时间点后被唤醒, 这里time是绝对时间!</p>
+</li>
+</ul>
+<p><font color="#0000ff">此外, 当其他线程调用了当前线程的<code>interrupt()方法</code>而中断了当前线程时, 当前线程会返回;</font></p>
+<p><font color="#0000ff">当其他线程调用了unPark()方法且把当前线程作为参数时, 也会返回.</font></p>
+<br>
+</li>
+<li><p><code>void unpark(Object thread)</code>方法</p>
+<p>唤醒调用park方法后阻塞的线程</p>
+<br>
+
+</li>
+</ul>
+<p><font color="#0000ff"><em>JDK8后新增方法</em></font></p>
+<ul>
+<li><p><code>long getAndSetLong(Object obj, long offset, long update)</code>方法</p>
+<p>获取对象obj中偏移量为offset的变量volatile语义的当前值, 并设置变量volatile语义的值为update;</p>
+<br>
+</li>
+<li><p><code>long getAndAddLong(Object obj, long offset, long addValue)</code>方法</p>
+<p>获取对象obj中偏移量为offset的变量volatile语义的当前值, 并设置变量值为原始值+addValue.</p>
+</li>
+</ul>
+<h4 id="2-如何使用Unsafe类"><a href="#2-如何使用Unsafe类" class="headerlink" title="2): 如何使用Unsafe类"></a>2): 如何使用Unsafe类</h4><pre><code class="java">package club.jasonkayzk666.chapter2.lesson9.unsafe;
+
+import sun.misc.Unsafe;
+
+public class UnsafeTest {
+
+    // 获取Unsafe实例
+    public static final Unsafe unsafe = Unsafe.getUnsafe();
+
+    // 记录变量state在类UnsafeTest中的偏移值
+    public static final long stateOffset;
+
+    // 变量
+    private volatile long state = 0;
+
+    static {
+        try {
+            // 使用Unsafe获取偏移值!
+            stateOffset = unsafe.objectFieldOffset(UnsafeTest.class.getDeclaredField(&quot;state&quot;));
+        } catch (NoSuchFieldException e) {
+            System.out.println(e.getLocalizedMessage());
+            throw new Error(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        // 创建实例, 并设置值为1
+        UnsafeTest test = new UnsafeTest();
+        System.out.println(unsafe.compareAndSwapLong(test, stateOffset, 0, 1));
+
+    }
+
+}
+</code></pre>
+<p>代码如上所示: 首先获取了一个Unsafe实例, 然后创建了一个state变量并初始化为0. 使用<code>unsafe.objectFieldOffset</code>获取UnsafeTest类中的state变量, 并将地址保存!</p>
+<p>调用unsafe的<code>compareAndSwapInt</code>方法, 设置test对象的state变量的值. 即: <font color="#0000ff"> 若test对象中内存偏移量为stateOffset的state变量的值为0, 则更新为1</font></p>
+<p>运行后的结果:</p>
+<pre><code class="java">Exception in thread &quot;main&quot; java.lang.ExceptionInInitializerError
+Caused by: java.lang.SecurityException: Unsafe
+    at sun.misc.Unsafe.getUnsafe(Unsafe.java:90)
+    at club.jasonkayzk666.chapter2.lesson9.unsafe.UnsafeTest.&lt;clinit&gt;(UnsafeTest.java:8)
+</code></pre>
+<p>为找出原因, 查看getUnsafe源码:</p>
+<pre><code class="java">    @CallerSensitive
+    public static Unsafe getUnsafe() {
+        // 获取调用本方法的对象的Class对象
+        Class var0 = Reflection.getCallerClass();
+
+        if (!VM.isSystemDomainLoader(var0.getClassLoader())) {
+            throw new SecurityException(&quot;Unsafe&quot;);
+        } else {
+            return theUnsafe;
+        }
+    }
+
+    // 判断paramClassLoader是不是BootStrap类加载器
+    public static boolean isSystemDomainLoader(ClassLoader var0) {
+        return var0 == null;
+    }</code></pre>
+<p><font color="#0000ff">代码首先获取调用本方法的对象的Class对象, 然后判断paramClassLoader是不是BootStrap类加载器. </font></p>
+<p><font color="#ff0000">显然, 本例中是在main方法中new出来的实例, 所以UnsafeTest.class是使用<code>APPClassLoader</code>加载的, 所以抛出了异常!</font></p>
+<p><strong>判断ClassLoader的原因:</strong></p>
+<p><font color="#ff0000">因为Unsafe类是<code>rt.jar</code>包提供的, 而此包中的类是使用<code>BootStrapClassLoader</code>加载的, 而我们在main函数所在的类是使用<code>APPClassLoader</code>加载的, 所以在main函数加载Unsafe类时, 根据<em>双亲委派原则,</em> 会委托BootStrap去加载Unsafe类, 从而调用上述代码而导致异常!!</font></p>
+<p><font color="#0000ff">由于Unsafe类可以直接操作内存, 不安全, 所以使用了ClassLoader判断</font></p>
+<p><strong>真想实例化Unsafe类的方法:</strong></p>
+<p><font color="#ff0000">通过反射打破双亲委派原则即可!</font></p>
+<p><strong>例:</strong></p>
+<pre><code class="java">package club.jasonkayzk666.chapter2.lesson9.unsafe;
+
+import sun.misc.Unsafe;
+
+import java.lang.reflect.Field;
+
+public class UnsafeReflection {
+
+    public static Unsafe unsafe;
+
+    public static long stateOffset;
+
+    private volatile long state = 0;
+
+    static {
+        try {
+
+            // 使用反射获取Unsafe的成员变量theUnsafe!
+            Field field = Unsafe.class.getDeclaredField(&quot;theUnsafe&quot;);
+
+            // 设置为可存取
+            field.setAccessible(true);
+
+            // 获取unsafe变量
+            unsafe = (Unsafe) field.get(null);
+
+            // 获取偏移量
+            stateOffset = unsafe.objectFieldOffset(UnsafeReflection.class.getDeclaredField(&quot;state&quot;));
+
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        UnsafeReflection test = new UnsafeReflection();
+
+        System.out.println(unsafe.compareAndSwapInt(test, stateOffset, 0, 1));
+    }
+
+}
+
+</code></pre>
+<p>代码通过反射创建了Unsafe对象, 最后输出:</p>
+<pre><code>true</code></pre><hr>
+<h3 id="10-Java指令重排列"><a href="#10-Java指令重排列" class="headerlink" title="10. Java指令重排列"></a>10. Java指令重排列</h3><p>Java的内存模型允许编译器和处理器对指令进行冲排列以提高性能, 并且<font color="#ff0000">只会对不存在数据依赖性的指令进行冲排列.</font></p>
+<p>在单线程的情况下可以保证最终执行的结果与顺序执行的结果相同! 但是多线程情况可能就不同!</p>
+<p>如:</p>
+<pre><code>int a = 1; (1)
+int b = 2; (2)
+int c = a + b; (3)</code></pre><p>上面的代码, c的值依赖于a和b, 所以重排列之后, (3)仍然在(1), (2)之后, 但是(1), (2)谁先执行就不一定了! 这在单线程下不会有问题!</p>
+<p>对于多线程:</p>
+<pre><code class="java">package club.jasonkayzk666.chapter2.lesson10.commandresort;
+
+public class CommandResort {
+
+    private static int num = 0;
+
+    private static boolean ready = false;
+
+    public static class ReadThread extends Thread {
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (ready) {
+                    System.out.println(num + num);
+                }
+            }
+            System.out.println(&quot;read thread....&quot;);
+        }
+    }
+
+    public static class WriteThread extends Thread {
+        @Override
+        public void run() {
+            num = 2; // (3)
+            ready = true; // (4)
+            System.out.println(&quot;writeThread set over...&quot;);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ReadThread rt = new ReadThread();
+        rt.start();
+
+        WriteThread wt = new WriteThread();
+        wt.start();
+
+        Thread.sleep(10);
+        rt.interrupt();
+
+        System.out.println(&quot;main exit&quot;);
+    }
+}
+</code></pre>
+<p>对于上述代码, 由于变量没有被声明为volatile, 也没有采用任何同步措施, 所以存在内存可见性问题. 这里先不考虑这个问题, 因为<font color="#0000ff">使用volatile本身即可避免指令重拍!</font></p>
+<p>当写线程的代码(3)(4)被重拍, 则执行(4)后, 有可能读线程已经执行了(1), 并且在(3)执行之前就开始执行(2)操作. <font color="#ff0000">此时输出的是0而不是4!</font></p>
+<p><strong>解决指令重排的方法:</strong></p>
+<p><font color="#0000ff">指令重排在多线程下会导致非预期的程序执行结果, 而使用volatile修饰ready即可避免重排列和内存可见性问题!</font></p>
+<p><font color="#ff0000">编译器会保证, 写volatile时, 写之前的操作不会被重排列到写之后; volatile读之后的操作不会重排序到读之前!</font></p>
+<hr>
+<h3 id="11-伪共享"><a href="#11-伪共享" class="headerlink" title="11. 伪共享"></a>11. 伪共享</h3><h4 id="1-什么是伪共享"><a href="#1-什么是伪共享" class="headerlink" title="1): 什么是伪共享"></a>1): 什么是伪共享</h4><p>未解决计算机中<em>主内存与CPU之间运行速度差问题</em>, 会在CPU与主内存之间添加一级或者多级高速缓冲. 如图为两级缓存:</p>
+<p><img src="https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=2559964246,1177664816&fm=26&gp=0.jpg" alt="两级缓存"></p>
+<p>在Cache内部是按照行进行存储的, 每一个行称为<code>Cache行</code>. <font color="#0000ff">Cache行是Cache与主内存进行数据交换的单位! Cache行的大小一般为2的幂次!</font></p>
+<p><img src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=691099822,286084129&fm=26&gp=0.jpg" alt="CPU的Cache行"></p>
+<p>当CPU访问某个变量时: 首先查看CPU Cache中是否存在该变量, 如果有则直接获取, 否则就会去主内存中获取该变量, 然后把该<font color="#ff0000">变量所在的内存区域的一个Cache行大小的内存复制到Cache中!</font></p>
+<p>由于存放在Cache行中的是内存块, 而不是单个变量! 所以会将多个变量放在Cache中.<font color="#ff0000">当多个线程同时修改一个缓存行中的多个变量时, 由于同时只能有一个线程操作缓存行, 所以相比每个变量放到一个缓存行, 性能会有所下降, 这既是<code>伪共享</code>!</font></p>
+<h4 id="2-出现伪共享的原因"><a href="#2-出现伪共享的原因" class="headerlink" title="2): 出现伪共享的原因"></a>2): 出现伪共享的原因</h4><p><font color="#ff0000">因为多个变量被放到了一个缓存行, 并且多个线程同时去写入缓存行中不同的变量. </font></p>
+<p>而缓存与内存交换数据的单位就是缓存行, 当CPU要访问的变量未在缓存中找到时, 根据程序运行的<strong>局部性原理</strong>, 会把该变量所在内存中大小为缓存行的内存全部放入缓存行!</p>
+<pre><code class="java">long a, b, c, d;</code></pre>
+<p>如: 上述代码声明了四个long变量, 若缓存行的大小为32 byte, 那么当CPU访问a时, 会把变量a 以及附近的b, c, d都放入缓存行.</p>
+<p><font color="#ff0000">即地址连续的多个变量才有可能还会被放在同一个缓存行! 当创建数组是, 数组中多个元素会被放在同一个缓存行, 这对于单线程是有利的!</font></p>
+<pre><code class="java">package club.jasonkayzk666.chapter2.lesson11.fakeshare;
+
+public class FakeShareDemo {
+
+    private static int LINE_NUM = 1024;
+
+    private static int COLUM_NUM = 1024;
+
+    public static void main(String[] args) {
+        long[][] fast = new long[LINE_NUM][COLUM_NUM];
+
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i &lt; LINE_NUM; ++i) {
+            for (int j = 0; j &lt; COLUM_NUM; ++j) {
+                // 地址连续取用
+                fast[i][j] = i * 2 + j;
+            }
+        }
+        System.out.println(&quot;Use Cache time: &quot; + (System.currentTimeMillis() - startTime));
+
+        long[][] slow = new long[LINE_NUM][COLUM_NUM];
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i &lt; LINE_NUM; ++i) {
+            for (int j = 0; j &lt; COLUM_NUM; ++j) {
+                // 地址非连续取用
+                fast[j][i] = i * 2 + j;
+            }
+        }
+        System.out.println(&quot;Not use Cache time: &quot; + (System.currentTimeMillis() - startTime));
+
+    }
+
+}
+</code></pre>
+<p>对于上述两个循环中: 循环一会快于循环二! <font color="#0000ff">因为数组内数组元素的内存地址是连续的, 当访问数组第一个元素时, 会把第一个元素后的若干元素放入缓存, 这样在访问时, 缓存直接命中就不用去主内存中读取了!</font></p>
+<p><font color="#ff0000">但是在多线程并发修改一个缓存行中的多个变量时, 就会发生竞争缓存行, 从而降低程序运行效率!</font></p>
+<h4 id="3-避免伪共享"><a href="#3-避免伪共享" class="headerlink" title="3): 避免伪共享"></a>3): 避免伪共享</h4><p>JDK 8之前是通过<strong>字节填充</strong>来避免, 即: <font color="#0000ff">创建一个变量时, 使用填充字段填充该变量所在缓存行, 这样即避免了将多个变量存放在同一个缓存行!</font></p>
+<p>如:</p>
+<pre><code class="java">public final static class FilledLong {
+    public volatile long value = 0;
+    public long p1, p2, p3, p4, p5, p6;
+}
+</code></pre>
+<p>假设缓存行为64字节, 则: 填充了6个long类型, 每个long类型占用8字节, 加上value变量本身, 共56字节. 此外, <font color="#0000ff">FilledLong是一个类对象, 每个类对象的字节码的对象头占用8字节</font>. 共64字节刚好占用一个缓存行!</p>
+<p>JDK 8之后提供了<code>sun.misc.Contended</code>注解, 用来解决伪共享问题!</p>
+<pre><code class="java">@sun.misc.Contended
+public final static class FilledLong {
+    public volatile long value = 0L;
+}</code></pre>
+<p><font color="#ff0000">注解可以修饰类, 变量.</font></p>
+<p>*<em>注意: *</em><font color="#ff0000">默认情况下, <code>@Contended</code>注解只用于Java的核心类, 如: <code>rt.jar</code>包下的类. 若用户类路径下的类需要使用这个注解, 需要:</font></p>
+<ul>
+<li>添加JVM参数<code>-XX: -RestrictContended</code>,</li>
+<li>自定义填充宽度: <code>-XX:ContendedPadding Width</code></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/11/Java并发编程-2/" title="https://jasonkayzk.github.io/2019/09/11/Java并发编程-2/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/11/Java并发编程-2/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1738209594764"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

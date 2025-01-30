@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>在Docker中体验Go1.17中的泛型 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在Golang的v1.17版本中，已经悄悄的加入了对泛型的支持；在此之前，我们需要在.go2中尝试泛型，现在我们可以直接编写.go格式的文件，然后通过指定-gcflags=-G=3来编译含有泛型语法的源文件了；同时，为了防止在体验时污染我们本地开发环境中的Go，采用了在Docker中运行的方式进行实验；">
+<meta name="keywords" content="Docker,Golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在Docker中体验Go1.17中的泛型">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/07/05/在Docker中体验Go1-17中的泛型/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在Golang的v1.17版本中，已经悄悄的加入了对泛型的支持；在此之前，我们需要在.go2中尝试泛型，现在我们可以直接编写.go格式的文件，然后通过指定-gcflags=-G=3来编译含有泛型语法的源文件了；同时，为了防止在体验时污染我们本地开发环境中的Go，采用了在Docker中运行的方式进行实验；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-01-30T03:58:33.267Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在Docker中体验Go1.17中的泛型">
+<meta name="twitter:description" content="在Golang的v1.17版本中，已经悄悄的加入了对泛型的支持；在此之前，我们需要在.go2中尝试泛型，现在我们可以直接编写.go格式的文件，然后通过指定-gcflags=-G=3来编译含有泛型语法的源文件了；同时，为了防止在体验时污染我们本地开发环境中的Go，采用了在Docker中运行的方式进行实验；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1738209560645">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+
+  <!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script><!-- End Cloudflare Web Analytics -->
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/学习案例/">学习案例</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?33">
+    
+    <h1>在Docker中体验Go1.17中的泛型</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年07月05日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 31 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Docker/">Docker</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#在Docker中体验Go1-17中的泛型"><span class="toc-text">在Docker中体验Go1.17中的泛型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#关于Go泛型的开发进度"><span class="toc-text">关于Go泛型的开发进度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Go中的泛型"><span class="toc-text">Go中的泛型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Docker中创建Go环境容器"><span class="toc-text">Docker中创建Go环境容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#几个泛型例子"><span class="toc-text">几个泛型例子</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Print泛型输出-范型基本语法"><span class="toc-text">Print泛型输出 - 范型基本语法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范型切片-声明范型类型"><span class="toc-text">范型切片 - 声明范型类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范型版Add函数-类型约束"><span class="toc-text">范型版Add函数 - 类型约束</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stringer-使用interface本身约束范型"><span class="toc-text">Stringer - 使用interface本身约束范型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MyStringer2-0-类型列表和方法列表双重约束"><span class="toc-text">MyStringer2.0 - 类型列表和方法列表双重约束</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查找index函数-comparable内置比较类型"><span class="toc-text">查找index函数 - comparable内置比较类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实现范型Set类型-声明范型方法"><span class="toc-text">实现范型Set类型 - 声明范型方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#范型队列-声明范型引用方法"><span class="toc-text">范型队列 - 声明范型引用方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一些其他范型例子"><span class="toc-text">一些其他范型例子</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#值生成器"><span class="toc-text">值生成器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实现函数式编程map、reduce、filter"><span class="toc-text">实现函数式编程map、reduce、filter</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Golang-泛型的实现机制"><span class="toc-text">Golang 泛型的实现机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能影响"><span class="toc-text">性能影响</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>在Golang的v1.17版本中，已经悄悄的加入了对泛型的支持；</p>
+<p>在此之前，我们需要在.go2中尝试泛型，现在我们可以直接编写.go格式的文件，然后通过指定<code>-gcflags=-G=3</code>来编译含有泛型语法的源文件了；</p>
+<p>同时，为了防止在体验时污染我们本地开发环境中的Go，采用了在Docker中运行的方式进行实验；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="在Docker中体验Go1-17中的泛型"><a href="#在Docker中体验Go1-17中的泛型" class="headerlink" title="在Docker中体验Go1.17中的泛型"></a><strong>在Docker中体验Go1.17中的泛型</strong></h1><h2 id="关于Go泛型的开发进度"><a href="#关于Go泛型的开发进度" class="headerlink" title="关于Go泛型的开发进度"></a><strong>关于Go泛型的开发进度</strong></h2><p>根据网络谣传的消息 Go 将在1.18 中正式支持泛型，而依照Go每年发布两个版本的节奏，Go 1.18会在2022年春，也就是二月份左右发布，但是我们目前已经可以在Go 1.17中尝鲜；</p>
+<blockquote>
+<p>  Go的泛型近一年来一直由Ian Lance Taylor(编译器大牛、Go核心成员)和Robert Griesemer（Go创始三巨头之一，Google V8、Chubby和HotSpot JVM的主要贡献者）等人开发，一直在<a href="https://github.com/golang/go/tree/dev.typeparams" target="_blank" rel="noopener">dev.typeparams</a>分支上做预研和开发工作；</p>
+<p>  但是由于泛型会对Go的核心代码做巨大的修改，会影响很多文件，因此将来dev.typeparams在merge回master分支的时候如何管理冲突是一个很困难的事；</p>
+<p>  目前，Go开发者采用定期把master的commit merge到dev.typeparams分支方式，尽早解决冲突：因为尽早解决冲突的方式每次解决冲突的量比较少，还是可控的；</p>
+<p>  但是由于master分支的开发者无需顾虑dev.typeparams分支的情况，导致最近冲突有些大，解决起来很困难，所以<a href="https://github.com/golang/go/issues/43931" target="_blank" rel="noopener">#43931</a>提议将dev.typeparams分支merge到master分支，以后泛型的开发直接在master分支；</p>
+</blockquote>
+<p>泛型特性可以通过feature flag的方式控制特性的启用和禁用，所以即使merge到master分支，也可以控制在Go 1.18再把特性启用；如果泛型的提案<a href="https://github.com/golang/go/issues/43651" target="_blank" rel="noopener">#43651</a>被拒绝掉的话，相关的无用代码也可以被清除掉；</p>
+<blockquote>
+<p>  这也类似引入go module的方式：</p>
+<p>  <code>go module</code>历经几个版本，并通过GO111MODULE开关控制这个特性的启用；</p>
+</blockquote>
+<p>比如引入<code>-G</code>开关：</p>
+<ul>
+<li><code>-G=0</code>启用类型检查；</li>
+<li><code>-G=1</code>启用 <code>types2 w/o generics</code>支持；</li>
+<li><code>-G=2</code>使用<code>types2 w/ generics</code>支持；</li>
+</ul>
+<p>而<code>-G=1</code>在Go 1.17中默认启用，<code>-G=2</code>在Go 1.18中启用；</p>
+<blockquote>
+<p>  这也是很好的一种渐进式引入特性的方法；</p>
+</blockquote>
+<p><font color="#f00"><strong>而现在我们已经可以在Go v1.17中通过指定<code>-gcflags=-G=3</code>来编译含有泛型语法的源文件了！</strong></font></p>
+<br>
+
+<h2 id="Go中的泛型"><a href="#Go中的泛型" class="headerlink" title="Go中的泛型"></a><strong>Go中的泛型</strong></h2><p>2019年中旬，在<a href="https://tonybai.com/2019/10/27/some-changes-in-go-1-13/" target="_blank" rel="noopener">Go 1.13版本</a>发布前夕的<a href="https://www.gophercon.com/" target="_blank" rel="noopener">GopherCon 2019大会</a>上，<a href="https://github.com/ianlancetaylor" target="_blank" rel="noopener">Ian Lance Taylor</a>代表Go核心团队做了<a href="https://blog.golang.org/why-generics" target="_blank" rel="noopener">有关Go泛型进展的介绍</a>；</p>
+<p>自那以后，Go团队对原先的<a href="https://github.com/golang/proposal/blob/master/design/go2draft-contracts.md" target="_blank" rel="noopener">Go Generics技术草案</a>做了进一步精化，并编写了相关工具让社区gopher体验满足这份设计的Go generics语法，返回建议和意见；</p>
+<p>经过一年多的思考、讨论、反馈与实践，Go核心团队决定在这份旧设计的基础上<strong>另起炉灶</strong>，撰写了一份<a href="https://github.com/golang/proposal/blob/master/design/go2draft-type-parameters.md" target="_blank" rel="noopener">Go Generics的新技术提案：“Type Parameters”</a>；</p>
+<p>与上一份提案最大的不同在于：<font color="#f00"><strong>使用扩展的interface类型替代“Contract”用于对类型参数的约束；</strong></font></p>
+<p><font color="#f00"><strong>Parametric Polymorphism((形式)参数多态)是Go此版泛型设计的基本思想：</strong></font></p>
+<p><font color="#f00"><strong>和Go设计思想一致，这种参数多态并不是通过像面向对象语言那种子类型的层次体系实现的，而是通过显式定义结构化的约束实现的；基于这种设计思想，该设计不支持<a href="https://code.fandom.com/wiki/Template_metaprogramming]" target="_blank" rel="noopener">模板元编程(template metaprogramming)</a>和编译期运算；</strong></font></p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：虽然都称为泛型(generics)，但是Go中的泛型(generics)仅是用于狭义地表达带有类型参数(type parameter)的函数或类型，这与其他编程语言中的泛型(generics)在含义上有相似性，但不完全相同；</strong></font></p>
+</blockquote>
+<p><font color="#f00"><strong>本文主要采用的是<code>go1.17beta1</code>版本进行讲述，而最终加入Go的泛型可能与目前的实现有所差异；</strong></font></p>
+<p>下面，首先让我们创建一个<code>go1.17beta1</code>环境的容器；</p>
+<p>随后，通过几个泛型的例子来学习Go中的泛型！</p>
+<br>
+
+<h2 id="Docker中创建Go环境容器"><a href="#Docker中创建Go环境容器" class="headerlink" title="Docker中创建Go环境容器"></a><strong>Docker中创建Go环境容器</strong></h2><p>为了不影响本地的Go环境，我选择了在Docker中创建一个<code>go1.17beta1</code>环境的容器来体验泛型；</p>
+<blockquote>
+<p>  <strong><code>go1.17beta1</code>是目前官方提供的最新的Go环境；</strong></p>
+<p>  <strong>可能你在阅读本文的时候，还有更新的版本可以选择，但是原理都是类似的！</strong></p>
+</blockquote>
+<p>一键创建Go环境容器：</p>
+<p>create-container.sh</p>
+<pre><code class="bash">docker run -dit \
+--name go-v.17 \
+-v /root/workspace/go-v1.17-code:/code \
+--privileged \
+golang:1.17-rc /bin/bash</code></pre>
+<p>然后你的<code>go1.17beta1</code>环境就有了；</p>
+<p>通过下面的命令即可进入容器：</p>
+<p>create-container.sh</p>
+<pre><code class="bash">[root@localhost go-v1.17-code]# docker exec -it go-v.17 bash
+root@e9d447a87912:/go# go version
+go version go1.17beta1 linux/amd64</code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>注：这里主要是将本地的<code>/root/workspace/go-v1.17-code</code>作为工作目录，并映射到容器的<code>/code</code>目录中，你可以根据自己的需求修改路径；</strong></font></p>
+</blockquote>
+<p>下面我们重点来看Go中的泛型；</p>
+<br>
+
+<h2 id="几个泛型例子"><a href="#几个泛型例子" class="headerlink" title="几个泛型例子"></a><strong>几个泛型例子</strong></h2><h3 id="Print泛型输出-范型基本语法"><a href="#Print泛型输出-范型基本语法" class="headerlink" title="Print泛型输出 - 范型基本语法"></a><strong>Print泛型输出 - 范型基本语法</strong></h3><p>我们先通过一个范型版的Print来看一看Go目前范型的语法吧；</p>
+<p>1_print/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+func printSlice[T any](s []T) {
+    for _, v := range s {
+        fmt.Printf(&quot;%v &quot;, v)
+    }
+    fmt.Print(&quot;\n&quot;)
+}
+
+func main() {
+    printSlice[int]([]int{1, 2, 3, 4, 5})
+    printSlice[float64]([]float64{1.01, 2.02, 3.03, 4.04, 5.05})
+    printSlice[string]([]string{&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;})
+
+    printSlice([]int64{5, 4, 3, 2, 1})
+}</code></pre>
+<p>运行文件：</p>
+<pre><code class="bash">go run -gcflags=-G=3 1_print/main.go
+
+1 2 3 4 5 
+1.01 2.02 3.03 4.04 5.05 
+one two three four five 
+5 4 3 2 1 </code></pre>
+<p>可以看到成功输出了不同类型的列表；</p>
+<p>代码中的<code>[T any]</code>即为类型参数，意思是该函数支持任何T类型；</p>
+<p>在调用该范型函数时，可以显式指定类型参数类型，如：<code>printSlice[int]([]int{1, 2, 3, 4, 5})</code>，以帮助编译器实行类型推导；</p>
+<p>不过在编译器完全可以实现类型推导时，也可以省略显式类型，如：<code>printSlice([]int64{5, 4, 3, 2, 1})</code>；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>目前Go中实现的范型声明采用<code>[]</code>表示，这一点既不同于传统范型的<code>&lt;&gt;</code>符号，又不同于Go最初制定的<code>()</code>运算符声明；</strong></font></p>
+<p>  <font color="#f00"><strong>关于Go为什么不用<code>()</code>运算符声明，我觉得可能是因为再使用<code>()</code>运算符的话，小括号真的是太多了！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="范型切片-声明范型类型"><a href="#范型切片-声明范型类型" class="headerlink" title="范型切片 - 声明范型类型"></a><strong>范型切片 - 声明范型类型</strong></h3><p>带有<strong>类型参数(type parameters)</strong>的类型被称为泛型类型；</p>
+<p>比如我们定义一个底层类型为切片类型的新类型 Vector：</p>
+<p>2_vector/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+type vector[T any] []T
+
+func printSlice[T any](s []T) {
+    for _, v := range s {
+        fmt.Printf(&quot;%v &quot;, v)
+    }
+    fmt.Print(&quot;\n&quot;)
+}
+
+func main() {
+    // Compiling Error
+    // Cannot use generic type vector[T interface{}] without instantiation
+    //vs0 := vector{1,2,3,4,5}
+
+    vs := vector[int]{5,4,2,1}
+    printSlice(vs)
+
+    vs2 := vector[string]{&quot;haha&quot;, &quot;hehe&quot;}
+    printSlice(vs2)
+}</code></pre>
+<p>首先，我们声明了一个可以存放任何类型的切片 vector：</p>
+<pre><code class="go">type vector[T any] []T</code></pre>
+<p>该vector(切片)类型中的元素类型为T；</p>
+<p>和泛型函数一样，使用泛型类型时，我们首先要对其进行实例化，即显式为<strong>类型参数</strong>赋一个实参值（一个类型名），因此在main函数中，我们初始化vector是需要带上实际类型！</p>
+<blockquote>
+<p>  <font color="#f00"><strong>泛型类型的实例化是必须显式为类型参数传参的，编译器无法自行做类型推导；</strong></font></p>
+<p>  如果将上面例子中main函数改为如下实现方式：</p>
+<pre><code class="go">  vs0 := vector{1,2,3,4,5}</code></pre>
+<p>  Go编译器会报如下错误：</p>
+<pre><code class="go">  // Compiling Error
+  // Cannot use generic type vector[T interface{}] without instantiation</code></pre>
+<p>  即：未实例化(instantiation)的泛型类型Vector(type T)无法使用；</p>
+</blockquote>
+<br>
+
+<h3 id="范型版Add函数-类型约束"><a href="#范型版Add函数-类型约束" class="headerlink" title="范型版Add函数 - 类型约束"></a><strong>范型版Add函数 - 类型约束</strong></h3><p>对于一个范型的Add函数而言，下面的实现一定是报错的：</p>
+<pre><code class="go">func add[T any] (a, b T) T {
+    return a + b
+}</code></pre>
+<p>因为在Go中，我们没有为任意类型都定义<code>+</code>运算！</p>
+<blockquote>
+<p>  <strong>在此版Go泛型设计中，泛型函数只能使用类型参数所能实例化出的任意类型都能支持的操作；</strong></p>
+<p>  比如上述Add函数的<strong>类型参数T</strong>没有任何约束，它可以被实例化为任何类型；那么这些实例化后的类型是否都支持“+”操作符运算呢？显然不是；因此，编译器针对示例代码中的第六行报了错！</p>
+<p>  对于像上面Add函数那样的没有任何约束的类型参数实例，Go允许对其进行的操作包括：</p>
+<ul>
+<li><strong>声明这些类型的变量；</strong></li>
+<li><strong>使用相同类型的值为这些变量赋值；</strong></li>
+<li><strong>将这些类型的变量以实参形式传给函数或从作为函数返回值；</strong></li>
+<li><strong>取这些变量的地址；</strong></li>
+<li><strong>将这些类型的值转换或赋值给interface{}类型变量；</strong></li>
+<li><strong>通过类型断言将一个接口值赋值给这类类型的变量；</strong></li>
+<li><strong>在type switch块中作为一个case分支；</strong></li>
+<li><strong>定义和使用由该类型组成的复合类型，比如：元素类型为该类型的切片；</strong></li>
+<li><strong>将该类型传递给一些内置函数，比如new；</strong></li>
+</ul>
+</blockquote>
+<p><strong>那么，我们要让上面的Add函数通过编译器的检查，我们就需要限制其类型参数所能实例化出的类型的范围；</strong></p>
+<p>比如：仅允许实例化为<strong>底层类型(underlying type)为整型类型的类型；</strong></p>
+<blockquote>
+<p>  <strong>上一版Go泛型设计中使用Contract来定义对类型参数的约束，不过由于Contract与interface在概念范畴上有交集，让Gopher们十分困惑；</strong></p>
+<p>  <strong>于是在新版泛型设计中，Contract这个关键字被移除了，取而代之的是语法扩展了的interface，即我们使用interface类型来修饰类型参数以实现对其可实例化出的类型集合的约束；</strong></p>
+</blockquote>
+<p>我们来看下面例子：</p>
+<p>3_add/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+/*
+    Invalid operation: operator + not defined on a (variable of type parameter type T)
+ */
+type Addable interface {
+    type int, int8, int16, int32, int64,
+        uint, uint8, uint16, uint32, uint64, uintptr,
+        float32, float64, complex64, complex128,
+        string
+}
+
+func add[T Addable] (a, b T) T {
+    return a + b
+}
+
+func main() {
+    fmt.Println(add(1,2))
+    fmt.Println(add(&quot;foo&quot;,&quot;bar&quot;))
+}</code></pre>
+<p>运行代码输出：</p>
+<pre><code class="bash">bash-5.0# go run -gcflags=-G=3 3_add/main.go   
+3
+foobar</code></pre>
+<p><font color="#f00"><strong>该提案扩展了interface语法，新增了类型列表(type list)表达方式，专用于对类型参数进行约束；</strong></font></p>
+<p>以该示例为例，如果编译器通过类型推导得到的类型在Addable这个接口定义的类型列表(type list)中，那么编译器将允许这个类型参数实例化；否则就像类型参数实例化将报错！</p>
+<p>例如，我们删去Addable中的string类型，重新运行代码，将会报错：</p>
+<pre><code class="bash">3_add/main.go:23:17: string does not satisfy Addable (string not found in int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, uintptr, float32, float64, complex64, complex128)</code></pre>
+<p>此外，需要注意的是：<font color="#f00"><strong>定义中带有类型列表的接口将无法用作接口变量类型！</strong></font></p>
+<p>比如下面这个示例：</p>
+<pre><code class="go">package main
+
+type Addable interface {
+    type int, int8, int16, int32, int64,
+        uint, uint8, uint16, uint32, uint64, uintptr,
+        float32, float64, complex64, complex128,
+        string
+}
+
+func main() {
+    var n int = 6
+    var i Addable
+    i = n
+    _ = i
+}</code></pre>
+<p>运行后报错：</p>
+<pre><code class="bash">3_add/main.go:22:8: interface contains type constraints (int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, uintptr, float32, float64, complex64, complex128, string)</code></pre>
+<br>
+
+<h3 id="Stringer-使用interface本身约束范型"><a href="#Stringer-使用interface本身约束范型" class="headerlink" title="Stringer - 使用interface本身约束范型"></a><strong>Stringer - 使用interface本身约束范型</strong></h3><p>除了在interface中显式声明类型约束之外，还可以在函数的入参中使用接口对范型进行类型约束，这一点是很自然的！</p>
+<p>如下：</p>
+<p>4_interface_constraint/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;strconv&quot;
+)
+
+type StringInt int
+
+func (i StringInt) String() string {
+    return strconv.Itoa(int(i))
+}
+
+type MyStringer interface {
+    String() string
+}
+
+// A generic type that need to implement MyStringer interface!
+func stringify[T MyStringer](s []T) (ret []string) {
+    for _, v := range s {
+        ret = append(ret, v.String())
+    }
+    return ret
+}
+
+func main() {
+    fmt.Println(stringify([]StringInt{1, 2, 3, 4, 5}))
+}</code></pre>
+<p>代码中我们声明了MyStringer接口，并且使用StringInt类型实现了此接口；</p>
+<p>在范型方法中，我们声明了范型的类型为：<code>任意实现了MyStringer接口的类型</code>；</p>
+<p>运行该示例输出：</p>
+<pre><code>[1 2 3 4 5]</code></pre><p>如果我们在main函数中写下如下代码：</p>
+<pre><code>func main() {
+    fmt.Println(Stringify([]int{1, 2, 3, 4, 5}))
+}</code></pre><p>那么我们将得到下面的编译器错误输出：</p>
+<pre><code>4_interface_constraint/main.go:28:23: int does not satisfy MyStringer (missing method String)</code></pre><p>我们看到：只有实现了Stringer接口的类型才会被允许作为实参传递给Stringify泛型函数的类型参数并成功实例化！</p>
+<br>
+
+<h3 id="MyStringer2-0-类型列表和方法列表双重约束"><a href="#MyStringer2-0-类型列表和方法列表双重约束" class="headerlink" title="MyStringer2.0 - 类型列表和方法列表双重约束"></a><strong>MyStringer2.0 - 类型列表和方法列表双重约束</strong></h3><p>我们还可以结合interface的类型列表(type list)和方法列表一起对类型参数进行约束，看下面示例：</p>
+<p>5_signed_interface_constraint/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;strconv&quot;
+)
+
+// Compiling Error:
+// StringInt does not satisfy MySignedStringer (uint not found in int, int8, int16, int32, int64)
+//type StringInt uint
+
+type StringInt int
+
+func (i StringInt) String() string {
+    return strconv.Itoa(int(i))
+}
+
+type MySignedStringer interface {
+    // Only these types &amp; interface can be generalized!
+    type int, int8, int16, int32, int64
+    String() string
+}
+
+// A generic type that need to implement MySignedStringer interface!
+func stringify[T MySignedStringer](s []T) (ret []string) {
+    for _, v := range s {
+        ret = append(ret, v.String())
+    }
+    return ret
+}
+
+func main() {
+    fmt.Println(stringify([]StringInt{1, 2, 3, 4, 5}))
+}</code></pre>
+<p>在该示例中，用于对泛型函数的类型参数进行约束的MySignedStringer接口既包含了类型列表，也包含方法列表，这样类型参数的实参类型既要在MySignedStringer的类型列表中，也要实现了MySignedStringer的String方法！</p>
+<p>如果我们将上面的StringInt的底层类型改为uint：</p>
+<pre><code>type StringInt uint</code></pre><p>那么我们将得到下面的编译器错误输出：</p>
+<pre><code>StringInt does not satisfy MySignedStringer (uint not found in int, int8, int16, int32, int64) type StringInt uint</code></pre><br>
+
+<h3 id="查找index函数-comparable内置比较类型"><a href="#查找index函数-comparable内置比较类型" class="headerlink" title="查找index函数 - comparable内置比较类型"></a><strong>查找index函数 - comparable内置比较类型</strong></h3><p>由于Go泛型设计选择了不支持运算操作符重载，因此，我们即便对interface做了语法扩展，依然无法表达类型是否支持<strong>==</strong>和<strong>!=</strong>；</p>
+<p>为了解决这个表达问题，新设计提案中引入了一个新的预定义类型约束：<strong>comparable</strong>；</p>
+<p>我们看下面例子：</p>
+<p>6_comparable/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+// index returns the index of x in s, or -1 if not found.
+func index[T comparable](s []T, x T) int {
+    for i, v := range s {
+        // v and x are type T, which has the comparable constraint
+        // so we can use == here.
+        if v == x {
+            return i
+        }
+    }
+    return -1
+}
+
+type Foo struct {
+    a string
+    b int
+}
+
+func main() {
+    fmt.Println(index([]int{1, 2, 3, 4, 5}, 3))
+    fmt.Println(index([]string{&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot;}, &quot;d&quot;))
+    fmt.Println(index(
+        []Foo{
+            {&quot;a&quot;, 1},
+            {&quot;b&quot;, 2},
+            {&quot;c&quot;, 3},
+            {&quot;d&quot;, 4},
+            {&quot;e&quot;, 5},
+        }, Foo{&quot;b&quot;, 2}))
+}</code></pre>
+<p>运行该示例：</p>
+<pre><code>2
+3
+1</code></pre><p>我们看到Go的原生支持比较的类型，诸如整型、字符串以及由这些类型组成的复合类型(如结构体)均可以直接作为实参传给由comparable约束的类型参数；</p>
+<p><font color="#f00"><strong>comparable可以看成一个由Go编译器特殊处理的、包含由所有内置可比较类型组成的type list的interface类型；</strong></font></p>
+<p>因此我们可以将其嵌入到其他作为约束的接口类型定义中：</p>
+<pre><code class="go">type ComparableStringer interface {
+    comparable
+    String() string
+}</code></pre>
+<p>此时，只有支持比较的类型且实现了<strong>String</strong>方法，才能满足ComparableStringer的约束；</p>
+<br>
+
+<h3 id="实现范型Set类型-声明范型方法"><a href="#实现范型Set类型-声明范型方法" class="headerlink" title="实现范型Set类型 - 声明范型方法"></a><strong>实现范型Set类型 - 声明范型方法</strong></h3><p>和对泛型函数中类型参数的约束方法一样，我们也可以对泛型类型的方法以同样方法做同样的约束；</p>
+<p>下面我们使用范型实现一个Set集合：</p>
+<p>7_generic_method/main.go</p>
+<pre><code class="go">// Package set implements sets of any comparable type.
+package main
+
+import &quot;fmt&quot;
+
+type addable interface {
+    //type int, int8, int16, int32, int64,
+    //    uint, uint8, uint16, uint32, uint64, uintptr,
+    //    float32, float64, complex64, complex128,
+    comparable
+}
+
+// set is a set of values.
+type set[T addable] map[T]struct{}
+
+// add adds v to the set s.
+// If v is already in s this has no effect.
+func (s set[T]) add(v T) {
+    s[v] = struct{}{}
+}
+
+// contains reports whether v is in s.
+func (s set[T]) contains(v T) bool {
+    _, ok := s[v]
+    return ok
+}
+
+// len reports the number of elements in s.
+func (s set[T]) len() int {
+    return len(s)
+}
+
+// delete removes v from the set s.
+// If v is not in s this has no effect.
+func (s set[T]) delete(v T) {
+    delete(s, v)
+}
+
+// iterate invokes f on each element of s.
+// It&#39;s OK for f to call the Delete method.
+func (s set[T]) iterate(f func (T) ) {
+    for v := range s {
+        f(v)
+    }
+}
+
+// invalid AST: method must have no type parameters
+// methods cannot have type parameters
+/*
+func (s set[T]) anotherGeneric[P comparable](v T, p P) {
+    fmt.Printf(&quot;v: %v, p: %v\n&quot;, v, p)
+}
+*/
+
+func print[T addable](s T) {
+    fmt.Printf(&quot;%v &quot;, s)
+}
+
+func main() {
+    s := make(set[int])
+
+    // Add the value 1,11,111 to the set s.
+    s.add(1)
+    s.add(11)
+    s.add(111)
+    s.add(1111)
+    s.add(11111)
+    fmt.Printf(&quot;%v\n&quot;, s)
+
+    // Check that s does not contain the value 11.
+    if s.contains(11) {
+        println(&quot;the set contains 11&quot;)
+    } else {
+        println(&quot;the set do not contain 11&quot;)
+    }
+
+    // Check len of set
+    fmt.Printf(&quot;the len of set: %d\n&quot;, s.len())
+
+    // Delete elem in set
+    s.delete(11)
+    fmt.Println(&quot;\nafter delete 11:&quot;)
+    if s.contains(11) {
+        println(&quot;the set contains 11&quot;)
+    } else {
+        println(&quot;the set do not contain 11&quot;)
+    }
+    fmt.Printf(&quot;the len of set: %d\n&quot;, s.len())
+
+    // Iterate set with explicit type(int)
+    s.iterate(func(x int) {
+        fmt.Println(x + 1)
+    })
+
+    // Iterate set with implicit type(addable) ERROR!
+    //s.iterate(print)
+
+    // Generic in another generic type method
+    //s.anotherGeneric(2, 3)
+}</code></pre>
+<p>在这个示例中我们定义了一个数据结构：Set；</p>
+<p>该Set中的元素是有约束的：必须支持可比较！对应到代码中，我们用comparable作为泛型类型Set的类型参数的约束；</p>
+<p>随后，我们定义了几个常用方法：</p>
+<ul>
+<li>add</li>
+<li>contains</li>
+<li>len</li>
+<li>delete</li>
+<li>iterate</li>
+</ul>
+<p>运行该示例：</p>
+<pre><code>map[1:{} 11:{} 111:{} 1111:{} 11111:{}]
+the set contains 11
+the len of set: 5
+
+after delete 11:
+the set do not contain 11
+the len of set: 4
+11112
+2
+112
+1112</code></pre><br>
+
+<h3 id="范型队列-声明范型引用方法"><a href="#范型队列-声明范型引用方法" class="headerlink" title="范型队列 - 声明范型引用方法"></a><strong>范型队列 - 声明范型引用方法</strong></h3><p>下面是一个队列，我们通过应用实现了这个队列的方法：</p>
+<p>8_generic_reference_method/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+type queue[T any] []T
+
+func (q *queue[T]) enqueue(v T) {
+    *q = append(*q, v)
+}
+
+func (q *queue[T]) dequeue() (T, bool) {
+    if len(*q) == 0 {
+        var zero T
+        return zero, false
+    }
+    r := (*q)[0]
+    *q = (*q)[1:]
+    return r, true
+}
+
+func main() {
+    q := new(queue[int])
+    q.enqueue(5)
+    q.enqueue(6)
+    fmt.Println(q)
+    fmt.Println(q.dequeue())
+    fmt.Println(q.dequeue())
+    fmt.Println(q.dequeue())
+}</code></pre>
+<p>可以看到，实现范型方法和通常Go的方法基本一致！</p>
+<br>
+
+<h2 id="一些其他范型例子"><a href="#一些其他范型例子" class="headerlink" title="一些其他范型例子"></a><strong>一些其他范型例子</strong></h2><h3 id="值生成器"><a href="#值生成器" class="headerlink" title="值生成器"></a><strong>值生成器</strong></h3><p>代码如下：</p>
+<p>9_others/2_generator/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+type addable interface {
+    type int, int8, int16, int32, int64,
+        uint, uint8, uint16, uint32, uint64, uintptr,
+        float32, float64, complex64, complex128
+}
+
+func generator[T addable](a T, v T) func() T {
+    return func() T {
+        r := a
+        a = a + v
+        return r
+    }
+}
+
+func main() {
+    g1 := generator(0, 1)
+    fmt.Println(g1())
+    fmt.Println(g1())
+    fmt.Println(g1())
+
+    g2 := generator(-9.9, 0.1)
+    fmt.Println(g2())
+    fmt.Println(g2())
+    fmt.Println(g2())
+}</code></pre>
+<p>输出如下：</p>
+<pre><code>0
+1
+2
+-9.9
+-9.8
+-9.700000000000001</code></pre><br>
+
+<h3 id="实现函数式编程map、reduce、filter"><a href="#实现函数式编程map、reduce、filter" class="headerlink" title="实现函数式编程map、reduce、filter"></a><strong>实现函数式编程map、reduce、filter</strong></h3><p>9_others/map/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+func mapFunc[T any, M any](a []T, f func (T) M) []M {
+    n := make([]M, len(a), cap(a))
+    for i, e := range a {
+        n[i] = f(e)
+    }
+    return n
+}
+
+func main() {
+    vi := []int{1, 2, 3, 4, 5, 6}
+    vs := mapFunc(vi, func(v int) string {
+        return &quot;&lt;&quot; + fmt.Sprint(v) + &quot;&gt;&quot;
+    })
+    fmt.Println(vs)
+}</code></pre>
+<p>运行输出：</p>
+<pre><code>[&lt;1&gt; &lt;2&gt; &lt;3&gt; &lt;4&gt; &lt;5&gt; &lt;6&gt;]</code></pre><br>
+
+<p>9_others/reduce/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+// reduceFunc
+// a: reduce operate collection
+// f: reduce operation function
+// initial: initial value in reduce
+func reduceFunc[T any](a []T, f func(T, T) T, initial interface{}) T {
+    if len(a) == 0 || f == nil {
+        var vv T
+        return vv
+    }
+
+    l := len(a) - 1
+    reduce := func(a []T, ff func(T, T) T, memo T, startPoint, direction, length int) T {
+        result := memo
+        index := startPoint
+        for i := 0; i &lt;= length; i++ {
+            result = ff(result, a[index])
+            index += direction
+        }
+        return result
+    }
+
+    if initial == nil {
+        return reduce(a, f, a[0], 1, 1, l-1)
+    }
+
+    return reduce(a, f, initial.(T), 0, 1, l)
+}
+
+func main() {
+    v1 := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+    res1 := reduceFunc(v1, func(lhs, rhs int) int {
+        return lhs + rhs
+    }, 1)
+    fmt.Println(res1)
+
+    v2 := []string{&quot;x&quot;, &quot;y&quot;, &quot;z&quot;}
+    res2 := reduceFunc(v2, func(lhs, rhs string) string {
+        return lhs + rhs
+    }, &quot;a&quot;)
+    fmt.Println(res2)
+
+    v3 := []int{5, 4, 3, 2, 1}
+    res3 := reduceFunc(v3, func(lhs, rhs int) int {
+        return lhs*10 + rhs
+    }, 0)
+    fmt.Println(res3)
+}</code></pre>
+<p>运行输出：</p>
+<pre><code>56
+axyz
+54321</code></pre><br>
+
+
+<p>9_others/filter/main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+func filterFunc[T any](a []T, f func(T) bool) []T {
+    var n []T
+    for _, e := range a {
+        if f(e) {
+            n = append(n, e)
+        }
+    }
+    return n
+}
+
+func main() {
+    v1 := []int{1, 2, 3, 4, 5, 6}
+    v1 = filterFunc(v1, func(v int) bool {
+        return v &lt; 4.0
+    })
+    fmt.Println(v1)
+
+    v2 := []float64{2.1, 3.2, 23.2, 2.3}
+    v2 = filterFunc(v2, func(v float64) bool {
+        return v &lt; 4.0
+    })
+    fmt.Println(v2)
+}</code></pre>
+<p>运行输出：</p>
+<pre><code>[1 2 3]
+[2.1 3.2 2.3]</code></pre><blockquote>
+<p>  更多例子，见：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="Golang-泛型的实现机制"><a href="#Golang-泛型的实现机制" class="headerlink" title="Golang 泛型的实现机制"></a><strong>Golang 泛型的实现机制</strong></h2><p>通常，把高级语言编译成机器本地可以执行的汇编代码，大致需要进行词法分析，语法分析，语义分析，生成中间代码，优化，以及最终生成目标代码等几个步骤；</p>
+<p>其中词法分析，语法分析，语义分析属于前端，而 <strong>golang 支持的泛型只是前端的改动，本质上是语法糖；</strong></p>
+<p>例如词法分析器要能正确解析泛型新引入的<code>[]</code>括号，语法分析器能正确识别并判断代码是否符合泛型的语法规则，并构造正确的语法树 AST；</p>
+<p>而到了语义分析阶段，编译器需要能根据前面提到的类型参数和接口限制，来正确的推导出参数的实际类型，检查类型是否实现了相关接口定义的方法，实例化支持特定类型的函数，以及进行函数调用的类型检查等等；</p>
+<p>我们可以使用编译 go2go 工具来编译泛型代码；</p>
+<blockquote>
+<p>  具体的 go2go 工具的编译过程，可以参考这篇文档：</p>
+<ul>
+<li><a href="https://golang.org/doc/install/source" target="_blank" rel="noopener">https://golang.org/doc/install/source</a></li>
+</ul>
+</blockquote>
+<p>下面我们来编译一个最基本的泛型示例代码，内容如下:</p>
+<pre><code class="go">import(
+   &quot;fmt&quot;
+)
+
+func Print[T any](s []T) {
+       for _, v := range s {
+              fmt.Println(v)
+        }
+ }
+
+func main(){
+     Print([]string{&quot;Hello, &quot;, &quot;World\n&quot;})
+}</code></pre>
+<p>编译完成后，我们看代码长这个样子:</p>
+<pre><code class="go">package main
+
+import &quot;fmt&quot;
+
+func main() {
+ instantiate୦୦Print୦string([]string{&quot;Hello, &quot;, &quot;World\n&quot;})
+}
+
+func instantiate୦୦Print୦string(s []string,) {
+    for _, v := range s {
+        fmt.Println(v)
+    }
+}
+
+type Importable୦ int
+
+var _ = fmt.Errorf</code></pre>
+<p>可以看到编译后的代码实例化了一个支持 string slice 类型的函数，且为了避免和已有代码中的其它函数重名，造成错误，工具引入了两个不常用的 Unicode 字符，并插入到实例化的函数名称中，最后工具把生成的代码，重新命名为.go 后缀的文件，并写到文件系统；</p>
+<p>接下来我们就可以正常的编译执行生成的.go 代码！</p>
+<p>进一步的，我们可以通过编译 debug go2go 的源码，来看看究竟工具如何做这些做事情的；</p>
+<p>通过 debug go2go 工具，我们发现，其实 go2go 帮我们把使用泛型的 golang 代码，通过重写 AST 的方式，转换成 go 1.x 版本的代码， 如下所示：</p>
+<pre><code class="go">// rewriteAST rewrites the AST for a file.
+func rewriteAST(fset *token.FileSet, importer *Importer, importPath string, tpkg *types.Package, file *ast.File, addImportableName bool) (err error) {
+    t := translator{
+        fset:         fset,
+        importer:     importer,
+        tpkg:         tpkg,
+        types:        make(map[ast.Expr]types.Type),
+        typePackages: make(map[*types.Package]bool),
+    }
+    t.translate(file)
+
+    // Add all the transitive imports. This is more than we need,
+    // but we&#39;re not trying to be elegant here.
+    imps := make(map[string]bool)
+
+    for _, p := range importer.transitiveImports(importPath) {
+        imps[p] = true
+    }
+    for pkg := range t.typePackages {
+    ......</code></pre>
+<p>上面的 AST 转换工具相关的代码和思路应该会被正式的 golang 编译器实现所借鉴；</p>
+<br>
+
+<h2 id="性能影响"><a href="#性能影响" class="headerlink" title="性能影响"></a><strong>性能影响</strong></h2><p>根据这份技术提案中关于泛型函数和泛型类型实现的说明，Go会使用基于接口的方法来编译泛型函数(generic function)，这将优化编译时间，因为该函数仅会被编译一次，但是会有一些运行时代价；</p>
+<p>对于每个类型参数集，泛型类型(generic type)可能会进行多次编译，这将延长编译时间，但是不会产生任何运行时代价，编译器还可以选择使用类似于接口类型的方法来实现泛型类型，使用专用方法访问依赖于类型参数的每个元素；</p>
+<br>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><p>Go泛型方案的即将定型即好也不好。Go向来以简洁著称，增加泛型，无论采用什么技术方案，都会增加Go的复杂性，提升其学习门槛，代码可读性也会下降；</p>
+<p>但在某些场合(比如实现container数据结构及对应算法库等)，使用泛型却又能简化实现；</p>
+<p>在这份提案中，Go核心团队也给出如下期望：</p>
+<pre><code>We expect that most packages will not define generic types or functions, but many packages are likely to use generic types or functions defined elsewhere
+
+我们期望大多数软件包不会定义泛型类型或函数，但是许多软件包可能会使用在其他地方定义的泛型类型或函数。</code></pre><p>并且提案提到了会在Go标准库中增加一些新包，已实现基于泛型的标准数据结构(slice、map、chan、math、list/ring等)、算法(sort、interator)等，gopher们只需调用这些包提供的API即可；</p>
+<blockquote>
+<p>  <strong>另外该提案的一大优点就是与Go1兼容，因此我们可能永远不会使用Go2这个版本号了；</strong></p>
+</blockquote>
+<p>由于 golang 泛型的实现涉及到编译器前端的诸多技术细节和语言的历史背景，本人不可能也没有能力通过短短一篇文章把所有的方面讲解清楚，目前社区通过多个分支并行开发来提供支持，感兴趣的读者可以自行下载源码阅读研究，本文主要是抛砖引玉，期望有更多的读者参与到开源技术的研究和推广中来并与大家分享；</p>
+<p>泛型代码适用的范围主要在集合，数学库，以及一些通用的算法和框架类库中, 滥用泛型会增加代码的编写和维护成本，得不偿失；</p>
+<p>最后，用 golang 编译器核心作者之一 Robert Griesemer 的话来总结本文: “泛型是带类型检查的宏指令，使用宏指令前请三思”。</p>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h2><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/go-v1.17-rc-generic</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://zenn.dev/mattn/books/4c7de85ec42cb44cf285" target="_blank" rel="noopener">Go 言語にやってくる Generics は我々に何をもたらすのか</a></li>
+<li><a href="https://github.com/mattn/go-generics-example" target="_blank" rel="noopener">https://github.com/mattn/go-generics-example</a></li>
+<li><a href="https://colobu.com/2021/02/20/merge-dev-typeparams-to-master-during-Go-1-17/" target="_blank" rel="noopener">利好！极大可能在go 1.17中就能尝试泛型</a></li>
+<li><a href="https://www.imooc.com/article/305914" target="_blank" rel="noopener">Go泛型新方案详解！Go泛型真的要来了，最早在Go 1.17版本支持</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/07/05/在Docker中体验Go1-17中的泛型/" title="https://jasonkayzk.github.io/2021/07/05/在Docker中体验Go1-17中的泛型/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/07/05/在Docker中体验Go1-17中的泛型/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1738209560758"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
