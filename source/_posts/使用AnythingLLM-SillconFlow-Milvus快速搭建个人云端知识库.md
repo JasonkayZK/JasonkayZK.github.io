@@ -286,6 +286,14 @@ root@VM-12-16-debian:~/workspace/anythingllm/models/Xenova# tree .
 
 <br/>
 
+## **结语**
+
+除了使用 Docker 来部署 AnythingLLM 之外，也提供了桌面的版本；
+
+Desktop 版本和 Web 版的配置非常类似，这里不再赘述！
+
+<br/>
+
 # **附录**
 
 源代码：
