@@ -30,6 +30,28 @@ cover: https://img.paulzzh.com/touhou/random?99
 
 <br/>
 
+### **实时访问数据**
+
+
+</div>
+<div class = "page-container">
+    <iframe id="page"
+        title="page"
+        style='position:inherit; top:0px; left:0px; width:100%; height:550px; z-index:999'
+        frameborder='no'
+        scrolling='true'
+        src="https://us.umami.is/share/j5SVhZLblKH5HIbJ/jasonkayzk.github.io/">
+    </iframe>
+</div>
+
+
+> **来源：**
+>
+> -   https://us.umami.is/share/j5SVhZLblKH5HIbJ/jasonkayzk.github.io
+
+<br/>
+
+
 ### **实时文章热榜**
 
 <div>
@@ -70,7 +92,6 @@ $.get("https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/hot_list/", (r
     }
 );
 </script>
-
 <br/>
 
 ### **实时应用热榜**
@@ -125,7 +146,6 @@ $.get("https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/app_hot_list?q
 <table width="800px">
 <tr>
 <td valign="top" width="50%">
-
 #### 🏊‍♂️ Coding Activity
 
 <a href="https://wakatime.com"><img src="https://wakatime.com/share/@Jasonkay/a46bf7c6-ccbf-43e5-b141-7e841f581d87.png" /></a>
