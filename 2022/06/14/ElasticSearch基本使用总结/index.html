@@ -1,0 +1,3486 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>ElasticSearch基本使用总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近做的项目用到了ES，这里总结一下；">
+<meta name="keywords" content="ElasticSearch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ElasticSearch基本使用总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/06/14/ElasticSearch基本使用总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近做的项目用到了ES，这里总结一下；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-03-20T06:20:00.269Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ElasticSearch基本使用总结">
+<meta name="twitter:description" content="最近做的项目用到了ES，这里总结一下；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1742451642195">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?78">
+    
+    <h1>ElasticSearch基本使用总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年06月14日</a>
+    <a><i class="nexmoefont icon-areachart"></i>14k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 66 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/ElasticSearch/">ElasticSearch</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/ElasticSearch/">ElasticSearch</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ElasticSearch基本使用总结"><span class="toc-text">ElasticSearch基本使用总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#部署ELK"><span class="toc-text">部署ELK</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#基本概念"><span class="toc-text">基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#索引（index）"><span class="toc-text">索引（index）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类型（type）"><span class="toc-text">类型（type）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#文档（document）"><span class="toc-text">文档（document）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#映射（mapping）"><span class="toc-text">映射（mapping）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分片（shard）"><span class="toc-text">分片（shard）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#副本（replica）"><span class="toc-text">副本（replica）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一些其他问题"><span class="toc-text">一些其他问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#analyzer和search-analyzer的区别"><span class="toc-text">analyzer和search_analyzer的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#es-number-of-shards和number-of-replicas的区别"><span class="toc-text">es number_of_shards和number_of_replicas的区别</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ES的基本操作"><span class="toc-text">ES的基本操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#索引（表）操作"><span class="toc-text">索引（表）操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#建索引（表）"><span class="toc-text">建索引（表）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#删索引"><span class="toc-text">删索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修改索引"><span class="toc-text">修改索引</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#文档操作"><span class="toc-text">文档操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#新增文档"><span class="toc-text">新增文档</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询文档"><span class="toc-text">查询文档</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#更新文档"><span class="toc-text">更新文档</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#删除文档"><span class="toc-text">删除文档</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bulk-API"><span class="toc-text">Bulk API</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#批量查询文档"><span class="toc-text">批量查询文档</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#各种查询"><span class="toc-text">各种查询</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#查询的类型"><span class="toc-text">查询的类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#复合查询（Compound-queries）"><span class="toc-text">复合查询（Compound queries）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Boolean-Query"><span class="toc-text">Boolean Query</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Boosting-Query"><span class="toc-text">Boosting Query</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#constant-score"><span class="toc-text">constant_score</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#dis-max"><span class="toc-text">dis_max</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#打分函数（function-score）"><span class="toc-text">打分函数（function_score）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#全文检索（Full-Text-Queries）"><span class="toc-text">全文检索（Full-Text Queries）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#match"><span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#intervals"><span class="toc-text">intervals</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#match-bool-prefix"><span class="toc-text">match_bool_prefix</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#match-phrase"><span class="toc-text">match_phrase</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#match-phrase-prefix"><span class="toc-text">match_phrase_prefix</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#multi-match"><span class="toc-text">multi_match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#combined-fields"><span class="toc-text">combined_fields</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#query-string"><span class="toc-text">query_string</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#simple-query-string"><span class="toc-text">simple_query_string</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Geo-地理查询"><span class="toc-text">Geo(地理查询)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Shape-queries-形状查询"><span class="toc-text">Shape queries(形状查询)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Joining-queries-加入查询"><span class="toc-text">Joining queries(加入查询)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Match-All-None-匹配所有"><span class="toc-text">Match All/None(匹配所有)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Span-queries-范围查询"><span class="toc-text">Span queries(范围查询)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Specialized-queries-专业查询"><span class="toc-text">Specialized queries(专业查询)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Term-level-queries-术语级查询"><span class="toc-text">Term-level queries(术语级查询)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#exists"><span class="toc-text">exists</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#fuzzy"><span class="toc-text">fuzzy</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ids"><span class="toc-text">ids</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#prefix"><span class="toc-text">prefix</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#range"><span class="toc-text">range</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#regexp"><span class="toc-text">regexp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#term"><span class="toc-text">term</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#terms"><span class="toc-text">terms</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#terms-set"><span class="toc-text">terms_set</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#wildcard"><span class="toc-text">wildcard</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一些高级特性"><span class="toc-text">一些高级特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#配置分词查询"><span class="toc-text">配置分词查询</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#安装分词插件"><span class="toc-text">安装分词插件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#补充知识：ik-max-word和ik-smart的区别"><span class="toc-text">补充知识：ik_max_word和ik_smart的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#分词索引配置"><span class="toc-text">分词索引配置</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置同义词"><span class="toc-text">配置同义词</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#一、创建同义词词库"><span class="toc-text">一、创建同义词词库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二、重启ES加载词库（不支持热更新）"><span class="toc-text">二、重启ES加载词库（不支持热更新）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三、创建索引时指定同义词-filter"><span class="toc-text">三、创建索引时指定同义词 filter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#测试"><span class="toc-text">测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#增加Stopwords"><span class="toc-text">增加Stopwords</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#为索引配置Stopwords"><span class="toc-text">为索引配置Stopwords</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#测试-1"><span class="toc-text">测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置大小写不敏感"><span class="toc-text">配置大小写不敏感</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近做的项目用到了ES，这里总结一下；</p>
+<br>
+
+<a id="more"></a>
+
+<h1 id="ElasticSearch基本使用总结"><a href="#ElasticSearch基本使用总结" class="headerlink" title="ElasticSearch基本使用总结"></a><strong>ElasticSearch基本使用总结</strong></h1><h2 id="部署ELK"><a href="#部署ELK" class="headerlink" title="部署ELK"></a><strong>部署ELK</strong></h2><p>在进行ES操作之前，首先我们要先有一个ELK服务；</p>
+<p>具体ELK的部署可以参考我之前的文章：</p>
+<ul>
+<li><a href="/2021/05/15/使用Docker-Compose部署单节点ELK/">使用Docker-Compose部署单节点ELK</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/docker-repo/tree/elk-v7.14-single" target="_blank" rel="noopener">https://github.com/JasonkayZK/docker-repo/tree/elk-v7.14-single</a></li>
+</ul>
+<p>下面来看看ES的具体用法；</p>
+<br>
+
+<h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a><strong>基本概念</strong></h2><p>Elasticsearch概述：</p>
+<p>ES 是一个基于 Lucene 的搜索服务器，它提供了一个分布式多用户能力的搜索引擎，且ES支持 Restful Web风格的url访问；ES是基于Java开发的开源搜索引擎，设计用于云计算；此外，ES还提供了数据聚合分析功能，但在数据分析方面，ES 的时效性不是很理想，在企业应用中一般还是用于搜索；ES自2016年起已经超过Solr等，称为排名第一的搜索引擎应用；</p>
+<p>ES的特性：速度快、易扩展、弹性、灵活、操作简单、多语言客户端、X-Pack、hadoop/spark强强联手、开箱即用；</p>
+<ul>
+<li>分布式：横向扩展非常灵活；</li>
+<li>全文检索：基于lucene的强大的全文检索能力；</li>
+<li>近实时搜索和分析：数据进入ES，可达到近实时搜索，还可进行聚合分析；</li>
+<li>高可用：容错机制，自动发现新的或失败的节点，重组和重新平衡数据；</li>
+<li>模式自由：ES的动态mapping机制可以自动检测数据的结构和类型，创建索引并使数据可搜索；</li>
+<li>RESTful API：JSON + HTTP；</li>
+</ul>
+<p>ElasticSearch 中有几个基本概念：</p>
+<ul>
+<li>索引(index)；</li>
+<li>类型(type)；</li>
+<li>文档(document)；</li>
+<li>映射(mapping)等；</li>
+</ul>
+<p>我们将这几个概念与传统的关系型数据库中的库、表、行、列等概念进行对比，如下表：</p>
+<table>
+<thead>
+<tr>
+<th><strong>RDBMS</strong></th>
+<th><strong>ES</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>数据库（Database）</strong></td>
+<td><strong>索引（Index）</strong></td>
+</tr>
+<tr>
+<td>表（table）</td>
+<td>类型（type）（ES6.0之后被废弃，es7中完全删除）</td>
+</tr>
+<tr>
+<td>表结构（schema）</td>
+<td>映射（mapping）</td>
+</tr>
+<tr>
+<td>行（row）</td>
+<td>文档（document）</td>
+</tr>
+<tr>
+<td>列（column）</td>
+<td>字段（field）</td>
+</tr>
+<tr>
+<td>索引</td>
+<td>反向索引</td>
+</tr>
+<tr>
+<td>SQL</td>
+<td>查询DSL</td>
+</tr>
+<tr>
+<td>SELECT * FROM table</td>
+<td>GET /index/_search {}</td>
+</tr>
+<tr>
+<td>UPDATE table SET</td>
+<td>PUT  /index {}</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>DELETE  /index {}</td>
+</tr>
+</tbody></table>
+<p><strong>这里需要特别注意的是：</strong></p>
+<p><strong>和 RDBMS 中的索引概念不同，ES 中的索引跟类似于 Table 的概念，即：</strong></p>
+<p><strong>在 ES 中文档是“挂”在索引上面的；</strong></p>
+<p>下面分别来看这些概念；</p>
+<br>
+
+<h3 id="索引（index）"><a href="#索引（index）" class="headerlink" title="索引（index）"></a><strong>索引（index）</strong></h3><p>索引是ES的<strong>逻辑存储</strong>，对应关系型数据库中的库，ES可以把索引数据存放到服务器中，也可以分片（Sharding）后存储到多台服务器上；</p>
+<p>每个索引可以有一个或多个分片，每个分片可以有多个副本；</p>
+<br>
+
+<h3 id="类型（type）"><a href="#类型（type）" class="headerlink" title="类型（type）"></a><strong>类型（type）</strong></h3><p>在 ES 中，<strong>一个索引可以存储多个用于不同用途的对象，可以通过类型来区分索引中的不同对象，对应关系型数据库中表的概念；但是在ES 6.0开始，类型的概念被废弃，ES7中将它完全删除；</strong></p>
+<p>删除type的原因：</p>
+<p>我们一直认为 ES 中的 <code>index</code> 类似于关系型数据库的 <code>database</code>，而 <code>type</code> 相当于一个数据表；但是，ES的开发者们认为这是一个糟糕的认识；例如：</p>
+<p><font color="#f00"><strong>关系型数据库中两个数据表示是独立的，即使他们里面有相同名称的列也不影响使用，但ES中不是这样的：ES 中不同 type 下名称相同的 field 最终在 Lucene 中的处理方式是一样的！</strong></font></p>
+<p><font color="#f00"><strong>举个例子：两个不同 type 下的两个 user_name，在 ES 同一个索引下其实被认为是同一个 field，你必须在两个不同的 type 中定义相同的field映射；否则，不同type中的相同字段名称就会在处理中出现冲突的情况，导致Lucene处理效率下降！</strong></font></p>
+<p><font color="#f00"><strong>去掉 type 能够使数据存储在独立的 index 中，这样即使有相同的字段名称也不会出现冲突，就像ElasticSearch出现的第一句话一样“你知道的，为了搜索····”，去掉type就是为了提高ES处理数据的效率；</strong></font></p>
+<p><font color="#f00"><strong>除此之外，在同一个索引的不同 type 下存储字段数不一样的实体会导致存储中出现稀疏数据，影响Lucene压缩文档的能力，导致ES查询效率的降低；</strong></font></p>
+<br>
+
+<h3 id="文档（document）"><a href="#文档（document）" class="headerlink" title="文档（document）"></a><strong>文档（document）</strong></h3><p><strong>存储在ES中的主要实体被称为：文档，可以理解为关系型数据库中表的一行数据记录，每个文档由多个字段（field）组成；</strong></p>
+<p><font color="#f00"><strong>区别于关系型数据库的是，ES是一个非结构化的数据库，每个文档可以有不同的字段，并且有一个唯一标识；</strong></font></p>
+<br>
+
+<h3 id="映射（mapping）"><a href="#映射（mapping）" class="headerlink" title="映射（mapping）"></a><strong>映射（mapping）</strong></h3><p><strong>mapping是对索引库中的索引字段及其数据类型进行定义，类似于关系型数据库中的表结构；</strong></p>
+<p><font color="#f00"><strong>ES默认动态创建索引和索引类型的mapping，这有点类似于 MongoDB，无需定义表结构，更不用指定字段的数据类型，表的结构是动态的非常灵活（当然也可以手动指定mapping类型）；</strong></font></p>
+<br>
+
+<h3 id="分片（shard）"><a href="#分片（shard）" class="headerlink" title="分片（shard）"></a><strong>分片（shard）</strong></h3><p>如果我们的索引数据量很大，超过硬件存放单个文件的限制，就会影响查询请求的速度；</p>
+<p>ES 引入了分片技术：一个分片本身是一个最小的工作单元，承载<strong>部分数据</strong>，文档存储在分片中，而分片会被分配到集群中的各个节点中，随着集群的扩大和缩小，ES会自动的将分片在节点之间进行迁移，以保证集群能保持一种平衡；</p>
+<p>分片有以下特点：</p>
+<ul>
+<li>一个索引可以包含多个分片（shard）；</li>
+<li>每一个分片（shard）都是一个最小的工作单元，承载<strong>部分数据</strong>；</li>
+<li><strong>每个shard都是一个lucene实例，有完整的简历索引和处理请求的能力；</strong></li>
+<li><strong>增减节点时，shard会自动在nodes中负载均衡；</strong></li>
+<li><strong>一个文档只能完整的存放在一个shard上；</strong></li>
+<li><font color="#f00"><strong>一个索引中含有shard的数量，默认值为5，在索引创建后这个值是不能被更改的；</strong></font></li>
+</ul>
+<p>优点：</p>
+<ul>
+<li><strong>水平分割和扩展我们存放的内容索引；</strong></li>
+<li><strong>分发和并行跨碎片操作提高性能/吞吐量；</strong></li>
+</ul>
+<p>每一个shard关联的副本分片（replica shard）的数量，默认值为1，这个设置在任何时候都可以修改；</p>
+<br>
+
+<h3 id="副本（replica）"><a href="#副本（replica）" class="headerlink" title="副本（replica）"></a><strong>副本（replica）</strong></h3><p>副本（replica shard）就是shard的冗余备份，它的主要作用：</p>
+<ul>
+<li>冗余备份，防止数据丢失；</li>
+<li>shard异常时负责容错和负载均衡；</li>
+</ul>
+<br>
+
+<h3 id="一些其他问题"><a href="#一些其他问题" class="headerlink" title="一些其他问题"></a><strong>一些其他问题</strong></h3><h4 id="analyzer和search-analyzer的区别"><a href="#analyzer和search-analyzer的区别" class="headerlink" title="analyzer和search_analyzer的区别"></a><strong>analyzer和search_analyzer的区别</strong></h4><p><strong>分析器主要有两种情况会被使用：</strong></p>
+<ul>
+<li><font color="#f00"><strong>第一种是插入文档时，将text类型的字段做分词然后插入倒排索引；</strong></font></li>
+<li><font color="#f00"><strong>第二种就是在查询时，先对要查询的text类型的输入做分词，再去倒排索引搜索；</strong></font></li>
+</ul>
+<p><font color="#f00"><strong>如果想要让 索引 和 查询 时使用不同的分词器，ElasticSearch也是能支持的，只需要在字段上加 search_analyzer参数；</strong></font></p>
+<p><font color="#f00"><strong>在索引时，只会去看字段有没有定义analyzer，有定义的话就用定义的，没定义就用ES预设的；</strong></font></p>
+<p><font color="#f00"><strong>在查询时，会先去看字段有没有定义search_analyzer，如果没有定义，就去看有没有analyzer，再没有定义，才会去使用ES预设的；</strong></font></p>
+<br>
+
+<h4 id="es-number-of-shards和number-of-replicas的区别"><a href="#es-number-of-shards和number-of-replicas的区别" class="headerlink" title="es number_of_shards和number_of_replicas的区别"></a><strong>es number_of_shards和number_of_replicas的区别</strong></h4><p><code>number_of_replicas</code> 是<strong>数据备份数</strong>，如果只有一台机器，可以设置为 0；</p>
+<p><code>number_of_shards</code> 是<strong>数据分片数</strong>，默认为 5；</p>
+<br>
+
+<h2 id="ES的基本操作"><a href="#ES的基本操作" class="headerlink" title="ES的基本操作"></a><strong>ES的基本操作</strong></h2><p>在 ES 中的所有操作都是可以使用 Restful 风格的请求来操作；</p>
+<p>例如：</p>
+<pre><code class="bash">curl -u username:passwd -XPUT -H &quot;Content-Type: application/json&quot; &quot;http://127.0.0.1:9200/abc&quot; -d &quot;{}&quot;</code></pre>
+<p>同时，在 Kibana 中也提供了相关工具：DevTools；</p>
+<p>在 Kibana 中可以直接简化上面的操作：</p>
+<pre><code>PUT /abc {}</code></pre><p>下面的操作都会在 Kibana 中操作，相信你也能轻松的转为 curl 命令的风格；</p>
+<br>
+
+<h3 id="索引（表）操作"><a href="#索引（表）操作" class="headerlink" title="索引（表）操作"></a><strong>索引（表）操作</strong></h3><h4 id="建索引（表）"><a href="#建索引（表）" class="headerlink" title="建索引（表）"></a><strong>建索引（表）</strong></h4><p>ES 的表结构是非常灵活的，最简单的建表语句可以是下面这样的：</p>
+<pre><code>PUT /abc</code></pre><p>调用之后返回：</p>
+<pre><code class="json">{
+  &quot;acknowledged&quot; : true,
+  &quot;shards_acknowledged&quot; : true,
+  &quot;index&quot; : &quot;abc&quot;
+}</code></pre>
+<p>即表示建表完成！</p>
+<p>当然，建表语句也可以非常复杂；</p>
+<p>例如，下面是一个保存文章的索引：</p>
+<pre><code class="json">PUT /passage
+{
+  &quot;settings&quot;: {
+    &quot;index&quot;: {
+      &quot;analysis&quot;: {
+        &quot;analyzer&quot;: {
+          &quot;title_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;false&quot;,
+            &quot;tokenizer&quot;: &quot;ik_max_word&quot;,
+            &quot;filter&quot;: [
+              &quot;jt_tfr&quot;,
+              &quot;lowercase&quot;
+            ]
+          },
+          &quot;content_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;true&quot;,
+            &quot;tokenizer&quot;: &quot;ik_smart&quot;,
+            &quot;filter&quot;: [
+              &quot;jt_tfr&quot;,
+              &quot;lowercase&quot;
+            ]
+          }
+        },
+        &quot;filter&quot;: {
+          &quot;jt_tfr&quot;: {
+            &quot;type&quot;: &quot;stop&quot;,
+            &quot;stopwords&quot;: [
+              &quot; &quot;,
+              &quot;！&quot;,
+              &quot;，&quot;,
+              &quot;：&quot;,
+              &quot;；&quot;
+            ]
+          }
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;analyzer&quot;: &quot;title_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      },
+      &quot;content&quot;: {
+        &quot;analyzer&quot;: &quot;content_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>索引包括了：</p>
+<ul>
+<li>三个映射：title、content；</li>
+<li>两个分析器：title_analyzer、content_analyzer；</li>
+<li>一个过滤器：jt_tfr；</li>
+</ul>
+<br>
+
+<h4 id="删索引"><a href="#删索引" class="headerlink" title="删索引"></a><strong>删索引</strong></h4><p>删除索引也是非常简单，由于 Restful 风格良好的表达，我们只需要将 <code>PUT</code> 改为 <code>DELETE</code> 即可！</p>
+<pre><code>DELETE /abc</code></pre><p>返回如下：</p>
+<pre><code class="json">{
+  &quot;acknowledged&quot; : true
+}</code></pre>
+<br>
+
+<h4 id="修改索引"><a href="#修改索引" class="headerlink" title="修改索引"></a><strong>修改索引</strong></h4><p>修改索引在之前的文章中写过了：</p>
+<ul>
+<li><a href="/2022/06/22/ES修改索引结构/">ES修改索引结构</a></li>
+</ul>
+<p>具体步骤如下：</p>
+<ul>
+<li>新建索引；</li>
+<li>复制数据（reindex）；</li>
+<li>确认数据；</li>
+<li>删除旧别名；</li>
+<li>删除旧索引；</li>
+<li>创建别名（aliases）；</li>
+</ul>
+<br>
+
+<h3 id="文档操作"><a href="#文档操作" class="headerlink" title="文档操作"></a><strong>文档操作</strong></h3><p>文档操作主要包括了  Index、Create、Read、Update、Delete 这五种操作；</p>
+<p>总结如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>实例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Index</td>
+<td><code>PUT my_index/_doc/1 {}</code></td>
+</tr>
+<tr>
+<td>Create</td>
+<td><code>PUT my_index/_create/1 {}</code><br><code>POST my_index/_doc {}</code> 不指定Id，自动生成；</td>
+</tr>
+<tr>
+<td>Read</td>
+<td><code>GET my_index/_doc/1</code></td>
+</tr>
+<tr>
+<td>Update</td>
+<td><code>POST my_index/_update/1 {&quot;doc&quot;: {...}}</code></td>
+</tr>
+<tr>
+<td>Delete</td>
+<td><code>DELETE my_index/_doc/1</code></td>
+</tr>
+</tbody></table>
+<p>请求首先都是提供一个 HTTP 的 method，后面是索引名字，在 7.0 之后所以的 Type 都用 <code>_doc</code> 表示，后面是文档 id；</p>
+<p>下面分别来看；</p>
+<h4 id="新增文档"><a href="#新增文档" class="headerlink" title="新增文档"></a><strong>新增文档</strong></h4><p>Create 支持两种方式：</p>
+<ul>
+<li><strong>指定文档Id创建文档；</strong></li>
+<li><strong>自动生成文档Id；</strong></li>
+</ul>
+<blockquote>
+<p>  <strong>自己指定文档 id创建文档，需要考虑 id 的均衡性，避免产生分配不均衡的问题；</strong></p>
+<p>  <strong>ES 的 hash 函数会确保文档 id 被均匀分配到不同的分片；</strong></p>
+</blockquote>
+<p>下面指定Id新增了一个文档：</p>
+<pre><code class="json">PUT /passage/_doc/1
+{
+  &quot;title&quot;: &quot;测试&quot;,
+  &quot;content&quot;: &quot;这是一个测试内容&quot;
+}</code></pre>
+<p>返回响应：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 0,
+  &quot;_primary_term&quot; : 1
+}</code></pre>
+<p>其中 <code>_version</code> 每一次操作，都会 + 1，它是一个锁的机制，当并行修改文档的时候，更新的版本号比文档当前的版本号小时就会报错，不允许做修改；</p>
+<p>也可以用下面的方式创建文档：</p>
+<pre><code class="json">PUT /passage/_create/2
+{
+  &quot;title&quot;: &quot;测试2&quot;,
+  &quot;content&quot;: &quot;这是一个测试内容2&quot;,
+  &quot;comment&quot;: &quot;这是一个评论2&quot;
+}</code></pre>
+<p>效果是一样的；</p>
+<p><font color="#f00"><strong>需要注意的是：这里的 <code>comment</code> 字段在我们创建索引的时候是不存在的！</strong></font></p>
+<p><font color="#f00"><strong>在ES创建文档时，如果索引中不存在，ES 会自动创建对应的 index 和 type！</strong></font></p>
+<p>也可以用不指定 id 创建文档的方式：</p>
+<pre><code class="json">POST /passage/_doc 
+{
+  &quot;title&quot;: &quot;自动创建Id的测试&quot;,
+  &quot;content&quot;: &quot;这是一个自动创建Id的测试内容&quot;
+}</code></pre>
+<p>响应：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;4cyVqYEBPqU3ER3DXk4l&quot;,
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 4,
+  &quot;_primary_term&quot; : 1
+}</code></pre>
+<p>Index操作相比 Create，区别在于：</p>
+<p><font color="#f00"><strong>如果文档不存在，就索引新的文档，否则现有文档就会被删除，新的文档被索引，版本信息 <code>_version</code> + 1；</strong></font></p>
+<br>
+
+<h4 id="查询文档"><a href="#查询文档" class="headerlink" title="查询文档"></a><strong>查询文档</strong></h4><p>Get 方法比较简单：只需要 <code>Get 索引名称/_doc/文档 id</code>，就可以知道文档的具体信息了；</p>
+<p>例如：</p>
+<pre><code>GET /passage/_doc/2</code></pre><p>返回结果如下：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;2&quot;,
+  &quot;_version&quot; : 3,
+  &quot;_seq_no&quot; : 3,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;title&quot; : &quot;测试2&quot;,
+    &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+    &quot;comment&quot; : &quot;这是一个评论2&quot;
+  }
+}</code></pre>
+<p>其中 <code>_index</code> 为索引，<code>_type</code> 为类型，<code>_id</code> 为文档 id，<code>_version</code> 为版本信息，<code>_source</code> 存储了文档的完整原始数据；</p>
+<p>当查询的文档 id 不存在时，会返回 HTTP 404，且 <code>found</code> 为 <code>false</code>，具体如下：</p>
+<pre><code>GET /passage/_doc/3</code></pre><p>返回结果如下：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;3&quot;,
+  &quot;found&quot; : false
+}</code></pre>
+<br>
+
+<h4 id="更新文档"><a href="#更新文档" class="headerlink" title="更新文档"></a><strong>更新文档</strong></h4><p>Update 方法采用 HTTP POST，在请求体中必须指明 doc，在把具体文档提供在 HTTP 的 body 里；</p>
+<p>并且，<font color="#f00"><strong>Update 和 Index 方法不同，Update 方法不会删除原来的文档，而是实现真正的数据更新！</strong></font></p>
+<p>比如在原来的文档 Id 为 1 的文档上增加字段，具体请求如下：</p>
+<pre><code class="json">POST /passage/_update/1
+{
+  &quot;doc&quot;: {
+    &quot;title&quot;: &quot;测试&quot;,
+    &quot;content&quot;: &quot;这是一个测试内容&quot;,
+    &quot;comment&quot;: &quot;这是一个评论&quot;
+  }
+}</code></pre>
+<p>结果如下：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;result&quot; : &quot;updated&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 5,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<p>执行后，版本信息 <code>_version</code> + 1；</p>
+<p>再去查询下该文档：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;_seq_no&quot; : 5,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;title&quot; : &quot;测试&quot;,
+    &quot;content&quot; : &quot;这是一个测试内容&quot;,
+    &quot;comment&quot; : &quot;这是一个评论&quot;
+  }
+}</code></pre>
+<p>可以看到，新增字段已经成功了；</p>
+<br>
+
+<h4 id="删除文档"><a href="#删除文档" class="headerlink" title="删除文档"></a><strong>删除文档</strong></h4><p>DELETE 方法也很简单，<code>DELETE 索引名称/_doc/文档id</code> 就可以了：</p>
+<pre><code class="json">DELETE /passage/_doc/1</code></pre>
+<p>返回值如下：</p>
+<pre><code class="json">{
+  &quot;_index&quot; : &quot;passage&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 3,
+  &quot;result&quot; : &quot;deleted&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 6,
+  &quot;_primary_term&quot; : 1
+}</code></pre>
+<br>
+
+<h3 id="Bulk-API"><a href="#Bulk-API" class="headerlink" title="Bulk API"></a><strong>Bulk API</strong></h3><p>在一个 REST 请求中，重新建立网络连接是十分损耗性能的，因此 ES 提供 Bulk API，支持在一次 API 调用中，对不同的索引进行操作，从而减少网络传输开销，提升写入速率；</p>
+<p>ES 支持 <code>Index</code>、<code>Create</code>、<code>Update</code>、<code>Delete</code> 四种类型操作，可以在 URI 中指定索引，也可以在请求的方法体中进行；</p>
+<p>同时多条操作中：<font color="#f00"><strong>如果其中有一条失败，也不会影响其他的操作，并且返回的结果包括每一条操作执行的结果；</strong></font></p>
+<p>比如下面的请求：</p>
+<pre><code class="json">POST /_bulk
+{&quot;index&quot;:{&quot;_index&quot;:&quot;passage&quot;,&quot;_id&quot;:&quot;2&quot;}}
+{&quot;comment&quot;:&quot;bulk api&quot;}
+{&quot;delete&quot;:{&quot;_index&quot;:&quot;passage&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;update&quot;:{&quot;_index&quot;:&quot;passage&quot;,&quot;_id&quot;:&quot;2&quot;}}
+{&quot;doc&quot;:{&quot;title&quot;:&quot;bulk&quot;}}</code></pre>
+<p>执行命令后，结果如下：</p>
+<pre><code class="json">{
+  &quot;took&quot; : 4,
+  &quot;errors&quot; : false,
+  &quot;items&quot; : [
+    {
+      &quot;index&quot; : {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 6,
+        &quot;result&quot; : &quot;updated&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 10,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200
+      }
+    },
+    {
+      &quot;delete&quot; : {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 2,
+        &quot;result&quot; : &quot;deleted&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 11,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200
+      }
+    },
+    {
+      &quot;update&quot; : {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 7,
+        &quot;result&quot; : &quot;updated&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 12,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200
+      }
+    }
+  ]
+}</code></pre>
+<p><code>took</code> 表示消耗了 4 毫秒，<code>errors</code> 为 <code>false</code> 说明没问题；</p>
+<p>如果，<code>errors</code> 为 <code>true</code> 则表示在这些操作中错误发生；</p>
+<p>在使用 Bulk API 的时候，<strong>当 <code>errors</code> 为 <code>true</code> 时，需要把错误的操作修改掉，防止存到 ES 的数据有缺失；</strong></p>
+<br>
+
+<h3 id="批量查询文档"><a href="#批量查询文档" class="headerlink" title="批量查询文档"></a><strong>批量查询文档</strong></h3><p><strong>批量查询需要指明要查询文档的 id</strong>，可以在一个 <code>_mget</code> 操作里查询不同索引的数据，可以减少网络连接所产生的开销，提高性能；</p>
+<p>下面我们来实际操作下，执行下面的命令就可以得到文档 Id 为 1、3 的数据：</p>
+<pre><code class="json">GET /_mget
+{
+  &quot;docs&quot;: [
+    {
+      &quot;_index&quot;: &quot;passage&quot;,
+      &quot;_id&quot;: &quot;1&quot;
+    },
+    {
+      &quot;_index&quot;: &quot;passage&quot;,
+      &quot;_id&quot;: &quot;3&quot;
+    }
+  ]
+}</code></pre>
+<p>返回结果：</p>
+<pre><code class="json">{
+  &quot;docs&quot; : [
+    {
+      &quot;_index&quot; : &quot;passage&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;1&quot;,
+      &quot;_version&quot; : 1,
+      &quot;_seq_no&quot; : 13,
+      &quot;_primary_term&quot; : 1,
+      &quot;found&quot; : true,
+      &quot;_source&quot; : {
+        &quot;title&quot; : &quot;测试&quot;,
+        &quot;content&quot; : &quot;这是一个测试内容&quot;
+      }
+    },
+    {
+      &quot;_index&quot; : &quot;passage&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;3&quot;,
+      &quot;_version&quot; : 1,
+      &quot;_seq_no&quot; : 15,
+      &quot;_primary_term&quot; : 1,
+      &quot;found&quot; : true,
+      &quot;_source&quot; : {
+        &quot;title&quot; : &quot;测试3&quot;,
+        &quot;content&quot; : &quot;这是一个测试内容3&quot;,
+        &quot;comment&quot; : &quot;这是一个评论3&quot;
+      }
+    }
+  ]
+}</code></pre>
+<p>批量操作虽然可以提高 API 调用性能，但是不要一次发送过多数据，否则会对 ES 集群产生过大的压力，导致性能有所下降；</p>
+<p>一般建议 1000-5000 个文档，如果你的文档很大，可以适当减少队列，大小建议是 5-15 MB，默认不能超过 100 M；</p>
+<br>
+
+<h2 id="各种查询"><a href="#各种查询" class="headerlink" title="各种查询"></a><strong>各种查询</strong></h2><p>在上面的查询中，主要都是直接通过 Id 进行查询；</p>
+<p>这种方式在实际使用时其实并不常见，更多的是配合各种各样的条件进行匹配查询；</p>
+<p>下面我们详细来看；</p>
+<br>
+
+<h3 id="查询的类型"><a href="#查询的类型" class="headerlink" title="查询的类型"></a><strong>查询的类型</strong></h3><p>ES 的搜索结果是按照相关分数的高低进行排序的，在搜索的过程中，会计算这个分数，这个分数代表了这条记录匹配搜索内容的相关程度；</p>
+<p>分数是一个浮点型的数字，对应的是搜索结果中的<code>_score</code>字段，分数越高代表匹配度越高，排序越靠前；</p>
+<p>在ES的搜索当中，分为两种：</p>
+<ul>
+<li>查询：计算分数，代表这条记录与搜索内容匹配的程度，除了决定这条记录是否匹配外，还要计算这条记录的相关分数；</li>
+<li>过滤：不计算分数，代表这条记录是否匹配查询条件；频繁使用的过滤还会被ES加入到缓存，以提升ES的性能；</li>
+</ul>
+<blockquote>
+<p>  <strong>在某些不需要相关性算分的查询场景，尽量使用FilterContext优化查询性能；</strong></p>
+</blockquote>
+<p>下面就是一个查询的例子：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: { 
+    &quot;bool&quot;: { 
+      &quot;must&quot;: [
+        { &quot;match&quot;: { &quot;title&quot;:   &quot;Search&quot;        }},
+        { &quot;match&quot;: { &quot;content&quot;: &quot;Elasticsearch&quot; }}
+      ],
+      &quot;filter&quot;: [ 
+        { &quot;term&quot;:  { &quot;status&quot;: &quot;published&quot; }},
+        { &quot;range&quot;: { &quot;publish_date&quot;: { &quot;gte&quot;: &quot;2015-01-01&quot; }}}
+      ]
+    }
+  }
+}</code></pre>
+<p><code>/_search</code> 是请求的路径，请求的方法是<code>GET</code>，请求体中有一个<code>query</code>，代表查询的条件；</p>
+<p>而 <code>bool</code> 中的：</p>
+<ul>
+<li><code>must</code> 被用作<code>query context</code>，它在查询的时候会计算记录匹配的相关分数；</li>
+<li><code>filter</code>中的条件用作过滤，只会把符合条件的记录检索出来，不会计算分数；</li>
+</ul>
+<br>
+
+<h3 id="复合查询（Compound-queries）"><a href="#复合查询（Compound-queries）" class="headerlink" title="复合查询（Compound queries）"></a><strong>复合查询（Compound queries）</strong></h3><p>复合查询由其他复合查询或叶查询组合而成，以组合它们的结果和分数，改变它们的行为，或者从查询切换到过滤上下文；</p>
+<p>复合查询包含了许多其他的查询，像我们前面提到的<code>query context</code>和<code>filter context</code>；</p>
+<p>在复合查询中，分为很多种类型：</p>
+<ul>
+<li>Boolean Query；</li>
+<li>Boosting Query；</li>
+<li>Const Query；</li>
+<li>全文检索；</li>
+<li>……</li>
+</ul>
+<p>下面我们分别来看；</p>
+<h4 id="Boolean-Query"><a href="#Boolean-Query" class="headerlink" title="Boolean Query"></a><strong>Boolean Query</strong></h4><p><strong>布尔查询是最常用的组合查询，不仅将多个查询条件组合在一起，并且将查询的<code>结果</code>和结果的<code>评分</code>组合在一起，bool 相当于<code>MySQL中的一个括号()</code>；</strong></p>
+<p>前面我们写的查询语句例子就是一个boolean查询，在 boolean 查询中有几个关键词：</p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>关键词</strong></th>
+<th align="left"><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><font color="#f00"><strong>must</strong></font></td>
+<td align="left"><font color="#f00"><strong>必须满足的条件，而且会计算分数；</strong></font></td>
+</tr>
+<tr>
+<td align="left"><font color="#f00"><strong>filter</strong></font></td>
+<td align="left"><font color="#f00"><strong>必须满足的条件，不会计算分数；</strong></font></td>
+</tr>
+<tr>
+<td align="left"><font color="#f00"><strong>should</strong></font></td>
+<td align="left"><font color="#f00"><strong>可以满足的条件，会计算分数；</strong></font></td>
+</tr>
+<tr>
+<td align="left"><font color="#f00"><strong>must_not</strong></font></td>
+<td align="left"><font color="#f00"><strong>必须不满足的条件，不会计算分数；</strong></font></td>
+</tr>
+</tbody></table>
+<p>我们看看下面的查询语句：</p>
+<pre><code class="javascript">POST _search
+{
+  &quot;query&quot;: {
+    &quot;bool&quot; : {
+      &quot;must&quot; : {
+        &quot;term&quot; : { &quot;user&quot; : &quot;kimchy&quot; }
+      },
+      &quot;filter&quot;: {
+        &quot;term&quot; : { &quot;tag&quot; : &quot;tech&quot; }
+      },
+      &quot;must_not&quot; : {
+        &quot;range&quot; : {
+          &quot;age&quot; : { &quot;gte&quot; : 10, &quot;lte&quot; : 20 }
+        }
+      },
+      &quot;should&quot; : [
+        { &quot;term&quot; : { &quot;tag&quot; : &quot;wow&quot; } },
+        { &quot;term&quot; : { &quot;tag&quot; : &quot;elasticsearch&quot; } }
+      ],
+      &quot;minimum_should_match&quot; : 1,
+      &quot;boost&quot; : 1.0
+    }
+  }
+}</code></pre>
+<p>上面的查询就是一个典型的boolean复合查询，里边的关键词都用上了；</p>
+<p>这里再强调一下 <code>must</code>和<code>should</code>的区别：</p>
+<ul>
+<li><code>must</code>是必须满足的条件，上面的例子中<code>must</code>里只写了一个条件，如果是多个条件，那么里边的所有条件必须全部满足，才能被查出来；</li>
+<li>而对于<code>should</code>，在例子中 <code>should</code> 列出了两个条件，并不是说这两个条件必须全部满足，到底需要满足几个条件可以看下面的关键字<code>minimum_should_match</code>（最小<code>should</code>匹配数，在这里设置的是1），也就是说，<code>should</code>里的条件只要满足1个，就算匹配成功；</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>在boolean查询中，如果存在一个<code>should</code>条件，而没有<code>filter</code>和<code>must</code>条件，那么<code>minimum_should_match</code>的默认值是1，其他情况默认值是0；</strong></font></p>
+</blockquote>
+<br>
+
+<p>再来看一个实际的例子，之前我们创建了一个 <code>passage</code> 索引；</p>
+<p>索引中存在着几条数据，数据如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">_index</th>
+<th align="left">_id</th>
+<th align="left">title</th>
+<th align="left">content</th>
+<th align="left">comment</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">passage</td>
+<td align="left">1</td>
+<td align="left">测试</td>
+<td align="left">这是一个测试内容</td>
+<td align="left">这是一个评论</td>
+</tr>
+<tr>
+<td align="left">passage</td>
+<td align="left">2</td>
+<td align="left">测试2</td>
+<td align="left">这是一个测试内容2</td>
+<td align="left">这是一个评论2</td>
+</tr>
+<tr>
+<td align="left">passage</td>
+<td align="left">wicds4EB0KdGOS9dT4Pr</td>
+<td align="left">自动创建Id测试</td>
+<td align="left">这是一个自动创建Id测试内容</td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<p>只有 3 条记录，我们新建一个查询语句，如下：</p>
+<pre><code class="javascript">POST /passage/_search
+{
+  &quot;query&quot;: {
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {
+          &quot;match&quot;: {
+            &quot;title&quot;: &quot;自动测试&quot;
+          }
+        }
+      ]
+    }
+  },
+  &quot;from&quot;: 0,
+  &quot;size&quot;: 1
+}</code></pre>
+<p>我们查询的条件是 <code>title</code> 字段满足 <code>自动测试</code> ；</p>
+<p>由于在创建索引时，我们使用了 ik 分词器：</p>
+<pre><code class="json">PUT /passage
+{
+  &quot;settings&quot;: {
+    &quot;index&quot;: {
+      &quot;analysis&quot;: {
+        &quot;analyzer&quot;: {
+          &quot;title_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;false&quot;,
+            &quot;tokenizer&quot;: &quot;ik_max_word&quot;,
+            &quot;filter&quot;: [
+              &quot;jt_tfr&quot;,
+              &quot;lowercase&quot;
+            ]
+          },
+          &quot;content_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;true&quot;,
+            &quot;tokenizer&quot;: &quot;ik_smart&quot;,
+            &quot;filter&quot;: [
+              &quot;jt_tfr&quot;,
+              &quot;lowercase&quot;
+            ]
+          }
+        },
+        &quot;filter&quot;: {
+          &quot;jt_tfr&quot;: {
+            &quot;type&quot;: &quot;stop&quot;,
+            &quot;stopwords&quot;: [...]
+          }
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;analyzer&quot;: &quot;title_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      },
+      &quot;content&quot;: {
+        &quot;analyzer&quot;: &quot;content_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>而查询条件 <code>自动测试</code> 会被分词为 <code>自动</code> 和 <code>测试</code> ，3个数据的 <code>title</code> 中都有 <code>测试</code> 字段，所以 3条数据都会被查询出来：</p>
+<pre><code class="json">{
+  &quot;took&quot; : 1,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.86236954,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;wicds4EB0KdGOS9dT4Pr&quot;,
+        &quot;_score&quot; : 0.86236954,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;自动创建Id测试&quot;,
+          &quot;content&quot; : &quot;这是一个自动创建Id测试内容&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.17426977,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容&quot;,
+          &quot;comment&quot; : &quot;这是一个评论&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.14181954,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试2&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+          &quot;comment&quot; : &quot;这是一个评论2&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<p>可以看到，数据全部被查询出来了，和我们的预期是一样的；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>text类型的查询都是基于分词后的词条查询的，例如”abcd”分词后”ab,cd”如果term查询”bc”就查不到；</strong></font></p>
+</blockquote>
+<p><font color="#f00"><strong>需要注意的是 <code>_score</code>字段：它们的分数是不一样的，我们的查询条件是 <code>自动测试</code>，所以既包含<code>自动</code>又包含<code>测试</code>的数据分数高，我们看到分数到了0.86，而另外2条数据只匹配了<code>测试</code>，所以分数只有0.17，0.14；</strong></font></p>
+<br>
+
+<h4 id="Boosting-Query"><a href="#Boosting-Query" class="headerlink" title="Boosting Query"></a><strong>Boosting Query</strong></h4><p>Boosting Query 可以为不喜欢的查询减分；</p>
+<p>Boosting Query 有两个关键词：<code>positive</code>和<code>negative</code>；</p>
+<ul>
+<li><code>positive</code>：（必需，查询对象）查询语句，所有满足 <code>positive</code> 条件的数据都会被查询出来；</li>
+<li><code>negative</code>：（必需，查询对象）降低分数的匹配查询，<strong>满足<code>negative</code>条件的数据并不会被过滤掉，而是会扣减分数；</strong>使用字段<code>negative_boost</code> 表示扣减系数（在0~1之间）；如果满足了<code>negative</code>条件的数据，它们的分数会乘以这个系数；比如这个系数是 0.5，原来100分的数据如果满足了<code>negative</code>条件，它的分数会乘以0.5，变成50分；</li>
+</ul>
+<pre><code class="javascript">POST /passage/_search
+{
+  &quot;query&quot;: {
+    &quot;boosting&quot;: {
+      &quot;positive&quot;: {
+        &quot;term&quot;: {
+          &quot;title&quot;: &quot;测试&quot;
+        }
+      },
+      &quot;negative&quot;: {
+        &quot;term&quot;: {
+          &quot;title&quot;: &quot;自动&quot;
+        }
+      },
+      &quot;negative_boost&quot;: 0.5
+    }
+  }
+}</code></pre>
+<p><code>positive</code> 条件是 <code>测试</code>，因此只要 <code>title</code> 中有 <code>测试</code> 的数据都会被查询出来；</p>
+<p>而<code>negative</code>的条件是 <code>自动</code>，只要<code>title</code>中包含 <code>自动</code> 的数据都会被扣减分数；由 <code>&quot;negative_boost&quot;: 0.5</code> 可知，它的得分将会变为 <code>原分数*0.5</code>；</p>
+<p>执行后的结果：</p>
+<pre><code class="json">{
+  &quot;took&quot; : 6,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.17426977,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.17426977,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容&quot;,
+          &quot;comment&quot; : &quot;这是一个评论&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.14181954,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试2&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+          &quot;comment&quot; : &quot;这是一个评论2&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;wicds4EB0KdGOS9dT4Pr&quot;,
+        &quot;_score&quot; : 0.05166793,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;自动创建Id测试&quot;,
+          &quot;content&quot; : &quot;这是一个自动创建Id测试内容&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<p>可以看到由于最后一条数据中的<code>title</code>包含<code>自动</code>，它的得分会乘以0.5的系数，所以分数会比较低；</p>
+<br>
+
+<h4 id="constant-score"><a href="#constant-score" class="headerlink" title="constant_score"></a><strong>constant_score</strong></h4><p>恒定分数查询；</p>
+<p>在通常情况下，ES 中查询的分数是由 Lucene 计算出来的，我们也可以人为指定一个固定的分数；</p>
+<p>例如：</p>
+<pre><code class="json">POST /passage/_search
+{
+  &quot;query&quot;: {
+    &quot;constant_score&quot;: {
+      &quot;filter&quot;: {
+        &quot;term&quot;: {
+          &quot;title&quot;: &quot;自动&quot;
+        }
+      },
+      &quot;boost&quot;: 1.2
+    }
+  }
+}</code></pre>
+<p>此时 <code>filter</code> 是必须的，并且其中的 <code>boost</code> 是匹配之后获得的分数；</p>
+<p>执行后结果为：</p>
+<pre><code class="json">{
+  &quot;took&quot; : 0,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 1.2,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;wicds4EB0KdGOS9dT4Pr&quot;,
+        &quot;_score&quot; : 1.2,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;自动创建Id测试&quot;,
+          &quot;content&quot; : &quot;这是一个自动创建Id测试内容&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<p>可以看到，得分为 1.2；</p>
+<br>
+
+<h4 id="dis-max"><a href="#dis-max" class="headerlink" title="dis_max"></a><strong>dis_max</strong></h4><p>dis_max 查询只使用最佳匹配查询条件的分数：</p>
+<ul>
+<li><code>queries</code>：（必需，查询对象数组）包含一个或多个查询子句；返回的文档必须与这些查询中的一个或多个匹配；如果一个文档匹配多个查询，ES 使用<code>最高</code>的相关性分数；</li>
+<li><code>tie_breaker</code>：（可选，浮点数）0-1之间，默认0.0，用于增加的评分；</li>
+</ul>
+<p>例如：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;dis_max&quot;: {
+      &quot;queries&quot;: [
+        { &quot;term&quot;: { &quot;title&quot;: &quot;测试&quot; } },  # 查询字句，假设C1=1.3
+        { &quot;term&quot;: { &quot;comment&quot;: &quot;2&quot; } }, # 查询字句，假设C2=1.8
+        { &quot;term&quot;: { &quot;content&quot;: &quot;这是一个&quot; } } # 查询字句，假设C3=1.1
+      ],
+      &quot;tie_breaker&quot;: 0.2
+    }
+  }
+}</code></pre>
+<p>对于无 dis_max 时查询的评分，大致应该是<code>C1+C2+C3</code>的评分；</p>
+<p>而有 dis_max 的评分大致计算：<code>C2+(C1+C3)*tie_breaker</code>；</p>
+<p>上面的查询返回：</p>
+<pre><code class="json">{
+  ......
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.7003642,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.7003642,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试2&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+          &quot;comment&quot; : &quot;这是一个评论2&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.17426977,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容&quot;,
+          &quot;comment&quot; : &quot;这是一个评论&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;wicds4EB0KdGOS9dT4Pr&quot;,
+        &quot;_score&quot; : 0.10333586,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;自动创建Id测试&quot;,
+          &quot;content&quot; : &quot;这是一个自动创建Id测试内容&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<br>
+
+<h4 id="打分函数（function-score）"><a href="#打分函数（function-score）" class="headerlink" title="打分函数（function_score）"></a><strong>打分函数（function_score）</strong></h4><p>function_score 会在 <code>主查询query结束后</code> 对每一个匹配的文档进行一系列的 <code>重新打分</code> 操作，能够对多个字段一起进行综合评估，并且能够使用 filter 将结果划分为多个子集，并为每个子集使用不同的加强函数；</p>
+<p><font color="#f00"><strong>需要注意的是：<code>不论我们怎么自定义打分，都不会改变原始query的匹配行为</code>，我们自定义打分，都是在原始 query 查询结束后，对每一个匹配的文档进行重新算分；</strong></font></p>
+<p>最终结果的 <code>_score</code>，即 <code>result_score</code> 的计算过程如下：</p>
+<ul>
+<li><strong>跟原来一样执行<code>query</code>并且得到原始 <code>query_score</code>；</strong></li>
+<li><strong>执行设置的自定义打分函数，并为每个文档得到一个新的分数，记为<code>func_score</code>；</strong></li>
+<li><strong>最终结果的分数 <code>result_score</code> 等于 <code>query_score</code>与<code>func_score</code>按某种方式计算的结果（默认是相乘）；</strong></li>
+</ul>
+<p><strong>最终的分数<code>result_score</code> 是由<code>query_score</code>与<code>func_score</code>进行计算而来，计算方式由参数<code>boost_mode</code>定义：</strong></p>
+<ul>
+<li>multiply : 相乘（默认），<code>result_score = query_score * function_score</code>；</li>
+<li>replace : 替换，<code>result_score = function_score</code>；</li>
+<li>sum : 相加，<code>result_score = query_score + function_score</code>；</li>
+<li>avg : 取两者的平均值，<code>result_score = Avg(query_score, function_score)</code>；</li>
+<li>max : 取两者之中的最大值，<code>result_score = Max(query_score, function_score)</code>；</li>
+<li>min : 取两者之中的最小值，<code>result_score = Min(query_score, function_score)</code>；</li>
+</ul>
+<p>function_score 提供了以下几种打分的函数：</p>
+<ul>
+<li>weight : 加权；</li>
+<li>random_score : 随机打分，生成 [0, 1) 之间均匀分布的随机分数值；</li>
+<li>field_value_factor : 使用字段的数值参与计算分数；</li>
+<li>decay_function : 衰减函数 gauss, linear, exp 等；</li>
+<li>script_score : 自定义脚本打分；</li>
+</ul>
+<p>例如：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;function_score&quot;: { # 打分函数
+      &quot;query&quot;: { &quot;match_all&quot;: {} }, # 原始query的匹配
+      &quot;boost&quot;: &quot;5&quot;, # 用以提高整个查询权重
+      &quot;functions&quot;: [ # 当有多个打分函数时，需使用functions，当只有一个时，可省略
+        { # 打分函数1：可以理解成，weight*随机数
+          &quot;weight&quot;: 23, # 加权值，默认值是1.0，也可以理解每个打分函数都有一个 weight: 1.0
+          &quot;filter&quot;: { &quot;match&quot;: { &quot;test&quot;: &quot;bar&quot; } }, # 通过 filter 去限制 weight 的作用范围
+          &quot;random_score&quot;: { # 随机打分，生成0-1之间的随机数，本示例中random_score在0-23之间
+            &quot;seed&quot;: 10,
+            &quot;field&quot;: &quot;_seq_no&quot;
+          } 
+        },
+        { # 打分函数2
+          &quot;weight&quot;: 42 # 加权数
+          &quot;filter&quot;: { &quot;match&quot;: { &quot;test&quot;: &quot;cat&quot; } }, # 通过 filter 去限制 weight 的作用范围
+        },
+        { # 打分函数3：衰减函数，
+          &quot;weight&quot;: 1.0, #  默认加权 1.0倍
+          &quot;exp&quot;: { # exp指数函数算法
+            &quot;ctime&quot;: { # 时间衰减
+              &quot;origin&quot;: 1649582870, # 当前时间戳
+              &quot;scale&quot;: 4320000, # 50天内衰减
+              &quot;offset&quot;: 800, # 从多长时间后开始衰减
+              &quot;decay&quot;: 0.1 // 最低衰减值
+            }
+          }
+        },
+        { # 打分函数4：使用字段值计算，此方法可以理解成：1.0*log1p(1.2*doc[&#39;weight&#39;].value)
+          &quot;weight&quot;: 1.0, #  默认加权 1.0倍
+          &quot;field_value_factor&quot;: { 
+            &quot;field&quot;: &quot;weight&quot;, # 参与计算的字段
+            &quot;modifier&quot;: &quot;log1p&quot;, # 计算函数，有十来个函数可以查看文档，示例中：log1p(1.2*doc[&#39;weight&#39;].value)，其实和script_score计算差不多，只不过效率更高
+            &quot;factor&quot;: 1.2, # 函数的调节用的参数，factor&gt;1会提升效果，factor&lt;1会降低效果
+            &quot;missing&quot;: 1   # 若 weight 字段不存在，则默认为1
+          }
+        },
+        { # 打分函数5：使用脚本来自定义
+          &quot;script_score&quot;: {
+            &quot;source&quot;: &quot;params.a / Math.pow(params.b, doc[&#39;my-int&#39;].value)&quot;,
+            &quot;params&quot;: {&quot;a&quot;: 5,&quot;b&quot;: 1.2},
+          }
+        }
+      ],
+      &quot;score_mode&quot;: &quot;avg&quot;, # 参数 score_mode 指定多个打分函数如何组合计算出新的分数，avg求平均
+      &quot;min_score&quot;: 2 # 为了排除掉一些分数太低的结果，我们可以通过 min_score 参数设置最小分数阈值
+      &quot;boost_mode&quot;: &quot;multiply&quot;, # 就是把原始的 query_score 与新的 func_score 计算就得到了最终的 _score 分数
+      &quot;max_boost&quot;: 42, # 为了避免新的分数的数值过高，可以通过 max_boost 参数去设置上限
+    }
+  }
+}</code></pre>
+<p><strong>注意：这里在重新打分时，如果都提供了 <code>weight</code> 这个参数，且 <code>score_mode=avg</code>，那么计算最终<code>func_score</code>时，应该是加权平均数；</strong></p>
+<p>例如：打分函数1的weight=2，算出来的值是3，打分函数2的weight=5，算出来的值是2，加权平均数=<code>(2*3+5*2)/(2+5)</code></p>
+<blockquote>
+<p>  相关文章：</p>
+<ul>
+<li><a href="https://segmentfault.com/a/1190000037700644" target="_blank" rel="noopener">ES 自定义打分 Function score query</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1764235" target="_blank" rel="noopener">Elasticsearch探索：相关性打分机制 API</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="全文检索（Full-Text-Queries）"><a href="#全文检索（Full-Text-Queries）" class="headerlink" title="全文检索（Full-Text Queries）"></a><strong>全文检索（Full-Text Queries）</strong></h3><p>全文查询能够搜索分析器（analyzer）<code>分析过后的文本字段</code>，例如内容正文；使用在索引期间应用于字段的相同分析器处理查询字符串；</p>
+<p>在前面的内容中提到：<strong>只有字段的类型是 <code>text</code>的才会使用全文检索，并且全文检索会使用到分析器；</strong></p>
+<p>在我们的 <code>passage</code> 索引中，<code>title</code>和<code>content</code>字段都是<code>text</code>类型；所以，这两个字段的搜索都会使用到ik中文分词器；</p>
+<p>全文检索比起前面的复合检索要简单一点，下面我们分别来看；</p>
+<p>对于下面的语句：</p>
+<pre><code class="javascript">GET /passage/_search
+{
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;title&quot;: {
+        &quot;query&quot;: &quot;测试&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>在请求体中，<code>match</code> 代替了之前的 <code>bool</code>，<code>match</code>是标准的全文索引的查询；</p>
+<p><code>match</code> 后面的字段是要查询的字段名，如果有多个字段，可以列举多个，<code>title</code>字段里的 <code>query</code> 就是要查询的内容；</p>
+<p>此外，还可以在字段中指定分析器，使用 <code>analyzer</code> 关键字，如果不指定，默认就是索引的分析器；</p>
+<p>执行上面的查询，结果如下：</p>
+<pre><code class="json">{
+  ......
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.17426977,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.17426977,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容&quot;,
+          &quot;comment&quot; : &quot;这是一个评论&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.14181954,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试2&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+          &quot;comment&quot; : &quot;这是一个评论2&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;wicds4EB0KdGOS9dT4Pr&quot;,
+        &quot;_score&quot; : 0.10333586,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;自动创建Id测试&quot;,
+          &quot;content&quot; : &quot;这是一个自动创建Id测试内容&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<p>可以看到相应的数据已经检索出来了；</p>
+<p>全文检索也包括了许多类型，下面我们一一来看；</p>
+<br>
+
+<h4 id="match"><a href="#match" class="headerlink" title="match"></a><strong>match</strong></h4><p>match查询是执行全文搜索的标准查询，包括了用于模糊匹配的选项；</p>
+<p>下面是一个 match 查询的标准参数：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match&quot;: { # match关键字
+      &quot;message&quot;: { # （必需，对象）要搜索的字段。
+        &quot;query&quot;: &quot;this is a test&quot;, # 要查询的内容
+        &quot;analyzer&quot;:{...}, # （可选，字符串）分析器
+        &quot;operator&quot;:&quot;&quot;, #（可选，字符串）用于解释query值中文本的布尔逻辑。有效值为：OR AND
+        &quot;fuzziness&quot;:&quot;&quot;, #（可选，字符串）允许匹配的最大编辑距离。
+        &quot;max_expansions&quot;:50, # （可选，整数）查询将扩展到的最大术语数。默认为50
+        &quot;prefix_length&quot;:0, #（可选，整数）用于模糊匹配的起始字符数保持不变。默认为0
+        &quot;fuzzy_transpositions&quot;:0, #可选，布尔值）如果true，模糊匹配的编辑包括两个相邻字符的换位（ab → ba）默认为true
+        &quot;fuzzy_rewrite&quot;:&quot;&quot;, #（可选，字符串）用于重写查询的方法。
+        &quot;lenient&quot;:false #（可选，布尔值）如果，则忽略true基于格式的错误
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="intervals"><a href="#intervals" class="headerlink" title="intervals"></a><strong>intervals</strong></h4><p>为了更加简单灵活的控制查询时字符串在文本中匹配的<code>距离</code>与<code>先后顺序</code>，ES 在 7.0 中引入了intervals query，用户可单一或者组合多个规则集合在某一个特定的<code>text field</code>上进行操作；</p>
+<p>例如：</p>
+<pre><code class="json">GET /passage/_search
+{
+  &quot;query&quot;: {
+    &quot;intervals&quot; : { # intervals查询关键字
+      &quot;content&quot; : { # （必需，规则对象）要搜索的text字段
+        &quot;all_of&quot; : { # 匹配规则，有效规则包括：match、prefix、wildcard、fuzzy、all_of、any_of
+          &quot;ordered&quot; : true, # all_of规则参数（可选，布尔值）如果true，规则产生的间隔应按指定的顺序出现，默认为false。
+          &quot;intervals&quot; : [ # all_of规则参数（必需，规则对象数组）要组合的规则数组。
+            { # 子规则1
+              &quot;match&quot; : {
+                &quot;query&quot; : &quot;一个 测试&quot;,
+                &quot;max_gaps&quot; : 0,
+                &quot;ordered&quot; : true
+              }
+            },
+            { # 子规则2
+              &quot;any_of&quot; : {
+                &quot;intervals&quot; : [
+                  { &quot;match&quot; : { &quot;query&quot; : &quot;2&quot; } },
+                  { &quot;match&quot; : { &quot;query&quot; : &quot;自动&quot; } }
+                ]
+              }
+            }
+          ]
+        },
+        &quot;boost&quot; : 2.0,
+        &quot;_name&quot; : &quot;passage_content&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>结果如下：</p>
+<pre><code class="json">{
+  ......
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.6666666,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;passage&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.6666666,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;测试2&quot;,
+          &quot;content&quot; : &quot;这是一个测试内容2&quot;,
+          &quot;comment&quot; : &quot;这是一个评论2&quot;
+        },
+        &quot;matched_queries&quot; : [
+          &quot;passage_content&quot;
+        ]
+      }
+    ]
+  }
+}</code></pre>
+<br>
+
+<h4 id="match-bool-prefix"><a href="#match-bool-prefix" class="headerlink" title="match_bool_prefix"></a><strong>match_bool_prefix</strong></h4><p>查询处理流程：</p>
+<ul>
+<li>对查询的内容进行分词；</li>
+<li>然后构造bool查询；</li>
+<li>对每个分词(除了最后一个分词)使用term查询；</li>
+<li>但对最后一个分词采用prefix查询；</li>
+</ul>
+<p>例如：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match_bool_prefix&quot;: { # 查询关键词
+      &quot;message&quot;: { # 查询字段
+        &quot;query&quot;: &quot;quick brown f&quot;, # 被查询的词，被分为3个词quick、brown、f。其中quick与brown使用term查询，p使用prefix查询
+        &quot;analyzer&quot;: &quot;keyword&quot; # 指定分析器
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="match-phrase"><a href="#match-phrase" class="headerlink" title="match_phrase"></a><strong>match_phrase</strong></h4><p>match_phrase 可以查询分析文本，并从分析的文本中创建短语查询；</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match_phrase&quot;: {
+      &quot;message&quot;: {
+        &quot;query&quot;: &quot;quick brown fox&quot;,
+        &quot;analyzer&quot;: &quot;my_analyzer&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>在上面的例子中，对于匹配了短语”quick brown fox”的文档，下面的条件必须为true：</p>
+<ul>
+<li>quick、brown和fox必须全部出现在某个字段中；</li>
+<li>brown的位置必须比quick的位置大1；</li>
+<li>fox的位置必须比quick的位置大2；</li>
+</ul>
+<p>如果以上的任何一个条件没有被满足，那么文档就不能被匹配！</p>
+<br>
+
+<h4 id="match-phrase-prefix"><a href="#match-phrase-prefix" class="headerlink" title="match_phrase_prefix"></a><strong>match_phrase_prefix</strong></h4><p>match_phrase_prefix和match_phrase是相同的，除了它允许文本中最后一项使用前缀匹配；</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match_phrase_prefix&quot;: {
+      &quot;message&quot;: {
+        &quot;query&quot;: &quot;quick brown f&quot; # 注意，分词的最后一项f使用前缀匹配
+        &quot;max_expansions&quot;:50, # 这里可以理解前缀查询f需在多少个词内查询到
+        &quot;analyzer&quot;:ik  
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="multi-match"><a href="#multi-match" class="headerlink" title="multi_match"></a><strong>multi_match</strong></h4><p>multi_match 查询提供了一个简便的方法用来对多个字段执行相同的查询；</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;multi_match&quot; : { # 关键字
+      &quot;query&quot;:      &quot;brown fox&quot;, # 查询字符串，经分析器处理后
+      &quot;type&quot;:       &quot;best_fields&quot;, # 处理类型
+      &quot;fields&quot;:     [ &quot;subject&quot;, &quot;message&quot; ], # 待处理的字段列表
+      &quot;tie_breaker&quot;: 0.3 
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="combined-fields"><a href="#combined-fields" class="headerlink" title="combined_fields"></a><strong>combined_fields</strong></h4><p>支持查询多个字段，比如文章的标题、正文、描述，也可以使用<code>^</code>字符提升某个字段的权重，同时也支持通配符；</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;combined_fields&quot; : {
+      &quot;query&quot;:      &quot;database systems&quot;,
+      &quot;fields&quot;:     [ &quot;title&quot;, &quot;abstract&quot;, &quot;body&quot;],
+      &quot;operator&quot;:   &quot;and&quot;
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="query-string"><a href="#query-string" class="headerlink" title="query_string"></a><strong>query_string</strong></h4><p>query_string是使用查询解析器来解析其内容的查询；</p>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax" target="_blank" rel="noopener">官方查询字符串语法</a></li>
+</ul>
+<pre><code class="json">GET /_search
+{
+    &quot;query&quot;: {
+        &quot;query_string&quot; : {
+            &quot;default_field&quot; : &quot;content&quot;, # 默认字符串
+            &quot;query&quot; : &quot;this AND that OR thus&quot; # 查询语法
+        }
+    }
+}</code></pre>
+<br>
+
+<h4 id="simple-query-string"><a href="#simple-query-string" class="headerlink" title="simple_query_string"></a><strong>simple_query_string</strong></h4><p>相比query_string，不支持 AND OR NOT，但会当作字符串处理，Term 之间默认的关系是 OR，可以指定 <code>Operator+</code>替代<code>AND</code>，<code>|</code>替代<code>OR</code>，<code>-</code>替代<code>NOT</code>；</p>
+<br>
+
+<h3 id="Geo-地理查询"><a href="#Geo-地理查询" class="headerlink" title="Geo(地理查询)"></a><strong>Geo(地理查询)</strong></h3><p>Elasticsearch 支持两种类型的地理数据：</p>
+<ul>
+<li><code>geo_point</code>字段，支持纬度/经度；</li>
+<li><code>geo_shape</code>字段，支持点、线、圆、多边形、多多边形等；</li>
+</ul>
+<p>主要包括下面几类：</p>
+<ul>
+<li>geo_bounding_box(矩形内的点的文档)；</li>
+<li>geo_distance(中心点指定距离内的文档)；</li>
+<li>geo_polygon(多边形内的文档)；</li>
+<li>geo_shape(相交、包含、不相交的形状)；</li>
+</ul>
+<br>
+
+<h3 id="Shape-queries-形状查询"><a href="#Shape-queries-形状查询" class="headerlink" title="Shape queries(形状查询)"></a><strong>Shape queries(形状查询)</strong></h3><p>Elasticsearch 支持索引任意二维（非地理空间）几何的能力，这使得绘制虚拟世界、体育场馆、主题公园和 CAD 图表成为可能；</p>
+<p>查询类型为 <code>shape</code>；</p>
+<p>以下是可用空间关系运算符的完整列表：</p>
+<ul>
+<li><p>INTERSECTS：（默认）返回shape字段与查询几何相交的所有文档；</p>
+</li>
+<li><p>DISJOINT：返回其shape字段与查询几何没有共同之处的所有文档；</p>
+</li>
+<li><p>WITHIN：返回其shape字段在查询几何范围内的所有文档；</p>
+</li>
+<li><p>CONTAINS：返回其shape字段包含查询几何的所有文档；</p>
+</li>
+</ul>
+<pre><code class="json">GET /example/_search
+{
+  &quot;query&quot;: {
+    &quot;shape&quot;: {
+      &quot;geometry&quot;: {
+        &quot;shape&quot;: {
+          &quot;type&quot;: &quot;envelope&quot;,
+          &quot;coordinates&quot;: [
+            [
+              1355,
+              5355
+            ],
+            [
+              1400,
+              5200
+            ]
+          ]
+        },
+        &quot;relation&quot;: &quot;within&quot;
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h3 id="Joining-queries-加入查询"><a href="#Joining-queries-加入查询" class="headerlink" title="Joining queries(加入查询)"></a><strong>Joining queries(加入查询)</strong></h3><p>在像 Elasticsearch 这样的分布式系统中执行完整的SQL风格的连接是非常昂贵的；相反，Elasticsearch 提供了两种形式的连接，旨在水平扩展；</p>
+<ul>
+<li>nested(嵌套查询)；</li>
+<li>has_child and has_parent(有子查询，有父查询)；</li>
+</ul>
+<p>例如：</p>
+<pre><code class="json"># 定义nested
+PUT /my-index-000001
+{
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;obj1&quot;: {
+        &quot;type&quot;: &quot;nested&quot; # 这里类型设置为nested
+      }
+    }
+  }
+}
+# 使用nested查询
+GET /my-index-000001/_search
+{
+  &quot;query&quot;: {
+    &quot;nested&quot;: { # 查询关键字
+      &quot;path&quot;: &quot;obj1&quot;,  # 您希望搜索路径嵌套对象
+      &quot;score_mode&quot;: &quot;avg&quot;, # 设置内部children匹配影响parent文档。默认是avg，但是也可以设置为sum、min、max和none
+      &quot;query&quot;: { # 查询语法
+        &quot;bool&quot;: {
+          &quot;must&quot;: [
+            { &quot;match&quot;: { &quot;obj1.name&quot;: &quot;blue&quot; } },
+            { &quot;range&quot;: { &quot;obj1.count&quot;: { &quot;gt&quot;: 5 } } }
+          ]
+        }
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h3 id="Match-All-None-匹配所有"><a href="#Match-All-None-匹配所有" class="headerlink" title="Match All/None(匹配所有)"></a><strong>Match All/None(匹配所有)</strong></h3><p>match_all(匹配所有文档)：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match_all&quot;: { &quot;boost&quot; : 1.2 }
+  }
+}</code></pre>
+<p>match_none(不匹所有文档)：</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;match_none&quot;: {}
+  }
+}</code></pre>
+<br>
+
+<h3 id="Span-queries-范围查询"><a href="#Span-queries-范围查询" class="headerlink" title="Span queries(范围查询)"></a><strong>Span queries(范围查询)</strong></h3><ul>
+<li>span_containing；</li>
+<li>span_field_masking；</li>
+<li>span_first；</li>
+<li>span_multi；</li>
+<li>span_near；</li>
+<li>span_not；</li>
+<li>span_or；</li>
+<li>span_term；</li>
+<li>span_within；</li>
+</ul>
+<br>
+
+<h3 id="Specialized-queries-专业查询"><a href="#Specialized-queries-专业查询" class="headerlink" title="Specialized queries(专业查询)"></a><strong>Specialized queries(专业查询)</strong></h3><ul>
+<li>distance_feature；</li>
+<li>more_like_this(相似度查询)；</li>
+<li>percolate；</li>
+<li>rank_feature；</li>
+<li>script；</li>
+<li>script_score；</li>
+<li>wrapper；</li>
+<li>pinned；</li>
+</ul>
+<br>
+
+<h3 id="Term-level-queries-术语级查询"><a href="#Term-level-queries-术语级查询" class="headerlink" title="Term-level queries(术语级查询)"></a><strong>Term-level queries(术语级查询)</strong></h3><p>根据结构化数据中的<code>精确值</code>查找文档；</p>
+<p><code>结构化数据</code>指的是，例如：日期范围、IP 地址、价格或产品 ID等；</p>
+<p><strong>与全文查询不同，词级查询不分析搜索词，相反，术语级别的查询与存储在字段中的确切术语相匹配；</strong></p>
+<h4 id="exists"><a href="#exists" class="headerlink" title="exists"></a><strong>exists</strong></h4><p>exist表示：包含字段索引值的文档，可以理解成MySQL中的<code>is not null</code></p>
+<pre><code class="json"># 查找指定字段存在的文档
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;exists&quot;: {
+      &quot;field&quot;: &quot;user&quot; # 必须，指定的字段，此字段必须包含值。不存在：null和[]，存在：&quot;&quot;,&quot;-&quot;,[null,&quot;foo&quot;]
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="fuzzy"><a href="#fuzzy" class="headerlink" title="fuzzy"></a><strong>fuzzy</strong></h4><p> fuzzy表示：包含与搜索词相似的词的文档；</p>
+<pre><code class="json"># 为了查找相似的术语，fuzzy查询会在指定的编辑距离内创建一组搜索术语的所有可能变体或扩展。然后查询返回每个扩展的精确匹配。
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;fuzzy&quot;: { 
+      &quot;user.id&quot;: { # 必须，要搜索的字段
+        &quot;value&quot;: &quot;ki&quot;, # 必须，待搜索的值
+        &quot;fuzziness&quot;: &quot;AUTO&quot;, # 允许匹配的最大编辑距离
+        &quot;max_expansions&quot;: 50, # 创建的最大变体数。默认为50
+        &quot;prefix_length&quot;: 0, # 创建扩展时保持不变的起始字符数。默认为0
+        &quot;transpositions&quot;: true, # 是否包括两个相邻字符的换位（ab → ba）。默认为true
+        &quot;rewrite&quot;: &quot;constant_score&quot; # 重写查询的方法。
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="ids"><a href="#ids" class="headerlink" title="ids"></a><strong>ids</strong></h4><p>ids用于查_id值对应的文档；</p>
+<pre><code class="json"># 根据文档的 ID 返回文档。此查询使用存储在_id字段中的文档 ID
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;ids&quot; : {
+      &quot;values&quot; : [&quot;1&quot;, &quot;4&quot;, &quot;100&quot;] # 必需，字符串数组，文档_id数组
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="prefix"><a href="#prefix" class="headerlink" title="prefix"></a><strong>prefix</strong></h4><p>prefix用于查前缀；</p>
+<pre><code class="json"># 包含特定前缀的文档
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;prefix&quot;: { 
+      &quot;user.id&quot;: { # 字段名
+        &quot;value&quot;: &quot;ki&quot; # 待搜索的值
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="range"><a href="#range" class="headerlink" title="range"></a><strong>range</strong></h4><p>range用于范围查询，可以理解为MySQL中的<code>between</code>；</p>
+<pre><code class="json"># 数字或时间范围匹配
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;range&quot;: { # 范围查询
+      &quot;age&quot;: { # 字段名
+        &quot;gte&quot;: 10, # 操作符 gt(&gt;) gte(&gt;=) lt(&lt;) lte(&lt;=)
+        &quot;lte&quot;: 20,
+        &quot;format&quot;: &quot;yyyy/MM/dd&quot;, # 用于转换date查询中值的日期格式
+        &quot;time_zone&quot;: &quot;&quot;, # 指定时区
+        &quot;boost&quot;: 2.0 # 增减查询参数
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="regexp"><a href="#regexp" class="headerlink" title="regexp"></a><strong>regexp</strong></h4><p>regexp表示正则表达式匹配；</p>
+<pre><code class="json"># 正则表达式
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;regexp&quot;: {
+      &quot;user.id&quot;: { # 要搜索的字段
+        &quot;value&quot;: &quot;k.*y&quot;, # 正则表达式，要提高性能，请避免使用通配符模式，例如.*或 .*?+，而没有前缀或后缀
+        &quot;flags&quot;: &quot;ALL&quot;, # 正则表达式启用可选运算符
+        &quot;case_insensitive&quot;: true, # 是否区分大小写的匹配
+        &quot;max_determinized_states&quot;: 10000,
+        &quot;rewrite&quot;: &quot;constant_score&quot; # 重写查询的方法
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="term"><a href="#term" class="headerlink" title="term"></a><strong>term</strong></h4><p>termy 用于精确匹配（除了text类型的字段)，可以理解成MySQL中的 <code>等于(=)</code>；</p>
+<pre><code class="json"># 精确查询
+# 避免term对text字段使用查询
+# 默认情况下，text作为analysis 的一部分，Elasticsearch 会更改字段的值。这会使查找text字段值的精确匹配变得困难。要搜索text字段值，请改用match查询。
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;term&quot;: {
+      &quot;user.id&quot;: { # 字段
+        &quot;value&quot;: &quot;kimchy&quot;, # 值
+        &quot;boost&quot;: 1.0 # 权重
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="terms"><a href="#terms" class="headerlink" title="terms"></a><strong>terms</strong></h4><p>terms 用于精确匹配多个；</p>
+<pre><code class="json"># 可以理解成MySQL中的in查询
+# 同term查询，唯一不同的就是可以设置多个值
+GET /_search
+{
+  &quot;query&quot;: {
+    &quot;terms&quot;: { 
+      &quot;user.id&quot;: [ &quot;kimchy&quot;, &quot;elkbee&quot; ], # 匹配多个值
+      &quot;boost&quot;: 1.0
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="terms-set"><a href="#terms-set" class="headerlink" title="terms_set"></a><strong>terms_set</strong></h4><p>terms_set 用于精确匹配多个，同时可定义最少匹配数；</p>
+<pre><code class="json"># 同terms查询，但可以定义最少匹配数
+GET /job-candidates/_search
+{
+  &quot;query&quot;: {
+    &quot;terms_set&quot;: {
+      &quot;programming_languages&quot;: {
+        &quot;terms&quot;: [ &quot;c++&quot;, &quot;java&quot;, &quot;php&quot; ],
+        &quot;minimum_should_match_field&quot;: &quot;required_matches&quot;,
+        &quot;minimum_should_match_script&quot;: {
+          &quot;source&quot;: &quot;Math.min(params.num_terms, doc[&#39;required_matches&#39;].value)&quot;
+        },
+        &quot;boost&quot;: 1.0
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h4 id="wildcard"><a href="#wildcard" class="headerlink" title="wildcard"></a><strong>wildcard</strong></h4><p>wildcard 表示通配符查询；</p>
+<pre><code class="json">GET /_search
+{
+  &quot;query&quot;: {
+    &quot;wildcard&quot;: {
+      &quot;user.id&quot;: { # 字段
+        &quot;value&quot;: &quot;ki*y&quot;, # 通配符的值
+        &quot;boost&quot;: 1.0, # 权重
+        &quot;rewrite&quot;: &quot;constant_score&quot; # 改变查询行为，专业人士使用，此参数的值会影响搜索性能和相关性
+      }
+    }
+  }
+}</code></pre>
+<br>
+
+<h2 id="一些高级特性"><a href="#一些高级特性" class="headerlink" title="一些高级特性"></a><strong>一些高级特性</strong></h2><h3 id="配置分词查询"><a href="#配置分词查询" class="headerlink" title="配置分词查询"></a><strong>配置分词查询</strong></h3><h4 id="安装分词插件"><a href="#安装分词插件" class="headerlink" title="安装分词插件"></a><strong>安装分词插件</strong></h4><p>对于中文查询而言，我们是没有类似于英文中的空格来拆分单词的，因此需要进行分词；</p>
+<p>一个非常常用的中文分词分析器 ik：</p>
+<ul>
+<li><a href="https://github.com/medcl/elasticsearch-analysis-ik" target="_blank" rel="noopener">https://github.com/medcl/elasticsearch-analysis-ik</a></li>
+</ul>
+<p>并且，ES 提供了很好的插件工具：<code>elasticsearch-plugin</code>，可以一键安装，例如：</p>
+<pre><code class="bash">./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.14.1/elasticsearch-analysis-ik-7.14.1.zip</code></pre>
+<br>
+
+<h4 id="补充知识：ik-max-word和ik-smart的区别"><a href="#补充知识：ik-max-word和ik-smart的区别" class="headerlink" title="补充知识：ik_max_word和ik_smart的区别"></a><strong>补充知识：ik_max_word和ik_smart的区别</strong></h4><p>IK分词器有两种分词模式：ik_max_word和ik_smart模式；</p>
+<ul>
+<li>ik_max_word：会将文本做最细粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为“中华人民共和国、中华人民、中华、华人、人民共和国、人民、共和国、大会堂、大会、会堂等一系列词语；</li>
+<li>ik_smart：会做最粗粒度的拆分，比如会将“中华人民共和国人民大会堂”拆分为中华人民共和国、人民大会堂；</li>
+</ul>
+<p><font color="#f00"><strong>两种分词器使用的最佳实践是：索引时用ik_max_word，在搜索时用ik_smart；</strong></font></p>
+<p><font color="#f00"><strong>即：索引时最大化的将文章内容分词，搜索时更精确的搜索到想要的结果；</strong></font></p>
+<p>举个例子：</p>
+<p>如果用户输入“苹果手机”，此时用户的想法是想搜索出“苹果手机”的商品，而不是苹果其它的商品，也就是商品信息中必须只有<code>苹果手机</code>这个词；</p>
+<p>如果此时使用 ik_smart 和 ik_max_word 都会将苹果手机拆分为苹果和手机两个词，那些只包括“苹果”这个词的信息也被搜索出来了，而目标是搜索只包含<code>苹果手机</code>这个词的信息；</p>
+<p>我们可以将<code>苹果手机</code>添加到自定义词库；</p>
+<p>此后，因为<code>苹果手机</code>是一个词，所以ik_smart就不再细粒度分了；</p>
+<p>因此，可以在索引时使用 ik_max_word，在搜索时用ik_smart；</p>
+<br>
+
+<h4 id="分词索引配置"><a href="#分词索引配置" class="headerlink" title="分词索引配置"></a><strong>分词索引配置</strong></h4><p>在本文开头的例子，建立的 <code>passage</code> 索引就使用了这两种分析器；</p>
+<p>如下所示：</p>
+<pre><code class="json">PUT /x
+{
+  &quot;settings&quot;: {
+    &quot;index&quot;: {
+      &quot;analysis&quot;: {
+        &quot;analyzer&quot;: {
+          &quot;title_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;false&quot;,
+            &quot;tokenizer&quot;: &quot;ik_max_word&quot;
+          },
+          &quot;content_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;true&quot;,
+            &quot;tokenizer&quot;: &quot;ik_smart&quot;
+          }
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;analyzer&quot;: &quot;title_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      },
+      &quot;content&quot;: {
+        &quot;analyzer&quot;: &quot;content_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>在上面的例子中，我们分别为索引 <code>x</code> 中的 <code>title</code> 和 <code>content</code> 字段配置了 <code>ik_max_word</code> 和 <code>ik_smart</code> 分析器；</p>
+<p>至于分词的效果，前面已经看到了，这里不再重复展示；</p>
+<br>
+
+<h3 id="配置同义词"><a href="#配置同义词" class="headerlink" title="配置同义词"></a><strong>配置同义词</strong></h3><p>除了分词之外，有时候我们还需要配置同义词，例如：<code>中国</code> 和 <code>China</code>，当用户输入 <code>China</code> 的时候，也可以搜索到 包含 <code>中国</code> 的内容；</p>
+<p>关于如何配置同义词，下面是官方文档：</p>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analysis-synonym-tokenfilter.html" target="_blank" rel="noopener">https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analysis-synonym-tokenfilter.html</a></li>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analyzer.html" target="_blank" rel="noopener">https://www.elastic.co/guide/en/elasticsearch/reference/7.14/analyzer.html</a></li>
+</ul>
+<p>这里简单说一下，大概分为三步：</p>
+<ul>
+<li>创建同义词词库；</li>
+<li>重启ES加载词库（不支持热更新）；</li>
+<li><strong>创建索引时指定同义词 filter；</strong></li>
+</ul>
+<p>下面分别来看；</p>
+<h4 id="一、创建同义词词库"><a href="#一、创建同义词词库" class="headerlink" title="一、创建同义词词库"></a><strong>一、创建同义词词库</strong></h4><p>找到 ES 安装目录，创建 <code>config/analysis/synonym.txt</code>，该文件用于创建同义词词库；</p>
+<p><font color="#f00"><strong>一行一个同义词，一定要是UTF-8格式！</strong></font></p>
+<p><strong>其中：</strong></p>
+<ul>
+<li><font color="#f00"><strong><code>AA,BB=&gt;CC</code> 这种写法会将 AA 与 BB 都映射到 CC，然后只对CC进行索引；</strong></font></li>
+<li><font color="#f00"><strong>而 <code>AA,BB</code> 这种当文档中存在AA时，不仅仅会索引AA还会索引BB；</strong></font></li>
+</ul>
+<p><font color="#f00"><strong>如果文件中一个词存在于多行，那么对应的近义词会累计，如：</strong></font></p>
+<pre><code>苹果,苹果手机
+苹果,苹果电脑</code></pre><p>此时“苹果”对应的近义词是“苹果手机”、“苹果电脑”，但如果是输入“苹果手机”，那么近义词只有“苹果”；</p>
+<p>将以下字段写入<code>synonym.txt</code>：</p>
+<pre><code>西红柿,番茄=&gt;圣女果
+中国,China</code></pre><br>
+
+<h4 id="二、重启ES加载词库（不支持热更新）"><a href="#二、重启ES加载词库（不支持热更新）" class="headerlink" title="二、重启ES加载词库（不支持热更新）"></a><strong>二、重启ES加载词库（不支持热更新）</strong></h4><p>重启elasticsearch，加载同义词词库；</p>
+<p>对于Docker来说就很容易了，只需要重启ES容器即可！</p>
+<br>
+
+<h4 id="三、创建索引时指定同义词-filter"><a href="#三、创建索引时指定同义词-filter" class="headerlink" title="三、创建索引时指定同义词 filter"></a><strong>三、创建索引时指定同义词 filter</strong></h4><p>创建索引和映射，my_analyzer 为自定义分词器，my_synonym 为自定义过滤器：</p>
+<pre><code class="json">PUT /synonym_test
+{
+  &quot;settings&quot;: {
+    &quot;index&quot;: {
+      &quot;analysis&quot;: {
+        &quot;analyzer&quot;: {
+          &quot;my_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;true&quot;,
+            &quot;tokenizer&quot;: &quot;ik_smart&quot;,
+            &quot;filter&quot;: [
+              &quot;my_synonym&quot;
+            ]
+          }
+        },
+        &quot;filter&quot;: {
+          &quot;my_synonym&quot;: {
+            &quot;type&quot;: &quot;synonym&quot;,
+            &quot;synonyms_path&quot;: &quot;analysis/synonym.txt&quot;
+          }
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;analyzer&quot;: &quot;my_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>其中 <code>synonyms_path</code> 指定第一步配置的索引文件路径；</p>
+<blockquote>
+<p>  <strong>最重要的步骤：mappings 需要指定字段来使用同义词的filter，若未指定将使用默认的filter，搜索时将对同义词不生效！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a><strong>测试</strong></h4><p>创建一个测试文档：</p>
+<pre><code class="json">POST /synonym_test/_doc/1
+{
+  &quot;title&quot;: &quot;我喜欢吃中国的圣女果&quot;
+}</code></pre>
+<p>测试 <code>AA,BB=&gt;CC</code>：</p>
+<pre><code class="json">GET /synonym_test/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;番茄&quot;
+      } 
+    }
+}
+
+GET /synonym_test/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;西红柿&quot;
+      } 
+    }
+}</code></pre>
+<p>以上两个搜索语句都能通过 <strong>番茄</strong> 和 <strong>西红柿</strong> 将 <strong>圣女果</strong> 搜索出来；</p>
+<p>再来测试一下 <code>AA,BB</code>：</p>
+<pre><code class="json">GET /synonym_test/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;中国&quot;
+      } 
+    }
+}
+
+GET /synonym_test/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;China&quot;
+      } 
+    }
+}</code></pre>
+<p>以上两个搜索语句也都能查询到！</p>
+<br>
+
+<h3 id="增加Stopwords"><a href="#增加Stopwords" class="headerlink" title="增加Stopwords"></a><strong>增加Stopwords</strong></h3><p>在搜索的时候，我们还有另一种场景：有些文字或者词语没有什么实际的意义，比如：<code>的</code>、<code>嗯</code>等等；</p>
+<p>这些词如果没有排除掉，用户在搜索时也会影响我们的匹配得分；</p>
+<p>此时，我们可以配置 <code>Stopwords</code> 来跳过对这些词的匹配；</p>
+<p>下面的这个 Github 开源库提供了一些常用的 Stopwords：</p>
+<ul>
+<li><a href="https://dgithub.com/goto456/stopwords" target="_blank" rel="noopener">https://dgithub.com/goto456/stopwords</a></li>
+</ul>
+<p>我们来动手配一下 Stopwords 看看效果；</p>
+<br>
+
+<h4 id="为索引配置Stopwords"><a href="#为索引配置Stopwords" class="headerlink" title="为索引配置Stopwords"></a><strong>为索引配置Stopwords</strong></h4><p>Stopwords 的配置方式和同义词类似；</p>
+<p>这里也可以采用另一种方式，即：在创建索引的时候提供 Stopwords 数组；</p>
+<p>这样可以避免重启ES；</p>
+<p>索引配置如下：</p>
+<pre><code class="json">PUT /stopword_test
+{
+  &quot;settings&quot;: {
+    &quot;index&quot;: {
+      &quot;analysis&quot;: {
+        &quot;analyzer&quot;: {
+          &quot;my_analyzer&quot;: {
+            &quot;type&quot;: &quot;custom&quot;,
+            &quot;use_smart&quot;: &quot;true&quot;,
+            &quot;tokenizer&quot;: &quot;ik_smart&quot;,
+            &quot;filter&quot;: [
+              &quot;my_stopwords&quot;
+            ]
+          }
+        },
+        &quot;filter&quot;: {
+          &quot;my_stopwords&quot;: {
+            &quot;type&quot;: &quot;stop&quot;,
+            &quot;stopwords&quot;: [
+              &quot;的&quot;,
+              &quot;深圳&quot;
+            ]
+          }
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;analyzer&quot;: &quot;my_analyzer&quot;,
+        &quot;type&quot;: &quot;text&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>下面进行测试；</p>
+<br>
+
+<h4 id="测试-1"><a href="#测试-1" class="headerlink" title="测试"></a><strong>测试</strong></h4><p>向索引添加文档：</p>
+<pre><code class="json">POST /stopword_test/_doc/1
+{
+  &quot;title&quot;: &quot;深圳的夏天很热&quot;
+}</code></pre>
+<p>尝试搜索关键字：</p>
+<pre><code class="json">GET /stopword_test/_doc/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;深圳&quot;
+      } 
+    }
+}
+
+GET /stopword_test/_doc/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;的&quot;
+      } 
+    }
+}</code></pre>
+<p>都查不到文档，说明 Stopwords 已生效！</p>
+<p>而查询 <code>夏天</code>：</p>
+<pre><code class="json">GET /stopword_test/_doc/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;title&quot;: &quot;夏天&quot;
+      } 
+    }
+}</code></pre>
+<p>可以查到；</p>
+<br>
+
+<h3 id="配置大小写不敏感"><a href="#配置大小写不敏感" class="headerlink" title="配置大小写不敏感"></a><strong>配置大小写不敏感</strong></h3><p>有时候，我们也需要在查询时忽略大小写；此时，我们只需要使用 <code>lowercase</code> 过滤器即可：</p>
+<p>在自定义的 <code>analysis</code> 里面：</p>
+<ul>
+<li>如果是针对 <code>keyword</code> 类型的字段， analysis 要定义成 <code>normalizer</code>；</li>
+<li>对于 <code>text</code> 类型，则需要为analyzer；</li>
+</ul>
+<p>如下演示的是 <code>normalizer</code> 类型的定义：</p>
+<pre><code class="json">PUT /case_insensitive_test
+{
+  &quot;settings&quot;: {
+    &quot;analysis&quot;: {
+      &quot;normalizer&quot;: {
+        &quot;self_normalizer&quot;: {
+          &quot;type&quot;: &quot;custom&quot;,
+          &quot;filter&quot;: [
+            &quot;lowercase&quot;,
+            &quot;asciifolding&quot;
+          ]
+        }
+      }
+    }
+  },
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;content&quot;: {
+        &quot;type&quot;: &quot;keyword&quot;,
+        &quot;normalizer&quot;: &quot;self_normalizer&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>向ES中新增数据：</p>
+<pre><code class="json">POST /case_insensitive_test/_doc/1
+{
+  &quot;content&quot;: &quot;abc&quot;
+}
+POST /case_insensitive_test/_doc/2
+{
+  &quot;content&quot;: &quot;aBC&quot;
+}
+POST /case_insensitive_test/_doc/3
+{
+  &quot;content&quot;: &quot;Abc&quot;
+}</code></pre>
+<p>此时的对于<code>content</code>，在ES中的值大小写都有的，此时进行查询：</p>
+<pre><code class="json">GET /case_insensitive_test/_search
+{
+    &quot;query&quot;:{
+      &quot;match&quot;: {
+        &quot;content&quot;: &quot;abc&quot;
+      } 
+    }
+}</code></pre>
+<p>三个都是可以查到的，并且分数完全相同：</p>
+<pre><code class="json">{
+  &quot;took&quot; : 0,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.13353139,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;case_insensitive_test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.13353139,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;abc&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;case_insensitive_test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.13353139,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;aBC&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;case_insensitive_test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_score&quot; : 0.13353139,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Abc&quot;
+        }
+      }
+    ]
+  }
+}</code></pre>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>相关文章：</p>
+<ul>
+<li><a href="/tags/ElasticSearch/">tags/ElasticSearch</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/docker-repo/tree/elk-v7.14-single" target="_blank" rel="noopener">https://github.com/JasonkayZK/docker-repo/tree/elk-v7.14-single</a></li>
+<li><a href="https://github.com/medcl/elasticsearch-analysis-ik" target="_blank" rel="noopener">https://github.com/medcl/elasticsearch-analysis-ik</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://blog.51cto.com/u_14286115/3328651" target="_blank" rel="noopener">https://blog.51cto.com/u_14286115/3328651</a></li>
+<li><a href="https://www.jianshu.com/p/438018379339" target="_blank" rel="noopener">https://www.jianshu.com/p/438018379339</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1597951" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1597951</a></li>
+<li><a href="https://hlog.cc/archives/29/" target="_blank" rel="noopener">https://hlog.cc/archives/29/</a></li>
+<li><a href="https://segmentfault.com/a/1190000037700644" target="_blank" rel="noopener">ES 自定义打分 Function score query</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/52543633" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/52543633</a></li>
+<li><a href="https://www.jianshu.com/p/893d35d53356" target="_blank" rel="noopener">https://www.jianshu.com/p/893d35d53356</a></li>
+<li><a href="https://www.jianshu.com/p/60f986726ef3" target="_blank" rel="noopener">https://www.jianshu.com/p/60f986726ef3</a></li>
+<li><a href="https://elasticsearch.cn/question/29" target="_blank" rel="noopener">https://elasticsearch.cn/question/29</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1764235" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1764235</a></li>
+<li><a href="https://www.jianshu.com/p/f668d847f18d" target="_blank" rel="noopener">https://www.jianshu.com/p/f668d847f18d</a></li>
+<li><a href="https://www.cnblogs.com/mikeluwen/p/8031813.html" target="_blank" rel="noopener">es number_of_shards和number_of_replicas</a></li>
+<li><a href="https://somersames.xyz/2020/03/20/ES7%E4%B8%AD%E5%A4%A7%E5%B0%8F%E5%86%99%E4%B8%8D%E6%95%8F%E6%84%9F%E7%9A%84%E6%A8%A1%E7%B3%8A%E5%8C%B9%E9%85%8D/" target="_blank" rel="noopener">https://somersames.xyz/2020/03/20/ES7%E4%B8%AD%E5%A4%A7%E5%B0%8F%E5%86%99%E4%B8%8D%E6%95%8F%E6%84%9F%E7%9A%84%E6%A8%A1%E7%B3%8A%E5%8C%B9%E9%85%8D/</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/06/14/ElasticSearch基本使用总结/" title="https://jasonkayzk.github.io/2022/06/14/ElasticSearch基本使用总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/06/14/ElasticSearch基本使用总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1742451642309"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

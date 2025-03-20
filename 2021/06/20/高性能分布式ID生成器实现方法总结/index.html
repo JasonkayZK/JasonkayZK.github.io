@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>高性能分布式ID生成器实现方法总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在支付、餐饮、酒店等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系统是非常必要的；本文介绍了业界常见的几种分布式ID的生成方法；">
+<meta name="keywords" content="Golang,分布式,ID生成器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="高性能分布式ID生成器实现方法总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/06/20/高性能分布式ID生成器实现方法总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在支付、餐饮、酒店等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系统是非常必要的；本文介绍了业界常见的几种分布式ID的生成方法；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_11.gif">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_12.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_1.jpg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_3.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_10.gif">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_6.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_7.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_8.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_9.png">
+<meta property="og:updated_time" content="2025-03-20T06:20:00.312Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="高性能分布式ID生成器实现方法总结">
+<meta name="twitter:description" content="在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在支付、餐饮、酒店等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系统是非常必要的；本文介绍了业界常见的几种分布式ID的生成方法；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_11.gif">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1742451648243">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?87">
+    
+    <h1>高性能分布式ID生成器实现方法总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年06月20日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8.4k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 35 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/ID生成器/">ID生成器</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/分布式/">分布式</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#高性能分布式ID生成器实现方法总结"><span class="toc-text">高性能分布式ID生成器实现方法总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么要用分布式-ID"><span class="toc-text">为什么要用分布式 ID</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#业务系统对ID号的要求"><span class="toc-text">业务系统对ID号的要求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分布式-ID-实现方案综述"><span class="toc-text">分布式 ID 实现方案综述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SnowFlake方案"><span class="toc-text">SnowFlake方案</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#SnowFlake算法详述"><span class="toc-text">SnowFlake算法详述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ID-缓冲环"><span class="toc-text">ID 缓冲环</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Snowflake-集成分布式部署方式"><span class="toc-text">Snowflake 集成分布式部署方式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Snowflake-中心集群式部署方式"><span class="toc-text">Snowflake 中心集群式部署方式</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Snowflake-直连集群式部署方式"><span class="toc-text">Snowflake 直连集群式部署方式</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Snowflake-算法评价"><span class="toc-text">Snowflake 算法评价</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UUID"><span class="toc-text">UUID</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库生成"><span class="toc-text">数据库生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Leaf方案实现"><span class="toc-text">Leaf方案实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Leaf-segment数据库方案"><span class="toc-text">Leaf-segment数据库方案</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#双buffer优化"><span class="toc-text">双buffer优化</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Leaf高可用容灾"><span class="toc-text">Leaf高可用容灾</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Leaf-Snowflake方案"><span class="toc-text">Leaf-Snowflake方案</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#弱依赖ZooKeeper"><span class="toc-text">弱依赖ZooKeeper</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#解决时钟问题"><span class="toc-text">解决时钟问题</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。如在支付、餐饮、酒店等产品的系统中，数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求；特别一点的如订单、骑手、优惠券也都需要有唯一ID做标识。此时一个能够生成全局唯一ID的系统是非常必要的；</p>
+<p>本文介绍了业界常见的几种分布式ID的生成方法；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/distributed-id-generator-mysql" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/distributed-id-generator-mysql</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="/2020/02/09/UUID生成算法-UUID还是snowflake/">UUID生成算法-UUID还是snowflake</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="高性能分布式ID生成器实现方法总结"><a href="#高性能分布式ID生成器实现方法总结" class="headerlink" title="高性能分布式ID生成器实现方法总结"></a><strong>高性能分布式ID生成器实现方法总结</strong></h2><h3 id="为什么要用分布式-ID"><a href="#为什么要用分布式-ID" class="headerlink" title="为什么要用分布式 ID"></a><strong>为什么要用分布式 ID</strong></h3><p>随着业务数据量的增长，存储在数据库中的数据越来越多，当索引占用的空间超出可用内存大小后，就会通过磁盘索引来查找数据，这样就会极大的降低数据查询速度；</p>
+<p>如何解决这样的问题呢？</p>
+<p>一般我们首先通过分库分表来解决：<font color="#f00"><strong>分库分表后就无法使用数据库自增 ID 来作为数据的唯一编号，那么就需要使用分布式 ID 来做唯一编号了；</strong></font></p>
+<br>
+
+<h3 id="业务系统对ID号的要求"><a href="#业务系统对ID号的要求" class="headerlink" title="业务系统对ID号的要求"></a><strong>业务系统对ID号的要求</strong></h3><p>那业务系统对ID号的要求有哪些呢？</p>
+<ul>
+<li><strong>全局唯一性</strong>：不能出现重复的ID号，既然是唯一标识，这是最基本的要求；</li>
+<li><strong>趋势递增</strong>：在MySQL的InnoDB引擎中使用的是聚集索引，由于多数RDBMS使用B-tree的数据结构来存储索引数据，在主键的选择上面我们应该尽量使用有序的主键保证写入性能；</li>
+<li><strong>单调递增</strong>：保证下一个ID一定大于上一个ID，例如事务版本号、IM增量消息、排序等特殊需求；</li>
+<li><strong>信息安全</strong>：如果ID是连续的，恶意用户的爬取就非常容易了，直接按照顺序下载指定URL即可；如果是订单号就更危险了，竞对可以直接知道我们一天的单量；因此，在一些应用场景下，会需要ID无规则、不规则；</li>
+</ul>
+<p>其中，上述1、2、3分别对应三类不同的场景，3和4需求还是互斥的，无法使用同一个方案满足；</p>
+<p>同时除了对ID号码自身的要求，业务还对<strong>ID号生成系统的可用性要求极高：</strong></p>
+<p>想象一下，如果ID生成系统瘫痪，整个支付、优惠券发券、骑手派单等关键动作都无法执行，这就会带来一场灾难；</p>
+<p>由此总结，对于一个ID生成系统应该做到如下几点：</p>
+<ul>
+<li><strong>平均延迟和TP999延迟都要尽可能低；</strong></li>
+<li><strong>可用性5个9；</strong></li>
+<li><strong>高QPS；</strong></li>
+</ul>
+<br>
+
+<h3 id="分布式-ID-实现方案综述"><a href="#分布式-ID-实现方案综述" class="headerlink" title="分布式 ID 实现方案综述"></a><strong>分布式 ID 实现方案综述</strong></h3><p>目前，关于分布式 ID ，业界主要有以下四种实现方案：</p>
+<ul>
+<li><strong>UUID</strong>：例如使用 JDK 的 <code>UUID#randomUUID()</code>生成 ID；</li>
+<li><strong>Redis或MySQL自增</strong>：Redis可以使用 <code>Jedis#incr(String key)</code> 生成 ID，MySQL可以通过表锁等方式；</li>
+<li><strong>Snowflake 算法</strong>：以时间戳机器号和毫秒内并发组成的 64 位 Long 型 ID；</li>
+<li><strong>Leaf算法</strong>：按照步长从数据库读取一段可用范围的 ID；</li>
+</ul>
+<blockquote>
+<p>  关于UUID和Snowflack见：</p>
+<ul>
+<li><a href="/2020/02/09/UUID生成算法-UUID还是snowflake/">UUID生成算法-UUID还是snowflake</a></li>
+</ul>
+</blockquote>
+<p>我们总结一下这几种方案的特点：</p>
+<table>
+<thead>
+<tr>
+<th><strong>方案</strong></th>
+<th><strong>顺序性</strong></th>
+<th><strong>重复性</strong></th>
+<th><strong>可用性</strong></th>
+<th><strong>部属方式</strong></th>
+<th><strong>可用时间</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UUID</td>
+<td>无序</td>
+<td>通过多位随机字符达到极低重复概率，但<strong>理论上是会重复的</strong></td>
+<td>一直可用</td>
+<td>JDK 直接调用</td>
+<td>永久</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>单调递增</td>
+<td><strong>RDB 持久化模式下，会出现重复</strong></td>
+<td>Redis 宕机后不可用</td>
+<td>Jedis 客户调用</td>
+<td>永久</td>
+</tr>
+<tr>
+<td>Sonwflake</td>
+<td>趋势递增</td>
+<td>不会重复</td>
+<td><strong>发生时钟回拨并且回拨时间超过等待阈值时不可用</strong></td>
+<td>集成部署、集群部署</td>
+<td>69年</td>
+</tr>
+<tr>
+<td>Leaf</td>
+<td>趋势递增</td>
+<td>不会重复</td>
+<td><strong>如果数据库宕机并且获取步长内的 ID 用完后不可用</strong></td>
+<td>集成部署、集群部署</td>
+<td>永久</td>
+</tr>
+</tbody></table>
+<p>其中，前面两种实现方案的用法以及实现大家日常了解较多，就不在此赘述；</p>
+<p>下面对于这些算法我们一个一个来看；</p>
+<br>
+
+<h3 id="SnowFlake方案"><a href="#SnowFlake方案" class="headerlink" title="SnowFlake方案"></a><strong>SnowFlake方案</strong></h3><h4 id="SnowFlake算法详述"><a href="#SnowFlake算法详述" class="headerlink" title="SnowFlake算法详述"></a><strong>SnowFlake算法详述</strong></h4><blockquote>
+<p>  <font color="#f00"><strong>Snowflake 算法可以做到分配好机器号后就可以使用，不依赖任何第三方服务实现本地 ID 生成；</strong></font></p>
+<p>  <font color="#f00"><strong>而依赖的第三方服务越少可用性越高；</strong></font></p>
+</blockquote>
+<p>长整型数字（即 Long 型数字）的十进制范围是 <code>-2^64 ~ 2^64-1</code>；</p>
+<p><font color="#f00"><strong>Snowflake 使用的是无符号长整型数字，即从左到右一共 64 位二进制组成，但其第一位是不使用的；</strong></font></p>
+<p>所以，<strong>在 Snowflake 中使用的是 63bit 的长整型无符号数字，它们由时间戳、机器号、毫秒内并发序列号三个部分组成 ：</strong></p>
+<ul>
+<li><strong>时间戳位</strong>：当前毫秒时间戳与新纪元时间戳的差值；</li>
+<li><strong>机器号</strong>：10 位 2 进制转为十进制是 2^10，即 1024，也就是说最多可以支持有 1024 个机器节点；</li>
+<li><strong>毫秒内并发序列号</strong>：12 位 2 进制转为十进制是 2^12，即 4096，也就是说一毫秒内在一个机器节点上并发的获取 ID，最多可以支持 4096 个并发；</li>
+</ul>
+<blockquote>
+<p>  <strong>① 关于新纪元时间戳</strong></p>
+<p>  所谓<font color="#f00"><strong>新纪元时间戳就是应用开始使用 Snowflake 的时间；</strong></font></p>
+<p>  <font color="#f00"><strong>如果不设置新纪元时间，时间戳默认是从1970年开始计算的，设置了新纪元时间可以延长 Snowflake 的可用时间）；</strong></font></p>
+<p>  <strong>② 关于使用69年</strong></p>
+<p>  <font color="#f00"><strong>这是由于Snowflake 在计算UUID的时，时间戳位需要41位的二进制：</strong></font></p>
+<blockquote>
+<p>  41 位 2 进制转为十进制是<code>2^41</code>；</p>
+<p>  <code>2^41</code> 除以（365 天 * 24 小时 * 3600 秒 * 1000 毫秒），约等于 69年，所以最多可以使用 69 年；</p>
+</blockquote>
+</blockquote>
+<p>下面我们来看一下各个分段的使用情况：</p>
+<table>
+<thead>
+<tr>
+<th><strong>二进制位</strong></th>
+<th><strong>[0]</strong></th>
+<th><strong>[1,41]</strong></th>
+<th><strong>[42,51]</strong></th>
+<th><strong>[52,63]</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>说明</strong></td>
+<td><strong>最高符号位不使用</strong></td>
+<td>一共41位，是<strong>毫秒时间戳</strong></td>
+<td>一共10位，是<strong>机器号位</strong></td>
+<td>一共12位，是<strong>毫秒内并发序列号<br>当前请求的时间戳如果和上一次请求的时间戳相同<br>那么就将毫秒内并发序列号加一</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>  <font color="#f00"><strong>如果我们对IDC划分有需求，还可以将10-bit分5-bit给IDC，分5-bit给工作机器；</strong></font></p>
+<p>  这样就可以表示32个IDC，每个IDC下可以有32台机器，可以根据自身需求定义；</p>
+<p>  <strong>12个自增序列号可以表示2^12个ID，理论上snowflake方案的QPS约为409.6w/s；</strong></p>
+<p>  这种分配方式<strong>可以保证在任何一个IDC的任何一台机器在任意毫秒内生成的ID都是不同的；</strong></p>
+</blockquote>
+<p>那么 Snowflake 生成的 ID 长什么样子呢？</p>
+<p>下面我们来举几个例子（假设我们的时间戳新纪元是：2020-12-31 00:00:00）：</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>机器</th>
+<th>毫秒并发</th>
+<th>十进制 Snowflake ID</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2021-01-01 08:33:11</td>
+<td>1</td>
+<td>10</td>
+<td>491031363588106</td>
+</tr>
+<tr>
+<td>2021-01-02 13:11:12</td>
+<td>2</td>
+<td>25</td>
+<td>923887730696217</td>
+</tr>
+<tr>
+<td>2021-01-03 21:22:01</td>
+<td>3</td>
+<td>1</td>
+<td>1409793654796289</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>  <strong>对于例子①：</strong></p>
+<p>  <code>491031363588106</code> =</p>
+<p>   <code>0_00000000000000110111110100101110010011000_0000000001_000000001010</code></p>
+<ul>
+<li><p><strong>0： 0，不使用；</strong></p>
+</li>
+<li><p><strong>1~41：<code>00000000000000110111110100101110010011000</code> = <code>117071000</code>，表示自<code>2020-12-31 00:00:00</code>起过了<code>117071000</code>毫秒；</strong></p>
+</li>
+<li><p><strong>42~51：<code>0000000001</code>，表示：一号机器；</strong></p>
+</li>
+<li><p><strong>51~63：000000001010：表示一毫秒内有10个请求；</strong></p>
+<p>其他例子类似；</p>
+</li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="ID-缓冲环"><a href="#ID-缓冲环" class="headerlink" title="ID 缓冲环"></a><strong>ID 缓冲环</strong></h4><p>为了提高 <strong>SnowflakeID</strong> 的并发性能和可用性，可以使用 ID 缓冲环（即 ID Buffer Ring）提高并发性；通过使用缓冲环能够充分利用毫秒时间戳，提高可用性提，缓解由时钟回拨导致的服务不可用；</p>
+<p><font color="#f00"><strong>缓冲环是通过定长数组加游标哈希实现的，相比于链表而言，不需要频繁的内存分配；</strong></font></p>
+<p>下面是ID缓冲环的说明：</p>
+<ul>
+<li><strong>在 ID 缓冲环初始化的时候会请求 ID 生成器将 ID 缓冲环填满，当业务需要获取 ID 时，从缓冲环的头部依次获取 ID；</strong></li>
+<li><strong>当 ID 缓冲环中剩余的 ID 数量少于设定的阈值百分比时：比如剩余 ID 数量少于整个 ID 缓冲环的 30% 时，触发异步 ID 填充加载；异步 ID 填充加载会将新生成的 ID 追加到 ID 缓冲环的队列末尾，然后按照哈希算法映射到 ID 缓冲环上；</strong></li>
+<li><strong>另外有一个单独的定时器异步线程来定时填充 ID 缓冲环；</strong></li>
+</ul>
+<p>下面的动画展示了 ID 缓冲环的三个阶段：ID 初始化加载、ID 消费、ID 消费后填充：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_11.gif" alt></p>
+<p>具体流程：</p>
+<ul>
+<li><strong>ID缓冲环初始化加载</strong>：从 ID generator 获取到 ID 填充到 ID 缓冲环，直到 ID 缓冲环被填满；</li>
+<li><strong>ID缓冲环消费</strong>：业务应用从 ID 缓冲环获取 ID；</li>
+<li><strong>异步加载填充 ID 缓冲环</strong>：定时器线程负责异步的从 ID generator 获取 ID 添加到 ID 缓冲队列，同时按照哈希算法映射到 ID 缓冲环上，当 ID 缓冲环被填满时，异步加载填充结束；</li>
+</ul>
+<p>实际业务整体流程：</p>
+<ul>
+<li>客户端业务请求到应用服务器，应用服务器从 ID 缓冲环获取 ID：<ul>
+<li>如果 ID 缓冲环内空了那么抛出服务不可用；</li>
+<li>如果 ID 缓冲环内存有 ID 那么就消费一个 ID ；</li>
+</ul>
+</li>
+<li>同时，在消费 ID 缓冲环中的 ID 时，如果发现 ID 缓冲环中存留的 ID 数量少于整个 ID 缓冲环容量的 30% 时触发异步加载填充 ID 缓冲环；</li>
+</ul>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_12.png" alt></p>
+<br>
+
+<h4 id="Snowflake-集成分布式部署方式"><a href="#Snowflake-集成分布式部署方式" class="headerlink" title="Snowflake 集成分布式部署方式"></a><strong>Snowflake 集成分布式部署方式</strong></h4><p>Snowflake <strong>通常可以使用三种不同的部署方式来部署：</strong></p>
+<ul>
+<li><font color="#f00"><strong>集成分布式部署方式；</strong></font></li>
+<li><font color="#f00"><strong>中心集群式部署方式；</strong></font></li>
+<li><font color="#f00"><strong>直连集群式部署方式；</strong></font></li>
+</ul>
+<p>下面我们来分别介绍一下这几种部署方式；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>当使用 ID 的应用节点比较少时，比如 200 个节点以内，适合使用集成分布式部署方式；</strong></font></p>
+</blockquote>
+<p><font color="#f00"><strong>每个应用节点在启动的时候决定了机器号后，运行时不依赖任何第三方服务，在本地使用时间戳、机器号、以及毫秒内并发序列号生成 ID；</strong></font></p>
+<p>下图展示的是应用服务器通过引入 jar 包的方式实现获取分布式 ID 的过程：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_1.jpg" alt></p>
+<p>每一个使用分布式 ID 的应用服务器节点都会分配一个拓扑网络内唯一的机器号，这个机器号的管理存放在 MySQL 或者 ZooKeeper 上；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>当拓扑网络内使用分布式 ID 的机器节点很多，例如超过 1000 个机器节点时，使用集成部署的分布式 ID 就不合适了，因为机器号位一共是 10 位，即最多支持 1024 个机器号；</strong></font></p>
+<p>  <font color="#f00"><strong>因此，当机器节点超过 1000 个机器节点时，可以使用下面要介绍的中心集群式部署方式；</strong></font></p>
+</blockquote>
+<br>
+
+<h5 id="Snowflake-中心集群式部署方式"><a href="#Snowflake-中心集群式部署方式" class="headerlink" title="Snowflake 中心集群式部署方式"></a><strong>Snowflake 中心集群式部署方式</strong></h5><p><font color="#f00"><strong>中心集群式部署需要新增用来做请求转发的 ID 网关，比如：使用 nginx 反向代理（即下图中的 ID REST API Gateway）；</strong></font></p>
+<p>如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_2.png" alt></p>
+<blockquote>
+<p>  <font color="#f00"><strong>机器号的分配只是分配给下图中的 ID Generator node 节点，应用节点是不需要分配机器号的；</strong></font></p>
+</blockquote>
+<p><font color="#f00"><strong>使用 ID 网关组网后，应用服务器通过 HTTP 或 RPC 请求 ID 网关获取分布式 ID</strong></font>，这样相比于上面的集成分布式部署方式，就可以支撑更多的应用节点使用分布式 ID 了；</p>
+<blockquote>
+<p>  <strong>使用中心集群式部署方式需要引入新的 nginx 反向代理做网关，增加了系统的复杂性，降低了服务的可用性；</strong></p>
+</blockquote>
+<p>我们下面再介绍一种不需要引入 nginx 又可以支持超过 1000 个应用节点的直连集群部署方式；</p>
+<br>
+
+<h5 id="Snowflake-直连集群式部署方式"><a href="#Snowflake-直连集群式部署方式" class="headerlink" title="Snowflake 直连集群式部署方式"></a><strong>Snowflake 直连集群式部署方式</strong></h5><p>相比于中心集群部署方式，<strong>直连集群部署方式可以去掉中间的 ID 网关，提高服务的可用性；</strong></p>
+<p>在使用 ID 网关的时候，我们<strong>需要把 ID generator node 的服务地址配置在 ID 网关中（如Nginx）；</strong></p>
+<p>而在使用直连集群式部署方式时，ID generator node 的服务地址可以配置在应用服务器本地配置文件中，或者配置在配置中心；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_3.png" alt></p>
+<p>应用服务器获取到服务地址列表后，需要实现服务直连 ID生成器来获取 ID；</p>
+<br>
+
+<h4 id="Snowflake-算法评价"><a href="#Snowflake-算法评价" class="headerlink" title="Snowflake 算法评价"></a><strong>Snowflake 算法评价</strong></h4><p>Snowflake 算法的优缺点是：</p>
+<p>优点：</p>
+<ul>
+<li><strong>毫秒数在高位，自增序列在低位，整个ID都是趋势递增的；</strong></li>
+<li><strong>不依赖数据库等第三方系统，以服务的方式部署，稳定性更高，生成ID的性能也是非常高；</strong></li>
+<li><strong>可以根据自身业务特性分配bit位，非常灵活；</strong></li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>强依赖机器时钟，如果机器上时钟回拨，会导致发号重复或者服务会处于不可用状态；</li>
+</ul>
+<p><font color="#f00"><strong>由于Snowflake 算法是强依赖时间戳的算法，因此一旦发生时钟回拨就会产生 ID 重复的问题；</strong></font></p>
+<p>那么时钟回拨是怎么产生的，我们又需要怎么去解决这个问题呢？</p>
+<p><strong>例如：NTP（Network Time Protocol）服务自动校准可能导致时钟回拨；</strong></p>
+<blockquote>
+<p>  我们身边的每一台计算机都有自己本地的时钟，这个时钟是根据 CPU 的晶振脉冲计算得来的；</p>
+<p>  然而随着运行时间的推移，这个时间和世界时间的偏差会越来越大；</p>
+<p>  那么 NTP 就是用来做时钟校准的服务；</p>
+</blockquote>
+<p>一般情况下发生时钟回拨的概率也非常小，因为：</p>
+<p><font color="#f00"><strong>一旦出现本地时间相对于世界时间需要校准，但时钟偏差值小于 STEP 阈值（默认128毫秒）时，计算机会选择以 SLEW 的方式进行同步，即以 0.5 毫秒/秒的速度差调整时钟速度，保证本地时钟是一直连续向前的，不产生时钟回拨，直到本地时钟和世界时钟对齐；</strong></font></p>
+<p>然而如果本地时钟和世界时钟相差大于 STEP 阈值时，就会发生时钟回拨！</p>
+<p>这个 STEP 阈值是可以修改的，但是修改的越大，在 SLEW 校准的时候需要花费的校准时间就越长，例如 STEP 阈值设置为 10 分钟，即本地时钟与世界时钟偏差在 10 分钟以内时都会以 SLEW 的方式进行校准，这样最多会需要 14 天才会完成校准！</p>
+<p><font color="#f00"><strong>为了避免时钟回拨导致重复 ID 的问题，可以使用 128 毫秒的 STEP 阈值，同时在获取 SnowflakeID 的时候与上一次的时间戳相比，判断时钟回拨是否在 1 秒钟以内，如果在 1 秒钟以内，那么等待 1 秒钟，否则服务不可用，这样可以解决时钟回拨 1 秒钟的问题</strong></font></p>
+<blockquote>
+<p>  <strong>Snowflake 算法应用举例：MongoDB ObjectID</strong></p>
+<p>  <a href="https://docs.mongodb.com/manual/reference/method/ObjectId/#description" target="_blank" rel="noopener">MongoDB官方文档-ObjectID</a>可以算作是和snowflake类似方法：</p>
+<p>  通过<code>时间+机器码+pid+inc</code>共12个字节，通过4+3+2+3的方式最终标识成一个24长度的十六进制字符；</p>
+</blockquote>
+<br>
+
+<h3 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a><strong>UUID</strong></h3><p>UUID(Universally Unique Identifier)的<strong>标准型式包含32个16进制数字，以连字号分为五段，形式为8-4-4-4-12的36个字符；</strong></p>
+<p>示例：<code>550e8400-e29b-41d4-a716-446655440000</code>；</p>
+<blockquote>
+<p>  到目前为止业界一共有5种方式生成UUID，详情见IETF发布的UUID规范：</p>
+<ul>
+<li><a href="http://www.ietf.org/rfc/rfc4122.txt" target="_blank" rel="noopener">A Universally Unique IDentifier (UUID) URN Namespace</a>。</li>
+</ul>
+</blockquote>
+<p>优点：</p>
+<ul>
+<li>性能非常高：本地生成，没有网络消耗；</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>不易于存储：UUID太长，16字节128位，通常以36长度的字符串表示，很多场景不适用；</li>
+<li>信息不安全：基于MAC地址生成UUID的算法可能会造成MAC地址泄露（这个漏洞曾被用于寻找梅丽莎病毒制作者的位置！）；</li>
+<li>ID作为主键时在特定的环境会存在一些问题，比如做DB主键的场景下，UUID就非常不适用：</li>
+</ul>
+<p>其他说明：</p>
+<p><font color="#f00"><strong>① MySQL官方有明确的建议主键要尽量越短越好，36个字符长度的UUID不符合要求；</strong></font></p>
+<pre><code>All indexes other than the clustered index are known as secondary indexes. In InnoDB, each record in a secondary index contains the primary key columns for the row, as well as the columns specified for the secondary index. InnoDB uses this primary key value to search for the row in the clustered index.*** If the primary key is long, the secondary indexes use more space, so it is advantageous to have a short primary key***.</code></pre><p><font color="#f00"><strong>② 对MySQL索引不利：如果作为数据库主键，在InnoDB引擎下，UUID的无序性可能会引起数据位置频繁变动，严重影响性能；</strong></font></p>
+<br>
+
+<h3 id="数据库生成"><a href="#数据库生成" class="headerlink" title="数据库生成"></a><strong>数据库生成</strong></h3><p>数据库生成可以采用Redis、MySQL等数据库生成ID；</p>
+<p>以MySQL举例，利用给字段设置<code>auto_increment_increment</code>和<code>auto_increment_offset</code>来保证ID自增，每次业务使用下列SQL读写MySQL得到ID号；</p>
+<pre><code class="mysql">begin;
+REPLACE INTO Tickets64 (stub) VALUES (&#39;a&#39;);
+SELECT LAST_INSERT_ID();
+commit;</code></pre>
+<p>这种方案的优缺点如下：</p>
+<p>优点：</p>
+<ul>
+<li>非常简单，利用现有数据库系统的功能实现，成本小，可以由专业DBA维护；</li>
+<li>ID号单调自增，可以实现一些对ID有特殊要求的业务；</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>强依赖DB，当DB异常时整个系统不可用，属于致命问题；配置主从复制可以尽可能的增加可用性，但是数据一致性在特殊情况下难以保证；同时，主从切换时的不一致可能会导致重复发号；</li>
+<li>ID发号性能瓶颈限制在单台MySQL的读写性能；</li>
+</ul>
+<p>对于MySQL的性能问题，可用如下方案解决：</p>
+<p><strong>在分布式系统中我们可以多部署几台机器，每台机器设置不同的初始值，且步长和机器数相等；</strong></p>
+<p>比如有两台机器，设置步长step为2，TicketServer1的初始值为1（1，3，5，7，9，11…）、TicketServer2的初始值为2（2，4，6，8，10…）；</p>
+<blockquote>
+<p>  这是Flickr团队在2010年撰文介绍的一种主键生成策略：</p>
+<ul>
+<li><a href="http://code.flickr.net/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/" target="_blank" rel="noopener">Ticket Servers: Distributed Unique Primary Keys on the Cheap </a></li>
+</ul>
+</blockquote>
+<p>如下所示，为了实现上述方案分别设置两台机器对应的参数，TicketServer1从1开始发号，TicketServer2从2开始发号，两台机器每次发号之后都递增2：</p>
+<pre><code class="sql">TicketServer1:
+auto-increment-increment = 2
+auto-increment-offset = 1
+
+TicketServer2:
+auto-increment-increment = 2
+auto-increment-offset = 2</code></pre>
+<p>假设我们要部署N台机器，则步长需设置为N，并且每台的初始值依次为<code>0,1,2…,N-1</code>；</p>
+<p>那么整个架构就变成了如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_4.png" alt></p>
+<p>这种架构貌似能够满足性能的需求，但有以下几个缺点：</p>
+<p><strong>① 系统水平扩展比较困难；</strong></p>
+<p>比如定义好了步长和机器台数之后，如果要添加机器该怎么做？</p>
+<p>假设现在只有一台机器发号是1,2,3,4,5（步长是1），这个时候需要扩容机器一台；可以这样做：</p>
+<p>首先，把第二台机器的初始值设置得比第一台超过很多，比如：14（假设在扩容时间之内第一台不可能发到14），同时设置步长为2，那么这台机器下发的号码都是14以后的偶数；</p>
+<p>然后，摘掉第一台，把ID值保留为奇数，比如7，然后修改第一台的步长为2，让它符合我们定义的号段标准，对于这个例子来说就是让第一台以后只能产生奇数；</p>
+<p>扩容方案看起来复杂吗？貌似还好，但是现在想象一下如果我们线上有100台机器，这个时候要扩容该怎么做？简直是噩梦。所以系统水平扩展方案复杂难以实现；</p>
+<p><strong>② ID没有了单调递增的特性</strong></p>
+<p>ID只能趋势递增，这个缺点对于一般业务需求不是很重要，可以容忍；</p>
+<p><strong>③ 数据库性能</strong></p>
+<p>数据库压力还是很大，每次获取ID都得读写一次数据库，只能靠堆机器来提高性能；</p>
+<br>
+
+<h3 id="Leaf方案实现"><a href="#Leaf方案实现" class="headerlink" title="Leaf方案实现"></a><strong>Leaf方案实现</strong></h3><blockquote>
+<p>  Leaf 这个名字是来自德国哲学家、数学家莱布尼茨的一句话： </p>
+<p>  There are no two identical leaves in the world &gt; “世界上没有两片相同的树叶”</p>
+</blockquote>
+<p>综合对比上述几种方案，每种方案都不完全符合我们的要求；</p>
+<p>因此Leaf分别在上述第一种和第三种方案上做了相应的优化，实现了Leaf-snowflake和Leaf-segment方案；</p>
+<h4 id="Leaf-segment数据库方案"><a href="#Leaf-segment数据库方案" class="headerlink" title="Leaf-segment数据库方案"></a><strong>Leaf-segment数据库方案</strong></h4><p>第一种Leaf-segment方案，在使用数据库的方案上，做了如下改变：</p>
+<ul>
+<li>由于原方案每次获取ID都得读写一次数据库，造成数据库压力大，<font color="#f00"><strong>改为利用proxy server批量获取，并且每次获取一个segment(step决定大小)号段的值；用完之后再去数据库获取新的号段，可以大大的减轻数据库的压力；</strong></font></li>
+<li><font color="#f00"><strong>各个业务不同的发号需求用app_tag字段来区分，每个app_tag的ID获取相互隔离，互不影响；如果以后有性能需求需要对数据库扩容，不需要上述描述的复杂的扩容操作，只需要对app_tag分库分表就行；</strong></font></li>
+</ul>
+<p>数据库表设计如下：</p>
+<p>schema.sql</p>
+<pre><code class="mysql">CREATE TABLE `segments`
+(
+    `app_tag`     VARCHAR(32) NOT NULL,
+    `max_id`      BIGINT      NOT NULL,
+    `step`        BIGINT      NOT NULL,
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`app_tag`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+    COMMENT =&#39;业务ID池&#39;;
+
+INSERT INTO segments(`app_tag`, `max_id`, `step`)
+VALUES (&#39;test_business&#39;, 0, 100000);</code></pre>
+<p>重要字段说明：</p>
+<ul>
+<li>app_tag：用来区分业务；</li>
+<li>max_id表示：该app_tag目前所被分配的ID号段的最大值；</li>
+<li>step表示：每次分配的号段长度；</li>
+</ul>
+<p>原来获取ID每次都需要写数据库，现在只需要把step设置得足够大，比如1000；那么只有当1000个号被消耗完了之后才会去重新读写一次数据库，读写数据库的频率从1减小到了1/step；</p>
+<p>大致架构如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_5.png" alt></p>
+<p>test_tag在第一台Leaf机器上是 <code>1~1000</code> 的号段，当这个号段用完时，会去加载另一个长度为<code>step=1000</code>的号段；</p>
+<p>假设另外两台号段都没有更新，这个时候第一台机器新加载的号段就应该是3001~4000；</p>
+<p>同时数据库对应的app_tag这条数据的max_id会从3000被更新成4000，更新号段的SQL语句如下：</p>
+<pre><code class="mysql">Begin
+UPDATE table SET max_id=max_id+step WHERE app_tag=xxx
+SELECT tag, max_id, step FROM table WHERE app_tag=xxx
+Commit</code></pre>
+<p>这种模式有以下优缺点：</p>
+<p>优点：</p>
+<ul>
+<li><strong>高性能</strong>：Leaf服务可以很方便的线性扩展，性能完全能够支撑大多数业务场景；</li>
+<li><strong>趋势递增</strong>：ID号码是趋势递增的 8 Byte 的64位数字，满足上述数据库存储的主键要求；</li>
+<li><strong>容灾性高</strong>：Leaf服务内部有号段缓存，即使DB宕机，短时间内Leaf仍能正常对外提供服务；</li>
+<li><strong>方便迁移</strong>：可以自定义max_id的大小，非常方便业务从原有的ID方式上迁移过来；</li>
+<li><strong>不依赖时间戳</strong>：ID 生成不依赖时间戳，ID 生成初始值可以从 0 开始逐渐增加；</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li><strong>ID号码不够随机，能够泄露发号数量的信息，不太安全；</strong></li>
+<li>当服务重启时需要将最大 ID 值增加步长，频繁重启的话就会浪费掉很多分段；</li>
+<li>TP999数据波动大，当号段使用完之后还是会hang在更新数据库的I/O上，此时数据会出现偶尔的尖刺；</li>
+<li><strong>DB宕机会造成整个系统不可用；</strong></li>
+</ul>
+<br>
+
+<h5 id="双buffer优化"><a href="#双buffer优化" class="headerlink" title="双buffer优化"></a><strong>双buffer优化</strong></h5><p>对于第二个缺点，可以对Leaf-Segment做一些优化，简单的说就是：</p>
+<p>上述Leaf算法<strong>取号段的时机是在号段消耗完的时候进行的</strong>，也就意味着号段临界点的ID下发时间取决于下一次从DB取回号段的时间，并且在这期间进来的请求也会因为DB号段没有取回来，导致线程阻塞；</p>
+<p>如果请求DB的网络和DB的性能稳定，这种情况对系统的影响是不大的，但是假如取DB的时候网络发生抖动，或者DB发生慢查询就会导致整个系统的响应时间变慢；</p>
+<p>为此，我们<strong>希望DB取号段的过程能够做到无阻塞，不需要在DB取号段的时候阻塞请求线程</strong>，即<font color="#f00"><strong>当号段消费到某个点时就异步的把下一个号段加载到内存中。而不需要等到号段用尽的时候才去更新号段</strong></font>，这样做就可以很大程度上的降低系统的TP999指标；</p>
+<p>双buffer优化的主要原理为：<font color="#f00"><strong>设计两个缓存桶：currentBufferBucket 和 nextBufferBucket，每个桶都存放一个步长这么多的 ID，如果当前缓存桶的 ID 用完了，那么就将下一个缓存桶设置为当前缓存桶；</strong></font></p>
+<p>下面的动画展示了双桶缓存初始化、异步加载预备桶和将预备桶切换成当前桶的全过程：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_10.gif" alt></p>
+<ul>
+<li><strong>初始化当前的缓存桶</strong>：即更新<code>max = max + step</code>，然后获取更新后的 max 值；比如：步长是 1000，更新后的 max 值是 1000，那么<code>桶的高度就是步长即 1000</code>，<code>桶 min = max - step + 1 = 1，max = 1000</code>；</li>
+<li><strong>加载新桶</strong>：当前缓存桶的 ID 剩余不足 20% 的时候（其他条件也可以）可以加载下一个缓存桶，即更新 <code>max = max + step</code>，然后获取更新后的 max 值，此时更新后的 max 值是 2000，<code>min = max - step + 1 = 1001， max = 2000</code>；</li>
+<li><strong>切换桶</strong>：如果当前桶的 ID 全部用完了，那么就将下一个 ID 缓存桶设置为当前桶；</li>
+</ul>
+<p>具体详细实现如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_6.png" alt></p>
+<p><strong>优化采用双buffer的方式，Leaf服务内部有两个号段缓存区segment：</strong></p>
+<ul>
+<li><font color="#f00"><strong>在当前号段已下发10%时，如果下一个号段未更新，则另启一个更新线程去更新下一个号段；</strong></font></li>
+<li><font color="#f00"><strong>当前号段全部下发完后，如果下个号段准备好了则切换到下个号段为当前segment接着下发，循环往复；</strong></font></li>
+</ul>
+<p>在设计上：</p>
+<ul>
+<li><font color="#f00"><strong>每个app-tag都有消费速度监控，通常推荐segment长度设置为服务高峰期发号QPS的600倍（10分钟），这样即使DB宕机，Leaf仍能持续发号10-20分钟不受影响；</strong></font></li>
+<li><font color="#f00"><strong>每次请求来临时都会判断下个号段的状态，从而更新此号段，所以偶尔的网络抖动不会影响下个号段的更新；</strong></font></li>
+</ul>
+<br>
+
+<h5 id="Leaf高可用容灾"><a href="#Leaf高可用容灾" class="headerlink" title="Leaf高可用容灾"></a><strong>Leaf高可用容灾</strong></h5><p>对于第三点<code>DB可用性</code>问题，目前可以采用一主两从的方式，同时分机房部署，Master和Slave之间采用<strong>半同步方式</strong>同步数据；同时可以使用Atlas数据库中间件(已开源，改名为<a href="http://tech.meituan.com/dbproxy-introduction.html" target="_blank" rel="noopener">DBProxy</a>)做主从切换；</p>
+<p>当然这种方案在一些情况会退化成异步模式，甚至在<strong>非常极端</strong>情况下仍然会造成数据不一致的情况，但是出现的概率非常小；</p>
+<p>如果你的系统要保证100%的数据强一致，可以选择使用<code>类Paxos算法</code>实现的强一致MySQL方案，如MySQL中提供的<a href="https://dev.mysql.com/doc/refman/5.7/en/group-replication.html" target="_blank" rel="noopener">MySQL Group Replication</a>；</p>
+<p>但是运维成本和精力都会相应的增加，根据实际情况选型即可；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_7.png" alt></p>
+<p>同时Leaf服务可以分IDC部署：服务调用的时候，可以配置负载均衡算法优先调用同机房的Leaf服务；只有在该IDC内Leaf服务不可用的时候才会选择其他机房的Leaf服务；</p>
+<p>同时还可以搭配服务治理：提供针对服务的过载保护、一键截流、动态流量分配等对服务的保护措施；</p>
+<br>
+
+<h4 id="Leaf-Snowflake方案"><a href="#Leaf-Snowflake方案" class="headerlink" title="Leaf-Snowflake方案"></a><strong>Leaf-Snowflake方案</strong></h4><p>Leaf-Segment方案可以生成趋势递增的ID，同时<strong>ID号是可计算的</strong>，不适用于订单ID生成场景；</p>
+<p><strong>比如：竞争对手在两天中午12点分别下单，通过订单id号相减就能大致计算出公司一天的订单量，这个是不能忍受的；</strong></p>
+<p>面对这一问题，可以使用 Leaf-Snowflake方案；</p>
+<p><strong>Leaf-Snowflake方案完全沿用Snowflake方案的bit位设计，即：<code>1+41+10+12</code>的方式组装ID号；</strong></p>
+<p>对于10bit位的workerID的分配：</p>
+<ul>
+<li><font color="#f00"><strong>当服务集群数量较小的情况下，完全可以手动配置；</strong></font></li>
+<li><font color="#f00"><strong>Leaf服务规模较大，动手配置成本太高；所以可以使用Zookeeper持久顺序节点的特性自动对snowflake节点配置wokerID；</strong></font></li>
+</ul>
+<p>Leaf-Snowflake是按照下面几个步骤启动的：</p>
+<ol>
+<li>启动Leaf-snowflake服务，连接Zookeeper，在leaf_forever父节点下检查自己是否已经注册过（是否有该顺序子节点）；</li>
+<li>如果有注册过直接取回自己的workerID（zk顺序节点生成的int类型ID号），启动服务；</li>
+<li>如果没有注册过，就在该父节点下面创建一个持久顺序节点，创建成功后取回顺序号当做自己的workerID号，启动服务；</li>
+</ol>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_8.png" alt></p>
+<br>
+
+<h5 id="弱依赖ZooKeeper"><a href="#弱依赖ZooKeeper" class="headerlink" title="弱依赖ZooKeeper"></a><strong>弱依赖ZooKeeper</strong></h5><p><font color="#f00"><strong>除了服务每次会去ZK拿数据以外，服务也会在本机文件系统缓存一个workerID文件；</strong></font></p>
+<p><font color="#f00"><strong>当ZooKeeper出现问题，恰好机器出现问题需要重启时，能保证服务能够正常启动；</strong></font></p>
+<p><font color="#f00"><strong>这样做到了对三方组件的弱依赖，一定程度上提高了SLA；</strong></font></p>
+<br>
+
+<h5 id="解决时钟问题"><a href="#解决时钟问题" class="headerlink" title="解决时钟问题"></a><strong>解决时钟问题</strong></h5><p>因为Leaf-Snowflake方案仍然需要依赖时间，因此如果机器的时钟发生了回拨，那么还是会有可能生成重复的ID号；</p>
+<p>此时还是需要解决时钟回退的问题；</p>
+<p>问题可以通过在ZK中写入自身系统实际来解决，解决方案如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/distributed_id_9.png" alt></p>
+<p>参见上图整个启动流程图，服务启动时首先检查自己是否写过ZooKeeper的leaf_forever节点：</p>
+<ol>
+<li>若写过，则用自身系统时间与<code>leaf_forever/${self}</code>节点记录时间做比较，若小于<code>leaf_forever/${self}</code>时间则认为机器时间发生了大步长回拨，服务启动失败并报警；</li>
+<li>若未写过，证明是新服务节点，直接创建持久节点<code>leaf_forever/${self}</code>并写入自身系统时间，接下来综合对比其余Leaf节点的系统时间来<strong>判断自身系统时间是否准确</strong>，具体做法是：<ul>
+<li>取<code>leaf_temporary</code>下的所有临时节点(所有运行中的Leaf-Snowflake节点)的服务IP：Port，然后通过RPC请求得到所有节点的系统时间，并计算<code>sum(time)/nodeSize</code>；</li>
+<li>若<code>abs(自身系统时间-sum(time)/nodeSize ) &lt; 阈值</code>，认为当前系统时间准确，正常启动服务，同时写临时节点<code>leaf_temporary/${self}</code>维持租约；</li>
+<li>否则认为本机系统时间发生大步长偏移，启动失败并报警；</li>
+</ul>
+</li>
+<li>每隔一段时间(3s)上报自身系统时间写入<code>leaf_forever/${self}</code>；</li>
+</ol>
+<p>由于强依赖时钟，对时间的要求比较敏感，因此在<strong>机器工作时NTP同步也会造成秒级别的回退，建议可以直接关闭NTP同步；</strong></p>
+<p>要么在时钟回拨的时候直接不提供服务直接返回ERROR_CODE，等时钟追上即可；</p>
+<p><strong>或者做一层重试，然后上报报警系统，更或者是发现有时钟回拨之后自动摘除本身节点并报警</strong>，如下：</p>
+<pre><code class="java"> //发生了回拨，此刻时间小于上次发号时间
+ if (timestamp &lt; lastTimestamp) {
+     long offset = lastTimestamp - timestamp;
+     if (offset &lt;= 5) {
+         try {
+             //时间偏差大小小于5ms，则等待两倍时间
+             wait(offset &lt;&lt; 1);//wait
+             timestamp = timeGen();
+             if (timestamp &lt; lastTimestamp) {
+                 //还是小于，抛异常并上报
+                 throwClockBackwardsEx(timestamp);
+             }    
+         } catch (InterruptedException e) {  
+             throw  e;
+         }
+     } else {
+         //throw
+         throwClockBackwardsEx(timestamp);
+     }
+ }
+ //分配ID</code></pre>
+<br>
+
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h3><p>本文主要介绍了分布式 ID 的实现方案，并详细介绍了 Snowflake 方案和Leaf方案，以及针对这两种方案的优化方案；</p>
+<p>我们再简单总结一下这两个方案：</p>
+<ul>
+<li>在高并发场景下生成大量的分布式 ID，适合使用 Snowflake 算法方案，毫秒内并发序列为2^12=4096，单机 QPS 支持高达 4 百万，但是需要对 ID 生成器的机器号进行管理；</li>
+<li>使用Leaf方式生成 ID 就可以免去对机器号的管理，但是需要合理的设置步长，如果步长太短满足不了并发需求，如果步长太长又会造成分段的过渡浪费；</li>
+</ul>
+<blockquote>
+<p>  <strong>扩展：</strong></p>
+<p>  本文主要参考了美团点评的文章：<a href="https://tech.meituan.com/MT_Leaf.html" target="_blank" rel="noopener">Leaf——美团点评分布式ID生成系统</a></p>
+<p>  而Leaf在美团点评公司内部服务包含金融、支付交易、餐饮、外卖、酒店旅游、猫眼电影等众多业务线；</p>
+<p>  目前Leaf的性能在4C8G的机器上QPS能压测到近5w/s，TP999 1ms，已经能够满足大部分的业务的需求，每天提供亿数量级的调用量！</p>
+</blockquote>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h2><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/distributed-id-generator-mysql" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/distributed-id-generator-mysql</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="/2020/02/09/UUID生成算法-UUID还是snowflake/">UUID生成算法-UUID还是snowflake</a></li>
+<li><a href="/2021/06/20/高性能分布式ID生成器实现方法总结/">高性能分布式ID生成器实现方法总结</a></li>
+<li><a href="/2021/06/20/在Go中仅使用MySQL实现高性能分布式ID生成器/">在Go中仅使用MySQL实现高性能分布式ID生成器</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/uqfbmr8oJFr8riPNl59crw" target="_blank" rel="noopener">浅谈分布式 ID 的实践与应用</a></li>
+<li><a href="https://tech.meituan.com/MT_Leaf.html" target="_blank" rel="noopener">Leaf——美团点评分布式ID生成系统</a></li>
+<li><a href="https://github.com/owenliang/go-id-alloc" target="_blank" rel="noopener">go-id-alloc</a></li>
+</ul>
+<br>
+
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/06/20/高性能分布式ID生成器实现方法总结/" title="https://jasonkayzk.github.io/2021/06/20/高性能分布式ID生成器实现方法总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/06/20/高性能分布式ID生成器实现方法总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1742451648356"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

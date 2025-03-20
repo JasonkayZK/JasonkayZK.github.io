@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>【转】Golang中Slice底层实现 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在Java中使用array、ArrayList或者LinkedList作为数组，而在C++中使用array或是vector作为数组存储，而Golang中使用slice较多，而slice底层到底屎怎么实现的呢？本文将带你深入剖析Golang中Slice的底层实现方式；">
+<meta name="keywords" content="Golang,Slice">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【转】Golang中Slice底层实现">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/10/04/【转】Golang中Slice底层实现/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在Java中使用array、ArrayList或者LinkedList作为数组，而在C++中使用array或是vector作为数组存储，而Golang中使用slice较多，而slice底层到底屎怎么实现的呢？本文将带你深入剖析Golang中Slice的底层实现方式；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice3.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice6.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice7.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice8.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice9.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice10.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice11.png">
+<meta property="og:updated_time" content="2025-03-20T06:20:00.290Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【转】Golang中Slice底层实现">
+<meta name="twitter:description" content="在Java中使用array、ArrayList或者LinkedList作为数组，而在C++中使用array或是vector作为数组存储，而Golang中使用slice较多，而slice底层到底屎怎么实现的呢？本文将带你深入剖析Golang中Slice的底层实现方式；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice1.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1742451657855">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?23">
+    
+    <h1>【转】Golang中Slice底层实现</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年10月04日</a>
+    <a><i class="nexmoefont icon-areachart"></i>5.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 24 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Slice/">Slice</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Golang中Slice底层实现"><span class="toc-text">Golang中Slice底层实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-数组"><span class="toc-text">一. 数组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-切片的数据结构"><span class="toc-text">二. 切片的数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-创建切片"><span class="toc-text">三. 创建切片</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-make-和切片字面量"><span class="toc-text">1. make 和切片字面量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-nil-和空切片"><span class="toc-text">2. nil 和空切片</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-切片扩容"><span class="toc-text">四. 切片扩容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-扩容策略"><span class="toc-text">1. 扩容策略</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#新数组-or-老数组-？"><span class="toc-text">新数组 or 老数组 ？</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#情况一：原数组还有容量空间"><span class="toc-text">情况一：原数组还有容量空间</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#情况二：原数组无容量空间"><span class="toc-text">情况二：原数组无容量空间</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-切片拷贝"><span class="toc-text">五. 切片拷贝</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-slicecopy方法"><span class="toc-text">1. slicecopy方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-slicestringcopy方法"><span class="toc-text">2. slicestringcopy方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-拷贝中的坑"><span class="toc-text">3. 拷贝中的坑</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在Java中使用array、ArrayList或者LinkedList作为数组，而在C++中使用array或是vector作为数组存储，而Golang中使用slice较多，而slice底层到底屎怎么实现的呢？本文将带你深入剖析Golang中Slice的底层实现方式；</p>
+<p>文章转自：</p>
+<ul>
+<li><a href="https://halfrost.com/go_slice/" target="_blank" rel="noopener">深入解析 Go 中 Slice 底层实现</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/slice" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/slice</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="Golang中Slice底层实现"><a href="#Golang中Slice底层实现" class="headerlink" title="Golang中Slice底层实现"></a>Golang中Slice底层实现</h2><p> 切片是 Go  中的一种基本的数据结构，使用这种结构可以用来管理数据集合。切片的设计想法是由动态数组概念而来，为了开发者可以更加方便的使一个数据结构可以自动增加和减少。但是切片本身并不是动态数据或者数组指针。切片常见的操作有 reslice、append、copy。与此同时，切片还具有可索引，可迭代的优秀特性。 </p>
+<h3 id="一-数组"><a href="#一-数组" class="headerlink" title="一. 数组"></a>一. 数组</h3><p>在 Go 中，与 C 数组变量隐式作为指针使用不同：</p>
+<p><font color="#f00"><strong>Go中的数组是值类型，赋值和函数传参操作都会复制整个数组数据。</strong></font></p>
+<pre><code class="go">func main() {
+    arrayA := [2]int{100, 200}
+    var arrayB [2]int
+
+    arrayB = arrayA
+
+    fmt.Printf(&quot;arrayA : %p , %v\n&quot;, &amp;arrayA, arrayA)
+    fmt.Printf(&quot;arrayB : %p , %v\n&quot;, &amp;arrayB, arrayB)
+
+    testArray(arrayA)
+}
+
+func testArray(x [2]int) {
+    fmt.Printf(&quot;func Array : %p , %v\n&quot;, &amp;x, x)
+}</code></pre>
+<p>打印结果：</p>
+<pre><code class="go">arrayA : 0xc000094280 , [100 200]
+arrayB : 0xc000094290 , [100 200]
+func Array : 0xc0000942c0 , [100 200]</code></pre>
+<p>可以看到，三个内存地址都不同，这也就验证了 Go 中数组赋值和函数传参都是值复制的。那这会导致什么问题呢？</p>
+<blockquote>
+<p>  假想每次传参都用数组，那么每次数组都要被复制一遍！</p>
+<p>  如果数组大小有 100万，在64位机器上就需要花费大约 800W 字节，即 8MB 内存。这样会消耗掉大量的内存。</p>
+</blockquote>
+<p>于是乎有人想到，函数传参用数组的指针：</p>
+<pre><code class="GO">func main() {
+    arrayA := []int{100, 200}
+    testArrayPoint(&amp;arrayA)   // 1.传数组指针
+    arrayB := arrayA[:]
+    testArrayPoint(&amp;arrayB)   // 2.传切片
+    fmt.Printf(&quot;arrayA : %p , %v\n&quot;, &amp;arrayA, arrayA)
+}
+
+func testArrayPoint(x *[]int) {
+    fmt.Printf(&quot;func Array : %p , %v\n&quot;, x, *x)
+    (*x)[1] += 100
+}</code></pre>
+<p>打印结果：</p>
+<pre><code class="go">func Array : 0xc000004560 , [100 200]
+func Array : 0xc0000045a0 , [100 300]
+arrayA : 0xc000004560 , [100 400]</code></pre>
+<p>这也就证明了数组指针确实到达了我们想要的效果。现在就算是传入10亿的数组，也只需要再栈上分配一个8个字节的内存给指针就可以了。这样更加高效的利用内存，性能也比之前的好。</p>
+<p>不过传指针会有一个弊端，从打印结果可以看到，第一行和第三行指针地址都是同一个：<font color="#f00"><strong>万一原数组的指针指向更改了，那么函数里面的指针指向都会跟着更改。</strong></font></p>
+<p>切片的优势也就表现出来了。用切片传数组参数，既可以达到节约内存的目的，也可以达到合理处理好共享内存的问题。打印结果第二行就是切片，切片的指针和原来数组的指针是不同的。</p>
+<p>由此我们可以得出结论：</p>
+<p><font color="#f00"><strong>把一个大数组传递给函数会消耗很多内存，采用切片的方式传参可以避免上述问题。切片是引用传递，所以它们不需要使用额外的内存并且比使用数组更有效率。</strong></font></p>
+<p>但是，依旧有反例。</p>
+<pre><code class="go">func array() [1024]int {
+    var x [1024]int
+    for i := 0; i &lt; len(x); i++ {
+        x[i] = i
+    }
+    return x
+}
+
+func slice() []int {
+    x := make([]int, 1024)
+    for i := 0; i &lt; len(x); i++ {
+        x[i] = i
+    }
+    return x
+}
+
+func BenchmarkArray(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        array()
+    }
+}
+
+func BenchmarkSlice(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        slice()
+    }
+}</code></pre>
+<p>我们做一次性能测试，并且禁用内联和优化，来观察切片的<strong>堆上内存分配</strong>的情况。</p>
+<pre><code class="go">go test -bench . -benchmem -gcflags &quot;-N -l&quot;</code></pre>
+<p>输出结果比较“令人意外”：</p>
+<pre><code class="vim">BenchmarkArray-4          500000              3637 ns/op               0 B/op          0 alloc s/op
+BenchmarkSlice-4          300000              4055 ns/op            8192 B/op          1 alloc s/op</code></pre>
+<p>解释一下上述结果，在测试 Array 的时候，用的是4核，循环次数是500000，平均每次执行时间是3637 ns，每次执行堆上分配内存总量是0，分配次数也是0。</p>
+<p>而切片的结果就“差”一点，同样也是用的是4核，循环次数是300000，平均每次执行时间是4055 ns，但是每次执行一次，堆上分配内存总量是8192，分配次数也是1 。</p>
+<p>这样对比看来：<font color="#f00"><strong>并非所有时候都适合用切片代替数组，因为切片底层数组可能会在堆上分配内存，而且小数组在栈上拷贝的消耗也未必比 make 消耗大。</strong></font></p>
+<br>
+
+<h3 id="二-切片的数据结构"><a href="#二-切片的数据结构" class="headerlink" title="二. 切片的数据结构"></a>二. 切片的数据结构</h3><p>切片本身并不是动态数组或者数组指针。它内部实现的数据结构通过指针引用底层数组，设定相关属性将数据读写操作限定在指定的区域内。<strong>切片本身是一个只读对象，其工作机制类似数组指针的一种封装</strong></p>
+<p>切片（slice）是对数组一个连续片段的引用，所以切片是一个引用类型（因此更类似于 C/C++ 中的数组类型，或者 Python 中的  list  类型）。这个片段可以是整个数组，或者是由起始和终止索引标识的一些项的子集。需要注意的是，终止索引标识的项不包括在切片内。切片提供了一个与指向数组的动态窗口。</p>
+<p>给定项的切片索引可能比相关数组的相同元素的索引小。和数组不同的是，<strong>切片的长度可以在运行时修改，最小为 0 最大为相关数组的长度：切片是一个长度可变的数组。</strong></p>
+<p>Slice 的数据结构定义如下：</p>
+<pre><code class="go">type slice struct {
+    array unsafe.Pointer
+    len   int
+    cap   int
+}</code></pre>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice1.png" alt="slice1.png"></p>
+<p> 切片的结构体由3部分构成：</p>
+<ul>
+<li>Pointer 是指向一个数组的指针；</li>
+<li>len 代表当前切片的长度；</li>
+<li>cap 是当前切片的容量，cap 总是大于等于 len 的；</li>
+</ul>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice2.png" alt="slice2.png"></p>
+<p>如果想从 slice 中得到一块内存地址，可以这样做：</p>
+<pre><code class="go">s := make([]byte, 200)
+ptr := unsafe.Pointer(&amp;s[0])</code></pre>
+<p>如果反过来呢？从 Go 的内存地址中构造一个 slice：</p>
+<pre><code class="go">var ptr unsafe.Pointer
+var s1 = struct {
+    addr uintptr
+    len int
+    cap int
+}{ptr, length, length}
+s := *(*[]byte)(unsafe.Pointer(&amp;s1))</code></pre>
+<p>构造一个虚拟的结构体，把 slice 的数据结构拼出来。</p>
+<p>当然还有更加直接的方法，在 Go 的反射中就存在一个与之对应的数据结构 SliceHeader，我们可以用它来构造一个 slice：</p>
+<pre><code class="go">var o []byte
+sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&amp;o)))
+sliceHeader.Cap = length
+sliceHeader.Len = length
+sliceHeader.Data = uintptr(ptr)</code></pre>
+<br>
+
+<h3 id="三-创建切片"><a href="#三-创建切片" class="headerlink" title="三. 创建切片"></a>三. 创建切片</h3><p>make函数允许在运行期动态指定数组长度，绕开了数组类型必须使用编译期常量的限制。</p>
+<p>创建切片有两种形式：</p>
+<ul>
+<li>make 创建切片；</li>
+<li>空切片；</li>
+</ul>
+<h4 id="1-make-和切片字面量"><a href="#1-make-和切片字面量" class="headerlink" title="1. make 和切片字面量"></a>1. make 和切片字面量</h4><pre><code class="go">func makeslice(et *_type, len, cap int) slice {
+    // 根据切片的数据类型，获取切片的最大容量
+    maxElements := maxSliceCap(et.size)
+    // 比较切片的长度，长度值域应该在[0,maxElements]之间
+    if len &lt; 0 || uintptr(len) &gt; maxElements {
+        panic(errorString(&quot;makeslice: len out of range&quot;))
+    }
+    // 比较切片的容量，容量值域应该在[len,maxElements]之间
+    if cap &lt; len || uintptr(cap) &gt; maxElements {
+        panic(errorString(&quot;makeslice: cap out of range&quot;))
+    }
+    // 根据切片的容量申请内存
+    p := mallocgc(et.size*uintptr(cap), et, true)
+    // 返回申请好内存的切片的首地址
+    return slice{p, len, cap}
+}</code></pre>
+<p>还有一个 int64 的版本：</p>
+<pre><code class="go">func makeslice64(et *_type, len64, cap64 int64) slice {
+    len := int(len64)
+    if int64(len) != len64 {
+        panic(errorString(&quot;makeslice: len out of range&quot;))
+    }
+
+    cap := int(cap64)
+    if int64(cap) != cap64 {
+        panic(errorString(&quot;makeslice: cap out of range&quot;))
+    }
+
+    return makeslice(et, len, cap)
+}</code></pre>
+<p>实现原理和上面的是一样的，只不过多了把 int64 转换成 int 这一步罢了。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice3.png" alt="slice3.png"></p>
+<p>上图是用 make 函数创建的一个 len = 4， cap = 6 的切片：</p>
+<p><strong>内存空间申请了6个 int 类型的内存大小。</strong>由于 len = 4，所以后面2个暂时访问不到，但是容量还是在的。这时候数组里面每个变量都是0。</p>
+<p>除了 make 函数可以创建切片以外，字面量也可以创建切片。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice4.png" alt="slice4.png"></p>
+<p> 这里是用字面量创建的一个 len = 6，cap = 6 的切片，这时候数组里面每个元素的值都初始化完成了。</p>
+<p><font color="#f00"><strong>需要注意的是 [ ] 里面不要写数组的容量，因为如果写了个数以后就是数组了，而不是切片了。</strong></font></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice5.png" alt="slice5.png"></p>
+<p> 还有一种简单的字面量创建切片的方法。如上图就 Slice A 创建出了一个 len = 3，cap = 3  的切片。同理，Slice B 创建出了一个 len = 2，cap = 4 的切片。 </p>
+<blockquote>
+<p>在通过数组、切片获取切片时，可以使用单个冒号的语法和两个冒号的语法：</p>
+<ul>
+<li>[statrIndex : endIndex]；</li>
+<li>[statrIndex : endIndex :  max]；</li>
+</ul>
+<p>其中，第三个参数指定了切片的容量值：<code>cap = (max - start)</code>，代表了当前的切片已经引用了startIndex-endIndex的值，并且最多可以取到max(原数组max索引处)；</p>
+<p>如：</p>
+<pre><code class="go">array := [6]int64{1, 2, 3, 4, 5, 6}
+sliceA := array[2:5:5]
+sliceB := array[1:3:5]
+
+fmt.Println(sliceA, len(sliceA), cap(sliceA))
+fmt.Println(sliceB, len(sliceB), cap(sliceB))</code></pre>
+<p>最终输出：</p>
+<pre><code>[3 4 5] 3 3
+[2 3] 2 4</code></pre></blockquote>
+<hr>
+<h4 id="2-nil-和空切片"><a href="#2-nil-和空切片" class="headerlink" title="2. nil 和空切片"></a>2. nil 和空切片</h4><p>nil 切片和空切片也是常用的。</p>
+<pre><code class="go">var slice []int</code></pre>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice6.png" alt="slice6.png"></p>
+<p>nil 切片被用在很多标准库和内置函数中，描述一个不存在的切片的时候，就需要用到 nil 切片。比如函数在发生异常的时候，返回的切片就是 nil 切片。nil 切片的指针指向 nil。</p>
+<p>空切片一般会用来表示一个空的集合。比如数据库查询，一条结果也没有查到，那么就可以返回一个空切片。</p>
+<pre><code class="go">silce := make( []int , 0 )
+slice := []int{ }</code></pre>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice7.png" alt="slice7.png"></p>
+<p>空切片和 nil 切片的区别在于：<strong>空切片指向的地址不是nil，指向的是一个内存地址，但是它没有分配任何内存空间，即底层元素包含0个元素。</strong></p>
+<p>最后需要说明的一点是：不管是使用 nil 切片还是空切片，对其调用内置函数 append，len 和 cap 的效果都是一样的；</p>
+<br>
+
+<h3 id="四-切片扩容"><a href="#四-切片扩容" class="headerlink" title="四. 切片扩容"></a>四. 切片扩容</h3><p>当一个切片的容量满了，就需要扩容了。怎么扩，策略是什么？</p>
+<pre><code class="go">func growslice(et *_type, old slice, cap int) slice {
+    if raceenabled {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;et))
+        racereadrangepc(old.array, uintptr(old.len*int(et.size)), callerpc, funcPC(growslice))
+    }
+    if msanenabled {
+        msanread(old.array, uintptr(old.len*int(et.size)))
+    }
+
+    if et.size == 0 {
+        // 如果新要扩容的容量比原来的容量还要小，这代表要缩容了，那么可以直接报panic了。
+        if cap &lt; old.cap {
+            panic(errorString(&quot;growslice: cap out of range&quot;))
+        }
+
+        // 如果当前切片的大小为0，还调用了扩容方法，那么就新生成一个新的容量的切片返回。
+        return slice{unsafe.Pointer(&amp;zerobase), old.len, cap}
+    }
+
+    // 这里就是扩容的策略
+    newcap := old.cap
+    doublecap := newcap + newcap
+    if cap &gt; doublecap {
+        newcap = cap
+    } else {
+        if old.len &lt; 1024 {
+            newcap = doublecap
+        } else {
+            // Check 0 &lt; newcap to detect overflow
+            // and prevent an infinite loop.
+            for 0 &lt; newcap &amp;&amp; newcap &lt; cap {
+                newcap += newcap / 4
+            }
+            // Set newcap to the requested cap when
+            // the newcap calculation overflowed.
+            if newcap &lt;= 0 {
+                newcap = cap
+            }
+        }
+    }
+
+    // 计算新的切片的容量，长度。
+    var lenmem, newlenmem, capmem uintptr
+    const ptrSize = unsafe.Sizeof((*byte)(nil))
+    switch et.size {
+    case 1:
+        lenmem = uintptr(old.len)
+        newlenmem = uintptr(cap)
+        capmem = roundupsize(uintptr(newcap))
+        newcap = int(capmem)
+    case ptrSize:
+        lenmem = uintptr(old.len) * ptrSize
+        newlenmem = uintptr(cap) * ptrSize
+        capmem = roundupsize(uintptr(newcap) * ptrSize)
+        newcap = int(capmem / ptrSize)
+    default:
+        lenmem = uintptr(old.len) * et.size
+        newlenmem = uintptr(cap) * et.size
+        capmem = roundupsize(uintptr(newcap) * et.size)
+        newcap = int(capmem / et.size)
+    }
+
+    // 判断非法的值，保证容量是在增加，并且容量不超过最大容量
+    if cap &lt; old.cap || uintptr(newcap) &gt; maxSliceCap(et.size) {
+        panic(errorString(&quot;growslice: cap out of range&quot;))
+    }
+
+    var p unsafe.Pointer
+    if et.kind&amp;kindNoPointers != 0 {
+        // 在老的切片后面继续扩充容量
+        p = mallocgc(capmem, nil, false)
+        // 将 lenmem 这个多个 bytes 从 old.array地址 拷贝到 p 的地址处
+        memmove(p, old.array, lenmem)
+        // 先将 P 地址加上新的容量得到新切片容量的地址，然后将新切片容量地址后面的 capmem-newlenmem 个 bytes 这块内存初始化。为之后继续 append() 操作腾出空间。
+        memclrNoHeapPointers(add(p, newlenmem), capmem-newlenmem)
+    } else {
+        // 重新申请新的数组给新切片
+        // 重新申请 capmen 这个大的内存地址，并且初始化为0值
+        p = mallocgc(capmem, et, true)
+        if !writeBarrier.enabled {
+            // 如果还不能打开写锁，那么只能把 lenmem 大小的 bytes 字节从 old.array 拷贝到 p 的地址处
+            memmove(p, old.array, lenmem)
+        } else {
+            // 循环拷贝老的切片的值
+            for i := uintptr(0); i &lt; lenmem; i += et.size {
+                typedmemmove(et, add(p, i), add(old.array, i))
+            }
+        }
+    }
+    // 返回最终新切片，容量更新为最新扩容之后的容量
+    return slice{p, old.len, newcap}
+}</code></pre>
+<p>上述就是扩容的实现。主要需要关注的有两点：一个是扩容时候的策略，还有一个就是扩容是生成全新的内存地址还是在原来的地址后追加；</p>
+<h4 id="1-扩容策略"><a href="#1-扩容策略" class="headerlink" title="1. 扩容策略"></a>1. 扩容策略</h4><p>先看看扩容策略。</p>
+<pre><code class="go">func main() {
+    slice := []int{10, 20, 30, 40}
+    newSlice := append(slice, 50)
+    fmt.Printf(&quot;Before slice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, slice, &amp;slice, len(slice), cap(slice))
+    fmt.Printf(&quot;Before newSlice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, newSlice, &amp;newSlice, len(newSlice), cap(newSlice))
+    newSlice[1] += 10
+    fmt.Printf(&quot;After slice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, slice, &amp;slice, len(slice), cap(slice))
+    fmt.Printf(&quot;After newSlice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, newSlice, &amp;newSlice, len(newSlice), cap(newSlice))
+}</code></pre>
+<p>输出结果：</p>
+<pre><code class="go">Before slice = [10 20 30 40], Pointer = 0xc4200b0140, len = 4, cap = 4
+Before newSlice = [10 20 30 40 50], Pointer = 0xc4200b0180, len = 5, cap = 8
+After slice = [10 20 30 40], Pointer = 0xc4200b0140, len = 4, cap = 4
+After newSlice = [10 30 30 40 50], Pointer = 0xc4200b0180, len = 5, cap = 8</code></pre>
+<p>用图表示出上述过程：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice8.png" alt="slice8.png"></p>
+<p>从图上我们可以很容易的看出，新的切片和之前的切片已经不同了，因为新的切片更改了一个值，并没有影响到原来的数组：<strong>新切片指向的数组是一个全新的数组；</strong></p>
+<p>并且 cap 容量也发生了变化。这之间究竟发生了什么呢？</p>
+<p>Go 中<strong>切片扩容的策略</strong>是这样的：</p>
+<ul>
+<li>首先判断，如果新申请容量（cap）大于2倍的旧容量（old.cap），最终容量（newcap）就是新申请的容量（cap）；</li>
+<li>否则判断，如果旧切片的长度小于1024，则最终容量(newcap)就是旧容量(old.cap)的两倍，即（newcap=doublecap）；</li>
+<li>否则判断，如果旧切片长度大于等于1024，则最终容量（newcap）从旧容量（old.cap）开始循环增加原来的  1/4，即（newcap=old.cap,for {newcap +=  newcap/4}）直到最终容量（newcap）大于等于新申请的容量(cap)，即（newcap &gt;= cap）；</li>
+<li>如果最终容量（cap）计算值溢出，则最终容量（cap）就是新申请容量（cap）；</li>
+</ul>
+<p>如果切片的容量小于 1024 个元素，扩容的时候就翻倍增加容量。上面那个例子也验证了这一情况，总容量从原来的4个翻倍到现在的8个。</p>
+<p>一旦元素个数超过 1024 个元素，那么增长因子就变成 1.25 ，即每次增加原来容量的四分之一。</p>
+<p><strong>注意：扩容扩大的容量都是针对原来的容量而言的，而不是针对原来数组的长度而言的。</strong></p>
+<hr>
+<h4 id="新数组-or-老数组-？"><a href="#新数组-or-老数组-？" class="headerlink" title="新数组 or 老数组 ？"></a>新数组 or 老数组 ？</h4><p>再谈谈扩容之后的数组一定是新的么？这个不一定，分两种情况。</p>
+<h5 id="情况一：原数组还有容量空间"><a href="#情况一：原数组还有容量空间" class="headerlink" title="情况一：原数组还有容量空间"></a><strong>情况一：原数组还有容量空间</strong></h5><pre><code class="go">func main() {
+    array := [4]int{10, 20, 30, 40}
+    slice := array[0:2]
+    newSlice := append(slice, 50)
+    fmt.Printf(&quot;Before slice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, slice, &amp;slice, len(slice), cap(slice))
+    fmt.Printf(&quot;Before newSlice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, newSlice, &amp;newSlice, len(newSlice), cap(newSlice))
+    newSlice[1] += 10
+    fmt.Printf(&quot;After slice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, slice, &amp;slice, len(slice), cap(slice))
+    fmt.Printf(&quot;After newSlice = %v, Pointer = %p, len = %d, cap = %d\n&quot;, newSlice, &amp;newSlice, len(newSlice), cap(newSlice))
+    fmt.Printf(&quot;After array = %v\n&quot;, array)
+}</code></pre>
+<p>打印输出：</p>
+<pre><code class="go">Before slice = [10 20], Pointer = 0xc4200c0040, len = 2, cap = 4
+Before newSlice = [10 20 50], Pointer = 0xc4200c0060, len = 3, cap = 4
+After slice = [10 30], Pointer = 0xc4200c0040, len = 2, cap = 4
+After newSlice = [10 30 50], Pointer = 0xc4200c0060, len = 3, cap = 4
+After array = [10 30 50 40]</code></pre>
+<p>把上述过程用图表示出来，如下图。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice9.png" alt="slice9.png"></p>
+<p>通过打印的结果，我们可以看到，在这种情况下，<strong>扩容以后并没有新建一个新的数组，扩容前后的数组都是同一个，这也就导致了新的切片修改了一个值，也影响到了老的切片了。</strong></p>
+<p>并且 append() 操作也改变了原来数组里面的值。一个 append()  操作影响了这么多地方，如果原数组上有多个切片，那么这些切片都会被影响！无意间就产生了莫名的 bug！</p>
+<p>这种情况：<font color="#f00"><strong>由于原数组还有容量可以扩容，所以执行 append() 操作以后，会在原数组上直接操作，所以这种情况下，扩容以后的数组还是指向原来的数组。</strong></font></p>
+<p>这种情况也极容易出现在字面量创建切片时候，第三个参数 cap 传值的时候，如果用字面量创建切片，cap 并不等于指向数组的总容量，那么这种情况就会发生。</p>
+<pre><code class="go">slice := array[1:2:3]</code></pre>
+<p><font color="#f00"><strong>上面这种情况非常危险，极度容易产生 bug 。</strong></font></p>
+<p><font color="#f00"><strong>建议用字面量创建切片的时候，cap 的值一定要保持清醒，避免共享原数组导致的 bug。</strong></font></p>
+<h5 id="情况二：原数组无容量空间"><a href="#情况二：原数组无容量空间" class="headerlink" title="情况二：原数组无容量空间"></a><strong>情况二：原数组无容量空间</strong></h5><p>情况二其实就是在扩容策略里面举的例子，在那个例子中之所以生成了新的切片，是因为<font color="#f00"><strong>原来数组的容量已经达到了最大值，再想扩容， Go 默认会先开一片内存区域，把原来的值拷贝过来，然后再执行 append() 操作。这种情况丝毫不影响原数组。</strong></font></p>
+<p> 所以建议<strong>尽量避免情况一，尽量使用情况二，避免 bug 产生。</strong> </p>
+<br>
+
+<h3 id="五-切片拷贝"><a href="#五-切片拷贝" class="headerlink" title="五. 切片拷贝"></a>五. 切片拷贝</h3><p>Slice 中拷贝方法有2个。</p>
+<h4 id="1-slicecopy方法"><a href="#1-slicecopy方法" class="headerlink" title="1. slicecopy方法"></a><strong>1. slicecopy方法</strong></h4><pre><code class="go">func slicecopy(to, fm slice, width uintptr) int {
+    // 如果源切片或者目标切片有一个长度为0，那么就不需要拷贝，直接 return 
+    if fm.len == 0 || to.len == 0 {
+        return 0
+    }
+    // n 记录下源切片或者目标切片较短的那一个的长度
+    n := fm.len
+    if to.len &lt; n {
+        n = to.len
+    }
+    // 如果入参 width = 0，也不需要拷贝了，返回较短的切片的长度
+    if width == 0 {
+        return n
+    }
+    // 如果开启了竞争检测
+    if raceenabled {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;to))
+        pc := funcPC(slicecopy)
+        racewriterangepc(to.array, uintptr(n*int(width)), callerpc, pc)
+        racereadrangepc(fm.array, uintptr(n*int(width)), callerpc, pc)
+    }
+    // 如果开启了 The memory sanitizer (msan)
+    if msanenabled {
+        msanwrite(to.array, uintptr(n*int(width)))
+        msanread(fm.array, uintptr(n*int(width)))
+    }
+
+    size := uintptr(n) * width
+    if size == 1 { 
+        // TODO: is this still worth it with new memmove impl?
+        // 如果只有一个元素，那么指针直接转换即可
+        *(*byte)(to.array) = *(*byte)(fm.array) // known to be a byte pointer
+    } else {
+        // 如果不止一个元素，那么就把 size 个 bytes 从 fm.array 地址开始，拷贝到 to.array 地址之后
+        memmove(to.array, fm.array, size)
+    }
+    return n
+}</code></pre>
+<p>在这个slicecopy方法中：会把源切片值(即 fm Slice )中的元素复制到目标切片(即 to Slice  )中，并返回被复制的元素个数，此时要求 copy 的两个类型必须一致。</p>
+<p><font color="#f00"><strong>slicecopy 方法最终的复制结果取决于较短的那个切片，当较短的切片复制完成，整个复制过程就全部完成了。</strong></font></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice10.png" alt="slice10.png"></p>
+<p>举个例子，比如：</p>
+<pre><code class="go">func main() {
+    array := []int{10, 20, 30, 40}
+    slice := make([]int, 6)
+    n := copy(slice, array)
+    fmt.Println(n,slice)
+}</code></pre>
+<hr>
+<h4 id="2-slicestringcopy方法"><a href="#2-slicestringcopy方法" class="headerlink" title="2. slicestringcopy方法"></a><strong>2. slicestringcopy方法</strong></h4><p>还有一个拷贝的方法，这个方法原理和 slicecopy 方法类似，不在赘述了，注释写在代码里面了。</p>
+<pre><code class="go">func slicestringcopy(to []byte, fm string) int {
+    // 如果源切片或者目标切片有一个长度为0，那么就不需要拷贝，直接 return 
+    if len(fm) == 0 || len(to) == 0 {
+        return 0
+    }
+    // n 记录下源切片或者目标切片较短的那一个的长度
+    n := len(fm)
+    if len(to) &lt; n {
+        n = len(to)
+    }
+    // 如果开启了竞争检测
+    if raceenabled {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;to))
+        pc := funcPC(slicestringcopy)
+        racewriterangepc(unsafe.Pointer(&amp;to[0]), uintptr(n), callerpc, pc)
+    }
+    // 如果开启了 The memory sanitizer (msan)
+    if msanenabled {
+        msanwrite(unsafe.Pointer(&amp;to[0]), uintptr(n))
+    }
+    // 拷贝字符串至字节数组
+    memmove(unsafe.Pointer(&amp;to[0]), stringStructOf(&amp;fm).str, uintptr(n))
+    return n
+}</code></pre>
+<p>举个例子，比如：</p>
+<pre><code class="go">func main() {
+    slice := make([]byte, 3)
+    n := copy(slice, &quot;abcdef&quot;)
+    fmt.Println(n,slice)
+}</code></pre>
+<p>输出：</p>
+<pre><code class="go">3 [97,98,99]</code></pre>
+<hr>
+<h4 id="3-拷贝中的坑"><a href="#3-拷贝中的坑" class="headerlink" title="3. 拷贝中的坑"></a><strong>3. 拷贝中的坑</strong></h4><p>说到拷贝，切片中有一个需要注意的问题。</p>
+<pre><code class="go">func main() {
+    slice := []int{10, 20, 30, 40}
+    for index, value := range slice {
+        fmt.Printf(&quot;value = %d , value-addr = %x , slice-addr = %x\n&quot;, value, &amp;value, &amp;slice[index])
+    }
+}</code></pre>
+<p>输出：</p>
+<pre><code class="go">value = 10 , value-addr = c4200aedf8 , slice-addr = c4200b0320
+value = 20 , value-addr = c4200aedf8 , slice-addr = c4200b0328
+value = 30 , value-addr = c4200aedf8 , slice-addr = c4200b0330
+value = 40 , value-addr = c4200aedf8 , slice-addr = c4200b0338</code></pre>
+<p>从上面结果我们可以看到，<font color="#f00"><strong>如果用 range 的方式去遍历一个切片，拿到的 Value 其实是切片里面的值拷贝。所以每次打印 Value 的地址都不变。</strong></font></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/slice11.png" alt="slice11.png"></p>
+<p><font color="#f00"><strong>由于 Value 是值拷贝的，并非引用传递，所以直接改 Value 是达不到更改原切片值的目的的，需要通过 <code>&amp;slice[index]</code> 获取真实的地址。</strong></font></p>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>文章转自：</p>
+<ul>
+<li><a href="https://halfrost.com/go_slice/" target="_blank" rel="noopener">深入解析 Go 中 Slice 底层实现</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/slice" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/slice</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/10/04/【转】Golang中Slice底层实现/" title="https://jasonkayzk.github.io/2020/10/04/【转】Golang中Slice底层实现/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/10/04/【转】Golang中Slice底层实现/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1742451657969"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

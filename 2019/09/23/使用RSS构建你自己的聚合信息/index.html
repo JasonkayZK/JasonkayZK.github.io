@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>使用RSS构建你自己的聚合信息 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.">
+<meta name="keywords" content="RSS,信息聚合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用RSS构建你自己的聚合信息">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/23/使用RSS构建你自己的聚合信息/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_sample.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_use.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_statistics.png">
+<meta property="og:updated_time" content="2025-03-20T06:20:00.294Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用RSS构建你自己的聚合信息">
+<meta name="twitter:description" content="之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_sample.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1742451679767">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>509</div>
+        <div><span>标签</span>267</div>
+        <div><span>分类</span>66</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.87px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/Aria2/" style="font-size: 10.87px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.43px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.43px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 16.09px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.43px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.74px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.17px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.43px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.43px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.43px;">DLL</a> <a href="/tags/Docker/" style="font-size: 18.7px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.43px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.87px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 13.91px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.43px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.43px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.48px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.35px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.26px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.87px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.43px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.43px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.43px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.17px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.96px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.17px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.3px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.43px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.22px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.87px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.87px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.43px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.52px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.17px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.74px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.48px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.87px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.87px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.17px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.3px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.43px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.43px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.87px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.43px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.43px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.35px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.7px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.43px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.87px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.74px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.43px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 12.61px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.43px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.87px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.87px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.43px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.43px;">minikube</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.65px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.83px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.43px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.43px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 16.09px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.3px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 12.61px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.74px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.43px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.17px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.43px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.43px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.43px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.43px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.04px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.43px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.13px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.65px;">并发编程</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.43px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.74px;">排序</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.87px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.43px;">教师</a> <a href="/tags/教案/" style="font-size: 10.43px;">教案</a> <a href="/tags/数学/" style="font-size: 12.61px;">数学</a> <a href="/tags/数据库/" style="font-size: 14.78px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.48px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 13.91px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.43px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.87px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.87px;">查找</a> <a href="/tags/栈/" style="font-size: 10.87px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.87px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.61px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.57px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.43px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.87px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.43px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.43px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.17px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.43px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.39px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 14.78px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.43px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.43px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.43px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.48px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 13.91px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 14.78px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.87px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.87px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.3px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/">Redis</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">34</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">59</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/01/30/通过GithubActions拉取并推送Docker镜像到国内云/">通过GithubActions拉取并推送Docker镜像到国内云</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/29/使用AnythingLLM-SillconFlow-Milvus快速搭建个人云端知识库/">使用AnythingLLM+SillconFlow+Milvus快速搭建个人云端知识库</a>
+          </li>
+        
+          <li>
+            <a href="/2025/01/17/【顶】さよなら２０２４、こんにちは２０２５！/">【顶】さよなら２０２４、こんにちは２０２５！</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/11/Excel通过身份证号列计算性别/">Excel通过身份证号列计算性别</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/22/开源的个人书籍管理系统Talebook/">开源的个人书籍管理系统Talebook</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1569231114834&di=f78c3f4220e3ff7acea77dcc8648e56e&imgtype=0&src=http%3A%2F%2Fku.90sjimg.com%2Felement_origin_min_pic%2F00%2F85%2F90%2F4656ea289c7c11f.jpg">
+    
+    <h1>使用RSS构建你自己的聚合信息</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月23日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 16 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/工具分享/">工具分享</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/RSS/">RSS</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/信息聚合/">信息聚合</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#RSS"><span class="toc-text">RSS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-什么是RSS"><span class="toc-text">一. 什么是RSS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-RSS的没落"><span class="toc-text">1): RSS的没落</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-国内常见的订阅方式比较"><span class="toc-text">2): 国内常见的订阅方式比较</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-如何使用RSS"><span class="toc-text">二. 如何使用RSS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-RSS阅读工具"><span class="toc-text">1): RSS阅读工具</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-开始使用"><span class="toc-text">2): 开始使用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#注册"><span class="toc-text">注册</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#添加订阅"><span class="toc-text">添加订阅</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#收取消息"><span class="toc-text">收取消息</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#管理订阅"><span class="toc-text">管理订阅</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#其他"><span class="toc-text">其他</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-如何高效使用RSS"><span class="toc-text">3): 如何高效使用RSS</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-RSS订阅源问题"><span class="toc-text">三. RSS订阅源问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Inoreader中搜索"><span class="toc-text">1): Inoreader中搜索</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-万物皆可RSS"><span class="toc-text">2): 万物皆可RSS</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-一些常用的RSS订阅"><span class="toc-text">3): 一些常用的RSS订阅</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#一般网站和博客"><span class="toc-text">一般网站和博客</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#论坛"><span class="toc-text">论坛</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#微博"><span class="toc-text">微博</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#微信公众号"><span class="toc-text">微信公众号</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#简书"><span class="toc-text">简书</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#B站"><span class="toc-text">B站</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#贴吧"><span class="toc-text">贴吧</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#知乎"><span class="toc-text">知乎</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#知乎日报"><span class="toc-text">知乎日报</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#豆瓣小组"><span class="toc-text">豆瓣小组</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Twitter"><span class="toc-text">Twitter</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Instagram"><span class="toc-text">Instagram</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#U2B"><span class="toc-text">U2B</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Reddit"><span class="toc-text">Reddit</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#抖音"><span class="toc-text">抖音</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#网易云音乐"><span class="toc-text">网易云音乐</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#喜马拉雅"><span class="toc-text">喜马拉雅</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Github"><span class="toc-text">Github</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#V2EX"><span class="toc-text">V2EX</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Dribble"><span class="toc-text">Dribble</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-RSS的一些其他玩用法"><span class="toc-text">四. RSS的一些其他玩用法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-监视网页内任意内容的变化。"><span class="toc-text">1. 监视网页内任意内容的变化。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-指定新闻内容动态提醒。"><span class="toc-text">2. 指定新闻内容动态提醒。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-RSS-配合-IFTTT"><span class="toc-text">3.RSS 配合 IFTTT</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-总结"><span class="toc-text">五.总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>之前就看到github上面的一个叫万物皆可RSS(RSSHub)的项目, 但是一直都没时间看. 直到最近, 感觉微信公众号里面的文章太多了! 而且爪机也很是不给力, 所以就试了试RSS订阅的方式, 一试不当紧, 马上就爱上了这种Geek的获取信息的方式.</p>
+<p>本文主要讲述了对于小白而言的有关RSS的一切! 不论之前你是否接触过RSS, 在阅读了本文之后, 你都会学到:</p>
+<ul>
+<li>RSS是什么? RSS能帮助我做什么?</li>
+<li>如何使用RSS? (创建, 订阅, 信息获取)</li>
+<li>RSS订阅源</li>
+<li>关于RSS的一些工具, 优化</li>
+<li>……</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="RSS"><a href="#RSS" class="headerlink" title="RSS"></a>RSS</h2><h3 id="一-什么是RSS"><a href="#一-什么是RSS" class="headerlink" title="一. 什么是RSS"></a>一. 什么是RSS</h3><p>其实笔者之前也不知道RSS究竟是个什么鬼东西, 在百度之后, 给出的解释是: <code>简易信息聚合（也叫聚合内容）是一种RSS基于XML标准，在互联网上被广泛采用的内容包装和投递协议。RSS(Really Simple Syndication)是一种描述和同步网站内容的格式，是使用最广泛的XML应用</code>.</p>
+<p>看完了上面的介绍笔者还是一头雾水. 简单来说: <font color="#ff0000">其实RSS就相当于我们日常生活中的订阅报纸, 或者微信的订阅号(公众号)</font></p>
+<p>如下图是我的一个在Inoreader中的RSS订阅订阅内容:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_sample.png" alt="RSS订阅"></p>
+<br>
+
+<p>左侧显示了订阅的相关信息, 右侧为推送的内容! <font color="#ff0000">不仅限于微信公众号, 你可以在各种各样的网站上进行订阅, 如果这个网站内容有所更新, 你可以直接收到网站给你投递的推送!</font></p>
+<br>
+
+<h4 id="1-RSS的没落"><a href="#1-RSS的没落" class="headerlink" title="1): RSS的没落"></a>1): RSS的没落</h4><p>其实在笔者还未接触RSS之前, RSS风光过一段时间, 而现如今只有一小部分 RSS 重度用户仍在使用. RSS 没落的原因有两个：</p>
+<ul>
+<li>一是门槛高上手难度大;</li>
+<li>二是 RSS 是一种单向的服务工具;</li>
+</ul>
+<p>RSS 会将网站内容转化为文本格式，这样一来，那怕你的网站设计有多么巧妙，文章排版有多么的精良，在 RSS  阅读器里统统会变成最原始的文本内容，也无法附带任何脚本语言，这使得提供内容的网站无法对运营效果做出评估，就连文章点击量+1都无法统计，其中一些网站赖以生存的广告营收也荡然无存。</p>
+<p>从运营方的角度来说，网站其实也并不那么希望读者使用 RSS 来阅读内容，因为 RSS 难以连接内容提供者和读者，也无法平衡了内容提供者与读者之间的关系，砍去RSS订阅也成了无奈之举，就连曾经被业界”奉若神明”的 Google Reader 也是如此。</p>
+<br>
+
+<h4 id="2-国内常见的订阅方式比较"><a href="#2-国内常见的订阅方式比较" class="headerlink" title="2): 国内常见的订阅方式比较"></a>2): 国内常见的订阅方式比较</h4><p><strong>1. RSS订阅</strong><br> RSS订阅是互联网上最早的一种订阅方式。简单来说，以前你需要主动访问网站后才知道有没有内容更新，但有了RSS订阅后，就变成网站内容主动发送到你手上来。（<strong>缺点：门槛高难度大</strong>）</p>
+<p><strong>2. 站内订阅</strong><br> 站内订阅和RSS订阅有些相似，都需要用户主动订阅，但这些网站都在试图打造自己的内容闭环生态圈，因此你只能订阅该站站内的内容。比如视频订阅，微博关注，微信公众号订阅，知乎专栏关注等SNS网站。（<strong>缺点：信息孤岛效应</strong>）</p>
+<p><strong>3. 算法推荐</strong><br> 以算法为主要内容分发机制，通过你的浏览记录来猜测和推送你可能感兴趣的内容，比如今日头条，腾讯新闻等各大门户的新闻客户端。算法推荐可能是当下最普遍的分发机制，大多数网站和应用或多或少地都在使用。（<strong>缺点：回音室效应</strong>）</p>
+<p><strong>4. 人工推荐</strong><br> 人工推荐的产品更近似于传统媒体，产品的内容质量较高，同时也颇具“个人”特色，因为内容都是这些网站的编辑精选而来。比如知乎日报，湾区日报，好奇心日报，果壳精选等。（缺点：<strong>推荐内容与预期存在较大偏差</strong>）</p>
+<p><strong>5. 算法推荐 + 人工推荐</strong><br> 相比于算法推荐基于兴趣、领域这样的“面”信息，精准推送采用的是算法和人工编辑并重的分发机制，它为用户提供更加精确的信息，订阅的维度是“点”信息。比如即刻、一订、读读日报、轻芒阅读等。（缺点：<strong>再精准也还是无法代替人脑</strong>）</p>
+<br>
+
+<p>订阅就会产生「<strong>信息过载</strong>」和「<strong>回声室效应</strong>」的问题，但这些问题在 RSS 上也并没有得到完美的解决。</p>
+<p>算法推荐常常被诟病瀑布流的内容模式容易造成了信息的过载，然而在 RSS 上，随着时间的推移和不断添加新订阅源，如果你疏于阅读清理，巨大的未阅读数量同样会造成信息过载。</p>
+<p>算法推荐也常常被诟病，因为要迁就读者的喜好，推荐的内容会越来越狭窄，读者接受到的知识和观点也会变得片面，视野受限。同样，在 RSS  上，这种回声室效应也没有得到解决，甚至可以说更甚。因为每一条订阅源都是你自己亲自添加的，你没有理由会去添加一条你不喜欢的订阅源。</p>
+<p>对于一个没有筛选和自控能力的人来说，RSS 订阅和其他订阅方法差别不大。就像沉迷抖音的那一群人，他们本身就是筛选能力和自控能力较弱的那一群人。</p>
+<p><strong>但如果你是一个有筛选和自控能力的人，RSS 对于你来说就是一种高效的阅读方式。</strong></p>
+<br>
+
+
+
+<hr>
+<h3 id="二-如何使用RSS"><a href="#二-如何使用RSS" class="headerlink" title="二. 如何使用RSS"></a>二. 如何使用RSS</h3><h4 id="1-RSS阅读工具"><a href="#1-RSS阅读工具" class="headerlink" title="1): RSS阅读工具"></a>1): RSS阅读工具</h4><p><font color="#ff0000">不推荐使用本地 RSS 阅读器，不能多平台使用和同步的话，容易造成阅读压力, 同时PC上的消息无法在移动端接收会让你相当头疼!</font></p>
+<p>在线 RSS 应用现如今比较知名的有两家，一家是 Feedly，一家是 Inoreader. Feedly 有着非常优雅的阅读界面，但在国内无法正常访问!<font color="#ff0000">所以我在这里推荐的是Inoreader阅读器.</font></p>
+<p><font color="#0000ff">对于移动端, 我在iOS系统上使用的是Unread阅读器, 安装端应当也有相应的阅读工具软件.实在不行, 网页版阅读也是很舒服的!</font></p>
+<br>
+
+<h4 id="2-开始使用"><a href="#2-开始使用" class="headerlink" title="2): 开始使用"></a>2): 开始使用</h4><p>这里以Inoreader为例说明如何使用RSS, 以及如何订阅.</p>
+<h5 id="注册"><a href="#注册" class="headerlink" title="注册"></a>注册</h5><p>在<a href="https://www.inoreader.com/" target="_blank" rel="noopener">Inoreader官网</a>注册账号, 这里要说明的是: <font color="#ff0000">国内访问Inoreader有点慢, 所以可以通过其在日本的网站来访问</font>:</p>
+<ul>
+<li><p>官网: <a href="https://www.inoreader.com/" target="_blank" rel="noopener">https://www.inoreader.com/</a></p>
+</li>
+<li><p>日本网站: <a href="http://jp.inoreader.com/" target="_blank" rel="noopener">http://jp.inoreader.com/</a></p>
+</li>
+</ul>
+<br>
+
+<h5 id="添加订阅"><a href="#添加订阅" class="headerlink" title="添加订阅"></a>添加订阅</h5><p><font color="#ff0000">注册登录后, 可以在网站右上角搜索, 或者输入你要添加的RSS源. 就相当于添加了一个微信公众号一样! 不过这个要比公众号要干净, 简洁的多了!</font></p>
+<br>
+
+<h5 id="收取消息"><a href="#收取消息" class="headerlink" title="收取消息"></a>收取消息</h5><p><font color="#0000ff">当你添加了你的订阅之后, 就已经可以获取到更新了!</font></p>
+<br>
+
+<h5 id="管理订阅"><a href="#管理订阅" class="headerlink" title="管理订阅"></a>管理订阅</h5><p>通过网站左侧的leftside-bar下方可以找到<code>statistics</code>:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_use.png" alt="RSS使用"></p>
+<br>
+
+<p>点击即出现了:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rss_statistics.png" alt="RSS管理"></p>
+<br>
+
+<p>通过这些数据可以看到订阅中有哪些网站过了多久没有更新, 可以进行快速取消订阅等功能!</p>
+<br>
+
+<h5 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h5><p>除此之外, Inoreader还包括了其他相关的功能如: <font color="#0000ff">一键全部阅读, 订阅标签分类, 设置推送时间, 内容更新时间设置等功能, 可以说很是方便了!</font></p>
+<br>
+
+
+
+<h4 id="3-如何高效使用RSS"><a href="#3-如何高效使用RSS" class="headerlink" title="3): 如何高效使用RSS"></a>3): 如何高效使用RSS</h4><p>RSS最初的愿景是让阅读变得简单，然而RSS实际使用起来并不是那么的简单。最常见的现象是<strong>订阅数量太多或者网站更新频率太高导致未阅读信息堆积如山</strong>，因此在使用 RSS 时，首先要从「做减法」上着手。</p>
+<p><strong>1.选择性订阅</strong></p>
+<p>RSS 适合订阅那些不定时更新的信息源，新闻类网站因为更新频率高会导致未读消息数量庞大，而造成阅读焦虑。那些更新频率高的网站可以用浏览器的书签功能来代替。</p>
+<p><strong>2.人工筛选阅读</strong></p>
+<p>第一种是通过扫标题的方法，感兴趣的全部标记为星标，接着把这个信息源下的内容全部标记为已读，然后用比较集中的时间到“星标文章”中去阅读。<br> 第二种方法是快捷键 J（下一篇文章）或者 K（上一篇文章）的方法来快速阅读，半分钟内能消化完的内容当场就读完，那些值得仔细阅读的信息则标记为星标。</p>
+<p><strong>3.订阅源分类</strong></p>
+<p> 对订阅源进行分类时，不建议用订阅源的类型作为分类依据，可以按照时间管理里的「四象限法则」来分类，分成「紧急重要」、「紧急不重要」和「重要不紧急」三类，对于那些「不重要不紧急」的订阅源则直接退订删除。分类文件夹名字可以使用「资讯信息」、「每日必读」和「每周必读」。</p>
+<p><strong>4.清理未读文章</strong></p>
+<p>有时候难免会遇到没时间阅读RSS的情况，这时就会积攒下很多未读文章，你需要拿出「断舍离」的心态果断清理未读文章，特别是「资讯信息」这类短期内不看就不再有价值的文章。</p>
+<p><strong>5.定期整理订阅源</strong></p>
+<p>如果你发现一些订阅源每天会更新很多内容但你几乎不会去阅读他们，那就可以退订阅删除他们了，不要让日益增加的未读数目成为你的阅读负担。</p>
+<br>
+
+
+
+<hr>
+<h3 id="三-RSS订阅源问题"><a href="#三-RSS订阅源问题" class="headerlink" title="三. RSS订阅源问题"></a>三. RSS订阅源问题</h3><p>既然RSS这么强大, 那么RSS订阅源的来源有哪些呢?</p>
+<h4 id="1-Inoreader中搜索"><a href="#1-Inoreader中搜索" class="headerlink" title="1): Inoreader中搜索"></a>1): Inoreader中搜索</h4><p>可以通过在Inoreader等网站中的搜索框中搜索你想要订阅的频道, 内容不限于: 音乐, 体育, 娱乐等等!</p>
+<br>
+
+
+
+<h4 id="2-万物皆可RSS"><a href="#2-万物皆可RSS" class="headerlink" title="2): 万物皆可RSS"></a>2): 万物皆可RSS</h4><p>这是Github上的一个开源项目: <a href="https://github.com/DIYgod/RSSHub" target="_blank" rel="noopener">RSSHub</a></p>
+<p>如果你细心观察就会发现, 提供 RSS 相关服务的网站都是国外的，国内与 RSS 相关的网站都相继宣布关闭了。你会发现国内提供 RSS 相关服务的网站都是个人或者小机构，这其中有一个叫 <a href="https://www.runningcheese.com/go?url=https://docs.rsshub.app/" target="_blank" rel="noopener">RSSHub</a> 的网站，是这其中的集大成者，它的作用是<font color="#ff0000">可以给任何奇奇怪怪的内容生成 RSS 订阅源!</font></p>
+<p><font color="#ff0000">可以在Chrome或者Firefox等主流浏览器中添加JS插件, 来完成对该网页中可用的RSS订阅进行检索</font> </p>
+<p>具体可参见RSSHub官方文档: <a href="https://docs.rsshub.app/" target="_blank" rel="noopener">RSSHub官方文档</a></p>
+<br>
+
+<h4 id="3-一些常用的RSS订阅"><a href="#3-一些常用的RSS订阅" class="headerlink" title="3): 一些常用的RSS订阅"></a>3): 一些常用的RSS订阅</h4><p>其实安装了RSSHub的插件之后, 就会为你自动捕获相当多的RSS订阅了, 以下列出了一些常用的RSS订阅:</p>
+<h5 id="一般网站和博客"><a href="#一般网站和博客" class="headerlink" title="一般网站和博客"></a><strong>一般网站和博客</strong></h5><p>1). 通常在顶部菜单、右侧菜单、底部菜单等地方会有RSS图标;</p>
+<p>2). 如果没有，可以尝试在网站地址后面加上/rss或者/feed，有时会出现在二级域名里;</p>
+<p>3). 如果还是没有，可能网站没有提供RSS订阅。可以借用 <a href="https://www.runningcheese.com/go?url=http://createfeed.fivefilters.org/" target="_blank" rel="noopener">Fivefilters.org</a> 或者<a href="https://www.runningcheese.com/go?url=https://feedity.com/default.aspx" target="_blank" rel="noopener">Feedity.com</a>来制作订阅源;</p>
+<p>4). 对于一些只提供了摘要RSS的网站，可以使用 <a href="https://www.runningcheese.com/go?url=https://feedex.net/" target="_blank" rel="noopener">FeedEx.Net</a> 来制作全文RSS。 </p>
+<br>
+
+
+
+<h5 id="论坛"><a href="#论坛" class="headerlink" title="论坛"></a><strong>论坛</strong></h5><p>一般会有 RSS 图标，如果没有，在网址后面加上 ?mod=rss;</p>
+<p>比如网址 <a href="https://www.runningcheese.com/go?url=http://bbs.kafan.cn/forum-215-1.html" target="_blank" rel="noopener">http://bbs.kafan.cn/forum-215-1.html</a>，其 rss 地址为<a href="http://bbs.kafan.cn/forum-215-1.html?mod=rss" target="_blank" rel="noopener">http://bbs.kafan.cn/forum-215-1.html?mod=rss</a></p>
+<br>
+
+
+
+<h5 id="微博"><a href="#微博" class="headerlink" title="微博"></a><strong>微博</strong></h5><p><a href="https://rsshub.app/weibo/user2/博主ID，比如https://rsshub.app/weibo/user2/1195230310" target="_blank" rel="noopener">https://rsshub.app/weibo/user2/博主ID，比如https://rsshub.app/weibo/user2/1195230310</a></p>
+<br>
+
+
+
+<h5 id="微信公众号"><a href="#微信公众号" class="headerlink" title="微信公众号"></a><strong>微信公众号</strong></h5><p>在 <a href="https://www.runningcheese.com/go?url=https://w.qnmlgb.tech/" target="_blank" rel="noopener">瓦斯阅读</a> 搜索要订阅的公众号名称，就会有专门的RSS订阅地址。</p>
+<br>
+
+
+
+<h5 id="简书"><a href="#简书" class="headerlink" title="简书"></a><strong>简书</strong></h5><p><a href="https://rsshub.app/jianshu/user/作者ID，比如" target="_blank" rel="noopener">https://rsshub.app/jianshu/user/作者ID，比如</a> <a href="https://rsshub.app/jianshu/user/yZq3ZV" target="_blank" rel="noopener">https://rsshub.app/jianshu/user/yZq3ZV</a></p>
+<br>
+
+
+
+<h5 id="B站"><a href="#B站" class="headerlink" title="B站"></a><strong>B站</strong></h5><p><a href="https://rsshub.app/bilibili/user/video/UP主ID" target="_blank" rel="noopener">https://rsshub.app/bilibili/user/video/UP主ID</a><br></p>
+<h5 id="贴吧"><a href="#贴吧" class="headerlink" title="贴吧"></a><strong>贴吧</strong></h5><p>精品贴订阅：<a href="https://rsshub.app/tieba/forum/good/贴吧吧名（支持中文）" target="_blank" rel="noopener">https://rsshub.app/tieba/forum/good/贴吧吧名（支持中文）</a>, </p>
+<p>比如 <a href="https://www.runningcheese.com/go?url=https://rsshub.app/tieba/forum/good/哲学" target="_blank" rel="noopener">https://rsshub.app/tieba/forum/good/哲学</a></p>
+<br>
+
+
+
+<h5 id="知乎"><a href="#知乎" class="headerlink" title="知乎"></a><strong>知乎</strong></h5><p>知乎热榜：<a href="https://www.runningcheese.com/go?url=https://rsshub.app/zhihu/hotlist" target="_blank" rel="noopener">https://rsshub.app/zhihu/hotlist</a></p>
+<p>用户动态：<a href="https://rsshub.app/zhihu/people/activities/用户ID，" target="_blank" rel="noopener">https://rsshub.app/zhihu/people/activities/用户ID，</a></p>
+<p>知乎专栏：<a href="https://rsshub.app/zhihu/zhuanlan/专栏ID，" target="_blank" rel="noopener">https://rsshub.app/zhihu/zhuanlan/专栏ID，</a></p>
+<br>
+
+
+
+<h5 id="知乎日报"><a href="#知乎日报" class="headerlink" title="知乎日报"></a><strong>知乎日报</strong></h5><p>订阅：<a href="https://www.runningcheese.com/go?url=https://rsshub.app/zhihu/daily" target="_blank" rel="noopener">https://rsshub.app/zhihu/daily</a></p>
+<p>分栏订阅： <a href="https://www.runningcheese.com/go?url=http://zhihurss.miantiao.me/section" target="_blank" rel="noopener">http://zhihurss.miantiao.me/section</a></p>
+<br>
+
+
+
+<h5 id="豆瓣小组"><a href="#豆瓣小组" class="headerlink" title="豆瓣小组"></a><strong>豆瓣小组</strong></h5><p><a href="https://www.douban.com/feed/group/豆瓣小组ID/discussion，" target="_blank" rel="noopener">https://www.douban.com/feed/group/豆瓣小组ID/discussion，</a></p>
+<p>比如 <a href="https://www.runningcheese.com/go?url=https://www.douban.com/feed/group/beijing/discussion" target="_blank" rel="noopener">https://www.douban.com/feed/group/beijing/discussion</a></p>
+<br>
+
+
+
+<h5 id="Twitter"><a href="#Twitter" class="headerlink" title="Twitter"></a><strong>Twitter</strong></h5><p><a href="https://rsshub.app/twitter/user/用户ID" target="_blank" rel="noopener">https://rsshub.app/twitter/user/用户ID</a></p>
+<br>
+
+
+
+<h5 id="Instagram"><a href="#Instagram" class="headerlink" title="Instagram"></a><strong>Instagram</strong></h5><p><a href="https://rsshub.app/instagram/user/用户ID" target="_blank" rel="noopener">https://rsshub.app/instagram/user/用户ID</a></p>
+<br>
+
+
+
+<h5 id="U2B"><a href="#U2B" class="headerlink" title="U2B"></a><strong>U2B</strong></h5><p><a href="https://rsshub.app/youtube/user/用户ID，比如" target="_blank" rel="noopener">https://rsshub.app/youtube/user/用户ID，比如</a> <a href="https://www.runningcheese.com/go?url=https://rsshub.app/youtube/user/JFlaMusic/" target="_blank" rel="noopener">https://rsshub.app/youtube/user/JFlaMusic/</a></p>
+<p><a href="https://rsshub.app/youtube/channel/频道ID，比如" target="_blank" rel="noopener">https://rsshub.app/youtube/channel/频道ID，比如</a> <a href="https://www.runningcheese.com/go?url=https://rsshub.app/youtube/channel/UCDwDMPOZfxVV0x_dz0eQ8KQ" target="_blank" rel="noopener">https://rsshub.app/youtube/channel/UCDwDMPOZfxVV0x_dz0eQ8KQ</a></p>
+<br>
+
+
+
+<h5 id="Reddit"><a href="#Reddit" class="headerlink" title="Reddit"></a><strong>Reddit</strong></h5><p>在当前链接后面加入.rss，比如 <a href="https://www.runningcheese.com/go?url=https://www.reddit.com/r/nba/top/" target="_blank" rel="noopener">https://www.reddit.com/r/nba/top/</a> 改成 <a href="https://www.runningcheese.com/go?url=https://www.reddit.com/r/nba/top/.rss" target="_blank" rel="noopener">https://www.reddit.com/r/nba/top/.rss</a></p>
+<br>
+
+
+
+<h5 id="抖音"><a href="#抖音" class="headerlink" title="抖音"></a><strong>抖音</strong></h5><p><a href="https://rsshub.app/douyin/user/用户ID" target="_blank" rel="noopener">https://rsshub.app/douyin/user/用户ID</a></p>
+<br>
+
+
+
+<h5 id="网易云音乐"><a href="#网易云音乐" class="headerlink" title="网易云音乐"></a><strong>网易云音乐</strong></h5><p>1). 歌单歌曲</p>
+<p><a href="https://rsshub.app/ncm/playlist/歌单ID" target="_blank" rel="noopener">https://rsshub.app/ncm/playlist/歌单ID</a></p>
+<p> 2). 用户歌单</p>
+<p><a href="https://rsshub.app/ncm/user/playlist/用户ID" target="_blank" rel="noopener">https://rsshub.app/ncm/user/playlist/用户ID</a></p>
+<p>3). 电台节目</p>
+<p><a href="https://rsshub.app/ncm/djradio/电台ID" target="_blank" rel="noopener">https://rsshub.app/ncm/djradio/电台ID</a></p>
+<br>
+
+
+
+<h5 id="喜马拉雅"><a href="#喜马拉雅" class="headerlink" title="喜马拉雅"></a><strong>喜马拉雅</strong></h5><p><a href="https://rsshub.app/ximalaya/album/专辑ID" target="_blank" rel="noopener">https://rsshub.app/ximalaya/album/专辑ID</a></p>
+<br>
+
+
+
+<h5 id="Github"><a href="#Github" class="headerlink" title="Github"></a><strong>Github</strong></h5><p>1). 用户动态: 地址 + .atom</p>
+<p> 2). 仓库releases: 地址 + .atom</p>
+<p> 3). 仓库commits: 地址 + .atom</p>
+<p> 4). 仓库issues：<a href="https://rsshub.app/github/issue/用户名/仓库名" target="_blank" rel="noopener">https://rsshub.app/github/issue/用户名/仓库名</a></p>
+<br>
+
+
+
+<h5 id="V2EX"><a href="#V2EX" class="headerlink" title="V2EX"></a><strong>V2EX</strong></h5><p>周报：<a href="https://www.runningcheese.com/go?url=http://vdaily.iu.vc/old-weekly.xml" target="_blank" rel="noopener">http://vdaily.iu.vc/old-weekly.xml</a></p>
+<br>
+
+
+
+<h5 id="Dribble"><a href="#Dribble" class="headerlink" title="Dribble"></a><strong>Dribble</strong></h5><p><a href="https://rsshub.app/dribbble/user/用户ID" target="_blank" rel="noopener">https://rsshub.app/dribbble/user/用户ID</a></p>
+<br>
+
+<hr>
+<h3 id="四-RSS的一些其他玩用法"><a href="#四-RSS的一些其他玩用法" class="headerlink" title="四. RSS的一些其他玩用法"></a>四. RSS的一些其他玩用法</h3><h4 id="1-监视网页内任意内容的变化。"><a href="#1-监视网页内任意内容的变化。" class="headerlink" title="1. 监视网页内任意内容的变化。"></a>1. <strong>监视网页内任意内容的变化。</strong></h4><p>有一款叫 <code>Distill Web Monitor</code>的拓展 （支持 Firefox / Chrome），可以让你监视网页某处内容的变化，并在第一时间通知你。</p>
+<p>使用的场景非常多，比如监控某商城网站商品是否有货是否有降价，某网站上的房价涨跌提醒，某个页面是否有内容更新，某视频网站Po主发布新视频的提醒，再比如你是做运营的，想要监视竞争对手产品的动态，这款拓展都能做到。更加强大的地方在于它可以自定义提醒的条件，比如价格变化超过10%才提醒你。</p>
+<h4 id="2-指定新闻内容动态提醒。"><a href="#2-指定新闻内容动态提醒。" class="headerlink" title="2. 指定新闻内容动态提醒。"></a>2. <strong>指定新闻内容动态提醒。</strong></h4><p><a href="https://www.runningcheese.com/go?url=https://www.google.com/alerts" target="_blank" rel="noopener">Google Alerts</a> 可以让用户指定监控的关键词，Google 会在第一时间内向用户推送新内容更新提醒，支持邮件提醒，也支持RSS提醒，非常方便，用户可以用这个功能来跟踪一些新闻报道，业界动态，获取最新的国际事件等等。</p>
+<p>Google Alerts的最大作用就是：让用户能迅速而方便地获得其所关注的信息。Google Alerts能将有价值的信息主动推给用户，大大减少了用户获取信息的时间。实现了“不上网而知天下事”。百度也有<a href="https://www.runningcheese.com/go?url=https://www.baidu.com/search/rss.html" target="_blank" rel="noopener">类似产品</a>。</p>
+<h4 id="3-RSS-配合-IFTTT"><a href="#3-RSS-配合-IFTTT" class="headerlink" title="3.RSS 配合 IFTTT"></a>3.<strong>RSS 配合 IFTTT</strong></h4><p>IFTTT是“if this then that”的缩写，可以让你的网络行为能够引发连锁反应。以RSS为例，比如在你的RSS订阅源里出现了有关于”iPhone8”的信息，联接上IFTTT后就可以在手机上弹窗通知我们了。</p>
+<br>
+
+
+
+<hr>
+<h3 id="五-总结"><a href="#五-总结" class="headerlink" title="五.总结"></a>五.总结</h3><p>有一个说法，说的是 “<strong>You are what you read / 你的阅读造就了你</strong>“. RSS作为一个优化你获取信息的一种工具, 掌握之后一定会让你在更短的时间内, 获得更多你想要获得的信息!</p>
+<p>你阅读什么就会成为什么样的人，你获取的信息决定了你的思维你的眼界。RSS 就像是你从茫茫的信息海洋中将宝贵的信息收集在一起，同时随着你不断更新整理其中的内容，RSS 也慢慢地变成了一本由你亲手编写的宝书.</p>
+<br>
+
+
+
+<hr>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>文章引用:</p>
+<ul>
+<li><p><a href="https://www.runningcheese.com/rss-feed" target="_blank" rel="noopener">当我们谈论RSS时，我们谈论些什么?</a></p>
+</li>
+<li><p><a href="https://www.runningcheese.com/rss-subscriptions" target="_blank" rel="noopener"> 可能是目前最全的RSS订阅源了 </a></p>
+</li>
+<li><p><a href="https://docs.rsshub.app/" target="_blank" rel="noopener">RSSHub官方文档</a></p>
+</li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/23/使用RSS构建你自己的聚合信息/" title="https://jasonkayzk.github.io/2019/09/23/使用RSS构建你自己的聚合信息/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/23/使用RSS构建你自己的聚合信息/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1742451679881"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        "跑步健身🏃",
+        "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
