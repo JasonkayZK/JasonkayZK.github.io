@@ -1,0 +1,2621 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>mit-6.824 lab1 MapReduce总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近开始重新学习 mit-6.824，目前把Lab1做完了，在这里总结一下；源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～">
+<meta name="keywords" content="分布式,课程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mit-6.824 lab1 MapReduce总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/10/08/mit-6-824-lab1-MapReduce总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近开始重新学习 mit-6.824，目前把Lab1做完了，在这里总结一下；源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mapreduce_architecture.png">
+<meta property="og:updated_time" content="2025-07-30T10:34:36.205Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mit-6.824 lab1 MapReduce总结">
+<meta name="twitter:description" content="最近开始重新学习 mit-6.824，目前把Lab1做完了，在这里总结一下；源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mapreduce_architecture.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1753871720467">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>520</div>
+        <div><span>标签</span>276</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.91px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.45px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">26</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/debian12部署kubernetes-1-28集群/">debian12部署kubernetes-1.28集群</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/分享两个服务器实用脚本：xsync和xcall/">分享两个服务器实用脚本：xsync和xcall</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?10">
+    
+    <h1>mit-6.824 lab1 MapReduce总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年10月08日</a>
+    <a><i class="nexmoefont icon-areachart"></i>11.2k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 55 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/课程/">课程</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/分布式/">分布式</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/课程/">课程</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#mit-6-824-lab1-MapReduce总结"><span class="toc-text">mit-6.824 lab1 MapReduce总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MapReduce简介"><span class="toc-text">MapReduce简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MapReduce-编程模型"><span class="toc-text">MapReduce 编程模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#函数式编程模型"><span class="toc-text">函数式编程模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MapReduce计算执行过程"><span class="toc-text">MapReduce计算执行过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MapReduce容错机制"><span class="toc-text">MapReduce容错机制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Worker失效"><span class="toc-text">Worker失效</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Master失效"><span class="toc-text">Master失效</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#落后的Worker"><span class="toc-text">落后的Worker</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#其他优化"><span class="toc-text">其他优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#数据本地性"><span class="toc-text">数据本地性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Combiner"><span class="toc-text">Combiner</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#环境准备"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实验内容分析"><span class="toc-text">实验内容分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码实现"><span class="toc-text">代码实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RPC通信"><span class="toc-text">RPC通信</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Master调度"><span class="toc-text">Master调度</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Master结构体"><span class="toc-text">Master结构体</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Master初始化及启动"><span class="toc-text">Master初始化及启动</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Task的获取与分配"><span class="toc-text">Task的获取与分配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#处理前一个提交的Task"><span class="toc-text">处理前一个提交的Task</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#处理Map和Reduce类型任务的Handler"><span class="toc-text">处理Map和Reduce类型任务的Handler</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Job任务状态切换transit"><span class="toc-text">Job任务状态切换transit</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Worker状态轮询"><span class="toc-text">Worker状态轮询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#全部任务执行结束退出Done"><span class="toc-text">全部任务执行结束退出Done</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Worker计算"><span class="toc-text">Worker计算</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化Worker"><span class="toc-text">初始化Worker</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#处理Map任务"><span class="toc-text">处理Map任务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#处理Reduce任务"><span class="toc-text">处理Reduce任务</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#测试验证"><span class="toc-text">测试验证</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近开始重新学习 mit-6.824，目前把Lab1做完了，在这里总结一下；</p>
+<p>源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～</p>
+<p>视频学习地址：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1R7411t71W/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1R7411t71W/</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="mit-6-824-lab1-MapReduce总结"><a href="#mit-6-824-lab1-MapReduce总结" class="headerlink" title="mit-6.824 lab1 MapReduce总结"></a><strong>mit-6.824 lab1 MapReduce总结</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p>目前我学习的是 2020 MIT 6.824 分布式系统，当然现在有了更新的 2021、2022 的版本，不过大致思想基本上都是一样的；</p>
+<p>完整的 Lab 说明在这里：</p>
+<ul>
+<li><a href="http://nil.csail.mit.edu/6.824/2020/labs/lab-mr.html" target="_blank" rel="noopener">http://nil.csail.mit.edu/6.824/2020/labs/lab-mr.html</a></li>
+</ul>
+<p>在做实验之前，建议先看完 Google 的这两篇论文：</p>
+<ul>
+<li><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/gfs-sosp2003.pdf" target="_blank" rel="noopener">https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/gfs-sosp2003.pdf</a></li>
+<li><a href="https://pdos.csail.mit.edu/6.824/papers/mapreduce.pdf" target="_blank" rel="noopener">https://pdos.csail.mit.edu/6.824/papers/mapreduce.pdf</a></li>
+</ul>
+<p>并看完 Lecture 1、2:</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1R7411t71W/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1R7411t71W/</a></li>
+</ul>
+<p>对 MapReduce 有一定的了解，并且对 Go 有一定的了解再下手去做；</p>
+<br>
+
+<h2 id="MapReduce简介"><a href="#MapReduce简介" class="headerlink" title="MapReduce简介"></a><strong>MapReduce简介</strong></h2><h3 id="MapReduce-编程模型"><a href="#MapReduce-编程模型" class="headerlink" title="MapReduce 编程模型"></a><strong>MapReduce 编程模型</strong></h3><p>总的来讲，Google MapReduce 所执行的分布式计算会以一组键值对作为输入，输出另一组键值对，用户则通过编写 Map 函数和 Reduce 函数来指定所要进行的计算。</p>
+<p>由用户编写的Map 函数将被应用在每一个输入键值对上，并输出若干键值对作为中间结果。之后，MapReduce 框架则会将与同一个键 II 相关联的值都传递到同一次 Reduce 函数调用中。</p>
+<p>同样由用户编写的 Reduce 函数以键 II 以及与该键相关联的值的集合作为参数，对传入的值进行合并并输出合并后的值的集合。</p>
+<p>形式化地说，由用户提供的 Map 函数和 Reduce 函数应有如下类型：</p>
+<pre><code>map(k1,v1) → list(k2,v2) 
+
+reduce(k2,list(v2)) → list(v2)</code></pre><p>值得注意的是，在实际的实现中 MapReduce 框架使用 <code>Iterator</code> 来代表作为输入的集合，主要是为了避免集合过大，无法被完整地放入到内存中；</p>
+<p>作为案例，我们考虑这样一个问题：给定大量的文档，计算其中每个单词出现的次数（Word Count）；</p>
+<p>用户通常需要提供形如如下伪代码的代码来完成计算：</p>
+<pre><code class="python">map(String key, String value):
+  // key: document name
+  // value: document contents
+  for each word w in value:
+    EmitIntermediate(w, “1”);
+
+
+reduce(String key, Iterator values):
+  // key: a word
+  // values: a list of counts
+  int result = 0;
+  for each v in values:
+    result += ParseInt(v);
+  Emit(AsString(result));</code></pre>
+<br>
+
+<h3 id="函数式编程模型"><a href="#函数式编程模型" class="headerlink" title="函数式编程模型"></a><strong>函数式编程模型</strong></h3><p>了解函数式编程范式的读者不难发现：MapReduce 所采用的编程模型源自于函数式编程里的 Map 函数和 Reduce 函数。后起之秀 Spark 同样采用了类似的编程模型；</p>
+<p>使用函数式编程模型的好处在于这种编程模型本身就对并行执行有良好的支持，这使得底层系统能够轻易地将大数据量的计算并行化，同时由用户函数所提供的确定性也使得底层系统能够将函数重新执行作为提供容错性的主要手段；</p>
+<h3 id="MapReduce计算执行过程"><a href="#MapReduce计算执行过程" class="headerlink" title="MapReduce计算执行过程"></a><strong>MapReduce计算执行过程</strong></h3><p>每一轮 MapReduce 的大致过程如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/mapreduce_architecture.png" alt="mapreduce_architecture.png"></p>
+<p>首先，用户通过 MapReduce 客户端指定 Map 函数和 Reduce 函数，以及此次 MapReduce 计算的配置，包括中间结果键值对的 Partition 数量 RR 以及用于切分中间结果的哈希函数 hash；</p>
+<p>用户开始 MapReduce 计算后，整个 MapReduce 计算的流程可总结如下：</p>
+<ol>
+<li>作为输入的文件会被分为 M 个 Split，每个 Split 的大小通常在 16~64 MB 之间；</li>
+<li>如此，整个 MapReduce 计算包含 M 个Map 任务和 R 个 Reduce 任务。Master 结点会从空闲的 Worker 结点中进行选取并为其分配 Map 任务和 Reduce 任务；</li>
+<li>收到 Map 任务的 Worker 们（又称 Mapper）开始读入自己对应的 Split，将读入的内容解析为输入键值对并调用由用户定义的 Map 函数；由 Map 函数产生的中间结果键值对会被暂时存放在缓冲内存区中；</li>
+<li>在 Map 阶段进行的同时，Mapper 们周期性地将放置在缓冲区中的中间结果存入到自己的本地磁盘中，同时根据用户指定的 Partition 函数（默认为 <code>hash(key) % R</code>）将产生的中间结果分为RR 个部分。任务完成时，Mapper 便会将中间结果在其本地磁盘上的存放位置报告给 Master；</li>
+<li>Mapper 上报的中间结果存放位置会被 Master 转发给 Reducer；当 Reducer 接收到这些信息后便会通过 RPC 读取存储在 Mapper 本地磁盘上属于对应 Partition 的中间结果；在读取完毕后，Reducer 会对读取到的数据进行排序以令拥有相同键的键值对能够连续分布；</li>
+<li>之后，Reducer 会为每个键收集与其关联的值的集合，并以之调用用户定义的 Reduce 函数。Reduce 函数的结果会被放入到对应的 Reduce Partition 结果文件；</li>
+</ol>
+<p>实际上，在一个 MapReduce 集群中，Master 会记录每一个 Map 和 Reduce 任务的当前完成状态，以及所分配的 Worker；除此之外，Master 还负责将 Mapper 产生的中间结果文件的位置和大小转发给 Reducer；</p>
+<p><strong>值得注意的是，每次 MapReduce 任务执行时，M 和 R 的值都应比集群中的 Worker 数量要高得多，以达成集群内负载均衡的效果；</strong></p>
+<br>
+
+<h3 id="MapReduce容错机制"><a href="#MapReduce容错机制" class="headerlink" title="MapReduce容错机制"></a><strong>MapReduce容错机制</strong></h3><p>由于 Google MapReduce 很大程度上利用了由 Google File System 提供的分布式原子文件读写操作，所以 MapReduce 集群的容错机制实现相比之下便简洁很多，也主要集中在任务意外中断的恢复上；</p>
+<h4 id="Worker失效"><a href="#Worker失效" class="headerlink" title="Worker失效"></a><strong>Worker失效</strong></h4><p>在 MapReduce 集群中，Master 会周期地向每一个 Worker 发送 Ping 信号：如果某个 Worker 在一段时间内没有响应，Master 就会认为这个 Worker 已经不可用；</p>
+<p>任何分配给该 Worker 的 Map 任务，无论是正在运行还是已经完成，都需要由 Master 重新分配给其他 Worker，因为该 Worker 不可用也意味着存储在该 Worker 本地磁盘上的中间结果也不可用了；</p>
+<p>Master 也会将这次重试通知给所有 Reducer，没能从原本的 Mapper 上完整获取中间结果的 Reducer 便会开始从新的 Mapper 上获取数据；</p>
+<p>如果有 Reduce 任务分配给该 Worker，Master 则会选取其中尚未完成的 Reduce 任务分配给其他 Worker；</p>
+<p>鉴于 Google MapReduce 的结果是存储在 Google File System 上的，已完成的 Reduce 任务的结果的可用性由 Google File System 提供，因此 MapReduce Master 只需要处理未完成的 Reduce 任务即可；</p>
+<br>
+
+<h4 id="Master失效"><a href="#Master失效" class="headerlink" title="Master失效"></a><strong>Master失效</strong></h4><p><strong>整个 MapReduce 集群中只会有一个 Master 结点，因此 Master 失效的情况并不多见；</strong></p>
+<p>Master 结点在运行时会周期性地将集群的当前状态作为保存点（Checkpoint）写入到磁盘中；</p>
+<p>Master 进程终止后，重新启动的 Master 进程即可利用存储在磁盘中的数据恢复到上一次保存点的状态；</p>
+<br>
+
+<h4 id="落后的Worker"><a href="#落后的Worker" class="headerlink" title="落后的Worker"></a><strong>落后的Worker</strong></h4><p>如果集群中有<strong>某个 Worker 花了特别长的时间来完成最后的几个 Map 或 Reduce 任务，整个 MapReduce 计算任务的耗时就会因此被拖长，这样的 Worker 也就成了落后者（Straggler）！</strong></p>
+<p><font color="#f00"><strong>MapReduce 在整个计算完成到一定程度时就会将剩余的任务进行备份，即同时将其分配给其他空闲 Worker 来执行，并在其中一个 Worker 完成后将该任务视作已完成；</strong></font></p>
+<br>
+
+<h3 id="其他优化"><a href="#其他优化" class="headerlink" title="其他优化"></a><strong>其他优化</strong></h3><p>在高可用的基础上，Google MapReduce 系统现有的实现同样采取了一些优化方式来提高系统运行的整体效率；</p>
+<h4 id="数据本地性"><a href="#数据本地性" class="headerlink" title="数据本地性"></a><strong>数据本地性</strong></h4><p>在 Google 内部所使用的计算环境中，机器间的网络带宽是比较稀缺的资源，需要尽量减少在机器间过多地进行不必要的数据传输；</p>
+<p>Google MapReduce 采用 Google File System 来保存输入和结果数据，因此 Master 在分配 Map 任务时会从 Google File System 中读取各个 Block 的位置信息，并尽量将对应的 Map 任务分配到持有该 Block 的 Replica 的机器上；</p>
+<p>如果无法将任务分配至该机器，Master 也会利用 Google File System 提供的机架拓扑信息将任务分配到较近的机器上；</p>
+<br>
+
+<h4 id="Combiner"><a href="#Combiner" class="headerlink" title="Combiner"></a><strong>Combiner</strong></h4><p>在某些情形下，用户所定义的 Map 任务可能会产生大量重复的中间结果键，同时用户所定义的 Reduce 函数本身也是满足交换律和结合律的；</p>
+<p>在这种情况下，Google MapReduce 系统允许用户声明在 Mapper 上执行的 Combiner 函数：Mapper 会使用由自己输出的 R 个中间结果 Partition 调用 Combiner 函数以对中间结果进行局部合并，减少 Mapper 和 Reducer 间需要传输的数据量；</p>
+<blockquote>
+<p>  以上内容转自：</p>
+<ul>
+<li><a href="https://mr-dai.github.io/mapreduce_summary/" target="_blank" rel="noopener">https://mr-dai.github.io/mapreduce_summary/</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a><strong>环境准备</strong></h2><p>Lab1 所需要的环境非常简单，只需要你的电脑安装 Go 即可；</p>
+<blockquote>
+<p>  <strong>实验要求的环境是 Go 1.13，但是我的环境是 Go 1.18；</strong></p>
+<p>  <strong>但是由于 Go 良好向前兼容的特性，也是可以用的！</strong></p>
+</blockquote>
+<p>获取代码也非常简单，直接通过 Git Clone 下来就可以了：</p>
+<pre><code class="bash">$ git clone git://g.csail.mit.edu/6.824-golabs-2020 6.824
+$ cd 6.824</code></pre>
+<p>Clone 下来的代码默认已经提供了一个简单的顺序执行的 MapReduce 实现在：<code>src/main/mrsequential.go</code>；</p>
+<p>同时在 <code>mrapps/</code> 目录下，也提供了几个 MapReduce 的应用（主要是实现 Map、Reduce 两个函数），后面测试的时候会用到；</p>
+<p>可以简单的先做一个测试：</p>
+<pre><code class="bash">$ cd src/main
+# 构建 MapReduce APP 的动态链接库
+$ go build -buildmode=plugin ../mrapps/wc.go
+
+# 执行顺序实现的MapReduce例子
+$ rm mr-out*
+$ go run mrsequential.go wc.so pg*.txt
+
+# 验证结果
+$ more mr-out-0
+A 509
+ABOUT 2
+ACT 8
+...</code></pre>
+<p>看到成功输出了文件 <code>mr-out-0</code> 就说明我们的环境是OK的！</p>
+<p>在我们开始实验之前，先看一下上面的例子到底做了点啥；</p>
+<p>首先，通过 <code>go build -buildmode=plugin ../mrapps/wc.go</code> 将 WordCount 应用编译为了动态链接库；</p>
+<blockquote>
+<p>  <strong>在后面使用的时候，使用内置的 <code>plugin</code> 库中的 <code>Lookup</code> 函数直接加载了 Map 和 Reduce 函数进行调用；</strong> </p>
+<p>  关于 <code>plugin</code> 库：</p>
+<ul>
+<li><a href="https://pkg.go.dev/plugin" target="_blank" rel="noopener">https://pkg.go.dev/plugin</a></li>
+</ul>
+</blockquote>
+<p><code>mrapps/wc.go</code> 中的逻辑非常简单：</p>
+<pre><code class="go">package main
+
+// a word-count application &quot;plugin&quot; for MapReduce.
+// go build -buildmode=plugin wc.go
+
+import &quot;../mr&quot;
+import &quot;unicode&quot;
+import &quot;strings&quot;
+import &quot;strconv&quot;
+
+// The map function is called once for each file of input. The first
+// argument is the name of the input file, and the second is the
+// file&#39;s complete contents. You should ignore the input file name,
+// and look only at the contents argument. The return value is a slice
+// of key/value pairs.
+func Map(filename string, contents string) []mr.KeyValue {
+    // function to detect word separators.
+    ff := func(r rune) bool { return !unicode.IsLetter(r) }
+
+    // split contents into an array of words.
+    words := strings.FieldsFunc(contents, ff)
+
+    kva := []mr.KeyValue{}
+    for _, w := range words {
+        kv := mr.KeyValue{w, &quot;1&quot;}
+        kva = append(kva, kv)
+    }
+    return kva
+}
+
+// The reduce function is called once for each key generated by the
+// map tasks, with a list of all the values created for that key by
+// any map task.
+func Reduce(key string, values []string) string {
+    // return the number of occurrences of this word.
+    return strconv.Itoa(len(values))
+}</code></pre>
+<p><strong>就是定义了 Map、Reduce 两个函数，而不必关心后面的任务是如何调度的（分布式 or 顺序执行）；</strong></p>
+<p>随后执行：<code>go run mrsequential.go wc.so pg*.txt</code> 指定了 MapReduce 动态连接库，以及提前准备好的测试文件（以 <code>pg</code> 开头）；</p>
+<p>下面来看看顺序执行的 MapReduce 的实现：</p>
+<p>src/main/mrsequential.go</p>
+<pre><code class="go">package main
+
+// simple sequential MapReduce.
+// go run mrsequential.go wc.so pg*.txt
+
+import &quot;fmt&quot;
+import &quot;../mr&quot;
+import &quot;plugin&quot;
+import &quot;os&quot;
+import &quot;log&quot;
+import &quot;io/ioutil&quot;
+import &quot;sort&quot;
+
+// for sorting by key.
+type ByKey []mr.KeyValue
+
+// for sorting by key.
+func (a ByKey) Len() int           { return len(a) }
+func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByKey) Less(i, j int) bool { return a[i].Key &lt; a[j].Key }
+
+func main() {
+    if len(os.Args) &lt; 3 {
+        fmt.Fprintf(os.Stderr, &quot;Usage: mrsequential xxx.so inputfiles...\n&quot;)
+        os.Exit(1)
+    }
+
+    mapf, reducef := loadPlugin(os.Args[1])
+
+    // read each input file,
+    // pass it to Map,
+    // accumulate the intermediate Map output.
+    intermediate := []mr.KeyValue{}
+    for _, filename := range os.Args[2:] {
+        file, err := os.Open(filename)
+        if err != nil {
+            log.Fatalf(&quot;cannot open %v&quot;, filename)
+        }
+        content, err := ioutil.ReadAll(file)
+        if err != nil {
+            log.Fatalf(&quot;cannot read %v&quot;, filename)
+        }
+        file.Close()
+        kva := mapf(filename, string(content))
+        intermediate = append(intermediate, kva...)
+    }
+
+    // a big difference from real MapReduce is that all the
+    // intermediate data is in one place, intermediate[],
+    // rather than being partitioned into NxM buckets.
+
+    sort.Sort(ByKey(intermediate))
+
+    oname := &quot;mr-out-0&quot;
+    ofile, _ := os.Create(oname)
+
+    // call Reduce on each distinct key in intermediate[],
+    // and print the result to mr-out-0.
+    i := 0
+    for i &lt; len(intermediate) {
+        j := i + 1
+        for j &lt; len(intermediate) &amp;&amp; intermediate[j].Key == intermediate[i].Key {
+            j++
+        }
+        values := []string{}
+        for k := i; k &lt; j; k++ {
+            values = append(values, intermediate[k].Value)
+        }
+        output := reducef(intermediate[i].Key, values)
+
+        // this is the correct format for each line of Reduce output.
+        fmt.Fprintf(ofile, &quot;%v %v\n&quot;, intermediate[i].Key, output)
+
+        i = j
+    }
+
+    ofile.Close()
+}
+
+// load the application Map and Reduce functions
+// from a plugin file, e.g. ../mrapps/wc.so
+func loadPlugin(filename string) (func(string, string) []mr.KeyValue, func(string, []string) string) {
+    p, err := plugin.Open(filename)
+    if err != nil {
+        log.Fatalf(&quot;cannot load plugin %v&quot;, filename)
+    }
+    xmapf, err := p.Lookup(&quot;Map&quot;)
+    if err != nil {
+        log.Fatalf(&quot;cannot find Map in %v&quot;, filename)
+    }
+    mapf := xmapf.(func(string, string) []mr.KeyValue)
+    xreducef, err := p.Lookup(&quot;Reduce&quot;)
+    if err != nil {
+        log.Fatalf(&quot;cannot find Reduce in %v&quot;, filename)
+    }
+    reducef := xreducef.(func(string, []string) string)
+
+    return mapf, reducef
+}</code></pre>
+<p>直接从 main 函数开始看：</p>
+<p>首先从动态连接库中获取 Map 和 Reduce 函数；</p>
+<p>随后，读取每一个输入的文件，并使用 Map 函数处理，并将处理后的结果存入 intermediate 临时数组中；</p>
+<p>紧接着，对 intermediate 临时数组在 Key 上排序，这也是 MapReduce 论文中要求的；</p>
+<p>最后，由于按照 Key 值排序后的中间数组相同的 Key 值连续排列，因此我们对相同 Key 值调用 Reduce 进行聚合，并输出到文件中；</p>
+<p>至此我们的顺序执行 MapReduce 结束；</p>
+<p>可以看到，顺序执行的 MapReduce 的实现是非常简单的；下面我们来看我们要做的实验；</p>
+<br>
+
+<h2 id="实验内容分析"><a href="#实验内容分析" class="headerlink" title="实验内容分析"></a><strong>实验内容分析</strong></h2><p>根据实验内容，我们要做的是：<strong>实现一个 单机、多进程、并行 版本的 MapReduce；</strong></p>
+<p>实现包括两个独立的部分：单独的 master 和 多个并行的 worker 进程，两者通过 rpc 调用通信；</p>
+<p>每个 worker 进程都会向 master 索要任务、读取任务指定的文件、执行任务并最终将结果写入多个输出文件中；</p>
+<p>并且，为了模拟在分布式场景下程序的 worker 挂掉的场景，master 需要处理当一段时间内 worker 都没有完成任务（实验指定的是10秒钟），则需要将任务交给其他 worker 去做；</p>
+<p>实验已经提供了部分代码： <code>main/mrmaster.go</code> 和 <code>main/mrworker.go</code>（无需修改）；</p>
+<p>只需要将实现写在： <code>mr/master.go</code>, <code>mr/worker.go</code>、 <code>mr/rpc.go</code> 即可；</p>
+<p>同时，也提供了在开发的时候进行测试的方法：</p>
+<p>首先，启动 master 节点：</p>
+<pre><code class="bash">$ go run mrmaster.go pg-*.txt</code></pre>
+<p>随后在多个新的终端启动多个 worker 节点：</p>
+<pre><code class="bash">$ go run mrworker.go wc.so</code></pre>
+<p>即可测试；</p>
+<p>同时，实验提供了测试脚本用于整个实验的测试：<code>test-mr.sh</code>；</p>
+<p>关于实验的一些规则：</p>
+<ul>
+<li>在处理 Map 任务时，需要将中间产物 Key 切分为 <code>nReduce</code> 个 reduce 任务，这个参数是调用 <code>MakeMaster()</code> 函数时指定的！</li>
+<li>第 X 个 Reduce 任务的产物应当命名为：<code>mr-out-X</code>；</li>
+<li>最终输出文件 <code>mr-out-X</code> 应当每行一个输出，并且采用 <code>&quot;%v %v&quot;</code> 格式（和 <code>main/mrsequential.go</code> 一致）；</li>
+<li>当 <code>main/mrmaster.go</code> 调用  <code>mr/master.go</code> 的 <code>Done</code> 函数返回 true 时，其认为所有任务都已完成，将会退出；</li>
+<li>当所有的任务都结束，worker 应当退出；一个简单的实现是：当调用 <code>call</code> rpc 与 master 通信失败时，认为任务结束；不过一个另外一个做法是当任务结束后，master 下发一个 <code>请退出</code> 的任务，交给 worker 去执行；</li>
+</ul>
+<p>一些提示：</p>
+<ul>
+<li>在开发测试时，当你修改了 <code>mr/</code> 目录下的文件，你应该重新使用 <code>go build -buildmode=plugin ../mrapps/wc.go</code> 编译；</li>
+<li>一个合理的中间结果文件的命名为： <code>mr-X-Y</code>，X 表示 Map 任务Id、Y 表示 Reduce 任务Id；</li>
+<li>可以使用  <code>ihash(key)</code> 函数来计算由哪个 worker 来执行对应 Key 的 Reduce 任务；</li>
+<li>master 节点会被并发的访问，不要忘了对共享的数据加锁；</li>
+<li>有的时候 worker 需要等待，比如：只有在所有的 Map 任务都完成，才能开启 Reduce 任务；一个实现方案是：worker 定期轮询 master 去索要任务的时候来询问；另一个实现方案是由 master 节点来定期轮询是否所有的任务都已经完成；</li>
+<li>master 节点无法区分一个 worker 节点到底是挂掉了，还是执行了一个任务太长时间；最好的做法是master等待一段时间后，放弃那些执行时间过长（本实验中为10s）的 worker，认为他们已经挂了，并重新分配任务；</li>
+<li>可以使用 <code>mrapps/crash.go</code> 测试节点挂掉后的恢复，他的 Map、Reduce 函数会随机直接退出（模拟 worker 节点在被分配任务后挂掉）；</li>
+<li><font color="#f00"><strong>为了保证没有 worker 节点能够看到由于节点崩溃而写入一半的最终产出文件，在 MapReduce 论文中提出了，先创建临时文件，并且在全部写入完成后，重命名的方法（很赞！）；你也应当使用这种方法；</strong></font></li>
+</ul>
+<p>通过上面的任务，我们可以总结出：</p>
+<p>对于 master 节点要做到：</p>
+<ul>
+<li><strong>在启动时根据指定的输入文件及 nReduce 数，生成 Map Task 及 Reduce Task；</strong></li>
+<li><strong>通过 RPC 的方式为 Workers 分配可用的 Task 去处理（由 Worker 调用去获取）；</strong></li>
+<li><strong>校验 Task 的完成情况，当所有 Map Task 完成后，推进到 Reduce 阶段，开始派发 Reduce Task；在所有 Reduce Task 完成后标记作业已完成并退出；</strong></li>
+<li><strong>同时，由于 worker 节点存在挂掉的可能，在 master 校验 Task 完成情况时，需要 追踪已分配的 Task 的运行情况，在 Task 超出 10s 仍未完成时，将该 Task 重新分配给其他 Worker 重试；</strong></li>
+</ul>
+<p>对于 worker 节点：</p>
+<ul>
+<li><strong>当空闲时调用 RPC 向 master 获取任务；</strong></li>
+<li><strong>获取到任务后，根据不同任务类型调用 Map、Reduce 并输出中间、最终文件；</strong></li>
+</ul>
+<br>
+
+<p>一个难点在于：在执行 Reduce 任务时，需要根据指定的 nReduce 数进行分配；</p>
+<p>解决方法是：我们可以通过计算 <code>ihash(key)</code> 来定义中间产物文件，来记录每个 Reduce 所在的文件；</p>
+<p>另一个难点在于：有可能存在两个 worker 同时执行同一个任务的情况，此时要保证只有一个 Worker 能够完成结果数据的最终写出，以免出现冲突导致最终观察到重复或缺失的结果数据；</p>
+<p>我们可以通过实验给出的提示：通过临时文件的方法解决；即：</p>
+<p>Worker 写出数据时，先写出到临时文件（Write），最终确认没有问题后再将其重命名（Commit）为正式结果文件，区分开了 Write 和 Commit 的过程；</p>
+<p>而 Commit 的过程可以是 Master 来执行，也可以是 Worker 来执行：</p>
+<ul>
+<li><strong>Master Commit</strong>：Worker 向 Master 汇报 Task 完成，<strong>Master 确认该 Task 是否仍属于该 Worker</strong>，是则进行结果文件 Commit，否则直接忽略；</li>
+<li><strong>Worker Commit</strong>：Worker 向 Master 汇报 Task 完成，Master 确认该 Task 是否仍属于该 Worker 并响应 Worker，是则 Worker 进行结果文件 Commit，再向 Master 汇报 Commit 完成；</li>
+</ul>
+<p>上面两种方法都是可行的；</p>
+<p>我的实现选择了 Master Commit，因为可以少一次 RPC 调用，在实现上会更简单；但缺点是所有 Task 最终 Commit 都由 Master 完成，在极端场景下会让 Master 变成整个 MR 过程的性能瓶颈；</p>
+<br>
+
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a><strong>代码实现</strong></h2><p>代码的实现主要分为三个部分，并且实验已经提供好了对应的文件：</p>
+<ul>
+<li>Master 与 Worker 间的 RPC 通信，对应 mr/rpc.go 文件；</li>
+<li>Master 调度逻辑，对应 mr/master.go 文件；</li>
+<li>Worker 计算逻辑，对应 mr/worker.go 文件；</li>
+</ul>
+<p>下面我们一个一个来看；</p>
+<h3 id="RPC通信"><a href="#RPC通信" class="headerlink" title="RPC通信"></a><strong>RPC通信</strong></h3><p>RPC 通信主要是用来：</p>
+<ul>
+<li><strong>Query</strong>：Worker 请求 Master 获取 Map 或 Reduce 任务；</li>
+<li><strong>Commit</strong>：Worker 向 Master 确认上一个任务已经完成；</li>
+</ul>
+<p>在实现时，因为上面两个步骤可以合并为一个步骤，因此，可以用一个 RPC 调用完成上面两个事情；</p>
+<p><strong>即：在 Query 下一个任务的时候，Commit 上一个任务；</strong></p>
+<p><strong>特别的：</strong></p>
+<ul>
+<li><strong>在 Query 第一个任务的时候，没有上一个任务，所以不需要 Commit；</strong></li>
+<li><strong>存在 Query 任务的时候，不存在任务的可能，此时可以 Commit 上一个任务，但是不会返回下一个任务；</strong></li>
+</ul>
+<p>RPC 的请求与相应结构体定义如下：</p>
+<p>src/mr/rpc.go</p>
+<pre><code class="go">// TaskTypeOpt The MapReduce task type
+type TaskTypeOpt string
+
+const (
+    TaskTypeMap      TaskTypeOpt = &quot;Map&quot;
+    TaskTypeReduce   TaskTypeOpt = &quot;Reduce&quot;
+    TaskTypeFinished TaskTypeOpt = &quot;Finished&quot;
+)
+
+// TaskInfo The MapReduce task
+type TaskInfo struct {
+    Id       string
+    Type     TaskTypeOpt
+    Index    int
+    File     string
+    WorkerId string
+    Deadline time.Time
+}
+
+// AckAndQueryNewTaskRequest RPC request for Workers to query a task after finished previously task
+type AckAndQueryNewTaskRequest struct {
+    // The finished previous task index (if it has finished task)
+    PreviousTaskIndex int
+    TaskType          TaskTypeOpt
+    WorkerId          string
+}
+
+// AckAndQueryNewTaskResponse RPC response for Workers to query a task
+type AckAndQueryNewTaskResponse struct {
+    // The task id(filename) for Map or Reduce to yield results(if there has)
+    Task            *TaskInfo
+    MapWorkerCnt    int
+    ReduceWorkerCnt int
+}</code></pre>
+<p>首先定义了 <code>TaskTypeOpt</code> 类型，标志任务的类型，包括三种：</p>
+<ul>
+<li><strong><code>&quot;Map&quot;</code>：Map 任务；</strong></li>
+<li><strong><code>&quot;Reduce&quot;</code>：Reduce 任务；</strong></li>
+<li><strong><code>&quot;Finished&quot;</code>：任务已完成，提示 Worker 可以退出；</strong></li>
+</ul>
+<p><code>TaskInfo</code> 表示一个任务实体，包括：</p>
+<ul>
+<li><strong>Id：任务的Id；</strong></li>
+<li><strong>Type：任务的类型；</strong></li>
+<li><strong>Index：任务的序号，表示是第几个任务；</strong></li>
+<li><strong>File：任务需要处理的文件；</strong></li>
+<li><strong>WorkerId：目前执行该任务的 Worker 的Id；</strong></li>
+<li><strong>Deadline：任务的结束时间（本实验为10秒钟）；</strong></li>
+</ul>
+<p>我们 RPC 的名称为 <code>AckAndQueryNewTask</code>，包括 Request 和 Response 两个部分；</p>
+<p><code>AckAndQueryNewTaskRequest</code> 包括：</p>
+<ul>
+<li><code>PreviousTaskIndex</code>：上一个执行完成任务的索引，用于 Commit 上一个任务；</li>
+<li><code>TaskType</code>：上一个执行完成任务的类型，用于 Commit 上一个任务；</li>
+<li><code>WorkerId</code>：上一个执行完成任务的 WorkerId（本 WorkerId），用于 Master 校验到底是哪个 Worker 执行任务（Failover 策略）；</li>
+</ul>
+<p><code>AckAndQueryNewTaskResponse</code> 包括：</p>
+<ul>
+<li><strong>Task</strong>：<code>*TaskInfo</code> 类型，新申请的任务，如果不存在可调度的任务，则返回 nil；</li>
+<li><strong>MapWorkerCnt：</strong>分配执行 Map 的 Worker 数，用于生成临时文件；</li>
+<li><strong>ReduceWorkerCnt：</strong>分配执行 Reduce 的 Worker 数，用于生成临时文件；</li>
+</ul>
+<br>
+
+<h3 id="Master调度"><a href="#Master调度" class="headerlink" title="Master调度"></a><strong>Master调度</strong></h3><h4 id="Master结构体"><a href="#Master结构体" class="headerlink" title="Master结构体"></a><strong>Master结构体</strong></h4><p>Master 主要是完成下面几个功能：</p>
+<ul>
+<li><strong>实现 <code>AckAndQueryNewTask</code> 方法，实现任务的分配、上一个任务的 Commit；</strong></li>
+<li><strong>实现各个任务状态之间的切换：Map =&gt; Reduce =&gt; Finished；</strong></li>
+<li><strong>定时轮询各个任务的执行情况，抛弃超时的任务并重新分配；</strong></li>
+</ul>
+<p>因此，Master 需要维护下面的信息：</p>
+<ul>
+<li><strong>配置信息</strong>：<ul>
+<li>MAP Worker 数量；</li>
+<li>Reduce Worker 数量；</li>
+</ul>
+</li>
+<li><strong>调度任务信息</strong>：<ul>
+<li>当前所处阶段，是 MAP、REDUCE、Finished；</li>
+<li>所有仍未完成的 Task 及其所属的 Worker 和 Deadline，可以使用 Map 配合 TaskId 实现；</li>
+<li>所有仍未分配的 Task 池，用于响应 Worker 申请任务及 Failover 时的重新分配，可以使用 Channel 实现；</li>
+</ul>
+</li>
+</ul>
+<p>下面是 Master 结构的定义：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">type Master struct {
+    // Use lock to avoid data race
+    lock sync.RWMutex
+
+    // The phase of all tasks
+    status TaskTypeOpt
+
+    // The count of the workers
+    mapCnt    int
+    reduceCnt int
+
+    // All tasks
+    tasks map[string]*TaskInfo
+    // All ongoing tasks
+    availableTasks chan *TaskInfo
+}</code></pre>
+<p>其中：</p>
+<ul>
+<li>lock 读写锁用于防止 Master 内部的状态出现 Data Race；</li>
+<li>status 记录了当前 Job 的任务状态；</li>
+<li>mapCnt、reduceCnt 记录了当前 Map、Reduce 的数量；</li>
+<li>tasks 记录了当前<strong>所有正在执行、可分配</strong>的任务；</li>
+<li>availableTasks 记录了<strong>当前可以被分配</strong>的任务；</li>
+</ul>
+<br>
+
+<h4 id="Master初始化及启动"><a href="#Master初始化及启动" class="headerlink" title="Master初始化及启动"></a><strong>Master初始化及启动</strong></h4><p>当创建一个 Master 后主要需要做以下几个事情：</p>
+<ul>
+<li>基于指定的输入文件生成 MAP Task 到：可用 Task 池 availableTasks 以及 tasks 中；</li>
+<li>处理 Worker 的 Task 申请 RPC，从池中分配一个可用的 Task 给 Worker 并响应；</li>
+<li>处理 Worker 的 Task 完成通知，完成 Task 最终的结果数据 Commit；</li>
+<li>在 MAP Task 全部完成后，切换至 REDUCE 阶段，生成 REDUCE Task 到可用 Task 池；</li>
+<li>在 REDUCE Task 全部完成后，标记 MR 作业已完成，退出；</li>
+<li>周期轮询正在运行的 Task，如果发现 Task 运行时长超出 Deadline 后重新分配其到新的 Worker 上运行；</li>
+</ul>
+<p>Master 的初始化主要是在 <code>src/main/mrmaster.go</code> 中通过调用 <code>MakeMaster</code> 函数实现的；</p>
+<p>下面来看：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// MakeMaster create a Master.
+// main/mrmaster.go calls this function.
+// nReduce is the number of reduce tasks to use.
+func MakeMaster(files []string, nReduce int) *Master {
+
+    // Step 1: Create master
+    m := &amp;Master{
+        status:         TaskTypeMap,
+        mapCnt:         len(files),
+        reduceCnt:      nReduce,
+        tasks:          make(map[string]*TaskInfo),
+        availableTasks: make(chan *TaskInfo, max(len(files), nReduce)),
+    }
+
+    // Step 2: Store the data
+    for idx, file := range files {
+        task := &amp;TaskInfo{
+            Id:    generateTaskId(TaskTypeMap, idx),
+            Type:  TaskTypeMap,
+            Index: idx,
+            File:  file,
+        }
+        m.tasks[task.Id] = task  // Store the tasks
+        m.availableTasks &lt;- task // Send the task to the channel
+    }
+
+    // Step 3: Start master server
+    m.server()
+    infof(&quot;master server started: %v&quot;, m)
+
+    // Step 4: Start workers heartbeats checker
+    go func() {
+        for {
+            time.Sleep(500 * time.Millisecond)
+            m.checkWorkers()
+        }
+    }()
+
+    return m
+}</code></pre>
+<p>代码首先初始化了 Master 的各个属性，将最初状态设置为 Map 类型的 Task；</p>
+<p>随后，遍历输入的文件，为每个文件创建 Task，并存入 tasks 和 availableTasks 中；</p>
+<p>这里生成 TaskId 的函数非常简单：</p>
+<p>src/mr/rpc.go</p>
+<pre><code class="go">// generateTaskId Generate TaskId for the given task
+//  The id follows the format: &quot;taskType-taskIndex&quot;
+func generateTaskId(taskType TaskTypeOpt, index int) string {
+    return fmt.Sprintf(&quot;%s-%d&quot;, taskType, index)
+}</code></pre>
+<p>随后，启动 RPC Server：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// start a thread that listens for RPCs from worker.go
+func (m *Master) server() {
+    _ = rpc.Register(m)
+    rpc.HandleHTTP()
+    //l, e := net.Listen(&quot;tcp&quot;, &quot;:1234&quot;)
+    sockname := masterSock()
+    _ = os.Remove(sockname)
+    l, e := net.Listen(&quot;unix&quot;, sockname)
+    if e != nil {
+        log.Fatal(&quot;listen error:&quot;, e)
+    }
+    go http.Serve(l, nil)
+}</code></pre>
+<p>这里只是使用实验提供的方法，并未进行修改；</p>
+<p>最后，在一个新开的协程中调用 checkWorkers 轮询我们的任务（后文会讲）；</p>
+<p>至此，我们的 Master 创建并初始化完毕，会在 <code>src/main/mrmaster.go</code> 中调用 <code>Done</code> 方法等待退出：</p>
+<p>src/main/mrmaster.go</p>
+<pre><code class="go">m := mr.MakeMaster(os.Args[1:], 10)
+for m.Done() == false {
+    time.Sleep(time.Second)
+}</code></pre>
+<p>因此，我们只需要在 Master 处理完所有任务后，在 Done 中返回 true 即可！</p>
+<br>
+
+<h4 id="Task的获取与分配"><a href="#Task的获取与分配" class="headerlink" title="Task的获取与分配"></a><strong>Task的获取与分配</strong></h4><p>Task的获取与分配主要是通过 RPC 方法 <code>AckAndQueryNewTask</code> 实现的：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">func (m *Master) AckAndQueryNewTask(req *AckAndQueryNewTaskRequest,
+    resp *AckAndQueryNewTaskResponse) error {
+
+    // Step 1: Mark previous task finished if necessary
+    if req.TaskType != &quot;&quot; {
+        err := m.handlePreviousTask(req)
+        if err != nil {
+            errorf(&quot;handlePreviousTask err: %v&quot;, err)
+            return err
+        }
+    }
+
+    // Step 2: Get the next task
+    task, ok := &lt;-m.availableTasks
+    if !ok { // Channel closed: no available tasks
+        m.lock.RLock()
+        defer m.lock.RUnlock()
+        retTask := &amp;TaskInfo{}
+        if m.status == TaskTypeFinished {
+            retTask.Type = TaskTypeFinished
+        }
+        resp.Task = retTask
+        return nil
+    }
+
+    // Step 3: Assign the task to the worker
+    m.lock.Lock()
+    defer m.lock.Unlock()
+    infof(&quot;Assign task %v to worker %s&quot;, task, req.WorkerId)
+    task.WorkerId = req.WorkerId
+    task.Deadline = time.Now().Add(10 * time.Second)
+    m.tasks[generateTaskId(task.Type, task.Index)] = task
+
+    // Step 4: Handle response
+    resp.Task = &amp;TaskInfo{
+        Id:       task.Id,
+        Type:     task.Type,
+        Index:    task.Index,
+        File:     task.File,
+        WorkerId: task.WorkerId,
+        Deadline: task.Deadline,
+    }
+    resp.MapWorkerCnt = m.mapCnt
+    resp.ReduceWorkerCnt = m.reduceCnt
+
+    return nil
+}</code></pre>
+<p>正如我们前面所讲的，当 Worker 发送一个新的 Task 请求时，会提交上一次的任务；</p>
+<p>因此代码首先判断了是否存在上一个任务，如果存在上一个任务，则调用 <code>handlePreviousTask</code> 首先处理上一个任务（见后文）；</p>
+<p>随后通过 <code>&lt;-m.availableTasks</code> 获取下一个任务；这里需要注意：</p>
+<ul>
+<li><strong>如果 Channel 未关闭，并且没有下一个任务，则会在此阻塞等待下一个任务；</strong></li>
+<li><strong>如果 Channel 已经关闭，则 ok 会是 false，</strong></li>
+</ul>
+<blockquote>
+<p>  对上面有疑问的可以参考这个简单的例子：</p>
+<ul>
+<li><a href="https://go.dev/play/p/YUbEDF2XaCG" target="_blank" rel="noopener">https://go.dev/play/p/YUbEDF2XaCG</a></li>
+</ul>
+</blockquote>
+<p>因此，如果 Channel 已经关闭，并且当前的任务状态为 <code>Finished</code> 我们只需要给 Worker 发送任务已经完成的任务响应即可！</p>
+<p>否则，如果我们获取到了任务，那么我们需要设置：</p>
+<ul>
+<li>执行这个任务的 WorkerId；</li>
+<li>任务的超时时间 Deadline；</li>
+</ul>
+<p>并将它写入我们的 tasks 中用于跟踪任务状态；</p>
+<p>最后，响应我们的 Worker 即可！</p>
+<br>
+
+<h4 id="处理前一个提交的Task"><a href="#处理前一个提交的Task" class="headerlink" title="处理前一个提交的Task"></a><strong>处理前一个提交的Task</strong></h4><p>前面说到，在 RPC 的第一步，如果存在前一个提交的任务，则会调用 <code>handlePreviousTask</code> 处理上一个任务；</p>
+<p>下面我们来看这里：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">var (
+    taskFinishHandlerMap = map[TaskTypeOpt]func(workerId string, taskIdx, reduceCnt int) error{
+        TaskTypeMap:    handleFinishedMapTask,
+        TaskTypeReduce: handleFinishedReduceTask,
+    }
+)
+
+// handle the previous finished task
+func (m *Master) handlePreviousTask(req *AckAndQueryNewTaskRequest) error {
+
+    previousTaskId := generateTaskId(req.TaskType, req.PreviousTaskIndex)
+
+    m.lock.Lock()
+    defer m.lock.Unlock()
+    taskInfo, exists := m.tasks[previousTaskId]
+    if exists {
+        if taskInfo.WorkerId == req.WorkerId { // This task belongs to the worker
+            infof(&quot;Mark task [%v] finished on worker %s&quot;, taskInfo, req.WorkerId)
+
+            // Step 1: Handle the previous finished task
+            handler, handlerExists := taskFinishHandlerMap[taskInfo.Type]
+            if !handlerExists || handler == nil {
+                return fmt.Errorf(&quot;handler not found for task: %v&quot;, taskInfo)
+            }
+            err := handler(req.WorkerId, req.PreviousTaskIndex, m.reduceCnt)
+            if err != nil {
+                errorf(&quot;Failed to handle previous task: %v&quot;, err)
+                return err
+            }
+            delete(m.tasks, previousTaskId)
+
+            // Step 2: Transit job phase if necessary
+            if len(m.tasks) &lt;= 0 {
+                m.transit()
+            }
+            return nil
+        } else { // The task is no longer belongs to this worker
+            infof(&quot;Task %v is no longer belongs to this worker&quot;, taskInfo)
+            return nil
+        }
+    } else { // Previous task not found in task map(worker retry ack maybe)!
+        warnf(&quot;[Warn] Previous task: %v not found in map&quot;, taskInfo)
+        return nil
+    }
+}</code></pre>
+<p>首先创建上一个任务的Id：previousTaskId，这也是我们 Map 中的 Key；</p>
+<p>随后，从 Map 中取出这个 Task（如果不存在，则无需处理了！）；</p>
+<p>接下来校验这个任务是否属于当前提交任务的 Worker（<code>taskInfo.WorkerId == req.WorkerId</code>）：</p>
+<p>如果当前任务已经不属于当前提交任务的 Worker，那么我们直接忽略掉即可！</p>
+<blockquote>
+<p>  <font color="#f00"><strong>这里就避免了由于 Fallover 处理而导致的多个 Worker 同时处理同一个 Task 并提交的问题！</strong></font></p>
+</blockquote>
+<p>否则，这是一个我们需要处理的 Commit，那么我们从 <code>taskFinishHandlerMap</code> 中获取到不同类型的任务对应的 Handler 进行处理；</p>
+<p>当处理成功后，我们从 tasks 中去掉这个任务；</p>
+<p>并且如果当前所有的任务都已处理完成，那么调用 <code>transit</code> 来推进整个 Job 的状态；</p>
+<br>
+
+<h4 id="处理Map和Reduce类型任务的Handler"><a href="#处理Map和Reduce类型任务的Handler" class="headerlink" title="处理Map和Reduce类型任务的Handler"></a><strong>处理Map和Reduce类型任务的Handler</strong></h4><p>对于不同的任务类型的处理函数是通过下面的 Map 中获取的：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">var (
+    taskFinishHandlerMap = map[TaskTypeOpt]func(workerId string, taskIdx, reduceCnt int) error{
+        TaskTypeMap:    handleFinishedMapTask,
+        TaskTypeReduce: handleFinishedReduceTask,
+    }
+)</code></pre>
+<p>这两个函数的实现如下：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// The map-type task finished handler
+func handleFinishedMapTask(workerId string, taskIdx, reduceCnt int) error {
+    // Mark the task&#39;s temporary file to final file(Rename)
+    for reduceIdx := 0; reduceIdx &lt; reduceCnt; reduceIdx++ {
+        tmpMapFileName := tmpMapOutFile(workerId, taskIdx, reduceIdx)
+        finalMapOutFileName := finalMapOutFile(taskIdx, reduceIdx)
+        err := os.Rename(tmpMapFileName, finalMapOutFileName)
+        if err != nil {
+            errorf(&quot;Failed to mark map output file `%s` as final: %e&quot;, tmpMapFileName, err)
+            return err
+        }
+    }
+
+    infof(&quot;handleFinishedMapTask success: workerId: %s, taskIdx: %d&quot;, workerId, taskIdx)
+
+    return nil
+}
+
+// The reduce-type task finished handler
+func handleFinishedReduceTask(workerId string, taskIdx, _ int) error {
+    // Mark the task&#39;s temporary file to final file(Rename)
+    tmpReduceFileName := tmpReduceOutFile(workerId, taskIdx)
+    finalReduceOutFileName := finalReduceOutFile(taskIdx)
+    err := os.Rename(tmpReduceFileName, finalReduceOutFileName)
+    if err != nil {
+        errorf(&quot;Failed to mark reduce output file `%s` as final: %v&quot;, tmpReduceFileName, err)
+        return err
+    }
+
+    infof(&quot;handleFinishedReduceTask success: workerId: %s, taskIdx: %d, finalReduceOutFileName: %s&quot;,
+        workerId, taskIdx, finalReduceOutFileName)
+
+    return nil
+}
+
+// The temporary file that map-type task yield
+func tmpMapOutFile(workerId string, taskIdx, reduceIdx int) string {
+    return fmt.Sprintf(&quot;mr-map-%s-%d-%d&quot;, workerId, taskIdx, reduceIdx)
+}
+
+// The final file that map-type task yield(for reduce)
+func finalMapOutFile(taskIdx, reduceIdx int) string {
+    return fmt.Sprintf(&quot;mr-map-%d-%d&quot;, taskIdx, reduceIdx)
+}
+
+// The temporary file that reduce-type task yield
+func tmpReduceOutFile(workerId string, reduceIdx int) string {
+    return fmt.Sprintf(&quot;mr-reduce-%s-%d&quot;, workerId, reduceIdx)
+}
+
+// The final file that reduce-type task yield(the MapReduce task yield)
+func finalReduceOutFile(taskIndex int) string {
+    return fmt.Sprintf(&quot;mr-out-%d&quot;, taskIndex)
+}</code></pre>
+<p>两个函数的内容基本上是一样的：</p>
+<p><strong>都是首先通过任务 Id 获取到对应输出的临时文件，然后将其重命名为对应任务的最终产出文件</strong>！</p>
+<p><strong>这和我们最开始的分析是一致的！</strong></p>
+<br>
+
+<h4 id="Job任务状态切换transit"><a href="#Job任务状态切换transit" class="headerlink" title="Job任务状态切换transit"></a><strong>Job任务状态切换transit</strong></h4><p>在前面的 RPC 调用中，如果发现某个类型（Map、Reduce）当前的任务全部完成，则会调用 <code>transit</code> 函数切换当前 Job 的状态，代码如下：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// Transit the job phase (from Map to Reduce)
+func (m *Master) transit() {
+
+    if m.status == TaskTypeMap {
+        // All map-type tasks finished, change to reduce phase
+        infof(&quot;All map-type tasks finished. Transit to REDUCE stage!&quot;)
+        m.status = TaskTypeReduce
+
+        // Yield Reduce Tasks
+        for reduceIdx := 0; reduceIdx &lt; m.reduceCnt; reduceIdx++ {
+            task := &amp;TaskInfo{
+                Type:  TaskTypeReduce,
+                Index: reduceIdx,
+            }
+            m.tasks[generateTaskId(task.Type, task.Index)] = task
+            m.availableTasks &lt;- task
+        }
+    } else if m.status == TaskTypeReduce {
+        // All reduce-type tasks finished, ready to exit
+        infof(&quot;All reduce-type tasks finished. Prepare to exit!&quot;)
+        // Close channel
+        close(m.availableTasks)
+        // Mark status to TaskTypeFinished for job completion
+        m.status = TaskTypeFinished
+    }
+}</code></pre>
+<p>逻辑如下：</p>
+<ul>
+<li><strong>如果 Map 任务全部执行完成，则将状态切换为 Reduce，并且重新创建 Reduce 的任务；</strong></li>
+<li><strong>如果 Reduce 任务全部完成，则将状态切换为 Finished，并且关闭 availableTasks Channel；</strong></li>
+</ul>
+<br>
+
+<h4 id="Worker状态轮询"><a href="#Worker状态轮询" class="headerlink" title="Worker状态轮询"></a><strong>Worker状态轮询</strong></h4><p>前面在创建并初始化 Master 的时候说到，初始化 Master 后，会单独起一个协程去轮询 Worker 的状态，用于清理那些超时的 Worker；</p>
+<p>这里来看这个 <code>checkWorkers</code> 函数：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// Check all workers heartbeats
+func (m *Master) checkWorkers() {
+
+    m.lock.Lock()
+    defer m.lock.Unlock()
+    for _, task := range m.tasks {
+        if task.WorkerId != &quot;&quot; &amp;&amp; time.Now().After(task.Deadline) {
+            infof(
+                &quot;Found timed-out task：%v, previously running on worker %s. Prepare to re-assign...&quot;,
+                task, task.WorkerId)
+            task.WorkerId = &quot;&quot;
+            m.availableTasks &lt;- task
+        }
+    }
+}</code></pre>
+<p>主要是遍历 tasks 中的任务，如果发现超时的（<code>time.Now().After(task.Deadline)</code>），则将其 <code>WorkerId</code> 置为空，并放入 availableTasks Channel 中重新分配任务；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>这里其实是可以进行优化的，即：使用小根堆从 <code>Deadline</code> 最早的一个任务进行遍历来减少开销；</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="全部任务执行结束退出Done"><a href="#全部任务执行结束退出Done" class="headerlink" title="全部任务执行结束退出Done"></a><strong>全部任务执行结束退出Done</strong></h4><p>最后，当全部任务结束后，Master 的状态会变为：<code>Finished</code>；</p>
+<p>因此，我们只需要判断我们 Master 当前的状态是否为 <code>Finished</code> 即可：</p>
+<p>src/mr/master.go</p>
+<pre><code class="go">// main/mrmaster.go calls Done() periodically to find out
+// if the entire job has finished.
+func (m *Master) Done() bool {
+    m.lock.RLock()
+    defer m.lock.RUnlock()
+
+    taskPhase := m.status
+    infof(&quot;current task phase: %s, res task count: %d&quot;, taskPhase, len(m.availableTasks))
+
+    // All tasks have finished
+    return taskPhase == TaskTypeFinished
+}</code></pre>
+<br>
+
+<h3 id="Worker计算"><a href="#Worker计算" class="headerlink" title="Worker计算"></a><strong>Worker计算</strong></h3><p>Worker 的实现就比较简单了，主要是一个死循环，不断地向 Master 调用 AckAndQueryNewTask：</p>
+<ul>
+<li>Master 返回 MAP Task，则：<ul>
+<li>读取对应输入文件的内容；</li>
+<li>传递至 APP 指定的 Map 函数，得到对应的中间结果；</li>
+<li>按中间结果 Key 的 Hash 值进行分桶，保存至中间结果文件；</li>
+<li>向 Master 提交任务；</li>
+</ul>
+</li>
+<li>Master 返回 REDUCE Task，则：<ul>
+<li>读取所有属于该 REDUCE Task 的中间结果文件数据；</li>
+<li>对所有中间结果进行排序，并按 Key 值进行排序归并；</li>
+<li>传递归并后的数据至 APP 指定的 REDUCE 函数，得到最终结果；</li>
+<li>写出到中间结果文件；</li>
+<li>向 Master 提交任务；</li>
+</ul>
+</li>
+<li>Master 返回 Finished Task，表示所有任务都已经完成，直接退出循环，结束 Worker 进程；</li>
+</ul>
+<p>下面先来看 Worker 初始化的代码；</p>
+<br>
+
+<h4 id="初始化Worker"><a href="#初始化Worker" class="headerlink" title="初始化Worker"></a><strong>初始化Worker</strong></h4><p>在 <code>main/mrworker.go</code> 中调用 <code>Worker</code> 函数对 Worker 进行初始化，代码如下：</p>
+<p>src/mr/worker.go</p>
+<pre><code class="go">// main/mrworker.go calls this function.
+func Worker(mapFunc func(string, string) []KeyValue,
+    reduceFunc func(string, []string) string) {
+
+    // Done Your worker implementation here.
+    workerId := generateWorkerId()
+    infof(&quot;Worker %v started!\n&quot;, workerId)
+
+    // Fire the worker to receive tasks
+    var previousTaskType TaskTypeOpt
+    var previousTaskIndex int
+    var taskErr error
+    for {
+        // Step 1: Query Task &amp; Ack the last task
+        req := AckAndQueryNewTaskRequest{
+            WorkerId:          workerId,
+            PreviousTaskIndex: previousTaskIndex,
+            TaskType:          previousTaskType,
+        }
+        resp := AckAndQueryNewTaskResponse{}
+        succeed := call(&quot;Master.AckAndQueryNewTask&quot;, &amp;req, &amp;resp)
+        if !succeed {
+            errorf(&quot;Failed to call AckAndQueryNewTask, retry 1 second later&quot;)
+            time.Sleep(time.Second)
+            continue
+        }
+        infof(&quot;Call AckAndQueryNewTaskResponse success! req: %v, resp: %v&quot;, &amp;req, &amp;resp)
+
+        // Extra Step: Job finished, exit
+        if resp.Task.Type == TaskTypeFinished {
+            // Job finished, exit
+            infof(&quot;Received job finish signal from master, exit&quot;)
+            break
+        }
+
+        // Step 2: handle the queried task
+        if resp.Task.Type == TaskTypeMap {
+            taskErr = handleMapTask(&amp;resp, workerId, mapFunc)
+            if taskErr != nil {
+                errorf(&quot;Failed to handleMapTask: %v, err: %v&quot;, resp.Task, taskErr)
+                continue
+            }
+        } else if resp.Task.Type == TaskTypeReduce {
+            taskErr = handleReduceTask(&amp;resp, workerId, reduceFunc)
+            if taskErr != nil {
+                errorf(&quot;Failed to handleReduceTask: %v, err: %v&quot;, resp.Task, taskErr)
+                continue
+            }
+        } else {
+            errorf(&quot;No handler to handle task: %v&quot;, resp.Task)
+            continue
+        }
+
+        // Step 3: save finished task info, ack for the next iteration
+        previousTaskType = resp.Task.Type
+        previousTaskIndex = resp.Task.Index
+        infof(&quot;Finished task: %v on worker: %s\n&quot;, resp.Task, workerId)
+    }
+
+    infof(&quot;Worker %v finished!\n&quot;, workerId)
+}
+
+// Use pid as the workerId(standalone type)
+func generateWorkerId() string {
+    return strconv.Itoa(os.Getpid())
+}</code></pre>
+<p>代码首先通过 <code>generateWorkerId</code> 将当前Worker的 PID 作为 WorkerId（便于Debug排查问题）；</p>
+<p>随后，进入 for 循环中，首先调用 RPC 获取任务；</p>
+<blockquote>
+<p>  <strong>这里需要注意的是，首次调用时，<code>previousTaskIndex</code>、<code>previousTaskType</code> 都为空，所以不会提交任务；</strong></p>
+</blockquote>
+<p>在获取到任务之后进行判断：</p>
+<ul>
+<li>如果是 <code>Finished</code> 类型的任务，则直接退出；</li>
+<li>如果是 <code>Map</code> 或 <code>Reduce</code> 类型的任务，则分别调用不同的处理函数进行处理；</li>
+</ul>
+<p>最后，如果成功处理了任务，则将本次的任务信息赋值给 <code>previousTaskIndex</code>、<code>previousTaskType</code>，在下一个 for 循环开始后，会对 Task 进行 Commit；</p>
+<p>下面来看 Map、Reduce任务的处理；</p>
+<br>
+
+<h4 id="处理Map任务"><a href="#处理Map任务" class="headerlink" title="处理Map任务"></a><strong>处理Map任务</strong></h4><p>和实验提供的顺序执行的 MapReduce 实现类似，这里的 Map 任务也是读取 Task 指定的文件，调用 Map 函数，并输出临时的中间结果文件；</p>
+<p>和之前不同的是，这里需要根据 Reduce 任务的个数对输出进行分桶操作，而即使对应的 Key 在哪个 Bucket 的函数，实验也已经提供了：<code>ihash</code>；</p>
+<p>Map 任务处理代码如下：</p>
+<p>src/mr/worker.go</p>
+<pre><code class="go">// The map-type task handler for worker
+func handleMapTask(resp *AckAndQueryNewTaskResponse,
+    workerId string, mapFunc func(string, string) []KeyValue) error {
+
+    // Step 1: Read task file
+    taskFile, err := os.Open(resp.Task.File)
+    if err != nil {
+        errorf(&quot;Failed to open map input file %s: %v&quot;, resp.Task.File, err)
+        return err
+    }
+    content, err := ioutil.ReadAll(taskFile)
+    if err != nil {
+        errorf(&quot;Failed to read map input file %s: %v&quot;, resp.Task.File, err)
+        return err
+    }
+
+    // Step 2: Use MapFunc to yield intermediate results
+    // Key: FileName, Value: FileContent
+    // Then Hash the key by ihash func, and push result into different buckets
+    mapResults := mapFunc(resp.Task.File, string(content))
+    hashedKva := make(map[int][]KeyValue)
+    for _, kv := range mapResults {
+        hashed := ihash(kv.Key) % resp.ReduceWorkerCnt
+        hashedKva[hashed] = append(hashedKva[hashed], kv)
+    }
+
+    // Step 3: Writes all intermediate results into intermediate files
+    for idx := 0; idx &lt; resp.ReduceWorkerCnt; idx++ {
+        tmpFileName := tmpMapOutFile(workerId, resp.Task.Index, idx)
+        intermediateFile, _ := os.Create(tmpFileName)
+        for _, kv := range hashedKva[idx] {
+            // The intermediate file format is: ${key}\t${value}\n
+            _, err = fmt.Fprintf(intermediateFile, &quot;%v\t%v\n&quot;, kv.Key, kv.Value)
+            if err != nil {
+                errorf(&quot;Write intermediate file: %s failed, err: %v&quot;, intermediateFile, err)
+                intermediateFile.Close()
+                return err
+            }
+        }
+        intermediateFile.Close()
+    }
+
+    infof(&quot;Worker[%s] writes intermediate files success, task: %v&quot;, workerId, resp.Task)
+
+    return nil
+}
+
+// use ihash(key) % NReduce to choose the reducer
+// task number for each KeyValue emitted by Map.
+func ihash(key string) int {
+    h := fnv.New32a()
+    _, _ = h.Write([]byte(key))
+    return int(h.Sum32() &amp; 0x7fffffff)
+}</code></pre>
+<p>代码首先从 Task 指定的文件中读取内容；</p>
+<p>随后调用 APP 中提供的 <code>mapFunc</code>，并将得到的 Key 值进行 <code>ihash(kv.Key) % resp.ReduceWorkerCnt</code> 后，放入到对应的 hashedKva 桶中；</p>
+<p>最后，分桶写入到了不同的临时文件中！</p>
+<br>
+
+<h4 id="处理Reduce任务"><a href="#处理Reduce任务" class="headerlink" title="处理Reduce任务"></a><strong>处理Reduce任务</strong></h4><p>Reduce 任务的实现也与顺序执行的 MapReduce 实现类似，代码如下：</p>
+<p>src/mr/worker.go</p>
+<pre><code class="go">// The reduce-type task handler for worker
+func handleReduceTask(resp *AckAndQueryNewTaskResponse,
+    workerId string, reduceFunc func(string, []string) string) error {
+
+    // Step 1: Read the corresponding file
+    var lines []string
+    for mi := 0; mi &lt; resp.MapWorkerCnt; mi++ {
+        inputFile := finalMapOutFile(mi, resp.Task.Index)
+        file, err := os.Open(inputFile)
+        if err != nil {
+            errorf(&quot;Failed to open map output file %s: %v&quot;, inputFile, err)
+            return err
+        }
+        content, err := ioutil.ReadAll(file)
+        if err != nil {
+            errorf(&quot;Failed to read map output file %s: %v&quot;, inputFile, err)
+            return err
+        }
+        lines = append(lines, strings.Split(string(content), &quot;\n&quot;)...)
+    }
+
+    // Step 2: Format the lines
+    var mapResults []KeyValue
+    for _, line := range lines {
+        if strings.TrimSpace(line) == &quot;&quot; {
+            continue
+        }
+        parts := strings.Split(line, &quot;\t&quot;)
+        mapResults = append(mapResults, KeyValue{
+            Key:   parts[0],
+            Value: parts[1],
+        })
+    }
+
+    // Step 3: Sort the results
+    sort.Sort(ByKey(mapResults))
+
+    // Step 4: Write the results(Just as the mrsequential.go do!)
+    tmpFileName := tmpReduceOutFile(workerId, resp.Task.Index)
+    tmpFile, _ := os.Create(tmpFileName)
+    defer tmpFile.Close()
+
+    // Step 5: Call Reduce on each distinct key in mapResults[], and write the intermediate result.
+    i := 0
+    for i &lt; len(mapResults) {
+        // Step 5.1: Find the same key in mapResults
+        j := i + 1
+        for j &lt; len(mapResults) &amp;&amp; mapResults[j].Key == mapResults[i].Key {
+            j++
+        }
+        var values []string
+        for k := i; k &lt; j; k++ {
+            values = append(values, mapResults[k].Value)
+        }
+
+        // Step 5.2: Call reduceFunc
+        output := reduceFunc(mapResults[i].Key, values)
+
+        // Step 5.3: Save the yield reduce results to intermediate files.
+        _, _ = fmt.Fprintf(tmpFile, &quot;%v %v\n&quot;, mapResults[i].Key, output)
+
+        i = j
+    }
+
+    return nil
+}</code></pre>
+<p>由于执行 Reduce 任务时，所有的 Map 任务一定都是被 Commit 过的；</p>
+<p>因此，我们可以找到所有 Map 任务最终 Commit 生成的文件并读取内容到 <code>mapResults []KeyValue</code> 中；</p>
+<p>随后，根据论文的内容，我们对结果进行排序，并对相同的 Key 进行归并；</p>
+<p>最后，和上面一样，我们将 Reduce 的结果输出到临时的文件；</p>
+<p>至此，Reduce 任务结束！</p>
+<br>
+
+<h2 id="测试验证"><a href="#测试验证" class="headerlink" title="测试验证"></a><strong>测试验证</strong></h2><p>开发完成后，我们来进行测试；</p>
+<p>直接在 <code>src/main</code> 目录下执行 <code>./test-mr.sh</code> 即可测试；</p>
+<blockquote>
+<p>  <strong>别忘了打开 <code>RACE=-race</code>！</strong></p>
+</blockquote>
+<p>通过最后的输出可以看到，所有的用例都通过了！</p>
+<pre><code>*** Starting wc test.
+--- wc test: PASS
+*** Starting indexer test.
+--- indexer test: PASS
+*** Starting map parallelism test.
+--- map parallelism test: PASS
+*** Starting reduce parallelism test.
+--- reduce parallelism test: PASS
+*** Starting crash test.
+--- crash test: PASS
+*** PASSED ALL TESTS</code></pre><p>同时输出了大量 INFO 级别的日志：</p>
+<pre><code>2022/10/12 22:21:11 [INFO]master server started: &amp;{{{0 0} 0 0 0 0} Map 8 10 map[Map-0:0xc000078180 Map-1:0xc0000781e0 Map-2:0xc000078240 Map-3:0xc0000782a0 Map-4:0xc000078300 Map-5:0xc000078360 Map-6:0xc0000783c0 Map-7:0xc000078420] 0xc000078120}
+2022/10/12 22:21:11 [INFO]current task phase: Map, res task count: 8
+2022/10/12 22:21:12 [INFO]Worker 58334 started!
+
+2022/10/12 22:21:12 [INFO]Worker 58333 started!
+
+2022/10/12 22:21:12 [INFO]Worker 58335 started!
+
+2022/10/12 22:21:12 [INFO]Assign task &amp;{Map-0 Map 0 ../pg-being_ernest.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58333
+2022/10/12 22:21:12 [INFO]Assign task &amp;{Map-1 Map 1 ../pg-dorian_gray.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58334
+2022/10/12 22:21:12 [INFO]Assign task &amp;{Map-2 Map 2 ../pg-frankenstein.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58335
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0  58334}, resp: &amp;{0xc000114ae0 8 10}
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0  58333}, resp: &amp;{0xc0001329c0 8 10}
+2022/10/12 22:21:12 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0  58335}, resp: &amp;{0xc000076720 8 10}
+2022/10/12 22:21:12 [INFO]current task phase: Map, res task count: 5
+2022/10/12 22:21:13 [INFO]Worker[58333] writes intermediate files success, task: &amp;{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &amp;{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST} on worker: 58333
+
+2022/10/12 22:21:13 [INFO]Mark task [&amp;{Map-0 Map 0 ../pg-being_ernest.txt 58333 2022-10-12 22:21:22.861303 +0800 CST m=+11.002276209}] finished on worker 58333
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58333, taskIdx: 0
+2022/10/12 22:21:13 [INFO]Assign task &amp;{Map-3 Map 3 ../pg-grimm.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58333
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0 Map 58333}, resp: &amp;{0xc000076360 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58335] writes intermediate files success, task: &amp;{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &amp;{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST} on worker: 58335
+
+2022/10/12 22:21:13 [INFO]Mark task [&amp;{Map-2 Map 2 ../pg-frankenstein.txt 58335 2022-10-12 22:21:22.861595 +0800 CST m=+11.002569001}] finished on worker 58335
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58335, taskIdx: 2
+2022/10/12 22:21:13 [INFO]Assign task &amp;{Map-4 Map 4 ../pg-huckleberry_finn.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58335
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{2 Map 58335}, resp: &amp;{0xc0000ba7e0 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58334] writes intermediate files success, task: &amp;{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &amp;{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST} on worker: 58334
+
+2022/10/12 22:21:13 [INFO]Mark task [&amp;{Map-1 Map 1 ../pg-dorian_gray.txt 58334 2022-10-12 22:21:22.861488 +0800 CST m=+11.002462043}] finished on worker 58334
+2022/10/12 22:21:13 [INFO]handleFinishedMapTask success: workerId: 58334, taskIdx: 1
+2022/10/12 22:21:13 [INFO]Assign task &amp;{Map-5 Map 5 ../pg-metamorphosis.txt  0001-01-01 00:00:00 +0000 UTC} to worker 58334
+2022/10/12 22:21:13 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{1 Map 58334}, resp: &amp;{0xc000098420 8 10}
+2022/10/12 22:21:13 [INFO]Worker[58334] writes intermediate files success, task: &amp;{Map-5 Map 5 ../pg-metamorphosis.txt 58334 2022-10-12 22:21:23.568509 +0800 CST}
+2022/10/12 22:21:13 [INFO]Finished task: &amp;{Map-5 Map 5 ../pg-metamorphosis.txt 58334 2022-10-12 22:21:23.568509 +0800 CST} on worker: 58334
+
+......
+
+2022/10/12 22:22:25 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{2 Reduce 58551}, resp: &amp;{0xc000188240 0 0}
+2022/10/12 22:22:25 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:25 [INFO]Worker 58551 finished!
+
+2022/10/12 22:22:26 [INFO]current task phase: Finished, res task count: 0
+2022/10/12 22:22:26 [INFO]Worker 58818 started!
+
+2022/10/12 22:22:26 [INFO]Worker 58817 started!
+
+2022/10/12 22:22:26 [INFO]Worker 58820 started!
+
+2022/10/12 22:22:26 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0  58818}, resp: &amp;{0xc00007a720 0 0}
+2022/10/12 22:22:26 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:26 [INFO]Worker 58818 finished!
+
+2022/10/12 22:22:26 [INFO]Call AckAndQueryNewTaskResponse success! req: &amp;{0  58817}, resp: &amp;{0xc00013aae0 0 0}
+2022/10/12 22:22:26 [INFO]Received job finish signal from master, exit
+2022/10/12 22:22:26 [INFO]Worker 58817 finished!</code></pre><p>从日志也可以看出，最终 Master 和 Worker 都成功的退出了！</p>
+<br>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h2><p>上面就是 Lab1 的基本实现了，在开发过程中的一个小技巧就是，<strong>大量打印日志</strong>，便于排查问题；</p>
+<p>同时，在写代码之前，要提前规划好代码，组织好逻辑之后再动手，效率反而高很多！</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码根据 MIT 实验的要求，是一个Private的 repo 没有公开，需要源代码的可以联系我，也可以一起交流～</p>
+<p>视频学习地址：</p>
+<ul>
+<li><a href="https://www.bilibili.com/video/BV1R7411t71W/" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1R7411t71W/</a></li>
+</ul>
+<br>
+
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/10/08/mit-6-824-lab1-MapReduce总结/" title="https://jasonkayzk.github.io/2022/10/08/mit-6-824-lab1-MapReduce总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/10/08/mit-6-824-lab1-MapReduce总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1753871720592"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

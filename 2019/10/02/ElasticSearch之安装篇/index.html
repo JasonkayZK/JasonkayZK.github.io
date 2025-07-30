@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>ElasticSearch之安装篇 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本篇作为ElasticSearch学习的入门篇, 主要讲解了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.">
+<meta name="keywords" content="ElasticSearch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ElasticSearch之安装篇">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/10/02/ElasticSearch之安装篇/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本篇作为ElasticSearch学习的入门篇, 主要讲解了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-07-30T10:34:36.184Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ElasticSearch之安装篇">
+<meta name="twitter:description" content="本篇作为ElasticSearch学习的入门篇, 主要讲解了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1753871761200">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>520</div>
+        <div><span>标签</span>276</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.91px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.45px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">26</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/debian12部署kubernetes-1-28集群/">debian12部署kubernetes-1.28集群</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/分享两个服务器实用脚本：xsync和xcall/">分享两个服务器实用脚本：xsync和xcall</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1570012601164&di=e7d7a24dc0375f5728f840b0722c89b0&imgtype=0&src=http%3A%2F%2Fpic2.zhimg.com%2Fv2-d6d239c55b93b2745b6c4ff516fa939f_1200x500.jpg">
+    
+    <h1>ElasticSearch之安装篇</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年10月02日</a>
+    <a><i class="nexmoefont icon-areachart"></i>3.7k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 16 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/ElasticSearch/">ElasticSearch</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/ElasticSearch/">ElasticSearch</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ElasticSearch之安装篇"><span class="toc-text">ElasticSearch之安装篇</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-Elastic-Search相关介绍"><span class="toc-text">一. Elastic Search相关介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-ElasticSearch是什么"><span class="toc-text">1. ElasticSearch是什么</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Elasticsearch中涉及到的重要概念"><span class="toc-text">2. Elasticsearch中涉及到的重要概念</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-Elastic-Search安装与配置"><span class="toc-text">二. Elastic Search安装与配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-下载"><span class="toc-text">1. 下载</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-解压缩"><span class="toc-text">2. 解压缩</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-修改用户权限或者文件所属"><span class="toc-text">3. 修改用户权限或者文件所属</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-修改环境变量"><span class="toc-text">4. 修改环境变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-测试运行"><span class="toc-text">5. 测试运行</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-Kibana安装"><span class="toc-text">三. Kibana安装</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-下载-1"><span class="toc-text">1. 下载</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-解压缩-1"><span class="toc-text">2. 解压缩</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-修改用户权限或者文件所属-1"><span class="toc-text">3. 修改用户权限或者文件所属</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-修改环境变量-1"><span class="toc-text">4. 修改环境变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-测试运行-1"><span class="toc-text">5. 测试运行</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-一些在安装时的坑"><span class="toc-text">四. 一些在安装时的坑</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-通过-kibana-安装sense失败"><span class="toc-text">1. 通过 kibana 安装sense失败</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-使用curl与head插件出现不能查询数据的异常"><span class="toc-text">2. 使用curl与head插件出现不能查询数据的异常</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>本篇主要讲述了ElasticSearch的基本概念, 以及ElasticSearch的安装与简单配置, 主要是为接下来ElasticSearch热身.</p>
+<p>主要内容包括:</p>
+<ul>
+<li>Elastic Search相关介绍</li>
+<li>Elastic Search安装与配置</li>
+<li>Kibana安装</li>
+<li>一些由于版本兼容而导致的坑</li>
+<li>……</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="ElasticSearch之安装篇"><a href="#ElasticSearch之安装篇" class="headerlink" title="ElasticSearch之安装篇"></a>ElasticSearch之安装篇</h2><h3 id="一-Elastic-Search相关介绍"><a href="#一-Elastic-Search相关介绍" class="headerlink" title="一. Elastic Search相关介绍"></a>一. Elastic Search相关介绍</h3><h4 id="1-ElasticSearch是什么"><a href="#1-ElasticSearch是什么" class="headerlink" title="1. ElasticSearch是什么"></a>1. ElasticSearch是什么</h4><p>Elasticsearch是一个基于Apache Lucene(TM)的开源搜索引擎，无论在开源还是专有领域，Lucene可以被认为是迄今为止最先进、性能最好的、功能最全的搜索引擎库。 <font color="#ff0000">但是，Lucene只是一个库。想要发挥其强大的作用，你需使用Java并要将其集成到你的应用中。Lucene非常复杂，你需要深入的了解检索相关知识来理解它是如何工作的。 </font> </p>
+<p>Elasticsearch也是使用Java编写并使用Lucene来建立索引并实现搜索功能，但是它的目的是<font color="#0000ff">通过简单连贯的RESTful API让全文搜索变得简单并隐藏Lucene的复杂性。</font> 不过，Elasticsearch不仅仅是Lucene和全文搜索引擎，它还提供：</p>
+<ul>
+<li>分布式的实时文件存储，每个字段都被索引并可被搜索</li>
+<li>实时分析的分布式搜索引擎</li>
+<li>可以扩展到上百台服务器，处理PB级结构化或非结构化数据</li>
+</ul>
+<p>而且，所有的这些功能被集成到一台服务器，你的应用<font color="#ff0000">可以通过简单的RESTful  API、各种语言的客户端甚至命令行与之交互</font>。上手Elasticsearch非常简单，它提供了许多合理的缺省值，并对初学者隐藏了复杂的搜索引擎理论。它开箱即用（安装即可使用），只需很少的学习既可在生产环境中使用。Elasticsearch在Apache  2 license下许可使用，可以免费下载、使用和修改。 随着知识的积累，你可以根据不同的问题领域定制Elasticsearch的高级特性，这一切都是可配置的，并且配置非常灵活。</p>
+<br>
+
+<h4 id="2-Elasticsearch中涉及到的重要概念"><a href="#2-Elasticsearch中涉及到的重要概念" class="headerlink" title="2. Elasticsearch中涉及到的重要概念"></a>2. Elasticsearch中涉及到的重要概念</h4><p>Elasticsearch有几个核心概念。从一开始理解这些概念会对整个学习过程有莫大的帮助。</p>
+<ul>
+<li><p>接近实时(NRT)<br>Elasticsearch<strong>是一个接近实时的搜索平台</strong>。这意味着，从索引一个文档直到这个文档能够被搜索到有一个轻微的延迟（通常是1秒）。</p>
+</li>
+<li><p>集群(cluster)</p>
+<p>一个集群就是由一个或多个节点组织在一起，它们共同持有你整个的数据，并一起提供索引和搜索功能。<font color="#ff0000">一个集群由一个唯一的名字标识，这个名字默认就是<code>elasticsearch</code>。</font>这个名字是重要的，因为一个节点只能通过指定某个集群的名字，来加入这个集群。在产品环境中显式地设定这个名字是一个好习惯，但是使用默认值来进行测试/开发也是不错的。</p>
+</li>
+<li><p>节点(node)<br><font color="#ff0000">一个节点是你集群中的一个服务器，作为集群的一部分，它存储你的数据，参与集群的索引和搜索功能。</font>和集群类似，<font color="#0000ff">一个节点也是由一个名字来标识的，默认情况下，这个名字是一个随机的漫威漫画角色的名字，这个名字会在启动的时候赋予节点。</font>这个名字对于管理工作来说挺重要的，因为在这个管理过程中，你会去确定网络中的哪些服务器对应于Elasticsearch集群中的哪些节点。</p>
+<p><font color="#ff0000">一个节点可以通过配置集群名称的方式来加入一个指定的集群。默认情况下，每个节点都会被安排加入到一个叫做<code>elasticsearch</code>的集群中，这意味着，如果你在你的网络中启动了若干个节点，并假定它们能够相互发现彼此，它们将会自动地形成并加入到一个叫做elasticsearch的集群中。</font>在一个集群里，只要你想，可以拥有任意多个节点。而且，如果当前你的网络中没有运行任何Elasticsearch节点，这时启动一个节点，会默认创建并加入一个叫做<code>elasticsearch</code>的集群。</p>
+</li>
+<li><p>索引(index)<br><font color="#ff0000">一个索引就是一个拥有几分相似特征的文档的集合。</font>比如说，你可以有一个客户数据的索引，另一个产品目录的索引，还有一个订单数据的索引。一个索引由一个名字来标识（必须全部是小写字母的），并且当我们要对对应于这个索引中的文档进行索引、搜索、更新和删除的时候，都要使用到这个名字。<font color="#ff0000">索引类似于关系型数据库中Database的概念。在一个集群中，如果你想，可以定义任意多的索引。</font></p>
+</li>
+<li><p>类型(type) - Deprecated!</p>
+</li>
+<li><p>文档(document)<br><font color="#ff0000">一个文档是一个可被索引的基础信息单元。</font>比如，你可以拥有某一个客户的文档，某一个产品的一个文档，当然，也可以拥有某个订单的一个文档。<font color="#ff0000">文档以JSON（Javascript  Object Notation）格式来表示，而JSON是一个到处存在的互联网数据交互格式。</font></p>
+<p>在一个index/type里面，只要你想，你可以存储任意多的文档。注意，<font color="#ff0000">尽管一个文档，物理上存在于一个索引之中，文档必须被索引/赋予一个索引的type。文档类似于关系型数据库中Record的概念。</font><font color="#0000ff">实际上一个文档除了用户定义的数据外，还包括<code>_index</code>、<code>_type</code>和<code>_id</code>字段。</font></p>
+</li>
+<li><p>分片和复制(shards &amp; replicas)<br><font color="#0000ff">一个索引可以存储超出单个结点硬件限制的大量数据。比如，一个具有10亿文档的索引占据1TB的磁盘空间，而任一节点都没有这样大的磁盘空间；或者单个节点处理搜索请求，响应太慢。</font></p>
+<p>为了解决这个问题，Elasticsearch提供了<font color="#ff0000">将索引划分成多份的能力，这些份就叫做分片。</font>当你创建一个索引的时候，你可以指定你想要的分片的数量。每个分片本身也是一个功能完善并且独立的“索引”，这个“索引”可以被放置到集群中的任何节点上。<br>分片之所以重要，主要有两方面的原因：</p>
+<ul>
+<li>允许你水平分割/扩展你的内容容量</li>
+<li>允许你在分片（潜在地，位于多个节点上）之上进行分布式的、并行的操作，进而提高性能/吞吐量</li>
+</ul>
+</li>
+</ul>
+<pre><code>&lt;font color=&quot;#ff0000&quot;&gt;至于一个分片怎样分布，它的文档怎样聚合回搜索请求，是完全由Elasticsearch管理的，对于作为用户的你来说，这些都是透明的。&lt;/font&gt;</code></pre><p>在一个网络/云的环境里，失败随时都可能发生，在某个分片/节点不知怎么的就处于离线状态，或者由于任何原因消失了。这种情况下，有一个故障转移机制是非常有用并且是强烈推荐的。为此目的，Elasticsearch允许你<font color="#ff0000">创建分片的一份或多份拷贝，这些拷贝叫做复制分片，或者直接叫复制。</font>复制之所以重要，主要有两方面的原因：</p>
+<ul>
+<li>在分片/节点失败的情况下，提供了高可用性。因为这个原因，注意到复制分片从不与原/主要（original/primary）分片置于同一节点上是非常重要的。</li>
+<li>扩展你的搜索量/吞吐量，因为搜索可以在所有的复制上并行运行</li>
+</ul>
+<p>总之，<font color="#ff0000">每个索引可以被分成多个分片。一个索引也可以被复制0次（意思是没有复制）或多次。</font><font color="#0000ff">一旦复制了，每个索引就有了主分片（作为复制源的原来的分片）和复制分片（主分片的拷贝）之别。</font>分片和复制的数量可以在索引创建的时候指定。在索引创建之后，你可以在任何时候动态地改变复制数量，但是不能改变分片的数量。</p>
+<p><font color="#ff0000">默认情况下，Elasticsearch中的每个索引被分片5个主分片和1个复制，这意味着，如果你的集群中至少有两个节点，你的索引将会有5个主分片和另外5个复制分片（1个完全拷贝），这样的话每个索引总共就有10个分片。</font><font color="#0000ff">一个索引的多个分片可以存放在集群中的一台主机上，也可以存放在多台主机上，这取决于你的集群机器数量。主分片和复制分片的具体位置是由ES内在的策略所决定的。</font></p>
+<br>
+
+<hr>
+<h3 id="二-Elastic-Search安装与配置"><a href="#二-Elastic-Search安装与配置" class="headerlink" title="二. Elastic Search安装与配置"></a>二. Elastic Search安装与配置</h3><p>本教程主要讲解在Linux下ES7.4.0(截止到2019/10/2最新版本)的安装与配置, 其他平台可以参考官方文档: <a href="https://www.elastic.co/cn/downloads/elasticsearch" target="_blank" rel="noopener">https://www.elastic.co/cn/downloads/elasticsearch</a></p>
+<h4 id="1-下载"><a href="#1-下载" class="headerlink" title="1. 下载"></a>1. 下载</h4><p>可以在<a href="https://www.elastic.co/cn/downloads/elasticsearch" target="_blank" rel="noopener">Elastic Search官方网站</a>下载.tar.gz格式的压缩文件.</p>
+<h4 id="2-解压缩"><a href="#2-解压缩" class="headerlink" title="2. 解压缩"></a>2. 解压缩</h4><p>然后通过命令解压压缩文件到指定目录, 我的是解压到/opt/目录下</p>
+<pre><code class="bash">sudo tar -zxvf elasticsearch-7.4.0-linux-x86_64.tar.gz -C /opt/</code></pre>
+<h4 id="3-修改用户权限或者文件所属"><a href="#3-修改用户权限或者文件所属" class="headerlink" title="3. 修改用户权限或者文件所属"></a>3. 修改用户权限或者文件所属</h4><p>我是通过修改文件所属</p>
+<pre><code class="bash">cd /opt/
+sudo chown zk:zk -R elasticsearch-7.4.0/</code></pre>
+<h4 id="4-修改环境变量"><a href="#4-修改环境变量" class="headerlink" title="4. 修改环境变量"></a>4. 修改环境变量</h4><pre><code class="bash"># 对当前用户有效, 若要对全部用户有效, 可修改/etc/profile
+$ vi ~/.bashrc
+
+# 添加以下内容
+export ES_HOME=/opt/elasticsearch-7.4.0
+export PATH=$PATH:${ES_HOME}/bin
+
+# 使修改立即生效
+$ source ~/.bashrc</code></pre>
+<br>
+
+<h4 id="5-测试运行"><a href="#5-测试运行" class="headerlink" title="5. 测试运行"></a>5. 测试运行</h4><p>通过<code>elasticsearch</code>命令便可以直接运行!</p>
+<p>运行时需要提前安装并配置好JVM环境, 因为ES是使用Java写的, 并且如果你的JDK版本为11以下, 则会有如下提醒:</p>
+<pre><code>future versions of Elasticsearch will require Java 11; your Java version from [/usr/lib/jvm/java-8-oracle/jre] does not meet this requirement</code></pre><p>再打开另外一个控制台, 并输入:</p>
+<pre><code class="bash">curl http://localhost:9200/</code></pre>
+<p>或者使用浏览器打开: <a href="http://localhost:9200/" target="_blank" rel="noopener">http://localhost:9200/</a></p>
+<p>最终返回:</p>
+<pre><code class="json">{
+  &quot;name&quot; : &quot;JasonkayZK&quot;,
+  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,
+  &quot;cluster_uuid&quot; : &quot;KUS8-G-XQMS2ZwsHPnR_UA&quot;,
+  &quot;version&quot; : {
+    &quot;number&quot; : &quot;7.4.0&quot;,
+    &quot;build_flavor&quot; : &quot;default&quot;,
+    &quot;build_type&quot; : &quot;tar&quot;,
+    &quot;build_hash&quot; : &quot;22e1767283e61a198cb4db791ea66e3f11ab9910&quot;,
+    &quot;build_date&quot; : &quot;2019-09-27T08:36:48.569419Z&quot;,
+    &quot;build_snapshot&quot; : false,
+    &quot;lucene_version&quot; : &quot;8.2.0&quot;,
+    &quot;minimum_wire_compatibility_version&quot; : &quot;6.8.0&quot;,
+    &quot;minimum_index_compatibility_version&quot; : &quot;6.0.0-beta1&quot;
+  },
+  &quot;tagline&quot; : &quot;You Know, for Search&quot;
+}
+</code></pre>
+<p>则说明ES安装成功!</p>
+<p>*<em>注: *</em></p>
+<ul>
+<li><p><font color="#ff0000">服务默认占用的是9200端口, 如启动失败, 有可能是JVM配置问题, 或者9200端口被占用!</font></p>
+</li>
+<li><p><font color="#ff0000">仅仅使用<code>elasticsearch</code>命令将在前台启动ES服务, 此时退出控制台将会退出ES服务! 如果想要在后台开启服务:</font></p>
+<pre><code class="bash"> ./elasticsearch –d #在后台运行Elasticsearch
+
+ ./elasticsearch -d -Xmx2g -Xms2g #后台启动，启动时指定内存大小（2G）
+
+ ./elasticsearch -d -Des.logger.level=DEBUG  #可以在日志中打印出更加详细的信息</code></pre>
+<p>详细请参考: <a href="https://www.elastic.co/guide/index.html" target="_blank" rel="noopener">es官方文档</a></p>
+</li>
+</ul>
+<br>
+
+<hr>
+<h3 id="三-Kibana安装"><a href="#三-Kibana安装" class="headerlink" title="三. Kibana安装"></a>三. Kibana安装</h3><p>仅仅使用ElasticSearch提供的命令终端来管理ES是很不方便的, 好在ES为我们提供了更加方便的可视化工具Kibana!</p>
+<p><font color="#00ff00">Kibana是一个开源的分析和可视化平台，设计用于和Elasticsearch一起工作。你用Kibana来搜索，查看，并和存储在Elasticsearch索引中的数据进行交互。</font>你可以轻松地执行高级数据分析，并且以各种图标、表格和地图的形式可视化数据。Kibana使得理解大量数据变得很容易。它简单的、基于浏览器的界面使你能够快速创建和共享动态仪表板，实时显示Elasticsearch查询的变化。</p>
+<h4 id="1-下载-1"><a href="#1-下载-1" class="headerlink" title="1. 下载"></a>1. 下载</h4><p>可以在<a href="https://www.elastic.co/cn/downloads/kibana" target="_blank" rel="noopener">Kibana官方网站</a>下载.tar.gz格式的压缩文件.</p>
+<h4 id="2-解压缩-1"><a href="#2-解压缩-1" class="headerlink" title="2. 解压缩"></a>2. 解压缩</h4><p>然后通过命令解压压缩文件到指定目录, 我的是解压到/opt/目录下</p>
+<pre><code class="bash">sudo tar -zxvf kibana-7.4.0-linux-x86_64.tar.gz -C /opt/</code></pre>
+<h4 id="3-修改用户权限或者文件所属-1"><a href="#3-修改用户权限或者文件所属-1" class="headerlink" title="3. 修改用户权限或者文件所属"></a>3. 修改用户权限或者文件所属</h4><p>我是通过修改文件所属</p>
+<pre><code class="bash">cd /opt/
+sudo chown zk:zk -R kibana-7.4.0-linux-x86_64/</code></pre>
+<h4 id="4-修改环境变量-1"><a href="#4-修改环境变量-1" class="headerlink" title="4. 修改环境变量"></a>4. 修改环境变量</h4><pre><code class="bash"># 对当前用户有效, 若要对全部用户有效, 可修改/etc/profile
+$ vi ~/.bashrc
+
+# 添加以下内容
+export KIBANA_HOME=/opt/kibana-7.4.0-linux-x86_64
+export PATH=$PATH:${KIBANA_HOME}/bin
+
+# 使修改立即生效
+$ source ~/.bashrc</code></pre>
+<br>
+
+<h4 id="5-测试运行-1"><a href="#5-测试运行-1" class="headerlink" title="5. 测试运行"></a>5. 测试运行</h4><p>在终端输入<code>kibana</code>即可运行, 需要注意的是:</p>
+<ul>
+<li><font color="#ff0000">Kibana依赖于ES的运行, 必须先要开启本地的ES服务才能使用Kibana!</font></li>
+<li><font color="#ff0000">Kibana服务会占用5601端口, 在启动kibana之前请先排除端口占用问题!</font></li>
+</ul>
+<p>启动之后, 可以通过浏览器访问: <a href="http://localhost:5601" target="_blank" rel="noopener">http://localhost:5601</a></p>
+<p>便可获得一个可视化的平台!</p>
+<p>对于Kibana的使用本文不再赘述, 大家可以移步下面网站学习: </p>
+<ul>
+<li><a href="https://www.cnblogs.com/cjsblog/p/9476813.html" target="_blank" rel="noopener">Kibana（一张图片胜过千万行日志）</a></li>
+<li><a href="https://www.elastic.co/guide/en/kibana/current/index.html" target="_blank" rel="noopener">Kibana官方教程</a></li>
+</ul>
+<br>
+
+<hr>
+<h3 id="四-一些在安装时的坑"><a href="#四-一些在安装时的坑" class="headerlink" title="四. 一些在安装时的坑"></a>四. 一些在安装时的坑</h3><h4 id="1-通过-kibana-安装sense失败"><a href="#1-通过-kibana-安装sense失败" class="headerlink" title="1. 通过 kibana 安装sense失败"></a>1. 通过 kibana 安装sense失败</h4><p>通过官方教程进行学习的时候, 要求安装Sense插件, 其中的命令为:</p>
+<pre><code class="bash"># 在 Kibana 目录下运行下面的命令，下载并安装 Sense app：
+./bin/kibana plugin --install elastic/sense</code></pre>
+<p>但是在7.x版本中已经不再支持这个命令了!</p>
+<p><font color="#0000ff">可以使用新的命令<code>kibana-plugin</code>进行安装</font>:</p>
+<pre><code class="bash">$ ./bin/kibana-plugin -h
+
+  Usage: bin/kibana-plugin [command] [options]
+
+  The Kibana plugin manager enables you to install and remove plugins that provide additional functionality to Kibana
+
+  Commands:
+    list  [options]                 list installed plugins
+    install  [options] &lt;plugin/url&gt; install a plugin
+    remove  [options] &lt;plugin&gt;      remove a plugin
+    help  &lt;command&gt;                 get the help for a specific command</code></pre>
+<p>但是仍然无法安装sense插件, 原因是:</p>
+<p><font color="#ff0000">从5.x版本之后, 就已经有了sense的功能, 所以不再需要安装! es5.0以后的版本x-pack提供的DevTools代替了sense, 即上文访问的控制台!</font></p>
+<br>
+
+<h4 id="2-使用curl与head插件出现不能查询数据的异常"><a href="#2-使用curl与head插件出现不能查询数据的异常" class="headerlink" title="2. 使用curl与head插件出现不能查询数据的异常"></a>2. 使用curl与head插件出现不能查询数据的异常</h4><p>使用elasticsearch时，curl与head插件都出现不能查询数据的异常，具体原因如下</p>
+<pre><code class="json">{
+  &quot;error&quot; : &quot;Content-Type header [application/x-www-form-urlencoded] is not supported&quot;,
+  &quot;status&quot; : 406
+}</code></pre>
+<p><font color="#ff0000">此原因时由于ES增加了安全机制， 进行严格的内容类型检查，严格检查内容类型也可以作为防止跨站点请求伪造攻击的一层保护。</font></p>
+<p>具体原因见官网: <a href="https://www.elastic.co/blog/strict-content-type-checking-for-elasticsearch-rest-requests" target="_blank" rel="noopener">官网解释</a></p>
+<p><font color="#0000ff">es5没有严格检查的，可以设置参数，以增加安全性</font></p>
+<pre><code>http.content_type.required</code></pre><p>*<em>解决方法: *</em></p>
+<p><font color="#ff0000">添加请求头即可正常查询</font></p>
+<pre><code class="bash"> curl -H &quot;Content-Type: application/json&quot; http://localhost:9200/_search?pretty  -d &#39; {&quot;query&quot;: {&quot;match_all&quot;: {}}}&#39;</code></pre>
+<br>
+
+<hr>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>参考文章</p>
+<ul>
+<li><a href="http://blog.csdn.net/cnweike/article/details/33736429" target="_blank" rel="noopener">Elasticsearch基础教程</a></li>
+<li><a href="https://www.cnblogs.com/cjsblog/p/9476813.html" target="_blank" rel="noopener">Kibana（一张图片胜过千万行日志）</a></li>
+<li><a href="https://elasticsearch.cn/question/3709" target="_blank" rel="noopener">通过 kibana 安装sense失败</a></li>
+<li><a href="https://blog.csdn.net/wangxilong1991/article/details/80618082" target="_blank" rel="noopener">Content-Type header [application/x-www-form-urlencoded] is not supported</a></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/10/02/ElasticSearch之安装篇/" title="https://jasonkayzk.github.io/2019/10/02/ElasticSearch之安装篇/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/10/02/ElasticSearch之安装篇/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1753871761324"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

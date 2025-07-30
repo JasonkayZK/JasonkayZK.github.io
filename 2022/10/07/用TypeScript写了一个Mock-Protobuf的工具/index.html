@@ -1,0 +1,2693 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>用TypeScript写了一个Mock Protobuf的工具 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近部门要搞API先行，后端定义好接口之后就要给前端Mock好数据。在网上找了关于Protobuf转JSON的工具，都没有找到。所以自己写了一个。">
+<meta name="keywords" content="工具分享,Protobuf,TypeScript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用TypeScript写了一个Mock Protobuf的工具">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/10/07/用TypeScript写了一个Mock-Protobuf的工具/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近部门要搞API先行，后端定义好接口之后就要给前端Mock好数据。在网上找了关于Protobuf转JSON的工具，都没有找到。所以自己写了一个。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-07-30T10:34:36.223Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用TypeScript写了一个Mock Protobuf的工具">
+<meta name="twitter:description" content="最近部门要搞API先行，后端定义好接口之后就要给前端Mock好数据。在网上找了关于Protobuf转JSON的工具，都没有找到。所以自己写了一个。">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1753871720597">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>520</div>
+        <div><span>标签</span>276</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.91px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.45px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">26</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/debian12部署kubernetes-1-28集群/">debian12部署kubernetes-1.28集群</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/分享两个服务器实用脚本：xsync和xcall/">分享两个服务器实用脚本：xsync和xcall</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?11">
+    
+    <h1>用TypeScript写了一个Mock Protobuf的工具</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年10月07日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 35 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/TypeScript/">TypeScript</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Protobuf/">Protobuf</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/TypeScript/">TypeScript</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/工具分享/">工具分享</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#用TypeScript写了一个Mock-Protobuf的工具"><span class="toc-text">用TypeScript写了一个Mock Protobuf的工具</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#使用"><span class="toc-text">使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Mock-JSON-数据"><span class="toc-text">Mock JSON 数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mock服务"><span class="toc-text">Mock服务</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#基本用法"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#自定义返回值"><span class="toc-text">自定义返回值</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#过滤条件"><span class="toc-text">过滤条件</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Include过滤条件"><span class="toc-text">Include过滤条件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Exclude过滤条件"><span class="toc-text">Exclude过滤条件</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开发过程"><span class="toc-text">开发过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#项目配置"><span class="toc-text">项目配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#代码逻辑"><span class="toc-text">代码逻辑</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#命令行入口"><span class="toc-text">命令行入口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#各个子命令入口"><span class="toc-text">各个子命令入口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Generate子命令"><span class="toc-text">Generate子命令</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Generate命令入口"><span class="toc-text">Generate命令入口</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#加载Protobuf文件"><span class="toc-text">加载Protobuf文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#过滤Protobuf定义"><span class="toc-text">过滤Protobuf定义</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建Mock数据"><span class="toc-text">创建Mock数据</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Serve子命令"><span class="toc-text">Serve子命令</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Serve子命令入口"><span class="toc-text">Serve子命令入口</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建Server"><span class="toc-text">创建Server</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#获取各个Handler"><span class="toc-text">获取各个Handler</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NPM上发布"><span class="toc-text">NPM上发布</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近部门要搞API先行，后端定义好接口之后就要给前端Mock好数据；</p>
+<p>在网上找了关于Protobuf转JSON的工具，都没有找到，所以自己写了一个；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/mock-protobuf.js" target="_blank" rel="noopener">https://github.com/JasonkayZK/mock-protobuf.js</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="用TypeScript写了一个Mock-Protobuf的工具"><a href="#用TypeScript写了一个Mock-Protobuf的工具" class="headerlink" title="用TypeScript写了一个Mock Protobuf的工具"></a><strong>用TypeScript写了一个Mock Protobuf的工具</strong></h1><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a><strong>使用</strong></h2><p>使用 npm 安装：</p>
+<pre><code class="bash">npm i mock-pb-cli@latest -g</code></pre>
+<p>可以使用下面命令查看帮助：</p>
+<pre><code class="bash">$ mock-pb -h
+
+Usage: mock-protobuf [options] [command]
+
+A tool to mock protobuf
+
+Options:
+  -v, --version         output the version number
+  -h, --help            display help for command
+
+Commands:
+  s|serve [options]     Create a mock server for the given protobuf
+  g|generate [options]  Generate mock data for the given protobuf
+  help [command]        display help for command</code></pre>
+<p>有两个子命令：</p>
+<ul>
+<li><code>mock-pb g</code> 或 <code>mock-pb generate</code>：Mock JSON 数据；</li>
+<li><code>mock-pb s</code> or <code>mock-pb serve</code>：Mock 服务；</li>
+</ul>
+<br>
+
+<h3 id="Mock-JSON-数据"><a href="#Mock-JSON-数据" class="headerlink" title="Mock JSON 数据"></a><strong>Mock JSON 数据</strong></h3><p>Generate 子命令主要是用来生成 Mock 的 JSON 数据；</p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g</code></pre>
+<p>上面的命令会获取当前工作目录下所有的 Proto 文件，并且将 Mock 的数据输出到终端；</p>
+<p>例如：</p>
+<pre><code class="bash">Mocked demo.BasicResponse:
+{
+    &quot;status&quot;: 902735693509892,
+    &quot;message&quot;: &quot;Vmucue hqxllqx oiloapzwp.&quot;,
+    &quot;resp&quot;: {}
+}
+
+Mocked demo.DemoRequest:
+{
+    &quot;data&quot;: &quot;Kqr gxxq.&quot;
+}
+
+Mocked demo.DemoResponse:
+{
+    &quot;resp&quot;: {
+        &quot;status&quot;: -6061376970430480,
+        &quot;message&quot;: &quot;Xpjzjyxrcq eqkmytjo.&quot;,
+        &quot;resp&quot;: {}
+    },
+    &quot;resp_data&quot;: &quot;Ryogd tswayqjsf.&quot;
+}</code></pre>
+<p><strong>默认情况下的 Protobuf 文件搜索路线为 <code>.</code>，你也可以使用 <code>-d</code> 来指定路径！</strong></p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g -d ../test/proto</code></pre>
+<p>同时，<strong>默认情况下 Mock 数据会打印到终端，你也可以使用 <code>-o</code> 来指定将 Mock 的数据输出到指定的目录！</strong></p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g -o ./mock-pb-output</code></pre>
+<p>此时，<code>mock-pb-output</code> 目录下的结果为：</p>
+<pre><code class="bash">$ tree
+.
+├── demo
+│   ├── BasicResponse.json
+│   ├── DemoRequest.json
+│   └── DemoResponse.json
+├── google.api
+│   ├── CustomHttpPattern.json
+│   ├── HttpBody.json
+│   ├── Http.json
+│   └── HttpRule.json
+└── google.protobuf
+    ├── Any.json
+    ├── Api.json
+        ......
+    ├── SourceContext.json
+    ├── Type.json
+    └── UninterpretedOption.json</code></pre>
+<p>输出中的目录结构是根据 Proto 文件中的 <code>package</code> 来产生的！</p>
+<br>
+
+<h3 id="Mock服务"><a href="#Mock服务" class="headerlink" title="Mock服务"></a><strong>Mock服务</strong></h3><h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a><strong>基本用法</strong></h4><p>除了产生 Mock 的数据，也可以直接 Mock 服务接口；</p>
+<p>下面的命令会读取当前工作目录下的 Proto 文件，并 Mock 在 Service 中定义了的 Method：</p>
+<pre><code class="bash">$ mock-pb s</code></pre>
+<p>输出如下：</p>
+<pre><code class="bash">Handling routePath: /Demo
+Handling routePath: /demo/DemoServiceAnotherDemo
+restify listening at http://[::]:3333</code></pre>
+<p>在服务端启动时，会打印出每个接口的请求路径；</p>
+<blockquote>
+<p>  <strong>默认情况下的服务端口号为：<code>3333</code>，你可以使用 <code>-p</code> 来自定义端口；</strong></p>
+<p>  例如：</p>
+<ul>
+<li><code>mock-pb s -p 13333</code></li>
+</ul>
+</blockquote>
+<p>如果你在你的 Method 中通过 <code>google.api.http</code> 定义了请求路径，那么在 Mock 服务的时候会使用这个路径；</p>
+<p>例如：</p>
+<pre><code class="protobuf">service DemoService {
+  rpc Demo(DemoRequest) returns (DemoResponse) {
+    option (google.api.http) = {
+      post: &quot;/Demo&quot;
+      body: &quot;*&quot;
+    };
+  }
+}</code></pre>
+<p>如果没有指定请求路径，那么请求路径为：<code>/{ProtobufPackageName}/{ProtobufMethodName}</code>；</p>
+<p>例如：</p>
+<pre><code class="protobuf">syntax = &quot;proto3&quot;;
+
+package demo;
+
+service DemoService {
+  rpc AnotherDemo(AnotherDemoRequest) returns (AnotherDemoResponse) {}
+}</code></pre>
+<p>当服务启动后的请求路径为：</p>
+<pre><code class="bash">$ curl localhost:3333/demo/DemoServiceAnotherDemo
+{&quot;resp&quot;:{&quot;status&quot;:-843357854531144,&quot;message&quot;:&quot;Vzby.&quot;,&quot;resp&quot;:{}},&quot;resp_data&quot;:&quot;Kvia gfkcggmuo.&quot;}</code></pre>
+<br>
+
+<h4 id="自定义返回值"><a href="#自定义返回值" class="headerlink" title="自定义返回值"></a><strong>自定义返回值</strong></h4><p>有时候你可能并不想 Mock 一些像下面这些无意义的数据：</p>
+<pre><code class="json">{&quot;resp&quot;:{&quot;status&quot;:-843357854531144,&quot;message&quot;:&quot;Vzby.&quot;,&quot;resp&quot;:{}},&quot;resp_data&quot;:&quot;Kvia gfkcggmuo.&quot;}</code></pre>
+<p>而是想要自定义一些有用的返回值，比如：</p>
+<pre><code class="json">{&quot;resp&quot;:{&quot;status&quot;:200,&quot;message&quot;:&quot;ok&quot;},&quot;resp_data&quot;:{&quot;Message&quot;:&quot;This is a demo message&quot;}}</code></pre>
+<p>此时可以创建配置文件，例如：</p>
+<p>mock-protobuf.config.json</p>
+<pre><code class="json">{
+    &quot;ResponseValue&quot;: [
+        {
+            &quot;MethodName&quot;: &quot;demo.Demo&quot;,
+            &quot;Data&quot;: {
+                &quot;Hello&quot;: &quot;world&quot;
+            }
+        },
+        {
+            &quot;MethodName&quot;: &quot;demo.AnotherDemo&quot;,
+            &quot;Data&quot;: {
+                &quot;resp&quot;: {
+                    &quot;status&quot;: 200,
+                    &quot;message&quot;: &quot;ok&quot;
+                },
+                &quot;resp_data&quot;: {
+                    &quot;Message&quot;: &quot;This is a demo message&quot;
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<p>其中 <code>MethodName</code> 是 Proto 文件中 Method 的全名：<code>package.method</code>；</p>
+<p>同时，你也可以通过 <code>-c</code> 请求来指定你的配置文件路径，例如： <code>-c ./mock-protobuf.config.json</code>；</p>
+<p>下面是一个完整的命令行例子：</p>
+<pre><code class="bash">$ npm run dev -- s -i demo -c ./mock-protobuf.config-demo.json</code></pre>
+<p>使用自定义返回值后的响应如下：</p>
+<pre><code class="bash">$ curl localhost:3333/Demo
+{&quot;Hello&quot;:&quot;world&quot;}
+
+$ curl localhost:3333/demo/DemoServiceAnotherDemo
+{&quot;resp&quot;:{&quot;status&quot;:200,&quot;message&quot;:&quot;ok&quot;},&quot;resp_data&quot;:{&quot;Message&quot;:&quot;This is a demo message&quot;}}</code></pre>
+<br>
+
+<h3 id="过滤条件"><a href="#过滤条件" class="headerlink" title="过滤条件"></a><strong>过滤条件</strong></h3><p>有的时候我们并不想 Mock 所有的 Proto 定义，此时可以使用 Filter 过滤条件；</p>
+<p>有两种方式进行过滤：</p>
+<ul>
+<li>包含 Includes: <code>-i &lt;string&gt;</code> 或 <code>--include</code>;</li>
+<li>不包含 Excludes: <code>-e &lt;string&gt;</code> 或 <code>--exclude</code>;</li>
+</ul>
+<p><strong>上面的 <code>&lt;string&gt;</code> 被定义为一个JS中的正则表达式 <code>RegExp</code>，所以可以使用类似于正则表达式的方式对 Proto 定义进行匹配：<code>packageName.serviceName.methodName</code>；</strong></p>
+<blockquote>
+<p>  <strong>多个条件使用 <code>,</code> 分隔！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="Include过滤条件"><a href="#Include过滤条件" class="headerlink" title="Include过滤条件"></a><strong>Include过滤条件</strong></h4><p>当使用 Include 过滤条件，只有匹配的 Proto 定义才会被 Mock；</p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g -i demo
+
+Mocked demo.BasicResponse:
+{
+    &quot;status&quot;: -978663427598816,
+    &quot;message&quot;: &quot;Iymo zomttydmb.&quot;,
+    &quot;resp&quot;: {}
+}
+
+Mocked demo.DemoRequest:
+{
+    &quot;data&quot;: &quot;Mdnbfxbvoq khrbwyu sxmkev jss.&quot;
+}
+
+Mocked demo.DemoResponse:
+{
+    &quot;resp&quot;: {
+        &quot;status&quot;: 6207610394471496,
+        &quot;message&quot;: &quot;Dkwse mmhmuhhunb.&quot;,
+        &quot;resp&quot;: {}
+    },
+    &quot;resp_data&quot;: &quot;Fqwkd noiefpr ntjbcfydl.&quot;
+}
+
+Mocked demo.AnotherDemoRequest:
+{
+    &quot;name&quot;: &quot;Puvujqy kyxl hshuysly.&quot;,
+    &quot;age&quot;: 175838119803604
+}
+
+Mocked demo.AnotherDemoResponse:
+{
+    &quot;resp&quot;: {
+        &quot;status&quot;: -7659482750118844,
+        &quot;message&quot;: &quot;Fygec kyzysqqga svimupy nbfrjt.&quot;,
+        &quot;resp&quot;: {}
+    },
+    &quot;resp_data&quot;: &quot;Mpgjtjsbr qfspgkb xmpji.&quot;
+}</code></pre>
+<p>上面的命令只会为 <code>demo.*</code> 产生 Mock 数据（即：package 为 demo 的那些定义）！</p>
+<p>另外一个例子：</p>
+<pre><code class="bash">$ mock-pb g -i demo.DemoRequest.*
+
+Mocked demo.DemoRequest:
+{
+    &quot;data&quot;: &quot;Ewqzspj hjkfvvc froqdhkwe fkqsdg dytidwli.&quot;
+}</code></pre>
+<p>此时只会 Mock：<code>demo.DemoRequest</code> 这一个 Message！</p>
+<br>
+
+<h4 id="Exclude过滤条件"><a href="#Exclude过滤条件" class="headerlink" title="Exclude过滤条件"></a><strong>Exclude过滤条件</strong></h4><p>相反的，<code>-e</code> 产生将会排除那些匹配的 Message；</p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g -e demo.*,google.protobuf.* -o mock-pb-gen
+
+$ tree
+.
+└── google.api
+    ├── CustomHttpPattern.json
+    ├── HttpBody.json
+    ├── Http.json
+    └── HttpRule.json</code></pre>
+<p>上面的命令将不会 Mock  <code>demo.*</code> 和 <code>google.protobuf.*</code> 下的 Message！</p>
+<p><font color="#f00"><strong>注意：当你同时使用  <code>include</code> and <code>exclude</code> 两个过滤器，<code>exclude</code> 会永远首先生效！</strong></font></p>
+<p>例如：</p>
+<pre><code class="bash">$ mock-pb g -i demo -e demo</code></pre>
+<p>什么都不会输出，因为所有的内容都被过滤掉了！</p>
+<br>
+
+<h2 id="开发过程"><a href="#开发过程" class="headerlink" title="开发过程"></a><strong>开发过程</strong></h2><p>上面主要是讲解了 Mock 工具的使用方法；</p>
+<p>下面总结了一下这个工具的整个开发过程，感兴趣的可以看看；</p>
+<br>
+
+<h3 id="项目配置"><a href="#项目配置" class="headerlink" title="项目配置"></a><strong>项目配置</strong></h3><p>项目目录结构如下（省略了一些无关的文件）：</p>
+<pre><code class="bash">$ tree
+.
+├── jest.config.js
+├── package.json
+├── proto
+│   └── ...
+├── src
+│   ├── commands
+│   │   ├── generate.ts
+│   │   ├── options.ts
+│   │   └── serve.ts
+│   ├── index.ts
+│   └── libs
+│       ├── configs.ts
+│       ├── filter.ts
+│       ├── mock.ts
+│       └── server.ts
+├── tsconfig.json
+└── tslint.json</code></pre>
+<p>目录结构非常简单：</p>
+<ul>
+<li><code>tslint.json</code>：一些 TS lint 相关的配置；</li>
+<li><code>tsconfig.json</code>：TS 编译相关配置；</li>
+<li><code>jest.config.js</code>：Jest 测试相关配置；</li>
+<li><code>package.json</code>：项目主配置；</li>
+<li><code>proto/</code>：项目提供的测试 Protobuf 文件；</li>
+<li><code>src/</code>：项目代码；</li>
+</ul>
+<p>下面主要看 <code>package.json</code> 配置：</p>
+<p>package.json</p>
+<pre><code class="json">{
+    &quot;name&quot;: &quot;mock-pb-cli&quot;,
+    &quot;version&quot;: &quot;v1.1.1&quot;,
+    &quot;scripts&quot;: {
+        &quot;c&quot;: &quot;tsc&quot;,
+        &quot;serve&quot;: &quot;ts-node src/index.ts&quot;,
+        &quot;dev&quot;: &quot;ts-node-dev src/index.ts&quot;,
+        &quot;test&quot;: &quot;jest&quot;,
+        &quot;cover&quot;: &quot;jest --coverage&quot;
+    },
+    &quot;main&quot;: &quot;src/index.ts&quot;,
+    &quot;bin&quot;: {
+        &quot;mock-pb&quot;: &quot;bin/index.js&quot;
+    },
+    &quot;files&quot;: [
+        &quot;bin&quot;,
+        &quot;README.md&quot;
+    ],
+    &quot;devDependencies&quot;: {
+        &quot;@types/fs-extra&quot;: &quot;^9.0.13&quot;,
+        &quot;@types/jest&quot;: &quot;^24.0.13&quot;,
+        &quot;@types/mockjs&quot;: &quot;^1.0.6&quot;,
+        &quot;@types/node&quot;: &quot;^14.18.10&quot;,
+        &quot;@types/restify&quot;: &quot;^8.5.5&quot;,
+        &quot;@types/shelljs&quot;: &quot;^0.8.11&quot;,
+        &quot;@types/supertest&quot;: &quot;^2.0.7&quot;,
+        &quot;jest&quot;: &quot;^24.8.0&quot;,
+        &quot;supertest&quot;: &quot;^4.0.2&quot;,
+        &quot;ts-jest&quot;: &quot;^24.0.2&quot;,
+        &quot;ts-node&quot;: &quot;^8.1.0&quot;,
+        &quot;ts-node-dev&quot;: &quot;^2.0.0-0&quot;,
+        &quot;tslint&quot;: &quot;^5.17.0&quot;,
+        &quot;typescript&quot;: &quot;^4.8.2&quot;
+    },
+    &quot;dependencies&quot;: {
+        &quot;commander&quot;: &quot;^9.4.0&quot;,
+        &quot;fs-extra&quot;: &quot;^9.0.13&quot;,
+        &quot;globby&quot;: &quot;^11.0.0&quot;,
+        &quot;mockjs&quot;: &quot;^1.1.0&quot;,
+        &quot;protobufjs&quot;: &quot;^7.1.0&quot;,
+        &quot;restify&quot;: &quot;^8.6.1&quot;,
+        &quot;shelljs&quot;: &quot;^0.8.5&quot;
+    }
+}</code></pre>
+<p>在上面的配置中：</p>
+<ul>
+<li><code>name</code> &amp; <code>version</code> 决定了发布到 NPM 后的名称和版本号；</li>
+<li><code>scripts</code>：声明了一些 <code>npm</code> 指令，可以通过 <code>npm run xxx</code> 执行；</li>
+<li><code>main</code>：作为项目入口的文件；</li>
+<li><strong><code>bin</code>（重要！）：作为 <code>node-cli</code> 的入口文件；注：<code>mock-pb</code> 为安装后的命令名称，<code>bin/index.js</code> 为命令的入口文件！</strong></li>
+<li><code>files</code>：npm 打包上传时包含的文件；</li>
+<li><code>devDependencies</code>：开发依赖，如果只使用 <code>npm -i</code> 安装，则不会安装这些依赖；</li>
+<li><code>dependencies</code>：项目依赖，使用 <code>npm -i</code> 安装，也会安装这些依赖；</li>
+</ul>
+<p><strong><code>devDependencies</code> 主要是一些 TS 库、test库等等，由于我们发布到 NPM 上的为编译好的 JS 文件，所以不需要这些 TS 库了！</strong></p>
+<p>在我们的项目中，主要使用的是下面这些依赖：</p>
+<ul>
+<li><strong>“commander”：知名的命令行解析、执行库；</strong></li>
+<li><strong>“fs-extra”：封装了一些文件系统同步、异步操作库；</strong></li>
+<li><strong>“globby”：匹配文件，用于匹配 proto 类型的文件；</strong></li>
+<li><strong>“mockjs”：生成 Mock 数据；</strong></li>
+<li><strong>“protobufjs”：解析 proto 文件；</strong></li>
+<li><strong>“restify”：创建 Mock Server；</strong></li>
+<li><strong>“shelljs”：一些 shell 命令的封装库，例如：<code>sed</code>；</strong></li>
+</ul>
+<p>再看一下 TS 编译的配置：</p>
+<p>tsconfig.json</p>
+<pre><code class="json">{
+    &quot;compilerOptions&quot;: {
+        /* Basic Options */
+        &quot;target&quot;: &quot;ES6&quot;,                     /* Specify ECMAScript target version: &#39;ES3&#39; (default), &#39;ES5&#39;, &#39;ES2015&#39;, &#39;ES2016&#39;, &#39;ES2017&#39;,&#39;ES2018&#39; or &#39;ESNEXT&#39;. */
+
+        //  ts-node 目前不支持es2015的的模块机制
+        //  https://github.com/TypeStrong/ts-node/issues/313#issuecomment-343698812
+        &quot;module&quot;: &quot;commonjs&quot;,                     /* Specify module code generation: &#39;none&#39;, &#39;commonjs&#39;, &#39;amd&#39;, &#39;system&#39;, &#39;umd&#39;, &#39;es2015&#39;, or &#39;ESNext&#39;. */
+
+        &quot;outDir&quot;: &quot;./bin/&quot;,                        /* Redirect output structure to the directory. */
+        &quot;rootDir&quot;: &quot;./src/&quot;,   /* input folder, and root dir cannot contain some ohter ts file which not in src folder*/
+
+          /* Strict Type-Checking Options */
+        &quot;strict&quot;: true,                           /* Enable all strict type-checking options. */
+
+        /* Module Resolution Options */
+        &quot;moduleResolution&quot;: &quot;node&quot;,            /* Specify module resolution strategy: &#39;node&#39; (Node.js) or &#39;classic&#39; (TypeScript pre-1.6). */
+        &quot;esModuleInterop&quot;: true,                   /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies &#39;allowSyntheticDefaultImports&#39;. */
+        &quot;experimentalDecorators&quot;: true       /* Enables experimental support for ES7 decorators. */
+    },
+    &quot;exclude&quot;: [
+      &quot;./test&quot;
+    ]
+}</code></pre>
+<p>主要关注：</p>
+<ul>
+<li><strong><code>outDir</code>：我们将文件编译至：<code>bin/</code> 目录下，和上面的 <code>bin</code> 以及 <code>files</code> 对应；</strong></li>
+<li><strong><code>rootDir</code>：我们 TS 文件的根目录；</strong></li>
+</ul>
+<p>下面来看代码逻辑；</p>
+<br>
+
+<h3 id="代码逻辑"><a href="#代码逻辑" class="headerlink" title="代码逻辑"></a><strong>代码逻辑</strong></h3><p>在 src 目录下分为了两个目录：</p>
+<pre><code class="bash">$ tree
+.
+├── commands
+│   ├── generate.ts
+│   ├── options.ts
+│   └── serve.ts
+├── index.ts
+└── libs
+    ├── configs.ts
+    ├── filter.ts
+    ├── mock.ts
+    └── server.ts
+
+2 directories, 8 files</code></pre>
+<ul>
+<li>index.ts 为执行入口；</li>
+<li>commands 目录下存放子命令相关内容；</li>
+<li>libs 目录下存放子命令实现相关内容；</li>
+</ul>
+<br>
+
+<h4 id="命令行入口"><a href="#命令行入口" class="headerlink" title="命令行入口"></a><strong>命令行入口</strong></h4><p>命令行入口为 index.ts：</p>
+<p>index.ts</p>
+<pre><code class="typescript">#!/usr/bin/env node
+const path = require(&#39;path&#39;);
+const fs = require(&#39;fs&#39;);
+const {Command} = require(&#39;commander&#39;);
+const {DirOption, IncludeOption, ExcludeOption, PortOption, OutputPathOption, ConfigOption} = require(&#39;./commands/options&#39;)
+const generate = require(&#39;./commands/generate&#39;);
+const serve = require(&#39;./commands/serve&#39;);
+
+const program = new Command();
+
+let config = {};
+// 配置文件如果存在则读取
+if (fs.existsSync(path.resolve(&quot;mock-protobuf.config-demo.json&quot;))) {
+    config = path.resolve(&quot;mock-protobuf.config-demo.json&quot;);
+}
+
+program
+    .name(&quot;mock-protobuf&quot;)
+    .version(&quot;v1.1.1&quot;, &quot;-v, --version&quot;)
+    .description(&quot;A tool to mock protobuf&quot;);
+
+program.command(&#39;s&#39;).alias(&#39;serve&#39;)
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(PortOption)
+    .addOption(ConfigOption)
+    .action(serve).description(&quot;Create a mock server for the given protobuf&quot;);
+
+program.command(&#39;g&#39;).alias(&#39;generate&#39;)
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(OutputPathOption)
+    .action(generate).description(&quot;Generate mock data for the given protobuf&quot;);
+
+program.parse();</code></pre>
+<p><strong>代码首行 <code>#!/usr/bin/env node</code> 表示这是一个 node-cli 入口，这个是必须要加的！</strong></p>
+<p>随后，解析配置文件、然后注册每个命令；</p>
+<p>最后调用：<code>program.parse()</code>，解析命令行参数；</p>
+<br>
+
+<h4 id="各个子命令入口"><a href="#各个子命令入口" class="headerlink" title="各个子命令入口"></a><strong>各个子命令入口</strong></h4><p>commands 目录下存放了每个子命令、以及命令行参数的文件；</p>
+<p>首先，由于某些命令行参数会被复用，因此在 options.ts 中定义了所有的命令行参数：</p>
+<p>options.ts</p>
+<pre><code class="typescript">import {Option} from &quot;commander&quot;;
+
+let DirOption = new Option(&#39;-d, --dir &lt;string&gt;&#39;, &#39;the directory of the protobuf files&#39;).default(&#39;.&#39;);
+
+let PortOption = new Option(&#39;-p, --port &lt;number&gt;&#39;, &#39;the port for the mock server&#39;).default(3333).env(&#39;PB_MOCK_PORT&#39;);
+
+let IncludeOption = new Option(&#39;-i, --include &lt;string&gt;&#39;,
+    &#39;include the specific protobuf interfaces, multiple packages split by &quot;,&quot;, &#39; +
+    &#39;such as: &quot;packageName.serviceName.methodName&quot;&#39;).default(&#39;&#39;);
+
+let ExcludeOption = new Option(&#39;-e, --exclude &lt;string&gt;&#39;,
+    &#39;exclude the specific protobuf interfaces, multiple packages split by &quot;,&quot;, &#39; +
+    &#39;such as: &quot;packageName.serviceName.methodName&quot;&#39;).default(&#39;&#39;);
+
+let OutputPathOption = new Option(&#39;-o, --output &lt;string&gt;&#39;, &#39;output path for result&#39;).default(&#39;&#39;);
+
+let ConfigOption = new Option(&#39;-c, --config &lt;string&gt;&#39;, &#39;the config file path&#39;).default(&#39;mock-protobuf.config.json&#39;);
+
+module.exports = {DirOption, PortOption, IncludeOption, ExcludeOption, OutputPathOption, ConfigOption: ConfigOption};</code></pre>
+<p>这些参数和上面的功能介绍中一一对应；</p>
+<p>随后是两个子命令的定义，对应上文中的 generate 和 serve：</p>
+<p>generate.ts</p>
+<pre><code class="typescript">import {getMockTpl, loadProtobufDefinition} from &quot;../libs/mock&quot;;
+import mockjs from &quot;mockjs&quot;;
+import fs from &#39;fs-extra&#39;;
+import path from &quot;path&quot;;
+import {
+    filterProtobufDefinitions,
+    getProtobufFiltersFromOptions, ProtobufMessage,
+} from &quot;../libs/filter&quot;;
+
+interface GenerateCmdOptions {
+
+    dir: string;
+
+    include?: string | undefined;
+
+    exclude?: string | undefined;
+
+    output: string;
+}
+
+module.exports = (options: GenerateCmdOptions) =&gt; {
+    // Step 1: Load protobuf definitions
+    let pkgDefinition = loadProtobufDefinition(options.dir);
+
+    // Step 2: Filter if necessary
+    let [filteredMessages, _] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(options.include, options.exclude));
+
+    // Step 3: Generate each messages
+    filteredMessages.forEach((v: ProtobufMessage[]) =&gt; {
+        // Step 3.2: Generate mocked protobuf message data
+        for (let protobufMessage of v) {
+            let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+            let mockData = mockjs.mock(mockTpl);
+            processMockData(options.output, protobufMessage, mockData);
+        }
+    });
+}
+
+function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + &quot;.json&quot;), mockedMessageData, err =&gt; {
+        if (err) return console.error(err)
+    })
+}</code></pre>
+<p>serve.ts</p>
+<pre><code class="typescript">import {createServer, parse_response_value_from_config} from &quot;../libs/server&quot;;
+
+interface ServeCmdOptions {
+
+    dir: string;
+
+    include: string;
+
+    exclude: string;
+
+    port: number | undefined;
+
+    config: string;
+}
+
+module.exports = function (options: ServeCmdOptions) {
+    createServer(options.dir, {
+        include: options.include,
+        exclude: options.exclude,
+        /*
+          The param data is result of mock.js
+          https://github.com/nuysoft/Mock
+        */
+        /**
+         * Hack mock rules of template
+         * @param key protobuf message key
+         * @param type protobuf message key type (eg. string/int32/bool...)
+         * @param random
+         */
+        responseHandlerMap: parse_response_value_from_config(options.config),
+        hackMockTpl: (key, type, random) =&gt; {
+            key = key.toLowerCase();
+            const keyTypeHas = (k: string, t: string) =&gt;
+                type === t &amp;&amp; key.indexOf(k) &gt; -1;
+            if (keyTypeHas(&#39;icon&#39;, &#39;string&#39;)) return &#39;@image&#39;;
+            else if (keyTypeHas(&#39;name&#39;, &#39;string&#39;)) return &#39;@name&#39;;
+            return &#39;&#39;;
+        }
+    }).then(server =&gt; server.start(options.port));
+}</code></pre>
+<p><strong>两个子命令都只是 export 了入口函数，用于在 index.ts 入口文件中注册子命令；</strong></p>
+<p><strong>同时，两个子命令主要都是调用在 libs 中定义的函数，来完成各自的功能；</strong></p>
+<p>下面来看各子命令的实现；</p>
+<br>
+
+<h4 id="Generate子命令"><a href="#Generate子命令" class="headerlink" title="Generate子命令"></a><strong>Generate子命令</strong></h4><h5 id="Generate命令入口"><a href="#Generate命令入口" class="headerlink" title="Generate命令入口"></a><strong>Generate命令入口</strong></h5><p>让我们自信看看 Generate 入口文件：</p>
+<p>generate.ts</p>
+<pre><code class="typescript">interface GenerateCmdOptions {
+
+    dir: string;
+
+    include?: string | undefined;
+
+    exclude?: string | undefined;
+
+    output: string;
+}
+
+module.exports = (options: GenerateCmdOptions) =&gt; {
+    // Step 1: Load protobuf definitions
+    let pkgDefinition = loadProtobufDefinition(options.dir);
+
+    // Step 2: Filter if necessary
+    let [filteredMessages, _] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(options.include, options.exclude));
+
+    // Step 3: Generate each messages
+    filteredMessages.forEach((v: ProtobufMessage[]) =&gt; {
+        // Step 3.2: Generate mocked protobuf message data
+        for (let protobufMessage of v) {
+            let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+            let mockData = mockjs.mock(mockTpl);
+            processMockData(options.output, protobufMessage, mockData);
+        }
+    });
+}
+
+function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + &quot;.json&quot;), mockedMessageData, err =&gt; {
+        if (err) return console.error(err)
+    })
+}</code></pre>
+<p>首先，GenerateCmdOptions 接口定义了 Generate 命令所需要的命令行参数；</p>
+<p>这些参数在命令行入口中可以被传递进来：</p>
+<p>index.ts</p>
+<pre><code class="typescript">program.command(&#39;g&#39;).alias(&#39;generate&#39;)
+    .addOption(DirOption)
+    .addOption(IncludeOption)
+    .addOption(ExcludeOption)
+    .addOption(OutputPathOption)
+    .action(generate).description(&quot;Generate mock data for the given protobuf&quot;);</code></pre>
+<br>
+
+<h5 id="加载Protobuf文件"><a href="#加载Protobuf文件" class="headerlink" title="加载Protobuf文件"></a><strong>加载Protobuf文件</strong></h5><p>在 generate 命令中，首先通过 loadProtobufDefinition 函数加载指定目录下的 protobuf 文件：</p>
+<p>libs/mock.ts</p>
+<pre><code class="typescript">export function loadProtobufDefinition(repository: string) {
+    const absFilePaths = path.posix.join(repository, &#39;**/*.proto&#39;);
+
+    // Load all protobuf files under the repository
+    const protoPaths = globby.sync([absFilePaths]);
+
+    // Process each protobuf files, and solve semantic analysis errors caused by compatible annotations
+    shell.sed(&#39;-i&#39;, /\/\*\/\//g, &#39;/* //&#39;, protoPaths);
+    return protoPaths.map(protoPaths =&gt; {
+        const root = new protobuf.Root();
+        return root.loadSync(protoPaths, {keepCase: true, alternateCommentMode: false, preferTrailingComment: false});
+    });
+}</code></pre>
+<p>上面的 loadProtobufDefinition 函数逻辑非常简单，首先查找所有的 proto 文件，随后加载；</p>
+<p>其中使用 <code>shell.sed(&#39;-i&#39;, /\/\*\/\//g, &#39;/* //&#39;, protoPaths);</code> 替换掉了文件中的注释行；</p>
+<blockquote>
+<p>  <strong>protobuf.js 库对于某些含有注释的文件解析支持不够好！</strong></p>
+</blockquote>
+<br>
+
+<h5 id="过滤Protobuf定义"><a href="#过滤Protobuf定义" class="headerlink" title="过滤Protobuf定义"></a><strong>过滤Protobuf定义</strong></h5><p>首先，调用 getProtobufFiltersFromOptions 函数根据命令行参数创建过滤条件：</p>
+<p>随后调用 filterProtobufDefinitions 函数，过滤那些来自命令行 <code>-i</code> 和 <code>-e</code> 指定的 protobuf 定义；</p>
+<p>libs/filter.ts</p>
+<pre><code class="typescript">export type ProtobufMessageFilter = RegExp[];
+
+export function getProtobufFiltersFromOptions(includes?: string | undefined, excludes?: string | undefined):
+    [ProtobufMessageFilter | undefined, ProtobufMessageFilter | undefined] {
+
+    return [
+        includes === undefined || includes.length === 0 ? undefined :
+            includes.split(&#39;,&#39;).map(regExpStr =&gt; new RegExp(getRegExpString(regExpStr.trim()))),
+        excludes === undefined || excludes.length === 0 ? undefined :
+            excludes.split(&#39;,&#39;).map(regExpStr =&gt; new RegExp(getRegExpString(regExpStr.trim()))),
+    ];
+}
+
+function getRegExpString(regExpStr: string): string {
+    // Using prefix match for filters
+    regExpStr = regExpStr.replace(&#39;\.&#39;, &quot;\\.&quot;);
+    return `^${regExpStr}`;
+}</code></pre>
+<p>可以看到，getProtobufFiltersFromOptions 函数根据命令行传递的过滤条件生成了对应的 RegExp 数组，用于匹配路径；</p>
+<p>filterProtobufDefinitions 函数：</p>
+<p>libs/filter.ts</p>
+<pre><code class="typescript">export interface ProtobufMessage {
+    data: ReflectionObject,
+    packageName: string;
+    serviceName: string;
+    messageName: string;
+}
+
+// Filter the protobuf definitions
+export function filterProtobufDefinitions(
+    pbDefinitions: protobuf.Root[],
+    includeFilters: ProtobufMessageFilter | undefined,
+    excludeFilters: ProtobufMessageFilter | undefined,
+): [Map&lt;string, ProtobufMessage[]&gt;, Map&lt;string, ProtobufMessage[]&gt;, Map&lt;string, ProtobufMessage[]&gt;] {
+
+    let retMessageMaps = new Map&lt;string, ProtobufMessage[]&gt;();
+    let retServiceMaps = new Map&lt;string, ProtobufMessage[]&gt;();
+    let retMethodMaps = new Map&lt;string, ProtobufMessage[]&gt;();
+    let repeatedSet = new Set&lt;string&gt;();
+    for (let pbDefinition of pbDefinitions) {
+        if (pbDefinition instanceof Namespace) {
+            handleNamespace(pbDefinition.name, pbDefinition as Namespace,
+                includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+        }
+    }
+
+    return [retMessageMaps, retServiceMaps, retMethodMaps];
+}
+
+function handleNamespace(namespace: string, pbDefinition: Namespace,
+                         includeFilters: ProtobufMessageFilter | undefined,
+                         excludeFilters: ProtobufMessageFilter | undefined,
+                         retMessageMaps: Map&lt;string, ProtobufMessage[]&gt;,
+                         retServiceMaps: Map&lt;string, ProtobufMessage[]&gt;,
+                         retMethodMaps: Map&lt;string, ProtobufMessage[]&gt;,
+                         repeatedSet: Set&lt;string&gt;) {
+
+    for (let i = 0; i &lt; pbDefinition.nestedArray.length; i++) {
+        let item = pbDefinition.nestedArray[i];
+
+        if (item instanceof Type) {
+            pushItem(namespace, &quot;&quot;, &quot;Type&quot;, item, includeFilters, excludeFilters, retMessageMaps, repeatedSet);
+        } else if (item instanceof Service) {
+            pushItem(namespace, item.name, &quot;Service&quot;, item, includeFilters, excludeFilters, retServiceMaps, repeatedSet);
+            for (let method of item.methodsArray) {
+                pushItem(namespace, item.name, &quot;Method&quot;, method, includeFilters, excludeFilters, retMethodMaps, repeatedSet);
+            }
+        } else if (item instanceof Namespace) {
+            handleNamespace(namespace === &quot;&quot; ? item.name : namespace + &quot;.&quot; + item.name, item,
+                includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+        }
+    }
+
+    return retMessageMaps;
+}
+
+function pushItem(namespace: string, serviceName: string, itemType: string, item: ReflectionObject,
+                  includeFilters: ProtobufMessageFilter | undefined,
+                  excludeFilters: ProtobufMessageFilter | undefined,
+                  retMap: Map&lt;string, ProtobufMessage[]&gt;,
+                  repeatedSet: Set&lt;string&gt;) {
+
+    if (namespace !== &quot;&quot; &amp;&amp; filterProtobuf(namespace + `.${item.name}`, includeFilters, excludeFilters)) {
+        return;
+    }
+
+    let repeatStr = generateRepeatStr(namespace, serviceName, itemType, item.name);
+    if (repeatedSet.has(repeatStr)) { // duplicate
+        return;
+    } else {
+        repeatedSet.add(repeatStr);
+    }
+
+    if (retMap.has(namespace)) {
+        retMap.get(namespace)!.push({
+            data: item,
+            packageName: namespace,
+            serviceName: serviceName,
+            messageName: item.name
+        });
+    } else {
+        retMap.set(namespace, [{data: item, packageName: namespace, serviceName: serviceName, messageName: item.name}]);
+    }
+}
+
+export function filterProtobuf(namespace: string, includeFilters: ProtobufMessageFilter | undefined,
+                               excludeFilters: ProtobufMessageFilter | undefined): boolean {
+
+    // Process for exclude filters first
+    if (excludeFilters !== undefined) {
+        if (matchFilters(namespace, excludeFilters)) {
+            return true;
+        }
+    }
+
+    // Process for include filters
+    if (includeFilters !== undefined) {
+        if (!matchFilters(namespace, includeFilters)) {
+            return true;
+        }
+    }
+
+    // Namespace has been not filtered, we pick it!
+    return false;
+}
+
+function matchFilters(namespace: string, filters: ProtobufMessageFilter): boolean {
+
+    return filters.some((filter) =&gt; filter.test(namespace));
+}</code></pre>
+<p>在函数 filterProtobufDefinitions 中，主要是遍历 Proto 的定义，然后根据过滤条件过滤出最终的 Message、Service、Method 定义；</p>
+<p>在其中定义的 repeatedSet 用于防止某些递归定义的 Protobuf，例如：</p>
+<pre><code class="protobuf">message BasicResponse {
+  int32 status = 1;
+  string message = 2;
+  BasicResponse resp = 3;
+}</code></pre>
+<p>在函数 filterProtobufDefinitions 中主要是调用 handleNamespace 来处理所有的 Protobuf 定义；</p>
+<p>主要是区分为不同的 Protobuf 类型：</p>
+<pre><code class="typescript">for (let i = 0; i &lt; pbDefinition.nestedArray.length; i++) {
+  let item = pbDefinition.nestedArray[i];
+
+  if (item instanceof Type) {
+    pushItem(namespace, &quot;&quot;, &quot;Type&quot;, item, includeFilters, excludeFilters, retMessageMaps, repeatedSet);
+  } else if (item instanceof Service) {
+    pushItem(namespace, item.name, &quot;Service&quot;, item, includeFilters, excludeFilters, retServiceMaps, repeatedSet);
+    for (let method of item.methodsArray) {
+      pushItem(namespace, item.name, &quot;Method&quot;, method, includeFilters, excludeFilters, retMethodMaps, repeatedSet);
+    }
+  } else if (item instanceof Namespace) {
+    handleNamespace(namespace === &quot;&quot; ? item.name : namespace + &quot;.&quot; + item.name, item,
+                    includeFilters, excludeFilters, retMessageMaps, retServiceMaps, retMethodMaps, repeatedSet);
+  }
+}</code></pre>
+<p>如果在 Proto 中的类型是 Namespace，那么我们还需要继续的递归调用 handleNamespace，来往下层继续搜索；</p>
+<p>而 pushItem 函数用于将不同的 Proto 定义加入到结果集中：</p>
+<pre><code class="typescript">function pushItem(namespace: string, serviceName: string, itemType: string, item: ReflectionObject,
+                  includeFilters: ProtobufMessageFilter | undefined,
+                  excludeFilters: ProtobufMessageFilter | undefined,
+                  retMap: Map&lt;string, ProtobufMessage[]&gt;,
+                  repeatedSet: Set&lt;string&gt;) {
+
+    if (namespace !== &quot;&quot; &amp;&amp; filterProtobuf(namespace + `.${item.name}`, includeFilters, excludeFilters)) {
+        return;
+    }
+
+    let repeatStr = generateRepeatStr(namespace, serviceName, itemType, item.name);
+    if (repeatedSet.has(repeatStr)) { // duplicate
+        return;
+    } else {
+        repeatedSet.add(repeatStr);
+    }
+
+    if (retMap.has(namespace)) {
+        retMap.get(namespace)!.push({
+            data: item,
+            packageName: namespace,
+            serviceName: serviceName,
+            messageName: item.name
+        });
+    } else {
+        retMap.set(namespace, [{data: item, packageName: namespace, serviceName: serviceName, messageName: item.name}]);
+    }
+}</code></pre>
+<p>在 pushItem 函数中，首先通过 Filters 对当前的 Proto 定义进行过滤，如果不满足条件，则直接返回；</p>
+<p>而过滤的逻辑非常简单：首先判断是否是排除的，如果是，则直接过滤掉，否则判断是否是包含的；</p>
+<pre><code class="typescript">export function filterProtobuf(namespace: string, includeFilters: ProtobufMessageFilter | undefined,
+                               excludeFilters: ProtobufMessageFilter | undefined): boolean {
+
+    // Process for exclude filters first
+    if (excludeFilters !== undefined) {
+        if (matchFilters(namespace, excludeFilters)) {
+            return true;
+        }
+    }
+
+    // Process for include filters
+    if (includeFilters !== undefined) {
+        if (!matchFilters(namespace, includeFilters)) {
+            return true;
+        }
+    }
+
+    // Namespace has been not filtered, we pick it!
+    return false;
+}</code></pre>
+<p>这也满足了上面说介绍的：当你同时使用  <code>include</code> and <code>exclude</code> 两个过滤器，<code>exclude</code> 会永远首先生效！</p>
+<p>随后，pushItem 函数调用 generateRepeatStr 创建去重字符串防止多次递归遍历同一个定义；</p>
+<p>最后将定义加入到返回值 Map 中；</p>
+<p>至此，过滤并获取 Protobuf 定义完成！</p>
+<br>
+
+<h5 id="创建Mock数据"><a href="#创建Mock数据" class="headerlink" title="创建Mock数据"></a><strong>创建Mock数据</strong></h5><p>最后，使用上面获取的 Protobuf 定义生成 Mock 数据：</p>
+<pre><code class="typescript">// Step 3: Generate each messages
+filteredMessages.forEach((v: ProtobufMessage[]) =&gt; {
+  // Step 3.2: Generate mocked protobuf message data
+  for (let protobufMessage of v) {
+    let mockTpl = getMockTpl(pkgDefinition, protobufMessage.packageName, protobufMessage.messageName, new Map(), undefined);
+    let mockData = mockjs.mock(mockTpl);
+    processMockData(options.output, protobufMessage, mockData);
+  }
+});</code></pre>
+<p>循环中首先通过 getMockTpl 获取到 Mock 对应 Protobuf 定义需要的模版，随后调用 mockjs.mock 生成 Mock 数据，最后调用 processMockData 保存 Mock 结果；</p>
+<p>获取 Mock 模版的代码如下：</p>
+<p>libs/mock.ts</p>
+<pre><code class="typescript">const TYPES: { [key: string]: string } = {
+    double: &#39;@float&#39;,
+    float: &#39;@float&#39;,
+    int32: &#39;@integer&#39;,
+    int64: &#39;@string(&quot;1234567890&quot;, 1, 20)&#39;,
+    uint32: &#39;@natural&#39;,
+    uint64: &#39;@string(&quot;1234567890&quot;, 1, 20)&#39;,
+    sint32: &#39;@integer&#39;,
+    sint64: &#39;@string(&quot;1234567890&quot;, 1, 20)&#39;,
+    fixed32: &#39;@natural&#39;,
+    fixed64: &#39;@string(&quot;1234567890&quot;, 1, 20)&#39;,
+    sfixed32: &#39;@integer&#39;,
+    sfixed64: &#39;@string(&quot;1234567890&quot;, 1, 20)&#39;,
+    bool: &#39;@boolean&#39;,
+    string: &#39;@sentence(1, 5)&#39;,
+    bytes: &#39;@sentence(1, 5)&#39;,
+};
+
+export function getService(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    serviceName: string,
+): Root | null | undefined {
+    return pbDefinitions.find(pd =&gt; {
+        try {
+            pd.lookupService(`${packageName}.${serviceName}`);
+            return true;
+        } catch {
+            return false;
+        }
+    });
+}
+
+export function getMethod(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    serviceName: string,
+    methodName: string
+): Method | null | undefined {
+    const service = getService(pbDefinitions, packageName, serviceName);
+    return service?.lookup(methodName) as Method;
+}
+
+export function getMessage(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    messageName: string
+): protobuf.Type | undefined {
+    return pbDefinitions
+        .find(pd =&gt; {
+            try {
+                pd.lookupType(`${packageName}.${messageName}`);
+                return true;
+            } catch {
+                return false;
+            }
+        })
+        ?.lookupType(`${packageName}.${messageName}`);
+}
+
+export function getMockTpl(
+    pbDefinitions: protobuf.Root[],
+    packageName: string,
+    messageType: string,
+    mockMemo: Map&lt;string, any&gt;, // mockMemo to avoid recursive struct
+    hackMockTpl?: (
+        key: string,
+        type: string,
+        random: MockjsRandom
+    ) =&gt; string | (() =&gt; string),
+) {
+    const messageTypeSplit = messageType.split(&#39;.&#39;);
+    if (messageTypeSplit.length) {
+        messageType = messageTypeSplit.pop()!;
+        packageName = messageTypeSplit.join(&#39;.&#39;);
+    }
+    const message = getMessage(pbDefinitions, packageName, messageType);
+    const fields = message?.fields || {};
+    const keys = Object.keys(fields);
+    const tpl: { [key: string]: any } = {};
+    keys.forEach(key =&gt; {
+        const val = fields[key];
+        const {repeated, type} = val;
+        const mockTpl =
+            (hackMockTpl &amp;&amp; hackMockTpl(key, type, Random)) || TYPES[type];
+        key = `${key}${repeated ? &#39;|0-10&#39; : &#39;&#39;}`;
+
+        let mockKey = `${packageName}.${messageType}.${key}`;
+
+        if (mockMemo.has(mockKey)) {
+            return;
+        }
+
+        mockMemo.set(mockKey, tpl); // memorize the key
+        if (mockTpl) {
+            tpl[key] = repeated ? [mockTpl] : mockTpl;
+        } else {
+            const recursiveMockTpl = getMockTpl(
+                pbDefinitions,
+                packageName,
+                type,
+                mockMemo,
+                hackMockTpl
+            );
+            tpl[key] = repeated ? [recursiveMockTpl] : recursiveMockTpl;
+        }
+    });
+    return tpl;
+}</code></pre>
+<p>主要是对当前的 Protobuf 定义，递归的 Mock 包含的每一个字段；</p>
+<p>同时，这里也使用到了 mockMemo 这个 Map 防止无限递归；</p>
+<p>最后，通过 processMockData 函数处理 Mock 后的结果：</p>
+<pre><code class="typescript">function processMockData(outputPath: string, pbMessage: ProtobufMessage, mockedMessageData: any) {
+    // Print the mock data to the console if no output path
+    if (outputPath.length === 0) {
+        console.log(`Mocked ${pbMessage.packageName}.${pbMessage.messageName}: \n${JSON.stringify(mockedMessageData, null, 2)}\n`);
+        return
+    }
+
+    // Else async write the output
+    let saveFilePath = path.posix.join(outputPath, pbMessage.packageName);
+    fs.ensureDirSync(saveFilePath)
+    fs.writeJSON(path.posix.join(saveFilePath, pbMessage.messageName + &quot;.json&quot;), mockedMessageData, err =&gt; {
+        if (err) return console.error(err)
+    })
+}</code></pre>
+<p>如果：</p>
+<ul>
+<li>没有指定输出文件，则将 Mock 的数据打印在控制台来直接 Copy；</li>
+<li>指定了输出文件，则根据 Namespace 创建对应的目录，并保存 Mock 结果；</li>
+</ul>
+<br>
+
+<h4 id="Serve子命令"><a href="#Serve子命令" class="headerlink" title="Serve子命令"></a><strong>Serve子命令</strong></h4><h5 id="Serve子命令入口"><a href="#Serve子命令入口" class="headerlink" title="Serve子命令入口"></a><strong>Serve子命令入口</strong></h5><p>Serve 子命令复用了上面大量的函数，这里来看下具体的实现；</p>
+<p>类似的，首先是定义接收命令行参数的接口：</p>
+<p>commands/serve.ts</p>
+<pre><code class="typescript">interface ServeCmdOptions {
+
+    dir: string;
+
+    include: string;
+
+    exclude: string;
+
+    port: number | undefined;
+
+    config: string;
+}
+
+module.exports = function (options: ServeCmdOptions) {
+    createServer(options.dir, {
+        include: options.include,
+        exclude: options.exclude,
+        /*
+          The param data is result of mock.js
+          https://github.com/nuysoft/Mock
+        */
+        /**
+         * Hack mock rules of template
+         * @param key protobuf message key
+         * @param type protobuf message key type (eg. string/int32/bool...)
+         * @param random
+         */
+        responseHandlerMap: parse_response_value_from_config(options.config),
+        hackMockTpl: (key, type, random) =&gt; {
+            key = key.toLowerCase();
+            const keyTypeHas = (k: string, t: string) =&gt;
+                type === t &amp;&amp; key.indexOf(k) &gt; -1;
+            if (keyTypeHas(&#39;icon&#39;, &#39;string&#39;)) return &#39;@image&#39;;
+            else if (keyTypeHas(&#39;name&#39;, &#39;string&#39;)) return &#39;@name&#39;;
+            return &#39;&#39;;
+        }
+    }).then(server =&gt; server.start(options.port));
+}</code></pre>
+<p>随后调用 createServer 创建 Mock 的服务，并在创建完成后在指定的端口启动 Server；</p>
+<br>
+
+<h5 id="创建Server"><a href="#创建Server" class="headerlink" title="创建Server"></a><strong>创建Server</strong></h5><p>创建Server的核心是要：<strong>根据 Protobuf 的定义，Mock 相应 Method 的返回值以及请求路径；</strong></p>
+<p>而关于 Mock 返回值，在上面 Generate 子命令中，我们已经实现了！</p>
+<p>下面首先来看 createServer 的实现：</p>
+<pre><code class="typescript">export const createServer = async (protobufRepoPath: string, options: MockHandlerOptions) =&gt; {
+    const server = restify.createServer();
+
+    // CORS
+    server.use((req: Request, res: Response, next: Next) =&gt; {
+        res.header(&quot;Access-Control-Allow-Credentials&quot;, true);
+        res.header(&quot;Access-Control-Allow-Origin&quot;, req.headers.origin);
+        next();
+    });
+
+    // HANDLER
+    const handlersMap = generateMockHandlersMap(protobufRepoPath, options);
+
+    // API ROUTES
+    server.opts(&quot;*&quot;, (req, res, next) =&gt; {
+        res.header(
+            &quot;Access-Control-Allow-Methods&quot;,
+            req.headers[&quot;access-control-request-methods&quot;],
+        );
+        res.header(
+            &quot;Access-Control-Allow-Headers&quot;,
+            req.headers[&quot;access-control-request-headers&quot;],
+        );
+        res.end();
+        next();
+    });
+    handlersMap.forEach((handler, routePath) =&gt; {
+        console.log(`Handling routePath: ${routePath}`)
+        server.get(routePath, handler);
+        server.post(routePath, handler);
+    })
+
+    return {
+        start: (port: number = 3333) =&gt;
+            server.listen(port, () =&gt;
+                console.log(&quot;%s listening at %s&quot;, server.name, server.url),
+            ),
+    };
+};</code></pre>
+<p>通过 <code>restify.createServer()</code> 我们可以创建一个 Server，同时配置允许跨域的 header；</p>
+<p>随后通过 generateMockHandlersMap 函数获取 routePath =&gt; Handler 的 Map；</p>
+<p>然后注册各个方法，最后返回启动 Server 的函数；</p>
+<p>下面重点来看获取 Handler 的函数 generateMockHandlersMap；</p>
+<br>
+
+<h5 id="获取各个Handler"><a href="#获取各个Handler" class="headerlink" title="获取各个Handler"></a><strong>获取各个Handler</strong></h5><p>获取各个 Handler 的方法和 Generate 子命令中的实现类似：</p>
+<p>libs/server.ts</p>
+<pre><code class="typescript">interface MockHandlerOptions {
+    include: string,
+    exclude: string,
+    responseHandlerMap?: Map&lt;string, ResponseHandler&gt;;
+    hackMockTpl?: (
+        key: string,
+        type: string,
+        random: MockjsRandom,
+    ) =&gt; string | (() =&gt; string);
+}
+
+type ResponseHandler = (resp: restify.Response, data: any) =&gt; void;
+
+function generateMockHandlersMap(
+    repository: string,
+    options: MockHandlerOptions,
+): Map&lt;string, RequestHandlerType&gt; {
+    const {include, exclude, responseHandlerMap, hackMockTpl} = options;
+
+    // Step 1: Load protobuf definitions
+    const pkgDefinition = loadProtobufDefinition(repository);
+
+    // Step 2: Filter if necessary
+    let [_, __, filteredMethodsMap] = filterProtobufDefinitions(pkgDefinition, ...getProtobufFiltersFromOptions(include, exclude));
+
+    // Step 3: Bind methods to the mock server handler
+    let retHandlersMap: Map&lt;string, RequestHandlerType&gt; = new Map;
+    filteredMethodsMap.forEach((v: ProtobufMessage[]) =&gt; {
+
+        // Step 3.1: Generate each handler from protobuf method data
+        for (let protobufMethod of v) {
+            // console.log(`protobufMethod: ${protobufMethod}`);
+            let methodFullName = `${protobufMethod.packageName}.${protobufMethod.data.name}`;
+
+            let handler = (req: Request, res: Response, next: Next) =&gt; {
+                const method = getMethod(
+                    pkgDefinition,
+                    protobufMethod.packageName,
+                    protobufMethod.serviceName,
+                    protobufMethod.data.name,
+                );
+                const responseType = method?.responseType || &quot;&quot;;
+                const tpl = getMockTpl(
+                    pkgDefinition,
+                    protobufMethod.packageName,
+                    responseType,
+                    new Map(),
+                    hackMockTpl,
+                );
+                const mockData = mockjs.mock(tpl);
+
+                let customHandler = responseHandlerMap?.get(methodFullName);
+                if (customHandler !== undefined) { // CustomHandler response handler
+                    customHandler(res, mockData);
+                } else { // We mock it
+                    // console.log(mockData);
+                    res.json(mockData)
+                }
+
+                next();
+            };
+            retHandlersMap.set(getRouthPath(protobufMethod.packageName,
+                protobufMethod.serviceName,
+                &lt;Method&gt;protobufMethod.data), handler);
+        }
+    });
+
+    return retHandlersMap;
+}
+
+function getRouthPath(packageName: string, serviceName: string, method: Method): string {
+
+    let parsedRouthPath = getRouthPathFromOptions(method);
+    if (parsedRouthPath === &quot;&quot;) {
+        parsedRouthPath = `/${packageName.replace(&#39;.&#39;, &#39;/&#39;)}` +
+            `/${serviceName.replace(&#39;.&#39;, &#39;/&#39;)}` +
+            `${method.name}`;
+    }
+    return parsedRouthPath;
+}
+
+function getRouthPathFromOptions(method: Method): string {
+
+    for (let reqType of [&quot;get&quot;, &quot;post&quot;]) {
+        let option = method.getOption(`(google.api.http).${reqType}`);
+        if (option !== undefined) {
+            return &lt;string&gt;option;
+        }
+    }
+    return &quot;&quot;;
+}</code></pre>
+<p>在 generateMockHandlersMap 函数中，首先也是惊喜 Protobuf 定义的加载解析以及过滤操作；</p>
+<p>随后遍历过滤之后的 MethodMap：为每个 Method Mock 请求参数，并获取请求路径；</p>
+<p>这里需要注意的是：</p>
+<p>如果 responseHandlerMap 中已经存在了自定义的响应，那么我们直接用这个即可：</p>
+<pre><code class="typescript">let customHandler = responseHandlerMap?.get(methodFullName);
+if (customHandler !== undefined) { // CustomHandler response handler
+  customHandler(res, mockData);
+} else { // We mock it
+  res.json(mockData)
+}</code></pre>
+<p>同时，getRouthPath 函数用于获取请求路径：</p>
+<pre><code class="bash">function getRouthPath(packageName: string, serviceName: string, method: Method): string {
+
+    let parsedRouthPath = getRouthPathFromOptions(method);
+    if (parsedRouthPath === &quot;&quot;) {
+        parsedRouthPath = `/${packageName.replace(&#39;.&#39;, &#39;/&#39;)}` +
+            `/${serviceName.replace(&#39;.&#39;, &#39;/&#39;)}` +
+            `${method.name}`;
+    }
+    return parsedRouthPath;
+}
+
+function getRouthPathFromOptions(method: Method): string {
+
+    for (let reqType of [&quot;get&quot;, &quot;post&quot;]) {
+        let option = method.getOption(`(google.api.http).${reqType}`);
+        if (option !== undefined) {
+            return &lt;string&gt;option;
+        }
+    }
+    return &quot;&quot;;
+}</code></pre>
+<p>如果存在通过 <code>google.api.http</code> 定义的请求路径，那么我们用这个路径，否则，我们用 Protobuf 的包名来生成路径；</p>
+<p>这一点和我们上面提到的功能是一致的！</p>
+<br>
+
+<h3 id="NPM上发布"><a href="#NPM上发布" class="headerlink" title="NPM上发布"></a><strong>NPM上发布</strong></h3><p>代码写完，并且测试 OK 了之后，可以发布到 NPM 仓库；</p>
+<p>把包发布在 NPM 上非常简单；</p>
+<p>首先注册一个账号，可以通过 Github 注册；</p>
+<p>随后使用 <code>npm login</code> 登陆，然后执行 <code>npm publish</code> 即可发布！</p>
+<ul>
+<li><a href="https://www.npmjs.com/package/mock-pb-cli" target="_blank" rel="noopener">https://www.npmjs.com/package/mock-pb-cli</a></li>
+</ul>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/mock-protobuf.js" target="_blank" rel="noopener">https://github.com/JasonkayZK/mock-protobuf.js</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://cloud.tencent.com/developer/article/1947207" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1947207</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/10/07/用TypeScript写了一个Mock-Protobuf的工具/" title="https://jasonkayzk.github.io/2022/10/07/用TypeScript写了一个Mock-Protobuf的工具/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/10/07/用TypeScript写了一个Mock-Protobuf的工具/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1753871720721"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

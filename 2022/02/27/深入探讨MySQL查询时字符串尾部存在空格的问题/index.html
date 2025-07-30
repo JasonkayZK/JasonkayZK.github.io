@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>深入探讨MySQL查询时字符串尾部存在空格的问题 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="之前在一次MySQL的查询中，偶然间发现了即使在字符串查询条件的后面加空格也能查出数据来！本文从多个场景对该现象进行了分析；">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入探讨MySQL查询时字符串尾部存在空格的问题">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/02/27/深入探讨MySQL查询时字符串尾部存在空格的问题/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="之前在一次MySQL的查询中，偶然间发现了即使在字符串查询条件的后面加空格也能查出数据来！本文从多个场景对该现象进行了分析；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-07-30T10:34:36.222Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入探讨MySQL查询时字符串尾部存在空格的问题">
+<meta name="twitter:description" content="之前在一次MySQL的查询中，偶然间发现了即使在字符串查询条件的后面加空格也能查出数据来！本文从多个场景对该现象进行了分析；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1753871723876">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>520</div>
+        <div><span>标签</span>276</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.91px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.45px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">26</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/debian12部署kubernetes-1-28集群/">debian12部署kubernetes-1.28集群</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/分享两个服务器实用脚本：xsync和xcall/">分享两个服务器实用脚本：xsync和xcall</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?31">
+    
+    <h1>深入探讨MySQL查询时字符串尾部存在空格的问题</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年02月27日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.7k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 34 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/MySQL/">MySQL</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/MySQL/">MySQL</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#深入探讨MySQL查询时字符串尾部存在空格的问题"><span class="toc-text">深入探讨MySQL查询时字符串尾部存在空格的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#字符串类型为普通字段的情况"><span class="toc-text">字符串类型为普通字段的情况</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#数据准备"><span class="toc-text">数据准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-5-7-x中的表现"><span class="toc-text">MySQL 5.7.x中的表现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#字段条件查询"><span class="toc-text">字段条件查询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Count查询"><span class="toc-text">Count查询</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-8-0-x中的表现"><span class="toc-text">MySQL 8.0.x中的表现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#对varchar类型进行查询"><span class="toc-text">对varchar类型进行查询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#对char类型进行查询"><span class="toc-text">对char类型进行查询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Count查询-1"><span class="toc-text">Count查询</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#字符串类型为唯一索引场景"><span class="toc-text">字符串类型为唯一索引场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#建表语句"><span class="toc-text">建表语句</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-5-7-x中的表现-1"><span class="toc-text">MySQL 5.7.x中的表现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-8-0-x中的表现-1"><span class="toc-text">MySQL 8.0.x中的表现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#字符串类型为主键场景"><span class="toc-text">字符串类型为主键场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#建表语句-1"><span class="toc-text">建表语句</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-5-7-x中的表现-2"><span class="toc-text">MySQL 5.7.x中的表现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-8-0-x中的表现-2"><span class="toc-text">MySQL 8.0.x中的表现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varchar类型作为主键"><span class="toc-text">varchar类型作为主键</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#char类型作为主键"><span class="toc-text">char类型作为主键</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#现象总结"><span class="toc-text">现象总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#原因分析"><span class="toc-text">原因分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CHAR和VARCHAR在底层数据存储上的区别"><span class="toc-text">CHAR和VARCHAR在底层数据存储上的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CHAR和VARCHAR在数据写入上的区别"><span class="toc-text">CHAR和VARCHAR在数据写入上的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CHAR和VARCHAR在数据读取上的区别"><span class="toc-text">CHAR和VARCHAR在数据读取上的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CHAR和VARCHAR在数据比较上的区别"><span class="toc-text">CHAR和VARCHAR在数据比较上的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-8-0-x中新增内容"><span class="toc-text">MySQL 8.0.x中新增内容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#NO-PAD类型"><span class="toc-text">NO PAD类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#非二进制字符串-nonbinary-strings-比较变更"><span class="toc-text">非二进制字符串(nonbinary strings)比较变更</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决方案"><span class="toc-text">解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#业务代码层面"><span class="toc-text">业务代码层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据集声明层面"><span class="toc-text">数据集声明层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查询层面"><span class="toc-text">查询层面</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#like"><span class="toc-text">like</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#binary"><span class="toc-text">binary</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>之前在一次MySQL的查询中，偶然间发现了即使在字符串查询条件的后面加空格也能查出数据来！</p>
+<p>本文从多个场景对该现象进行了分析；</p>
+<br>
+
+<a id="more"></a>
+
+<h1 id="深入探讨MySQL查询时字符串尾部存在空格的问题"><a href="#深入探讨MySQL查询时字符串尾部存在空格的问题" class="headerlink" title="深入探讨MySQL查询时字符串尾部存在空格的问题"></a><strong>深入探讨MySQL查询时字符串尾部存在空格的问题</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p>本文采用的MySQL版本分别如下：</p>
+<ul>
+<li>MySQL 5.7.36: docker.io/mysql:5.7.36</li>
+<li>MySQL 8.0.28: docker.io/mysql:8.0.28</li>
+</ul>
+<p><font color="#f00"><strong>需要注意的是：MySQL尾部存在空格的逻辑在 MySQL 8.x 版本已经被修改；</strong></font></p>
+<p><font color="#f00"><strong>下文会详细叙述；</strong></font></p>
+<br>
+
+<h2 id="字符串类型为普通字段的情况"><a href="#字符串类型为普通字段的情况" class="headerlink" title="字符串类型为普通字段的情况"></a><strong>字符串类型为普通字段的情况</strong></h2><h3 id="数据准备"><a href="#数据准备" class="headerlink" title="数据准备"></a><strong>数据准备</strong></h3><p>先来看最基本的情况：<strong>当字符串类型为普通字段时</strong>；</p>
+<p>创建表：</p>
+<pre><code class="mysql">DROP TABLE IF EXISTS `space_test`;
+CREATE TABLE `space_test`
+(
+    `id`      BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT &#39;主键自增ID&#39;,
+    `var_str` VARCHAR(64)         NOT NULL DEFAULT &#39;&#39;,
+    `str`     CHAR(64)            NOT NULL DEFAULT &#39;&#39;,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO space_test(var_str, str)
+values (&#39;abc&#39;, &#39;abc&#39;), # no space
+       (&#39; abc&#39;, &#39; abc&#39;), # one prefix space
+       (&#39;abc &#39;, &#39;abc &#39;), # one suffix space
+       (&#39;abc    &#39;, &#39;abc    &#39;); # four suffix spaces</code></pre>
+<p>上面的表创建了两个字段：<code>var_str</code> 和 <code>str</code>，分别为 <code>varchar</code> 和 <code>char</code> 类型；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意这里的字符集声明，后面有大作用！</strong></font></p>
+</blockquote>
+<p>随后，写入了四条具有代表性的数据；</p>
+<h3 id="MySQL-5-7-x中的表现"><a href="#MySQL-5-7-x中的表现" class="headerlink" title="MySQL 5.7.x中的表现"></a><strong>MySQL 5.7.x中的表现</strong></h3><p>首先，先将所有的结果列出：</p>
+<pre><code class="mysql">mysql&gt; select * from space_test;
+
++----+---------+------+
+| id | var_str | str  |
++----+---------+------+
+|  1 | abc     | abc  |
+|  2 |  abc    |  abc |
+|  3 | abc     | abc  |
+|  4 | abc     | abc  |
++----+---------+------+
+4 rows in set (0.00 sec)</code></pre>
+<p>可以看到，除了具有前导空格的数据，其他三条数据查询出来的结果看起来甚至是一模一样的！</p>
+<h4 id="字段条件查询"><a href="#字段条件查询" class="headerlink" title="字段条件查询"></a><strong>字段条件查询</strong></h4><p>下面我们执行几个查询：</p>
+<pre><code class="mysql"># 无空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+# 一个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+# 3个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc  &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+# 无数个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc          &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+# 一个前导空格查询
+mysql&gt; select * from space_test where var_str=&#39; abc&#39;;
++----+---------+------+
+| id | var_str | str  |
++----+---------+------+
+|  2 |  abc    |  abc |
++----+---------+------+
+1 row in set (0.00 sec)
+
+# 二个前导空格查询
+mysql&gt; select * from space_test where var_str=&#39;  abc&#39;;
+Empty set (0.00 sec)</code></pre>
+<p><strong>从执行结果我们可以看出：查询 varchar 类型时，MySQL的确忽略了尾部的空格（数据和查询条件）进行匹配；</strong></p>
+<p><strong>将查询条件中的 var_str 换成 str 结果也是一样的！</strong></p>
+<br>
+
+<h4 id="Count查询"><a href="#Count查询" class="headerlink" title="Count查询"></a><strong>Count查询</strong></h4><p>再来看一下 Count 查询：</p>
+<pre><code class="mysql">mysql&gt; select count(1) from space_test;
++----------+
+| count(1) |
++----------+
+|        4 |
++----------+
+1 row in set (0.00 sec)</code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>Count 的结果为4条，这是正确的，因为 Count(1) 其实是根据主键来确定数据条数的！</strong></font></p>
+</blockquote>
+<p>下面我们再来看一下查询在 MySQL 8.0.x中的表现；</p>
+<br>
+
+<h3 id="MySQL-8-0-x中的表现"><a href="#MySQL-8-0-x中的表现" class="headerlink" title="MySQL 8.0.x中的表现"></a><strong>MySQL 8.0.x中的表现</strong></h3><p>在 MySQL 8.0.x 中创建相同的表，并执行相同的查询；</p>
+<h4 id="对varchar类型进行查询"><a href="#对varchar类型进行查询" class="headerlink" title="对varchar类型进行查询"></a><strong>对varchar类型进行查询</strong></h4><p>结果如下：</p>
+<pre><code class="mysql"># 无空格
+mysql&gt; select * from space_test where var_str=&#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+# 1个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  3 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+# 3个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc   &#39;;
+Empty set (0.00 sec)
+
+# 4个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc    &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  4 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+# 无数个尾部空格查询
+mysql&gt; select * from space_test where var_str=&#39;abc           &#39;;
+Empty set (0.00 sec)
+
+# 1个头部空格查询
+mysql&gt; select * from space_test where var_str=&#39; abc&#39;;
++----+---------+------+
+| id | var_str | str  |
++----+---------+------+
+|  2 |  abc    |  abc |
++----+---------+------+
+1 row in set (0.00 sec)
+
+# 2个头部空格查询
+mysql&gt; select * from space_test where var_str=&#39;  abc&#39;;
+Empty set (0.00 sec)</code></pre>
+<p>可以看到：</p>
+<p><font color="#f00"><strong>在 MySQL 8.0.x 中，对于 varchar 的查询的逻辑不再去除尾部空格，而是采用精确匹配的方式；</strong></font></p>
+<p>下面再来看看在 MySQL 8.0.x 中针对 char 类型的查询；</p>
+<br>
+
+<h4 id="对char类型进行查询"><a href="#对char类型进行查询" class="headerlink" title="对char类型进行查询"></a><strong>对char类型进行查询</strong></h4><p>结果如下：</p>
+<pre><code class="mysql"># 无空格
+mysql&gt; select * from space_test where str=&#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+# 1个尾部空格查询
+mysql&gt; select * from space_test where str=&#39;abc &#39;;
+Empty set (0.00 sec)
+
+# 3个尾部空格查询
+mysql&gt; select * from space_test where str=&#39;abc   &#39;;
+Empty set (0.00 sec)
+
+# 4个尾部空格查询
+mysql&gt; select * from space_test where str=&#39;abc    &#39;;
+Empty set (0.00 sec)
+
+# 无数个尾部空格查询
+mysql&gt; select * from space_test where str=&#39;abc           &#39;;
+Empty set (0.00 sec)
+
+# 1个前导空格查询
+mysql&gt; select * from space_test where str=&#39; abc&#39;;
++----+---------+------+
+| id | var_str | str  |
++----+---------+------+
+|  2 |  abc    |  abc |
++----+---------+------+
+1 row in set (0.01 sec)
+
+# 2个前导空格查询
+mysql&gt; select * from space_test where str=&#39;  abc&#39;;</code></pre>
+<p>从上面的结果可以看出：</p>
+<p><font color="#f00"><strong>在 MySQL 8.0.x 中，对于 char 类型的查询会直接认为尾部不存在空格，并且仅会匹配尾部无空格的查询条件！</strong></font></p>
+<p><font color="#f00"><strong>这一点和 MySQL 5.7.x 中的行为完全不同！</strong></font></p>
+<p>接下来再看一下当被查询的数据被声明为唯一索引时的表现；</p>
+<br>
+
+<h4 id="Count查询-1"><a href="#Count查询-1" class="headerlink" title="Count查询"></a><strong>Count查询</strong></h4><p>再来看一下 Count 查询在 MySQL 8.0.x 中的表现：</p>
+<pre><code class="mysql">mysql&gt; select count(1) from space_test;
++----------+
+| count(1) |
++----------+
+|        4 |
++----------+
+1 row in set (0.00 sec)</code></pre>
+<p><font color="#f00"><strong>可以看到，Count 的结果也为4条！</strong></font></p>
+<br>
+
+<h2 id="字符串类型为唯一索引场景"><a href="#字符串类型为唯一索引场景" class="headerlink" title="字符串类型为唯一索引场景"></a><strong>字符串类型为唯一索引场景</strong></h2><h3 id="建表语句"><a href="#建表语句" class="headerlink" title="建表语句"></a><strong>建表语句</strong></h3><p>建表语句如下：</p>
+<pre><code class="mysql">DROP TABLE IF EXISTS `space_test`;
+CREATE TABLE `space_test`
+(
+    `id`      BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT &#39;主键自增ID&#39;,
+    `var_str` VARCHAR(64)         NOT NULL DEFAULT &#39;&#39;,
+    `str`     CHAR(64)            NOT NULL DEFAULT &#39;&#39;,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`var_str`),
+    UNIQUE KEY (`str`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO space_test(var_str, str) values (&#39;abc&#39;, &#39;abc&#39;); # no space
+
+INSERT INTO space_test(var_str, str) values (&#39; abc&#39;, &#39;2&#39;); # one varchar prefix space
+INSERT INTO space_test(var_str, str) values (&#39;3&#39;, &#39; abc&#39;); # one char prefix space
+
+INSERT INTO space_test(var_str, str) values (&#39;abc &#39;, &#39;4&#39;); # one varchar suffix space
+INSERT INTO space_test(var_str, str) values (&#39;5&#39;, &#39;abc &#39;); # one char suffix space
+
+INSERT INTO space_test(var_str, str) values (&#39;abc    &#39;, &#39;6&#39;); # four varchar suffix space
+INSERT INTO space_test(var_str, str) values (&#39;7&#39; ,&#39;abc    &#39;); # four char suffix space</code></pre>
+<p>由于可能会存在单条数据插入失败的场景，因此对不同的插入场景进行了区分；</p>
+<blockquote>
+<p>  <strong>为了避免空值重复，我们为其附上了没有意义的数字值；</strong></p>
+</blockquote>
+<p>下面分 MySQL 版本来看；</p>
+<br>
+
+<h3 id="MySQL-5-7-x中的表现-1"><a href="#MySQL-5-7-x中的表现-1" class="headerlink" title="MySQL 5.7.x中的表现"></a><strong>MySQL 5.7.x中的表现</strong></h3><p>执行上面的语句后，执行插入数据语句的结果如下：</p>
+<pre><code class="mysql">mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc&#39;, &#39;abc&#39;); # no space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39; abc&#39;, &#39;2&#39;); # one varchar prefix space
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;3&#39;, &#39; abc&#39;); # one char prefix space
+Query OK, 1 row affected (0.01 sec)
+
+
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc &#39;, &#39;4&#39;); # one varchar suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc &#39; for key &#39;var_str&#39;
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;5&#39;, &#39;abc &#39;); # one char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;str&#39;
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc    &#39;, &#39;6&#39;); # four varchar suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc    &#39; for key &#39;var_str&#39;
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;7&#39; ,&#39;abc    &#39;); # four char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;str&#39;</code></pre>
+<p>可以看到：</p>
+<p><strong>由于我们首先插入了不含有任何空格的数据，因此在插入任何具有尾部空格的数据时都会报错！</strong></p>
+<p>现象和我们上面进行查询完全一致：</p>
+<p><font color="#f00"><strong>在查询 varchar 或者 char 类型时，MySQL 5.7.x 版本忽略了尾部的空格（数据和查询条件）进行匹配；</strong></font></p>
+<p>下面再来看在 MySQL 8.0.x 中的表现；</p>
+<br>
+
+<h3 id="MySQL-8-0-x中的表现-1"><a href="#MySQL-8-0-x中的表现-1" class="headerlink" title="MySQL 8.0.x中的表现"></a><strong>MySQL 8.0.x中的表现</strong></h3><p>执行上面的语句后，执行插入数据语句的结果如下：</p>
+<pre><code class="mysql">mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc&#39;, &#39;abc&#39;); # no space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39; abc&#39;, &#39;2&#39;); # one varchar prefix space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;3&#39;, &#39; abc&#39;); # one char prefix space
+Query OK, 1 row affected (0.01 sec)
+
+
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc &#39;, &#39;4&#39;); # one varchar suffix space
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;5&#39;, &#39;abc &#39;); # one char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;space_test.str&#39;
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;abc    &#39;, &#39;6&#39;); # four varchar suffix space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(var_str, str) values (&#39;7&#39; ,&#39;abc    &#39;); # four char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;space_test.str&#39;</code></pre>
+<p>在MySQL 8.0.x 中的现象和查询的结果也完全一致：</p>
+<ul>
+<li><font color="#f00"><strong>对于 varchar 的查询的逻辑不再去除尾部空格，而是采用精确匹配的方式；</strong></font></li>
+<li><font color="#f00"><strong>对于 char 类型的查询会直接认为尾部不存在空格，并且仅会匹配尾部无空格的查询条件！</strong></font></li>
+</ul>
+<p>因此，在上面的插入中，varchar 类型可以成功插入，而 char 类型不可以！</p>
+<p>最后，再来看看当字符串为主键时的场景；</p>
+<br>
+
+<h2 id="字符串类型为主键场景"><a href="#字符串类型为主键场景" class="headerlink" title="字符串类型为主键场景"></a><strong>字符串类型为主键场景</strong></h2><h3 id="建表语句-1"><a href="#建表语句-1" class="headerlink" title="建表语句"></a><strong>建表语句</strong></h3><p>varchar 类型的主键和 char 类型的主键对应的建表语句如下：</p>
+<pre><code class="mysql">-- varchar
+DROP TABLE IF EXISTS `space_test`;
+CREATE TABLE `space_test`
+(
+    `id` VARCHAR(64) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- char
+DROP TABLE IF EXISTS `space_test`;
+CREATE TABLE `space_test`
+(
+    `id` CHAR(64) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;</code></pre>
+<p>以及对应的写入数据的SQL语句：</p>
+<pre><code class="mysql">INSERT INTO space_test(id) values (&#39;abc&#39;); # no space
+INSERT INTO space_test(id) values (&#39; abc&#39;); # one prefix space
+INSERT INTO space_test(id) values (&#39;abc &#39;); # one suffix space
+INSERT INTO space_test(id) values (&#39;abc    &#39;); # four char suffix space</code></pre>
+<p>下面分 MySQL 版本来看；</p>
+<br>
+
+<h3 id="MySQL-5-7-x中的表现-2"><a href="#MySQL-5-7-x中的表现-2" class="headerlink" title="MySQL 5.7.x中的表现"></a><strong>MySQL 5.7.x中的表现</strong></h3><p>创建以 varchar 类型作为主键的表后，执行插入语句后的结果如下：</p>
+<pre><code class="mysql">mysql&gt; INSERT INTO space_test(id) values (&#39;abc&#39;); # no space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39; abc&#39;); # one prefix space
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc &#39;); # one suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc &#39; for key &#39;PRIMARY&#39;
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc    &#39;); # four char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc    &#39; for key &#39;PRIMARY&#39;</code></pre>
+<p>可以看到，和字段为唯一索引的情况是一致的：</p>
+<p><strong>尾部存在空格的字符串会和无空格的字符串冲突，从而无法被插入；</strong></p>
+<p><strong>以 char 类型作为主键的表的结果和 varchar 的结果完全一致，这里不再赘述！</strong></p>
+<blockquote>
+<p>  <font color="#f00"><strong>其实结果是显而易见的，因为在主键的语义中已经包括了 <code>唯一索引</code> 的概念；</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="MySQL-8-0-x中的表现-2"><a href="#MySQL-8-0-x中的表现-2" class="headerlink" title="MySQL 8.0.x中的表现"></a><strong>MySQL 8.0.x中的表现</strong></h3><h4 id="varchar类型作为主键"><a href="#varchar类型作为主键" class="headerlink" title="varchar类型作为主键"></a><strong>varchar类型作为主键</strong></h4><p>建表后结果如下：</p>
+<pre><code class="mysql">mysql&gt; INSERT INTO space_test(id) values (&#39;abc&#39;); # no space
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39; abc&#39;); # one prefix space
+Query OK, 1 row affected (0.02 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc &#39;); # one suffix space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc    &#39;); # four char suffix space
+Query OK, 1 row affected (0.01 sec)</code></pre>
+<p>和上面的结论也是一致的：</p>
+<p><font color="#f00"><strong>MySQL 8.0.x 中对于 varchar 的查询的逻辑不再去除尾部空格，而是采用精确匹配的方式；</strong></font></p>
+<p>可以查询到，此时有四条数据：</p>
+<pre><code class="mysql">mysql&gt; select * from space_test;
+
++---------+
+| id      |
++---------+
+|  abc    |
+| abc     |
+| abc     |
+| abc     |
++---------+
+4 rows in set (0.00 sec)</code></pre>
+<p>下面再来看 char 类型作为主键时的场景；</p>
+<br>
+
+<h4 id="char类型作为主键"><a href="#char类型作为主键" class="headerlink" title="char类型作为主键"></a><strong>char类型作为主键</strong></h4><p>执行语句后结果如下：</p>
+<pre><code class="mysql">mysql&gt; INSERT INTO space_test(id) values (&#39;abc&#39;); # no space
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39; abc&#39;); # one prefix space
+Query OK, 1 row affected (0.01 sec)
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc &#39;); # one suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;space_test.PRIMARY&#39;
+
+mysql&gt; INSERT INTO space_test(id) values (&#39;abc    &#39;); # four char suffix space
+ERROR 1062 (23000): Duplicate entry &#39;abc&#39; for key &#39;space_test.PRIMARY&#39;</code></pre>
+<p>也和上面的结论保持一致：</p>
+<p><font color="#f00"><strong>MySQL 8.0.x 中对于 char 类型的查询会直接认为尾部不存在空格，并且仅会匹配尾部无空格的查询条件！</strong></font></p>
+<br>
+
+<h2 id="现象总结"><a href="#现象总结" class="headerlink" title="现象总结"></a><strong>现象总结</strong></h2><p>表格如下：</p>
+<table>
+<thead>
+<tr>
+<th><strong>版本</strong></th>
+<th><strong>匹配方式</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5.7.x</td>
+<td><font color="#f00"><strong>在查询/匹配 varchar 或者 char 类型时，会忽略尾部的空格（数据和查询条件）进行匹配；</strong></font></td>
+</tr>
+<tr>
+<td>8.0.x</td>
+<td><font color="#f00"><strong>对于 varchar 的查询的逻辑不再去除尾部空格，而是采用精确匹配的方式；</strong></font><br><font color="#f00"><strong>对于 char 类型的查询会直接认为尾部不存在空格，并且仅会匹配尾部无空格的查询条件！</strong></font></td>
+</tr>
+</tbody></table>
+<br>
+
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a><strong>原因分析</strong></h2><blockquote>
+<p>  <strong>相关资料参考：</strong></p>
+<p>  MySQL的官方文档：</p>
+<ul>
+<li><p><a href="https://dev.mysql.com/doc/refman/5.7/en/char.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/char.html</a></p>
+</li>
+<li><p><a href="https://dev.mysql.com/doc/refman/8.0/en/char.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/char.html</a></p>
+<p>以及Stack Overflow相关问题：</p>
+</li>
+<li><p><a href="https://stackoverflow.com/questions/10495692/mysql-comparison-operator-spaces" target="_blank" rel="noopener">https://stackoverflow.com/questions/10495692/mysql-comparison-operator-spaces</a></p>
+</li>
+</ul>
+</blockquote>
+<p><strong>下面先来看一下在 MySQL 5.7.x 中的内容；</strong></p>
+<br>
+
+<h3 id="CHAR和VARCHAR在底层数据存储上的区别"><a href="#CHAR和VARCHAR在底层数据存储上的区别" class="headerlink" title="CHAR和VARCHAR在底层数据存储上的区别"></a><strong>CHAR和VARCHAR在底层数据存储上的区别</strong></h3><p>首先需要明确的是：</p>
+<p><font color="#f00"><strong>在MySQL中，CHAR 和 VARCHAR 类型还是有非常大的区别的（无论是从存储角度还是查询角度来看）；</strong></font></p>
+<p>对应 CHAR 类型而言：</p>
+<p><font color="#f00"><strong>CHAR 类型的存储长度固定在创建表时声明的长度（长度在0～255之间）；</strong></font></p>
+<p><font color="#f00"><strong>当存储 CHAR 值时，会在字符串的右侧填充到指定长度的空格！而在查询 CHAR 值时，除非启用 <a href="https://dev.mysql.com/doc/refman/5.7/en/sql-mode.html#sqlmode_pad_char_to_full_length" target="_blank" rel="noopener"><code>PAD_CHAR_TO_FULL_LENGTH</code></a> SQL模式，否则将会删除尾部的所有空格！</strong></font></p>
+<p>而，对于 VARCHAR 类型而言：</p>
+<p><font color="#f00"><strong>VARCHAR 类型存储长度是动态变化的（长度在 0～65535之间，并且受限于整张表的最大行长度：<a href="https://dev.mysql.com/doc/refman/5.7/en/column-count-limit.html" target="_blank" rel="noopener">Section 8.4.7, “Limits on Table Column Count and Row Size”</a>）</strong></font></p>
+<p><font color="#f00"><strong>同时，相比于 CHAR 类型，VARCHAR 类型会在数据头部记录 1～2个字节（单个字节如果字符串长度小于255字节，否则为2个字节）的数据来表示当前所存储字符串的真实长度！</strong></font></p>
+<p><font color="#f00"><strong>同时，相比于 CHAR 类型，VARCHAR 类型并不会在字符串尾部插入空格来填充长度！</strong></font></p>
+<p><font color="#f00"><strong>因此，VARCHAR 在查询和存储字符串时会完全保留尾部的空格个数，和标准的SQL保持一致(in conformance with standard SQL)</strong></font></p>
+<br>
+
+<h3 id="CHAR和VARCHAR在数据写入上的区别"><a href="#CHAR和VARCHAR在数据写入上的区别" class="headerlink" title="CHAR和VARCHAR在数据写入上的区别"></a><strong>CHAR和VARCHAR在数据写入上的区别</strong></h3><p>除了数据存储上的区别之外，CHAR 和 VARCHAR 在数据写入上也存在些许区别；</p>
+<p><font color="#f00"><strong>在非严格SQL模式（strict SQL mode）下，当对 CHAR 和 VARCHAR 类型的字段插入超过声明长度的字符串时，字符串将会被截断；</strong></font></p>
+<p><font color="#f00"><strong>而在严格模式下，插入超过声明长度的数据会报错！</strong></font></p>
+<p><font color="#f00"><strong>对于尾部为空格的数据来说：</strong></font></p>
+<ul>
+<li><font color="#f00"><strong>对于 VARCHAR 类型而言，尾部的空格将会被截断，同时提示 WARNING（无论是否处于严格SQL模式下）；</strong></font></li>
+<li><font color="#f00"><strong>对于 CHAR 类型而言，尾部的空格会被截断，并且不会有任何提示（无论是否处于严格SQL模式下）；</strong></font></li>
+</ul>
+<blockquote>
+<p>  <strong>原文：</strong></p>
+<p>  If strict SQL mode is not enabled and you assign a value to a <code>CHAR</code> or <code>VARCHAR</code> column that exceeds the column’s maximum length, the value is truncated to fit and a warning is generated. For truncation of nonspace characters, you can cause an error to occur (rather than a warning) and suppress insertion of the value by using strict SQL mode. See <a href="https://dev.mysql.com/doc/refman/5.7/en/sql-mode.html" target="_blank" rel="noopener">Section 5.1.10, “Server SQL Modes”</a>.</p>
+<p>  For <code>VARCHAR</code> columns, trailing spaces in excess of the column length are truncated prior to insertion and a warning is generated, regardless of the SQL mode in use. For <code>CHAR</code> columns, truncation of excess trailing spaces from inserted values is performed silently regardless of the SQL mode.</p>
+</blockquote>
+<p>下面是一个在非严格SQL模式下，实际截断的例子：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Value</th>
+<th align="left"><code>CHAR(4)</code></th>
+<th align="left">Storage Required</th>
+<th align="left"><code>VARCHAR(4)</code></th>
+<th align="left">Storage Required</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>&#39;&#39;</code></td>
+<td align="left"><code>&#39;    &#39;</code></td>
+<td align="left">4 bytes</td>
+<td align="left"><code>&#39;&#39;</code></td>
+<td align="left">1 byte</td>
+</tr>
+<tr>
+<td align="left"><code>&#39;ab&#39;</code></td>
+<td align="left"><code>&#39;ab  &#39;</code></td>
+<td align="left">4 bytes</td>
+<td align="left"><code>&#39;ab&#39;</code></td>
+<td align="left">3 bytes</td>
+</tr>
+<tr>
+<td align="left"><code>&#39;abcd&#39;</code></td>
+<td align="left"><code>&#39;abcd&#39;</code></td>
+<td align="left">4 bytes</td>
+<td align="left"><code>&#39;abcd&#39;</code></td>
+<td align="left">5 bytes</td>
+</tr>
+<tr>
+<td align="left"><code>&#39;abcdefgh&#39;</code></td>
+<td align="left"><code>&#39;abcd&#39;</code></td>
+<td align="left">4 bytes</td>
+<td align="left"><code>&#39;abcd&#39;</code></td>
+<td align="left">5 bytes</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>  这里补充一点：</p>
+<p>  <font color="#f00"><strong>InnoDB 引擎会将长度大于等于768字节的定长字段编码为可变长度字段，使其可以在页外存储；</strong></font></p>
+<p>  <font color="#f00"><strong>例如，如果字符集的最大字节长度大于3，则 CHAR(255) 列可能会超过768字节（如，utf8mb4字符集）；</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="CHAR和VARCHAR在数据读取上的区别"><a href="#CHAR和VARCHAR在数据读取上的区别" class="headerlink" title="CHAR和VARCHAR在数据读取上的区别"></a><strong>CHAR和VARCHAR在数据读取上的区别</strong></h3><p><font color="#f00"><strong>对于分别存储在 CHAR(4) 和 VARCHAR(4) 中的数据而言，对于这些列查询到的值并不总是相同的：</strong></font></p>
+<p><font color="#f00"><strong>因为在查询时，CHAR 会删除尾部的空格！</strong></font></p>
+<p>例如：</p>
+<pre><code class="mysql">mysql&gt; CREATE TABLE vc (v VARCHAR(4), c CHAR(4));
+Query OK, 0 rows affected (0.01 sec)
+
+mysql&gt; INSERT INTO vc VALUES (&#39;ab  &#39;, &#39;ab  &#39;);
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; SELECT CONCAT(&#39;(&#39;, v, &#39;)&#39;), CONCAT(&#39;(&#39;, c, &#39;)&#39;) FROM vc;
++---------------------+---------------------+
+| CONCAT(&#39;(&#39;, v, &#39;)&#39;) | CONCAT(&#39;(&#39;, c, &#39;)&#39;) |
++---------------------+---------------------+
+| (ab  )              | (ab)                |
++---------------------+---------------------+
+1 row in set (0.06 sec)</code></pre>
+<br>
+
+<h3 id="CHAR和VARCHAR在数据比较上的区别"><a href="#CHAR和VARCHAR在数据比较上的区别" class="headerlink" title="CHAR和VARCHAR在数据比较上的区别"></a><strong>CHAR和VARCHAR在数据比较上的区别</strong></h3><p>首先需要明确的是，对于 CHAR 和 VARCHAR 而言，其比较都是建立在某一特定的字符集之上的！</p>
+<p><font color="#f00"><strong>同时，对于 MySQL 而言，所有的字符集类型都是“填充空格”(All MySQL collations are of type <code>PAD SPACE</code>)；</strong></font></p>
+<p><font color="#f00"><strong>即：无论对于 <code>CHAR</code>、 <code>VARCHAR</code>、 还是 <code>TEXT</code> 类型而言，在比较时，都会忽略尾部的空格！</strong></font></p>
+<p><font color="#f00"><strong>唯一需要区别的是，<code>LIKE</code> 关键字，因为这个场景下尾部空格的匹配对其非常重要！</strong></font></p>
+<blockquote>
+<p>  原文：</p>
+<p>  All MySQL collations are of type <code>PAD SPACE</code>. This means that all <code>CHAR</code>, <code>VARCHAR</code>, and <code>TEXT</code> values are compared without regard to any trailing spaces. “Comparison” in this context does not include the <a href="https://dev.mysql.com/doc/refman/5.7/en/string-comparison-functions.html#operator_like" target="_blank" rel="noopener"><code>LIKE</code></a> pattern-matching operator, for which trailing spaces are significant.</p>
+</blockquote>
+<p>例如：</p>
+<pre><code class="mysql">mysql&gt; CREATE TABLE names (myname CHAR(10));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql&gt; INSERT INTO names VALUES (&#39;Jones&#39;);
+Query OK, 1 row affected (0.00 sec)
+
+mysql&gt; SELECT myname = &#39;Jones&#39;, myname = &#39;Jones  &#39; FROM names;
++------------------+--------------------+
+| myname = &#39;Jones&#39; | myname = &#39;Jones  &#39; |
++------------------+--------------------+
+|                1 |                  1 |
++------------------+--------------------+
+1 row in set (0.00 sec)
+
+mysql&gt; SELECT myname LIKE &#39;Jones&#39;, myname LIKE &#39;Jones  &#39; FROM names;
++---------------------+-----------------------+
+| myname LIKE &#39;Jones&#39; | myname LIKE &#39;Jones  &#39; |
++---------------------+-----------------------+
+|                   1 |                     0 |
++---------------------+-----------------------+
+1 row in set (0.00 sec)</code></pre>
+<br>
+
+<p>对于那些会除去尾部空格，或者相互比较时尾部空格被忽略的场景，如果某列被声明为了唯一索引，则在向其插入的数据中如果只存在尾部空格的区别，则插入数据会报错！</p>
+<p>例如：表中已存在 <code>&#39;a&#39;</code>，则插入 <code>&#39;a &#39;</code> 会报错；</p>
+<blockquote>
+<p>  原文：</p>
+<p>  For those cases where trailing pad characters are stripped or comparisons ignore them, if a column has an index that requires unique values, inserting into the column values that differ only in number of trailing pad characters results in a duplicate-key error. For example, if a table contains <code>&#39;a&#39;</code>, an attempt to store <code>&#39;a &#39;</code> causes a duplicate-key error.</p>
+</blockquote>
+<br>
+
+<h3 id="MySQL-8-0-x中新增内容"><a href="#MySQL-8-0-x中新增内容" class="headerlink" title="MySQL 8.0.x中新增内容"></a><strong>MySQL 8.0.x中新增内容</strong></h3><p>上面为 MySQL 5.7.x 文档中的内容，在 MySQL 8.0.x 中有了部分变化；</p>
+<h4 id="NO-PAD类型"><a href="#NO-PAD类型" class="headerlink" title="NO PAD类型"></a><strong>NO PAD类型</strong></h4><p>首先，引入了 <code>NO PAD</code> 类型的数据类型；</p>
+<p><font color="#f00"><strong>上面提到在老的 MySQL 版本中，所有的字符集类型都是“填充空格”(All MySQL collations are of type <code>PAD SPACE</code>)；</strong></font></p>
+<p><font color="#f00"><strong>而在新的版本中，存在 <code>NO PAD</code> 类型，如：UCA 9.0.0 或更高版本的 Unicode；</strong></font></p>
+<p><font color="#f00"><strong>可以通过  <code>INFORMATION_SCHEMA</code>.<a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-collations-table.html" target="_blank" rel="noopener"><code>COLLATIONS</code></a> 表查看具体数据的类型；</strong></font></p>
+<blockquote>
+<p>  原文：</p>
+<p>  MySQL collations have a pad attribute of <code>PAD SPACE</code>, other than Unicode collations based on UCA 9.0.0 and higher, which have a pad attribute of <code>NO PAD</code>. (see <a href="https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html" target="_blank" rel="noopener">Section 10.10.1, “Unicode Character Sets”</a>).</p>
+<p>  To determine the pad attribute for a collation, use the <code>INFORMATION_SCHEMA</code> <a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-collations-table.html" target="_blank" rel="noopener"><code>COLLATIONS</code></a> table, which has a <code>PAD_ATTRIBUTE</code> column.</p>
+</blockquote>
+<br>
+
+<h4 id="非二进制字符串-nonbinary-strings-比较变更"><a href="#非二进制字符串-nonbinary-strings-比较变更" class="headerlink" title="非二进制字符串(nonbinary strings)比较变更"></a><strong>非二进制字符串(nonbinary strings)比较变更</strong></h4><p>在上面的基础之上：</p>
+<p><font color="#f00"><strong>对于非二进制字符串(包括，<code>CHAR</code>, <code>VARCHAR</code> 和 <code>TEXT</code> 类型)而言，字符串的校对填充属性(collation pad attribute) 决定了在比较时是否处理字符串在尾部的空格：</strong></font></p>
+<ul>
+<li><font color="#f00"><strong><code>NO PAD</code> 类型会在比较时计入尾部的空格；</strong></font></li>
+<li><font color="#f00"><strong>而 <code>PAD SPACE</code> 则不会在比较时计入尾部的空格；</strong></font></li>
+</ul>
+<blockquote>
+<p>  原文：</p>
+<p>  For nonbinary strings (<code>CHAR</code>, <code>VARCHAR</code>, and <code>TEXT</code> values), the string collation pad attribute determines treatment in comparisons of trailing spaces at the end of strings. <code>NO PAD</code> collations treat trailing spaces as significant in comparisons, like any other character. <code>PAD SPACE</code> collations treat trailing spaces as insignificant in comparisons; strings are compared without regard to trailing spaces. See <a href="https://dev.mysql.com/doc/refman/8.0/en/charset-binary-collations.html#charset-binary-collations-trailing-space-comparisons" target="_blank" rel="noopener">Trailing Space Handling in Comparisons</a>. The server SQL mode has no effect on comparison behavior with respect to trailing spaces.</p>
+</blockquote>
+<p>我们来看一下支持的类型：</p>
+<pre><code class="mysql">mysql&gt; select * from information_schema. COLLATIONS;
++----------------------------+--------------------+-----+------------+-------------+---------+---------------+
+| COLLATION_NAME             | CHARACTER_SET_NAME | ID  | IS_DEFAULT | IS_COMPILED | SORTLEN | PAD_ATTRIBUTE |
++----------------------------+--------------------+-----+------------+-------------+---------+---------------+
+| ascii_general_ci           | ascii              |  11 | Yes        | Yes         |       1 | PAD SPACE     |
+| ascii_bin                  | ascii              |  65 |            | Yes         |       1 | PAD SPACE     |
+| binary                     | binary             |  63 | Yes        | Yes         |       1 | NO PAD        |
+
+..........
+
+| utf8_tolower_ci            | utf8               |  76 |            | Yes         |       1 | PAD SPACE     |
+| utf8_bin                   | utf8               |  83 |            | Yes         |       1 | PAD SPACE     |
+| utf8_unicode_ci            | utf8               | 192 |            | Yes         |       8 | PAD SPACE     |
+| utf8_icelandic_ci          | utf8               | 193 |            | Yes         |       8 | PAD SPACE     |
+| utf8_latvian_ci            | utf8               | 194 |            | Yes         |       8 | PAD SPACE     |
+| utf8_romanian_ci           | utf8               | 195 |            | Yes         |       8 | PAD SPACE     |
+| utf8_slovenian_ci          | utf8               | 196 |            | Yes         |       8 | PAD SPACE     |
+| utf8_polish_ci             | utf8               | 197 |            | Yes         |       8 | PAD SPACE     |
+| utf8_estonian_ci           | utf8               | 198 |            | Yes         |       8 | PAD SPACE     |
+| utf8_spanish_ci            | utf8               | 199 |            | Yes         |       8 | PAD SPACE     |
+| utf8_swedish_ci            | utf8               | 200 |            | Yes         |       8 | PAD SPACE     |
+| utf8_turkish_ci            | utf8               | 201 |            | Yes         |       8 | PAD SPACE     |
+| utf8_czech_ci              | utf8               | 202 |            | Yes         |       8 | PAD SPACE     |
+| utf8_danish_ci             | utf8               | 203 |            | Yes         |       8 | PAD SPACE     |
+| utf8_lithuanian_ci         | utf8               | 204 |            | Yes         |       8 | PAD SPACE     |
+| utf8_slovak_ci             | utf8               | 205 |            | Yes         |       8 | PAD SPACE     |
+| utf8_spanish2_ci           | utf8               | 206 |            | Yes         |       8 | PAD SPACE     |
+| utf8_roman_ci              | utf8               | 207 |            | Yes         |       8 | PAD SPACE     |
+| utf8_persian_ci            | utf8               | 208 |            | Yes         |       8 | PAD SPACE     |
+| utf8_esperanto_ci          | utf8               | 209 |            | Yes         |       8 | PAD SPACE     |
+| utf8_hungarian_ci          | utf8               | 210 |            | Yes         |       8 | PAD SPACE     |
+| utf8_sinhala_ci            | utf8               | 211 |            | Yes         |       8 | PAD SPACE     |
+| utf8_german2_ci            | utf8               | 212 |            | Yes         |       8 | PAD SPACE     |
+| utf8_croatian_ci           | utf8               | 213 |            | Yes         |       8 | PAD SPACE     |
+| utf8_unicode_520_ci        | utf8               | 214 |            | Yes         |       8 | PAD SPACE     |
+| utf8_vietnamese_ci         | utf8               | 215 |            | Yes         |       8 | PAD SPACE     |
+| utf8_general_mysql500_ci   | utf8               | 223 |            | Yes         |       1 | PAD SPACE     |
+| utf8mb4_general_ci         | utf8mb4            |  45 |            | Yes         |       1 | PAD SPACE     |
+| utf8mb4_bin                | utf8mb4            |  46 |            | Yes         |       1 | PAD SPACE     |
+| utf8mb4_unicode_ci         | utf8mb4            | 224 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_icelandic_ci       | utf8mb4            | 225 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_latvian_ci         | utf8mb4            | 226 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_romanian_ci        | utf8mb4            | 227 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_slovenian_ci       | utf8mb4            | 228 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_polish_ci          | utf8mb4            | 229 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_estonian_ci        | utf8mb4            | 230 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_spanish_ci         | utf8mb4            | 231 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_swedish_ci         | utf8mb4            | 232 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_turkish_ci         | utf8mb4            | 233 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_czech_ci           | utf8mb4            | 234 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_danish_ci          | utf8mb4            | 235 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_lithuanian_ci      | utf8mb4            | 236 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_slovak_ci          | utf8mb4            | 237 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_spanish2_ci        | utf8mb4            | 238 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_roman_ci           | utf8mb4            | 239 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_persian_ci         | utf8mb4            | 240 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_esperanto_ci       | utf8mb4            | 241 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_hungarian_ci       | utf8mb4            | 242 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_sinhala_ci         | utf8mb4            | 243 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_german2_ci         | utf8mb4            | 244 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_croatian_ci        | utf8mb4            | 245 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_unicode_520_ci     | utf8mb4            | 246 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_vietnamese_ci      | utf8mb4            | 247 |            | Yes         |       8 | PAD SPACE     |
+| utf8mb4_0900_ai_ci         | utf8mb4            | 255 | Yes        | Yes         |       0 | NO PAD        |
+| utf8mb4_de_pb_0900_ai_ci   | utf8mb4            | 256 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_is_0900_ai_ci      | utf8mb4            | 257 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_lv_0900_ai_ci      | utf8mb4            | 258 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_ro_0900_ai_ci      | utf8mb4            | 259 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_sl_0900_ai_ci      | utf8mb4            | 260 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_pl_0900_ai_ci      | utf8mb4            | 261 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_et_0900_ai_ci      | utf8mb4            | 262 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_es_0900_ai_ci      | utf8mb4            | 263 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_sv_0900_ai_ci      | utf8mb4            | 264 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_tr_0900_ai_ci      | utf8mb4            | 265 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_cs_0900_ai_ci      | utf8mb4            | 266 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_da_0900_ai_ci      | utf8mb4            | 267 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_lt_0900_ai_ci      | utf8mb4            | 268 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_sk_0900_ai_ci      | utf8mb4            | 269 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_es_trad_0900_ai_ci | utf8mb4            | 270 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_la_0900_ai_ci      | utf8mb4            | 271 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_eo_0900_ai_ci      | utf8mb4            | 273 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_hu_0900_ai_ci      | utf8mb4            | 274 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_hr_0900_ai_ci      | utf8mb4            | 275 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_vi_0900_ai_ci      | utf8mb4            | 277 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_ru_0900_as_cs      | utf8mb4            | 307 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_zh_0900_as_cs      | utf8mb4            | 308 |            | Yes         |       0 | NO PAD        |
+| utf8mb4_0900_bin           | utf8mb4            | 309 |            | Yes         |       1 | NO PAD        |
++----------------------------+--------------------+-----+------------+-------------+---------+---------------+
+272 rows in set (0.00 sec)</code></pre>
+<p>再来看一下我们之前建表语句：</p>
+<pre><code class="mysql">DROP TABLE IF EXISTS `space_test`;
+CREATE TABLE `space_test`
+(
+    `id`      BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT &#39;主键自增ID&#39;,
+    `var_str` VARCHAR(64)         NOT NULL DEFAULT &#39;&#39;,
+    `str`     CHAR(64)            NOT NULL DEFAULT &#39;&#39;,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;</code></pre>
+<p>实际对应的字符集类型：</p>
+<pre><code class="mysql">mysql&gt; show table status from test like &#39;space_test&#39;;
++------------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+---------------------+------------+--------------------+----------+----------------+---------+
+| Name       | Engine | Version | Row_format | Rows | Avg_row_length | Data_length | Max_data_length | Index_length | Data_free | Auto_increment | Create_time         | Update_time         | Check_time | Collation          | Checksum | Create_options | Comment |
++------------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+---------------------+------------+--------------------+----------+----------------+---------+
+| space_test | InnoDB |      10 | Dynamic    |    4 |           4096 |       16384 |               0 |            0 |         0 |              5 | 2022-03-06 10:26:47 | 2022-03-06 10:26:47 | NULL       | utf8mb4_0900_ai_ci |     NULL |                |         |
++------------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+---------------------+------------+--------------------+----------+----------------+---------+
+1 row in set (0.01 sec)</code></pre>
+<p>可以看到，<font color="#f00"><strong>实际的排序类型为：<code>utf8mb4_0900_ai_ci</code>，对应的是 <code>NO PAD</code>！</strong></font></p>
+<p><font color="#f00"><strong>因此，这也是为什么在上面的测试中 MySQL 8.0.x 和 MySQL 5.7.x 表现不一致的原因！</strong></font></p>
+<br>
+
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a><strong>解决方案</strong></h2><h3 id="业务代码层面"><a href="#业务代码层面" class="headerlink" title="业务代码层面"></a><strong>业务代码层面</strong></h3><p><font color="#f00"><strong>首先，在业务代码中建议使用 Trim、TrimSpace 等相关函数先对参数进行处理，避免出现尾部存在空格的数据；</strong></font></p>
+<br>
+
+<h3 id="数据集声明层面"><a href="#数据集声明层面" class="headerlink" title="数据集声明层面"></a><strong>数据集声明层面</strong></h3><p><font color="#f00"><strong>需要根据实际需求，结合<code>INFORMATION_SCHEMA</code>.<a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-collations-table.html" target="_blank" rel="noopener"><code>COLLATIONS</code></a> 表判断具体使用 <code>PAD SPACE</code> 还是 <code>NO PAD</code>类型！</strong></font></p>
+<br>
+
+<h3 id="查询层面"><a href="#查询层面" class="headerlink" title="查询层面"></a><strong>查询层面</strong></h3><p>如果一定要查询含有尾部空格的数据，则可以使用两种方法：</p>
+<ul>
+<li>使用 like 匹配；</li>
+<li>查询条件中增加 binary；</li>
+</ul>
+<p>下面在MySQL 5.7.x 中分别来看；</p>
+<h4 id="like"><a href="#like" class="headerlink" title="like"></a><strong>like</strong></h4><p>查询结果：</p>
+<pre><code class="mysql">-- varchar查询
+mysql&gt; select * from space_test where var_str like &#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str like &#39;abc &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  3 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str like &#39;abc  &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str like &#39;abc   &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str like &#39;abc    &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  4 | abc     | abc |
++----+---------+-----+
+1 row in set (0.01 sec)
+
+
+-- char查询
+mysql&gt; select * from space_test where str like &#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+mysql&gt; select * from space_test where str like &#39;abc &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str like &#39;abc  &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str like &#39;abc   &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str like &#39;abc    &#39;;
+Empty set (0.00 sec)</code></pre>
+<p><font color="#f00"><strong>可以看到：在 MySQL 5.7.x 中使用 LIKE 关键字后的逻辑和 MySQL 8.0.x 中的<code>NO PAD</code>逻辑相同；</strong></font></p>
+<br>
+
+<h4 id="binary"><a href="#binary" class="headerlink" title="binary"></a><strong>binary</strong></h4><p><code>binary</code> 是MySQL中的一个类型转换运算符：用来强制它后面的字符串为一个二进制字符串，可以理解成精确匹配；</p>
+<p><font color="#f00"><strong>注：BINARY 关键字要放在 <code>=</code> 的后边，以便有效利用该字段的索引；</strong></font></p>
+<p>实验结果：</p>
+<pre><code class="mysql">-- varchar
+mysql&gt; select * from space_test where var_str = binary &#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str = binary &#39;abc &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  3 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str = binary &#39;abc  &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str = binary &#39;abc   &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where var_str = binary &#39;abc    &#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  4 | abc     | abc |
++----+---------+-----+
+1 row in set (0.00 sec)
+
+
+-- char
+mysql&gt; select * from space_test where str = binary &#39;abc&#39;;
++----+---------+-----+
+| id | var_str | str |
++----+---------+-----+
+|  1 | abc     | abc |
+|  3 | abc     | abc |
+|  4 | abc     | abc |
++----+---------+-----+
+3 rows in set (0.00 sec)
+
+mysql&gt; select * from space_test where str = binary &#39;abc &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str = binary &#39;abc  &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str = binary &#39;abc   &#39;;
+Empty set (0.00 sec)
+
+mysql&gt; select * from space_test where str = binary &#39;abc    &#39;;
+Empty set (0.00 sec)</code></pre>
+<p><font color="#f00"><strong>可以看到：在 MySQL 5.7.x 中使用 BINARY 关键字后的逻辑和 MySQL 8.0.x 中的<code>NO PAD</code>逻辑相同；</strong></font></p>
+<br>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><p>MySQL 中字符串尾部存在空格的问题和两个条件相关：</p>
+<ul>
+<li>字段类型：<code>CHAR</code> 或者 <code>VARCHAR</code>；</li>
+<li>字符集类型：<code>PAD SPACE</code> 或者 <code>NO PAD</code>;</li>
+</ul>
+<p><strong><code>CHAR</code> 类型在存储字符串时会截断尾部的空格，而 <code>VARCHAR</code> 则会保留；</strong></p>
+<p><strong><code>PAD SPACE</code> 类型在比较时会忽略字符串尾部的空格，而 <code>NO PAD</code> 会保留；</strong></p>
+<p><strong>同时，我们可以通过 <code>LIKE</code> 或 <code>BINARY</code> 关键字将针对 <code>PAD SPACE</code> 类型的查询转化为类似于 <code>NO PAD</code> 的查询；</strong></p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>参考文章：</p>
+<ul>
+<li><a href="https://www.cnblogs.com/waterystone/p/12871323.html" target="_blank" rel="noopener">MySQL字段等值查询时，尾部有空格也能匹配上的坑</a></li>
+<li><a href="https://www.cnblogs.com/xjnotxj/p/9019866.html" target="_blank" rel="noopener">Mysql 查询条件中字符串尾部有空格也能匹配上的问题</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/5.7/en/char.html" target="_blank" rel="noopener">11.3.2 The CHAR and VARCHAR Types</a></li>
+<li><a href="https://stackoverflow.com/questions/10495692/mysql-comparison-operator-spaces" target="_blank" rel="noopener">MySQL comparison operator, spaces</a></li>
+</ul>
+<p>MySQL的官方文档：</p>
+<ul>
+<li><a href="https://dev.mysql.com/doc/refman/5.7/en/char.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/5.7/en/char.html</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/char.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/char.html</a></li>
+</ul>
+<p>以及Stack Overflow相关问题：</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/10495692/mysql-comparison-operator-spaces" target="_blank" rel="noopener">https://stackoverflow.com/questions/10495692/mysql-comparison-operator-spaces</a></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/02/27/深入探讨MySQL查询时字符串尾部存在空格的问题/" title="https://jasonkayzk.github.io/2022/02/27/深入探讨MySQL查询时字符串尾部存在空格的问题/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/02/27/深入探讨MySQL查询时字符串尾部存在空格的问题/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1753871723999"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

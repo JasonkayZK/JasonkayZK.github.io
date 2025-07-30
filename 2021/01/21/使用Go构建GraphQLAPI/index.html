@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>使用Go构建GraphQL API - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="GraphQL是目前比较火热的技术，以高度灵活性著称；本文讲述了如何使用Go构建一个GraphQL的API；">
+<meta name="keywords" content="Golang,GraphQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Go构建GraphQL API">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/01/21/使用Go构建GraphQLAPI/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="GraphQL是目前比较火热的技术，以高度灵活性著称；本文讲述了如何使用Go构建一个GraphQL的API；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2025-07-30T10:34:36.211Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Go构建GraphQL API">
+<meta name="twitter:description" content="GraphQL是目前比较火热的技术，以高度灵活性著称；本文讲述了如何使用Go构建一个GraphQL的API；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1753871734892">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>520</div>
+        <div><span>标签</span>276</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 10.91px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.45px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">26</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/debian12部署kubernetes-1-28集群/">debian12部署kubernetes-1.28集群</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/21/分享两个服务器实用脚本：xsync和xcall/">分享两个服务器实用脚本：xsync和xcall</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2025 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?56">
+    
+    <h1>使用Go构建GraphQL API</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年01月21日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 24 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/GraphQL/">GraphQL</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#使用Go构建GraphQL-API"><span class="toc-text">使用Go构建GraphQL API</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是GraphQL"><span class="toc-text">什么是GraphQL</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#GraphQL的一个例子"><span class="toc-text">GraphQL的一个例子</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#GraphQL简介"><span class="toc-text">GraphQL简介</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#GraphQL的不足"><span class="toc-text">GraphQL的不足</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#快速入门GraphQL"><span class="toc-text">快速入门GraphQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用Go构建API"><span class="toc-text">使用Go构建API</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建数据库"><span class="toc-text">创建数据库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建数据库Mapper映射"><span class="toc-text">创建数据库Mapper映射</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#API转为GraphQL"><span class="toc-text">API转为GraphQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建HTTP路由处理函数"><span class="toc-text">创建HTTP路由处理函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动服务器"><span class="toc-text">启动服务器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GraphQL-API测试"><span class="toc-text">GraphQL API测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>GraphQL是目前比较火热的技术，以高度灵活性著称；</p>
+<p>本文讲述了如何使用Go和MySQL构建一个GraphQL API；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/graphql" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/graphql</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="使用Go构建GraphQL-API"><a href="#使用Go构建GraphQL-API" class="headerlink" title="使用Go构建GraphQL API"></a><strong>使用Go构建GraphQL API</strong></h2><p>最近看到了一篇英文文章讲述了如何使用Go和PostgreSQL构建一个GraphQL的API：</p>
+<ul>
+<li><a href="https://medium.com/@bradford_hamilton/building-an-api-with-graphql-and-go-9350df5c9356" target="_blank" rel="noopener">Building an API with GraphQL and Go</a></li>
+</ul>
+<p>但是内容是自顶向下讲述的，对于不了解GraphQL的来说(比如我)，看起来可能云里雾里的，不知道在干嘛；</p>
+<p>并且主要用的是PostgreSQL，我一般用的是MySQL，虽然两者区别没有那么大！</p>
+<p>所以我决定，按照原文使用MySQL再重写一个实现，并且尝试着自底向上讲述如何使用Go构建一个GraphQL API，希望能讲明白吧！</p>
+<br>
+
+<h3 id="什么是GraphQL"><a href="#什么是GraphQL" class="headerlink" title="什么是GraphQL"></a><strong>什么是GraphQL</strong></h3><p>首先先介绍一下，什么是GraphQL；</p>
+<p>需要明确的是，几乎所有的技术发展都是有需求背景的，GraphQL也不例外！</p>
+<blockquote>
+<p>  对于业务不断快速变化的今天，专注于CRUD的你有没有这样的感受：</p>
+<p>  产品A：加一个接口帮我查一下用户的这个…；</p>
+<p>  产品B：加一个接口帮我查一下用户的那个…；</p>
+<p>  ……</p>
+</blockquote>
+<p>而且这些需求隔三岔五的来，恨不得让你想直接在前端写SQL直连数据库做查询了！</p>
+<p>为了解决这样不断变化的需求，彻底解放后端频繁写各种查询SQL的场景，GraphQL应运而生！</p>
+<h4 id="GraphQL的一个例子"><a href="#GraphQL的一个例子" class="headerlink" title="GraphQL的一个例子"></a><strong>GraphQL的一个例子</strong></h4><p>我们先来看一个例子：</p>
+<p>这里有一个User类：</p>
+<pre><code class="go">// User shape
+type User struct {
+    ID         int
+    Name       string
+    Age        int
+    Profession string
+    Friendly   bool
+}</code></pre>
+<p>前端需要根据Name查询并展示Name、Age属性；</p>
+<p>那么我们的SQL可以这样写：</p>
+<pre><code class="mysql">SELECT name,age FROM `users` WHERE name=?;</code></pre>
+<p>此时产品又想展示Profession和Friendly，可以把SQL改为：</p>
+<pre><code class="mysql">SELECT name,age,profession,friendly FROM `users` WHERE name=?;</code></pre>
+<p>这时候产品由于某些原因(例如合规性等问题)又要修改展示内容，你还要再次修改SQL；</p>
+<p>这还是单个User对象的查询，如果一个查询涉及到五六张表，十多个关系的查询，那么每天啥也不用干了，就帮产品写SQL就完事了！</p>
+<p>如果使用了GraphQL你甚至都不需要改代码，只需要前端修改请求，获取他需要的内容即可，例如：</p>
+<pre><code class="json">// 查询name为kevin，字段为id,name,age,profession,friendly的数据
+{
+    &quot;query&quot;: &quot;{users(name:\&quot;kevin\&quot;){id,name,age,profession,friendly}}&quot;
+}
+// 返回值
+{
+  &quot;data&quot;: {
+    &quot;users&quot;: [
+      {
+        &quot;age&quot;: 35,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;waiter&quot;
+      },
+      {
+        &quot;age&quot;: 15,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 5,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;in school&quot;
+      }
+    ]
+  }
+}
+
+
+// 查询name为kevin，字段为friendly的数据
+{
+    &quot;query&quot;: &quot;{users(name:\&quot;kevin\&quot;){friendly}}&quot;
+}
+// 返回值
+{
+  &quot;data&quot;: {
+    &quot;users&quot;: [
+      {
+        &quot;friendly&quot;: true
+      },
+      {
+        &quot;friendly&quot;: true
+      }
+    ]
+  }
+}</code></pre>
+<p>这就好像是前端直接写SQL调用一样，而后端再也不用修改SQL啦！</p>
+<h4 id="GraphQL简介"><a href="#GraphQL简介" class="headerlink" title="GraphQL简介"></a><strong>GraphQL简介</strong></h4><p>GraphQL 是一种针对 Graph（图状数据）进行查询特别有优势的 Query Language（查询语言），所以叫做 GraphQL。GraphQL 跟用作存储的 NoSQL 等没有必然联系，GraphQL 背后的实际存储可以选择 NoSQL 型或是 SQL 类型的数据库，甚至任意其它存储方式（例如文本文件、存内存里等等）；</p>
+<p><strong>GraphQL 最大的优势是：查询图状数据。</strong></p>
+<p>GraphQL 是 Facebook 发明的，用 Facebook 做例子，例如说，你要在 Facebook 上打开我的页面查看我的信息，你需要请求如下信息：</p>
+<ul>
+<li><p>我的名字</p>
+</li>
+<li><p>我的头像</p>
+</li>
+<li><p>我的好友（按他们跟你的亲疏程度排序取前 6）：</p>
+</li>
+<li><ul>
+<li>好友 1 的名字、头像及链接</li>
+<li>好友 2 的名字、头像及链接</li>
+<li>……</li>
+</ul>
+</li>
+<li><p>我的照片（按时间倒序排序取前 6）：</p>
+</li>
+<li><ul>
+<li>照片 1 及其链接</li>
+<li>照片 2 及其链接</li>
+<li>……</li>
+</ul>
+</li>
+<li><p>我的帖子（按时间倒序排序）：</p>
+</li>
+<li><ul>
+<li><p>帖子 1：</p>
+</li>
+<li><ul>
+<li><p>帖子 1 内容</p>
+</li>
+<li><p>帖子 1 评论：</p>
+</li>
+<li><ul>
+<li><p>帖子 1 评论 1：</p>
+</li>
+<li><ul>
+<li>帖子 1 评论 1 内容</li>
+<li>帖子 1 评论 1 作者名字</li>
+<li>帖子 1 评论 1 作者头像</li>
+</ul>
+</li>
+<li><p>帖子 1 评论 2：</p>
+</li>
+<li><ul>
+<li>……</li>
+</ul>
+</li>
+<li><p>……</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>帖子 2：</p>
+</li>
+<li><ul>
+<li><p>帖子 2 内容</p>
+</li>
+<li><p>帖子 2 评论：</p>
+</li>
+<li><ul>
+<li>……</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>……</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>这是一个超级复杂的树状结构，如果我们用常见的 RESTful API 进行设计，每个 API 负责请求一种类型的对象，例如用户是一个类型，帖子是另一个类型，那就需要非常多个请求才能把这个页面所需的所有数据拿回来。而且这些请求直接还存在依赖关系，不能平行地发多个请求，例如说在获得帖子数据之前，无法请求评论数据；在获得评论数据之后，才能开始请求评论作者数据；</p>
+<p>如何解决这种问题？一个简单粗暴的办法是专门写一个 RESTful API，请求上述树状复杂数据。但很快新问题就会出现。现在 Facebook 想要做一个新的产品，例如说是宠物，然后要在我的页面上显示我的宠物信息，那这个 RESTful API 的实现就要跟着改；</p>
+<p>GraphQL 能够很好地解决这个问题，但前提是：<strong>数据已经以图的数据结构进行保存！</strong></p>
+<p>例如，上面说到的用户、帖子、评论是顶点，而用户跟用户发过的帖子存在边的关系，帖子跟帖子评论存在一对多的边，评论跟评论作者存在一对一的边。这时候如果新产品引入了新的对象类型（也就是顶点类型）和新的边类型，那没有关系。在查询数据时用 GraphQL 描述一下要查询的这些边和顶点就行，不需要去改 API 实现；</p>
+<h4 id="GraphQL的不足"><a href="#GraphQL的不足" class="headerlink" title="GraphQL的不足"></a><strong>GraphQL的不足</strong></h4><p>俗话说得好：<strong>没有银弹</strong>；</p>
+<ul>
+<li>出自：<a href="https://en.wikipedia.org/wiki/No_Silver_Bullet" target="_blank" rel="noopener">“No Silver Bullet – Essence and Accident in Software Engineering”</a></li>
+</ul>
+<p>说完了 GraphQL 是什么和能解决什么问题，说说不够好的地方吧；</p>
+<p>第一，Facebook 从来没有公开自己的 GraphQL 后端设计，使得大家必需要用第三方的，但体验显然不如我们在 Facebook 内部使用 GraphQL 好。我上面说了，数据必需已经以图的数据结构进行存储才有优势。Facebook 内部有非常好的后端做好了这件事情，而且还内置了基于隐私设置的访问控制。例如说你发的帖子有些是所有人可见的、有些是好友可见的、有些是仅同事可见的，我在打开你的页面时 Facebook 有一个中间层保证了根据我和你的关系我只能看到我该看到的帖子。GraphQL 在这一层之上，所以无论 GraphQL 怎么写我都不可能看到我不该看到的信息；</p>
+<p>第二，并不是所有场景都适用于 GraphQL 的，有些很简单的事情就应该用 RESTful API 来实现；Facebook 内部用户增长部门的很多 API 都还不是 GraphQL，因为没必要迁移到 GraphQL。用户增长部门的 API 处理新用户注册、填写短信验证码之类的事情，这些事情都是围绕着一个用户的具体某项或多项信息发生的，根本没有任何图的概念。可以强行写作 GraphQL，但得不到显著的好处。既然老的 API 早就写好了，需要的时候做一些小改动，但没必要重写；</p>
+<p>第三，GraphQL 尽管查询的数据是图状数据结构，但实际获得的数据视图是树状数据结构。每一个 GraphQL 查询或更新都有自己的根节点，然后所有的数据都是从根结点展开出去的。查询后获得的数据如果要在前端重新变回图的状态，那前端就不能简单地缓存查询得到的数据，必须用对用的 GraphQL 存储库，然后通过顶点的 ID 把不同节点之间的某些边重新连接起来；</p>
+<br>
+
+<h3 id="快速入门GraphQL"><a href="#快速入门GraphQL" class="headerlink" title="快速入门GraphQL"></a><strong>快速入门GraphQL</strong></h3><p>下面是GraphQL的中国官网：</p>
+<ul>
+<li><a href="https://graphql.cn/" target="_blank" rel="noopener">https://graphql.cn/</a></li>
+</ul>
+<p>GraphQL定义了一套类似于TypeScript的<strong>类型系统</strong>(<code>Type System</code>)来描述你的数据：</p>
+<pre><code class="typescript">// 项目的type
+type Project {
+  name: String
+  tagline: String
+  contributors: [User] // 数组表示多个，type 为下面的 User
+}
+
+type User {
+  name: String
+  photo: String,
+  friends: [User] // User 的朋友们， type 还是 User
+}</code></pre>
+<p>接下来你可以把<code>GraphQL</code>的<strong>查询语言</strong>(<code>Queries</code>)当成是没有值只有属性的对象，返回的结果就是有对应值的对象，也就是标准的<code>JSON</code>：</p>
+<pre><code class="json">// 基于Queries，请求你所要的数据
+{ // 查找 name 为 GraphQL 的 project
+  project(name: &quot;GraphQL&quot;) {
+    tagline
+  }
+}
+// 得到可预测的json结果
+{
+  &quot;project&quot;: {
+    &quot;tagline&quot;: &quot;A query language for APIs&quot;
+  }
+}</code></pre>
+<p>简单看了一下GraphQL中是如何定义和查询数据的，下面我们来动手实现一个GraphQL API！</p>
+<br>
+
+<h3 id="使用Go构建API"><a href="#使用Go构建API" class="headerlink" title="使用Go构建API"></a><strong>使用Go构建API</strong></h3><h4 id="创建数据库"><a href="#创建数据库" class="headerlink" title="创建数据库"></a><strong>创建数据库</strong></h4><p>schema.sql</p>
+<pre><code class="mysql">CREATE DATABASE IF NOT EXISTS `go_graphql_db`;
+
+USE `go_graphql_db`;
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  id serial PRIMARY KEY,
+  name VARCHAR (50) NOT NULL,
+  age INT NOT NULL,
+  profession VARCHAR (50) NOT NULL,
+  friendly BOOLEAN NOT NULL
+) ENGINE=InnoDB CHARSET=utf8mb4;
+
+INSERT INTO users VALUES
+  (1, &#39;kevin&#39;, 35, &#39;waiter&#39;, true),
+  (2, &#39;angela&#39;, 21, &#39;concierge&#39;, true),
+  (3, &#39;alex&#39;, 26, &#39;zoo keeper&#39;, false),
+  (4, &#39;becky&#39;, 67, &#39;retired&#39;, false),
+  (5, &#39;kevin&#39;, 15, &#39;in school&#39;, true),
+  (6, &#39;frankie&#39;, 45, &#39;teller&#39;, true);</code></pre>
+<p>创建了一个叫做<code>go_graphql_db</code>的数据库，以及一个<code>users</code>表，并插入了几条数据；</p>
+<h4 id="创建数据库Mapper映射"><a href="#创建数据库Mapper映射" class="headerlink" title="创建数据库Mapper映射"></a><strong>创建数据库Mapper映射</strong></h4><p>mapper/mapper.go</p>
+<pre><code class="go">package mapper
+
+import (
+    &quot;database/sql&quot;
+    &quot;fmt&quot;
+
+    _ &quot;github.com/go-sql-driver/mysql&quot;
+)
+
+// Db is our database struct used for interacting with the database
+type Db struct {
+    *sql.DB
+}
+
+// User shape
+type User struct {
+    ID         int
+    Name       string
+    Age        int
+    Profession string
+    Friendly   bool
+}
+
+// New makes a new database using the connection string and
+// returns it, otherwise returns the error
+func New(connString string) (*Db, error) {
+    db, err := sql.Open(&quot;mysql&quot;, connString)
+    if err != nil {
+        return nil, err
+    }
+
+    // Check that our connection is good
+    if err := db.Ping(); err != nil {
+        return nil, err
+    }
+
+    fmt.Println(&quot;mysql connected!&quot;)
+
+    return &amp;Db{db}, nil
+}
+
+// ConnString returns a connection string based on the parameters it&#39;s given
+// This would normally also contain the password, however we&#39;re not using one
+func ConnString(host string, port int, user, passwd, dbName string) string {
+    return fmt.Sprintf(
+        &quot;%s:%s@tcp(%s:%d)/%s&quot;,
+        user, passwd, host, port, dbName,
+    )
+}
+
+// GetUsersByName is called within our user query for graphql
+func (d *Db) GetUsersByName(name string) []User {
+    // Prepare query, takes a name argument, protects from sql injection
+    stmt, err := d.Prepare(&quot;SELECT * FROM go_graphql_db.`users` WHERE name=?&quot;)
+    if err != nil {
+        fmt.Println(&quot;GetUserByName preparation Err: &quot;, err)
+    }
+
+    // Make query with our stmt, passing in name argument
+    rows, err := stmt.Query(name)
+    if err != nil {
+        fmt.Println(&quot;GetUserByName Query Err: &quot;, err)
+    }
+
+    // Create User struct for holding each row&#39;s data
+    var r User
+    // Create slice of Users for our response
+    var users []User
+    // Copy the columns from row into the values pointed at by r (User)
+    for rows.Next() {
+        if err := rows.Scan(
+            &amp;r.ID,
+            &amp;r.Name,
+            &amp;r.Age,
+            &amp;r.Profession,
+            &amp;r.Friendly,
+        ); err != nil {
+            fmt.Println(&quot;Error scanning rows: &quot;, err)
+        }
+        users = append(users, r)
+    }
+
+    return users
+}
+</code></pre>
+<p>mapper中定义了数据库连接、User结构，以及最重要的<code>GetUsersByName</code>方法用于根据name取出users表中的数据；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>这里为了展示方便，将数据库连接配置、User类和数据库查询放在了一个文件；</strong></font></p>
+<p>  <font color="#f00"><strong>实际上应该按职责拆分为不同的文件处理；</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="API转为GraphQL"><a href="#API转为GraphQL" class="headerlink" title="API转为GraphQL"></a><strong>API转为GraphQL</strong></h3><p>经过上面的一步，我们就可以创建一个HTTP Server，并根据请求将对应name的数据查询，并序列化为Json格式返回响应；</p>
+<p>但是对于GraphQL而言，还要更为麻烦一些：<strong>我们需要将对数据库的直接查询转化为对GraphQL的查询，而由GraphQL对数据库进行查询；</strong></p>
+<p>这里我们使用的库是：</p>
+<ul>
+<li><a href="https://github.com/graphql-go/graphql" target="_blank" rel="noopener">graphql-go/graphql</a></li>
+</ul>
+<p>为了使用这个库，我们需要创建一个Schema(类似于查询和映射规则)，并指定Fields和Fields中的Resolver：</p>
+<ul>
+<li>Resolver：GraphQL从何处取得数据；</li>
+<li>Fields：GraphQL映射的数据域；</li>
+</ul>
+<p>代码如下：</p>
+<p>gql/queries.go</p>
+<pre><code class="go">package gql
+
+import (
+    &quot;github.com/graphql-go/graphql&quot;
+    &quot;github.com/jasonkayzk/go-graphql-api/mapper&quot;
+)
+
+// Root holds a pointer to a graphql object
+type Root struct {
+    Query *graphql.Object
+}
+
+// User describes a graphql object containing a User
+var User = graphql.NewObject(
+    graphql.ObjectConfig{
+        Name: &quot;User&quot;,
+        Fields: graphql.Fields{
+            &quot;id&quot;: &amp;graphql.Field{
+                Type: graphql.Int,
+            },
+            &quot;name&quot;: &amp;graphql.Field{
+                Type: graphql.String,
+            },
+            &quot;age&quot;: &amp;graphql.Field{
+                Type: graphql.Int,
+            },
+            &quot;profession&quot;: &amp;graphql.Field{
+                Type: graphql.String,
+            },
+            &quot;friendly&quot;: &amp;graphql.Field{
+                Type: graphql.Boolean,
+            },
+        },
+    },
+)
+
+// NewRoot returns base query type. This is where we add all the base queries
+func NewRoot(db *mapper.Db) *Root {
+    resolver := Resolver{db: db}
+
+    // Create a new Root that describes our base query set up. In this
+    // example we have a user query that takes one argument called name
+    root := Root{
+        Query: graphql.NewObject(
+            graphql.ObjectConfig{
+                Name: &quot;Query&quot;,
+                Fields: graphql.Fields{
+                    &quot;users&quot;: &amp;graphql.Field{
+                        Type: graphql.NewList(User),
+                        Args: graphql.FieldConfigArgument{
+                            &quot;name&quot;: &amp;graphql.ArgumentConfig{
+                                Type: graphql.String,
+                            },
+                        },
+                        // Create a resolver holding our database. Resolver can be found in resolvers.go
+                        Resolve: resolver.UserResolver,
+                    },
+                },
+            },
+        ),
+    }
+    return &amp;root
+}
+</code></pre>
+<p>这里我们定义了一个Root类，其中包括了一个<code>graphql.Object</code>类型的对象，即一个GraphQL的映射对象，这个对象就是一个Schema；</p>
+<p>在<code>NewRoot</code>方法中，创建了一个Root，并且指定了GraphQL配置：</p>
+<pre><code class="go">graphql.ObjectConfig{
+    Name: &quot;Query&quot;,
+    Fields: graphql.Fields{
+        &quot;users&quot;: &amp;graphql.Field{
+            Type: graphql.NewList(User),
+            Args: graphql.FieldConfigArgument{
+                &quot;name&quot;: &amp;graphql.ArgumentConfig{
+                    Type: graphql.String,
+                },
+            },
+            Resolve: Resolver{db: db}.UserResolver,
+        },
+    },
+},</code></pre>
+<p>上述代码定义了：</p>
+<ul>
+<li><p>GraphQL映射对象名称为：<code>Query</code>；</p>
+</li>
+<li><p>Fields规定了GraphQL的查询域，并且Fields是可以嵌套的；</p>
+<p>上述的定义类似于：</p>
+<pre><code class="json">&quot;users&quot;: [
+    {
+        &quot;age&quot;: 35,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;waiter&quot;
+    },
+    {
+        &quot;age&quot;: 15,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 5,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;in school&quot;
+    }
+]</code></pre>
+<p>其中：User为上面代码中定义的GraphQL映射类；</p>
+</li>
+<li><p>Fields中包括了三个字段：</p>
+<ul>
+<li>Type：返回类型；</li>
+<li>Args：请求入参名及类型；</li>
+<li>Resolver：数据解析来源；</li>
+</ul>
+</li>
+</ul>
+<p>下面我们来看看这个Resolver：</p>
+<p>gql/resolvers.go</p>
+<pre><code class="go">package gql
+
+import (
+    &quot;github.com/graphql-go/graphql&quot;
+    &quot;github.com/jasonkayzk/go-graphql-api/mapper&quot;
+)
+
+// Resolver struct holds a connection to our database
+type Resolver struct {
+    db *mapper.Db
+}
+
+// UserResolver resolves our user query through a db call to GetUserByName
+func (r *Resolver) UserResolver(p graphql.ResolveParams) (interface{}, error) {
+    // Strip the name from arguments and assert that it&#39;s a string
+    name, ok := p.Args[&quot;name&quot;].(string)
+    if ok {
+        users := r.db.GetUsersByName(name)
+        return users, nil
+    }
+
+    return nil, nil
+}
+</code></pre>
+<p>Resolver就是通过取得在Args中定义的入参，调用了mapper的方法，真正查询了数据库，并返回数据；</p>
+<p>最后，我们可以通过调用<code>graphql.Do</code>方法传入Schema和请求字符串完成查询；</p>
+<p>为了简单起见，我封装了一个函数：</p>
+<p>gql/gql.go</p>
+<pre><code class="go">package gql
+
+import (
+    &quot;fmt&quot;
+
+    &quot;github.com/graphql-go/graphql&quot;
+)
+
+// ExecuteQuery runs our graphql queries
+func ExecuteQuery(query string, schema graphql.Schema) *graphql.Result {
+    result := graphql.Do(graphql.Params{
+        Schema:        schema,
+        RequestString: query,
+    })
+
+    if len(result.Errors) &gt; 0 {
+        fmt.Printf(&quot;Unexpected errors inside ExecuteQuery: %v&quot;, result.Errors)
+    }
+
+    return result
+}
+</code></pre>
+<p>在上述ExecuteQuery函数中，其实就是使用请求字符串和Schema完成了查询；</p>
+<p>最后我们来创建HTTP路由处理函数，使用GraphQL查询处理路由上的请求，并返回请求结果；</p>
+<br>
+
+<h3 id="创建HTTP路由处理函数"><a href="#创建HTTP路由处理函数" class="headerlink" title="创建HTTP路由处理函数"></a><strong>创建HTTP路由处理函数</strong></h3><p>下面我们创建一个HTTP路由处理函数：</p>
+<p>handler/handler.go</p>
+<pre><code class="go">package handler
+
+import (
+    &quot;encoding/json&quot;
+    &quot;net/http&quot;
+
+    &quot;github.com/go-chi/render&quot;
+    &quot;github.com/graphql-go/graphql&quot;
+    &quot;github.com/jasonkayzk/go-graphql-api/gql&quot;
+)
+
+// Handler will hold connection to the db as well as handlers
+type Handler struct {
+    GqlSchema *graphql.Schema
+}
+
+type reqBody struct {
+    Query string `json:&quot;query&quot;`
+}
+
+// GraphQL returns an http.HandlerFunc for our /graphql endpoint
+func (s *Handler) GraphQL() http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        // Check to ensure query was provided in the request body
+        if r.Body == nil {
+            http.Error(w, &quot;Must provide graphql query in request body&quot;, 400)
+            return
+        }
+
+        var rBody reqBody
+
+        // Decode the request body into rBody
+        err := json.NewDecoder(r.Body).Decode(&amp;rBody)
+        if err != nil {
+            http.Error(w, &quot;Error parsing JSON request body&quot;, 400)
+        }
+
+        // Execute graphql query
+        result := gql.ExecuteQuery(rBody.Query, *s.GqlSchema)
+
+        // render.JSON comes from the chi/render package and handles
+        // marshalling to json, automatically escaping HTML and setting
+        // the Content-Type as application/json.
+        render.JSON(w, r, result)
+    }
+}
+</code></pre>
+<blockquote>
+<p>  <strong>虽然我们在这个项目中引入了<code>go-chi</code>框架，但是你不熟悉也没太大关系；</strong></p>
+</blockquote>
+<p>在Handler中我们定义了一个<code>graphql.Schema</code>类型的对象，用于处理GraphQL请求；</p>
+<p><code>reqBody</code>用于解析请求json中的<code>query</code>字段(我们在这个字段中放入GraphQL请求字符串！)；</p>
+<p>并且我们定义了一个可以处理HTTP请求的方法：<code>GraphQL</code>用于处理对应路由上的HTTP请求；</p>
+<p>在<code>GraphQL</code>方法中，我们首先解析了请求体，拿出了<code>query</code>字段的值，即：GraphQL字符串；</p>
+<p>随后使用上文中封装的<code>ExecuteQuery</code>函数，处理了请求，最后返回结果；</p>
+<br>
+
+<h3 id="启动服务器"><a href="#启动服务器" class="headerlink" title="启动服务器"></a><strong>启动服务器</strong></h3><p>现在我们已经拥有了HTTP服务器、数据库mapper映射、GraphQL Schema等；</p>
+<p>下面我们就来创建路由，并启动项目吧！</p>
+<p>main.go</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;log&quot;
+    &quot;net/http&quot;
+
+    &quot;github.com/go-chi/chi&quot;
+    &quot;github.com/go-chi/chi/middleware&quot;
+    &quot;github.com/go-chi/render&quot;
+    &quot;github.com/graphql-go/graphql&quot;
+
+    &quot;github.com/jasonkayzk/go-graphql-api/gql&quot;
+    &quot;github.com/jasonkayzk/go-graphql-api/handler&quot;
+    &quot;github.com/jasonkayzk/go-graphql-api/mapper&quot;
+)
+
+func main() {
+    // Initialize our API and return a pointer to our router for http.ListenAndServe
+    // and a pointer to our db to defer its closing when main() is finished
+    router, db := initializeAPI()
+    defer db.Close()
+
+    // Listen on port 4000 and if there&#39;s an error log it and exit
+    if err := http.ListenAndServe(&quot;:4000&quot;, router); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func initializeAPI() (*chi.Mux, *mapper.Db) {
+    // Create a new connection to our pg database
+    db, err := mapper.New(
+        mapper.ConnString(&quot;127.0.0.1&quot;, 3306, &quot;root&quot;, &quot;123456&quot;, &quot;go_graphql_db&quot;),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create our root query for graphql
+    rootQuery := gql.NewRoot(db)
+    // Create a new graphql schema, passing in the the root query
+    sc, err := graphql.NewSchema(
+        graphql.SchemaConfig{Query: rootQuery.Query},
+    )
+    if err != nil {
+        fmt.Println(&quot;Error creating schema: &quot;, err)
+    }
+
+    // Create a handler struct that holds a pointer to our database as well
+    // as the address of our graphql schema
+    s := handler.Handler{
+        GqlSchema: &amp;sc,
+    }
+
+    // Create a new router
+    router := chi.NewRouter()
+
+    // Add some middleware to our router
+    router.Use(
+        render.SetContentType(render.ContentTypeJSON), // set content-type headers as application/json
+        middleware.Logger,          // log API request calls
+        middleware.DefaultCompress, // compress results, mostly gzip assets and json
+        middleware.StripSlashes,    // match paths with a trailing slash, strip it, and continue routing through the mux
+        middleware.Recoverer,       // recover from panics without crashing handler
+    )
+
+    // Create the graphql route with a Handler method to handle it
+    router.Post(&quot;/graphql&quot;, s.GraphQL())
+
+    return router, db
+}
+</code></pre>
+<p>在main中，首先我们创建了数据库连接，随后使用在gql中定义的Query创建了一个Schema；</p>
+<p>随后使用schema创建了一个我们定义的Server，最后我们创建了一个端点(Endpoint)为<code>/graphql</code>的路由，并返回了路由；</p>
+<p>最后，指定了<code>4000</code>端口和<code>/graphql</code>路由，启动了Go中的HTTP Server；</p>
+<br>
+
+<h3 id="GraphQL-API测试"><a href="#GraphQL-API测试" class="headerlink" title="GraphQL API测试"></a><strong>GraphQL API测试</strong></h3><p>项目写完之后，我们可以启动项目并做请求测试；</p>
+<p>使用下面的命令整理依赖：</p>
+<pre><code class="bash">$ go mod tidy</code></pre>
+<p>启动项目：</p>
+<pre><code class="bash">$ go run main.go
+# 数据库成功连接！
+mysql connected!</code></pre>
+<blockquote>
+<p>  <strong>如果你是clone的我的项目，则在启动之前需要在<code>main.go</code>中配置一下你自己的数据库连接；</strong></p>
+</blockquote>
+<p>下面可以通过Postman或者curl的方式发送请求；</p>
+<p>这里我用curl的方式：</p>
+<pre><code class="bash">$ curl --location --request POST &#39;http://127.0.0.1:4000/graphql&#39; --header &#39;Content-Type: application/json&#39; --data &#39;{&quot;query&quot;: &quot;{users(name:\&quot;kevin\&quot;){id,name,age,profession,friendly}}&quot;}&#39;
+
+# 返回结果
+{
+  &quot;data&quot;: {
+    &quot;users&quot;: [
+      {
+        &quot;age&quot;: 35,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;waiter&quot;
+      },
+      {
+        &quot;age&quot;: 15,
+        &quot;friendly&quot;: true,
+        &quot;id&quot;: 5,
+        &quot;name&quot;: &quot;kevin&quot;,
+        &quot;profession&quot;: &quot;in school&quot;
+      }
+    ]
+  }
+}
+
+curl --location --request POST &#39;http://9.134.243.6:4000/graphql&#39; --header &#39;Content-Type: application/json&#39; --data &#39;{&quot;query&quot;: &quot;{users(name:\&quot;kevin\&quot;){name,friendly}}&quot;}&#39;
+
+# 返回结果
+{
+  &quot;data&quot;: {
+    &quot;users&quot;: [
+      {
+        &quot;friendly&quot;: true,
+        &quot;name&quot;: &quot;kevin&quot;
+      },
+      {
+        &quot;friendly&quot;: true,
+        &quot;name&quot;: &quot;kevin&quot;
+      }
+    ]
+  }
+}</code></pre>
+<p>实际上就是向url为<code>http://127.0.0.1:4000/graphql</code>的地址发送了一个Post请求，请求体为：</p>
+<pre><code class="json">{
+    &quot;query&quot;: &quot;{users(name:\&quot;kevin\&quot;){id,name,age,profession,friendly}}&quot;
+}</code></pre>
+<p>即在query字段中是一个GraphQL请求表达式；</p>
+<p>通过改变GraphQL表达式，我们得到了不同的响应结果！</p>
+<p>实验成功！</p>
+<br>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h2><p>本文由浅入深讲述了GraphQL的基本使用方法，详细阅读了本文之后，你对于GraphQL是什么，以及如何在Go中使用GraphQL有了一定了解！</p>
+<p>本文是基于本人个人学习和了解所写，如果有哪些错误，还请指出！</p>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://medium.com/@bradford_hamilton/building-an-api-with-graphql-and-go-9350df5c9356" target="_blank" rel="noopener">Building an API with GraphQL and Go</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/Go_Learn/tree/graphql" target="_blank" rel="noopener">https://github.com/JasonkayZK/Go_Learn/tree/graphql</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/01/21/使用Go构建GraphQLAPI/" title="https://jasonkayzk.github.io/2021/01/21/使用Go构建GraphQLAPI/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/01/21/使用Go构建GraphQLAPI/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1753871735016"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
