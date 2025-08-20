@@ -16,7 +16,7 @@ description: 传统的提示词工程通常涉及编写自由文本，随着应�
 
 Microsoft给出了一个工程化的答案：POML！
 
-源代码：
+文章和 Colab 配合，学习效果更佳：
 
 -   https://colab.research.google.com/drive/1RrZyqB16XMvsFBjir90m-NCXE35kWFdy?usp=sharing
 
@@ -136,7 +136,7 @@ POML具有类似CSS的样式系统，将内容与表示分离。
 
 POML包含强大的模板引擎，用于动态提示词生成：
 
--   变量：`{{ variable_name }}`
+-   变量：`{ { variable_name } }`
 -   循环：`<for each="item in items">...</for>`
 -   条件：`<if condition="variable > 0">...</if>`
 -   定义：`<let name="variable" value="expression" />`
@@ -232,7 +232,7 @@ example.poml
 示例定义了：
 
 -   LLM 的角色和任务，包含一张图片作为上下文，并指定了所需的输出格式。
--   同时，包含了一个变量 `{{teacher_name}}`；
+-   同时，包含了一个变量 `teacher_name`；
 
 编写完成后，如果你安装了 [Visual Studio Code poml](https://marketplace.visualstudio.com/items?itemName=poml-team.poml)  插件，则可以进行预览：
 
@@ -355,11 +355,69 @@ Look at our amazing plant friend! Just like you need food, plants need to eat to
 
 <br/>
 
+### **（三）使用样式**
+
+现在，让我们为上面的例子增加相关的样式，来优化的 Prompt 配置！
+
+example-2.poml
+
+```xml
+<poml>
+  <role>You are a patient teacher(named {{teacher_name}}) explaining concepts to a 10-year-old.</role>
+  <task>Explain the concept of photosynthesis using the provided image as a reference.</task>
+
+  <output-format>
+    <list listStyle="dash">
+        <item className="explanation">Keep the explanation simple, engaging, and under 100 words.</item>
+        <item className="greeting">    Start with "Hey there, future scientist!".     </item>
+    </list>
+  </output-format>
+</poml>
+
+<stylesheet>
+  {
+    ".explanation": {
+      "syntax": "json"
+    },
+    "list" : {
+      "whiteSpace": "trim"
+    }
+  }
+</stylesheet>
+```
+
+渲染结果如下：
+
+````bash
+# Role
+
+You are a patient teacher(named ) explaining concepts to a 10-year-old.
+
+# Task
+
+Explain the concept of photosynthesis using the provided image as a reference.
+
+# Output Format
+
+```json
+"Keep the explanation simple, engaging, and under 100 words."
+```
+
+- Start with "Hey there, future scientist!".     
+````
+
+>   更多内容可以参考官方文档：
+>
+>   -   https://microsoft.github.io/poml/latest/language/standalone/#stylesheet
+
+<br/>
+
 ## **三、深入学习**
 
 在完成了基础学习之后，可以继续阅读下面的内容：
 
 -   [更多官方的案例](https://github.com/microsoft/poml/tree/main/examples)
+-   [官方文档](https://microsoft.github.io/poml/latest/)
 -   [POML语法结构](https://zread.ai/microsoft/poml/6-poml-syntax-and-structure)
 -   [POML中间表示](https://zread.ai/microsoft/poml/8-intermediate-representation)
 -   [API参考](https://zread.ai/microsoft/poml/11-api-reference)
@@ -372,7 +430,7 @@ Look at our amazing plant friend! Just like you need food, plants need to eat to
 
 # **附录**
 
-源代码：
+文章和 Colab 配合，学习效果更佳：
 
 -   https://colab.research.google.com/drive/1RrZyqB16XMvsFBjir90m-NCXE35kWFdy?usp=sharing
 
