@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>给女朋友写小工具的总结之-正则表达式 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="今天给女朋友写的一个提取几个文件的数据的python小工具总结.">
+<meta name="keywords" content="Python,正则表达式,字符串处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="给女朋友写小工具的总结之-正则表达式">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/08/给女朋友写小工具的总结之-正则表达式/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="今天给女朋友写的一个提取几个文件的数据的python小工具总结.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.766Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="给女朋友写小工具的总结之-正则表达式">
+<meta name="twitter:description" content="今天给女朋友写的一个提取几个文件的数据的python小工具总结.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725365948">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567951431117&di=69d0d275e608b59cc641c5e5f1051cac&imgtype=0&src=http%3A%2F%2Fimg4.mukewang.com%2F5b38507d0001942e06800385.jpg">
+    
+    <h1>给女朋友写小工具的总结之-正则表达式</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月08日</a>
+    <a><i class="nexmoefont icon-areachart"></i>6.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 33 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/技术杂谈/">技术杂谈</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Python/">Python</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/字符串处理/">字符串处理</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/正则表达式/">正则表达式</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一-需求分析"><span class="toc-text">一. 需求分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二-实现分析"><span class="toc-text">二. 实现分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-构建配置文件"><span class="toc-text">1. 构建配置文件:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-分析"><span class="toc-text">2. 分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-OUT文件"><span class="toc-text">1): *.OUT文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-lis文件"><span class="toc-text">2): *.lis文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-swi文件"><span class="toc-text">3): *.swi文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-保存文件"><span class="toc-text">4): 保存文件</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三-正则表达式总结"><span class="toc-text">三. 正则表达式总结</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-基本语法"><span class="toc-text">1. 基本语法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-元字符"><span class="toc-text">1): 元字符</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-转义"><span class="toc-text">2): 转义</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-重复"><span class="toc-text">3): 重复</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-分组-捕获-断言"><span class="toc-text">4): 分组(捕获)断言</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-贪婪与非贪婪"><span class="toc-text">5): 贪婪与非贪婪</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#6-引擎选项"><span class="toc-text">6): 引擎选项</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Java中使用正则表达式"><span class="toc-text">2. Java中使用正则表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-正则表达式实例"><span class="toc-text">1): 正则表达式实例</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-Java中关于正则表达式的API"><span class="toc-text">2): Java中关于正则表达式的API</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#Pattern-java-util-regex-Pattern"><span class="toc-text">Pattern: java.util.regex.Pattern</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#Matcher-java-util-regex-Matcher"><span class="toc-text">Matcher: java.util.regex.Matcher</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四-附录"><span class="toc-text">四. 附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>女朋友最近要用到电力系统分析相关的一些数据, 但是用到的BPA软件生成的文件有好几个, 八万多行的文件都有. 每次处理起来都是自己手动输入, 很是麻烦. 我今天一看, 不就是基本的文件I/O加上正则表达嘛, 这又什么难得, Python走起!</p>
+<a id="more"></a>
+
+<h3 id="一-需求分析"><a href="#一-需求分析" class="headerlink" title="一. 需求分析"></a>一. 需求分析</h3><p>多个类似于:</p>
+<pre><code># File name: 33bpa.lis
+
+Wall clock : Sun Sep 08 09:52:36 2019
+
+&lt;MULTI_NODE_EQUAL_RESULT&gt;
+.#      ???             ??????            ??????           ??????             ??????
+.#                     G0+jB0(p.u.)        G1+jB1(p.u.)        G2+jB2(p.u.)       Im(kA)  Ia(deg)
+.#----------------  ------------------  ------------------  ------------------  ------------------
+B &quot;BUS-30  &quot; 100.0    0.0000    0.0000    3.4355  -51.9441    3.2023  -52.7944   30.0554  -86.2160
+B &quot;BUS-31  &quot; 100.0    0.0000    0.0000    3.9110  -30.8303    3.5087  -33.5190   17.9425  -82.7702
+B &quot;BUS-32  &quot; 100.0    0.0000    0.0000    3.6146  -36.5561    3.2913  -38.7305   21.2086  -84.3531
+........................</code></pre><pre><code>SWING CASE: 39测试     POWERFLOW CASE: 039bpa             * * *  输 出 信 息  * * *                            Date: 2019-09-06
+
+ * 发电机&quot;BUS-30   100.0 &quot;输出数据列表
+
+     功角        (度)              最大值 =   -51.3867/   74.0          最小值 =   -51.3869/  186.0          参考发电机    BUS-31   100.0  
+     0.0  -51.3868       0.0  -51.3868       1.0  -51.3868       2.0  -51.3868       3.0  -51.3868       4.0  -51.3867       5.0  -51.3867       6.0  -51.3867
+     7.0  -51.3867       8.0  -51.3867       9.0  -51.3867      10.0  -51.3867      11.0  -51.3868      12.0  -51.3868      13.0  -51.3868      14.0  -51.3868
+    15.0  -51.3868      16.0  -51.3868      17.0  -51.3868      18.0  -51.3868      19.0  -51.3868      20.0  -51.3868      21.0  -51.3868      22.0  -51.3868
+    23.0  -51.3868      24.0  -51.3868      25.0  -51.3868      26.0  -51.3868      27.0  -51.3868      28.0  -51.3868      29.0  -51.3868      30.0  -51.3868
+    31.0  -51.3868      32.0  -51.3868      33.0  -51.3868      34.0  -51.3868      35.0  -51.3868      36.0  -51.3868      37.0  -51.3868      38.0  -51.3868
+    39.0  -51.3868      40.0  -51.3868      41.0  -51.3868      42.0  -51.3868      43.0  -51.3868      44.0  -51.3868      45.0  -51.3868      46.0  -51.3868
+    47.0  -51.3868      48.0  -51.3868      49.0  -51.3868      50.0  -51.3868      51.0  -51.3868      52.0  -51.3868      53.0  -51.3868      54.0  -51.3868
+    55.0  -51.3868      56.0  -51.3868      57.0  -51.3868      58.0  -51.3868      59.0  -51.3868      60.0  -51.3868      61.0  -51.3868      62.0  -51.3868
+    ......................</code></pre><p>这样的文件中提取某些参数, 并构建对应的矩阵, 包括对称矩阵等.</p>
+<h3 id="二-实现分析"><a href="#二-实现分析" class="headerlink" title="二. 实现分析"></a>二. 实现分析</h3><h4 id="1-构建配置文件"><a href="#1-构建配置文件" class="headerlink" title="1. 构建配置文件:"></a>1. 构建配置文件:</h4><p>首先创建config.json配置文件, 今后从此文件中读取配置, 而不用在源码上进行修改!</p>
+<pre><code class="json">{
+    &quot;data_folder&quot;: &quot;E:\\BPA_generator&quot;,
+    &quot;out_file&quot;: &quot;ieee90.OUT&quot;,
+    &quot;swi_file&quot;: &quot;IEEE90.SWI&quot;,
+    &quot;lis_file&quot;: &quot;ieee90.lis&quot;,
+
+    &quot;motor_number&quot;: [1,2,3],
+    &quot;fault_time&quot;: 1,
+
+    &quot;save_to&quot;: &quot;.\\generate.txt&quot;
+}</code></pre>
+<p>在python中读取配置:</p>
+<pre><code class="python"># 读入配置文件
+with open(&quot;config.json&quot;) as f:
+    config = json.load(f)
+    data_folder = config[&quot;data_folder&quot;]
+    out_file = config[&quot;out_file&quot;]
+    swi_file = config[&quot;swi_file&quot;]
+    lis_file = config[&quot;lis_file&quot;]
+
+    motor_number = config[&quot;motor_number&quot;]
+    fault_time = float(config[&quot;fault_time&quot;])
+
+    motor_dict = dict()
+    for i in range(len(motor_number)):
+        motor_dict[motor_number[i]] = i
+
+    save_to = config[&quot;save_to&quot;]</code></pre>
+<p>其中motor_dict用于构建将给定的发电机序号与数组下标进行一一对应的反向索引! 这样可以在寻找到对应的发电机数据后, 写入对应的结果数组!</p>
+<h4 id="2-分析"><a href="#2-分析" class="headerlink" title="2. 分析"></a>2. 分析</h4><h5 id="1-OUT文件"><a href="#1-OUT文件" class="headerlink" title="1): *.OUT文件"></a>1): *.OUT文件</h5><pre><code>SWING CASE: 39测试     POWERFLOW CASE: 039bpa             * * *  输 出 信 息  * * *                            Date: 2019-09-06
+
+ * 发电机&quot;BUS-30   100.0 &quot;输出数据列表
+
+     功角        (度)              最大值 =   -51.3867/   74.0          最小值 =   -51.3869/  186.0          参考发电机    BUS-31   100.0  
+     0.0  -51.3868       0.0  -51.3868       1.0  -51.3868       2.0  -51.3868       3.0  -51.3868       4.0  -51.3867       5.0  -51.3867       6.0  -51.3867
+     7.0  -51.3867       8.0  -51.3867       9.0  -51.3867      10.0  -51.3867      11.0  -51.3868      12.0  -51.3868      13.0  -51.3868      14.0  -51.3868
+    15.0  -51.3868      16.0  -51.3868      17.0  -51.3868      18.0  -51.3868      19.0  -51.3868      20.0  -51.3868      21.0  -51.3868      22.0  -51.3868
+    23.0  -51.3868      24.0  -51.3868      25.0  -51.3868      26.0  -51.3868      27.0  -51.3868      28.0  -51.3868      29.0  -51.3868      30.0  -51.3868
+    31.0  -51.3868      32.0  -51.3868      33.0  -51.3868      34.0  -51.3868      35.0  -51.3868      36.0  -51.3868      37.0  -51.3868      38.0  -51.3868
+    39.0  -51.3868      40.0  -51.3868      41.0  -51.3868      42.0  -51.3868      43.0  -51.3868      44.0  -51.3868      45.0  -51.3868      46.0  -51.3868
+    47.0  -51.3868      48.0  -51.3868      49.0  -51.3868      50.0  -51.3868      51.0  -51.3868      52.0  -51.3868      53.0  -51.3868      54.0  -51.3868
+    55.0  -51.3868      56.0  -51.3868      57.0  -51.3868      58.0  -51.3868      59.0  -51.3868      60.0  -51.3868      61.0  -51.3868      62.0  -51.3868
+
+       速度偏差      (Hz)              最大值 =    14.8872/  295.0          最小值 =     0.0000/    0.0
+     0.0    0.0000       0.0    0.0000       1.0    0.1273       2.0    0.2546       3.0    0.3820       4.0    0.5094       5.0    0.6368       6.0    0.7643
+     7.0    0.8919       8.0    1.0196       9.0    1.1474      10.0    1.2755      10.0    1.2755      11.0    1.2734      12.0    1.2599      13.0    1.2395
+    14.0    1.2154      15.0    1.1896      16.0    1.1639      17.0    1.1392      18.0    1.1166      19.0    1.0967      20.0    1.0802      21.0    1.0675
+    22.0    1.0590      23.0    1.0548      24.0    1.0553      25.0    1.0606      26.0    1.0708      27.0    1.0860      28.0    1.1062      29.0    1.1314
+    30.0    1.1617      31.0    1.1971      32.0    1.2377      33.0    1.2838      34.0    1.3355      35.0    1.3932      36.0    1.4575      37.0    1.5291
+    38.0    1.6088      39.0    1.6979      40.0    1.7977      41.0    1.9098      42.0    2.0361      43.0    2.1784      44.0    2.3388      45.0    2.5186
+    46.0    2.7182      47.0    2.9362      48.0    3.1684      49.0    3.4068      50.0    3.6398      51.0    3.8528      52.0    4.0308      53.0    4.1620
+    ......................</code></pre><p>*.OUT类型文件如上所示, 要求找出功角数据下面的与配置文件中给定的初始故障数据相同的数据, 如: 1: -51.3868.</p>
+<p><strong>分析:</strong> 由于有多台发电机都有这样的数据, 且有可能出现功角, 转速等多个条目, 但是功角一定是首个出现的条目. 所以可以先通过正则表达式寻找到: <em>发电机”BUS-30   100.0 “输出数据列表</em> 字段, 然后再按行找到对应的时间, 加入结果集即可.(这里用到了正则分隔.)</p>
+<p>代码:</p>
+<pre><code class="python">############# 1. 故障时各台电机功角 #################
+fault_power_angle = list()
+
+# 读取发电机功角行向量
+with open(data_folder + &quot;\\&quot; + out_file, &#39;r&#39;, encoding=&#39;gbk&#39;) as f:
+    find_flag = False
+    for line in f:
+        line = line.strip()
+        if line.find(&#39;发电机&#39;) &gt;= 0 and line.find(&#39;输出数据列表&#39;) &gt;= 0:
+            motor_index = int(re.findall(r&quot;\d+\.?\d*&quot;, line)[0])
+            if (motor_number.__contains__(motor_index)):
+                find_flag = True
+                continue
+
+        if find_flag:
+            line_data = [x.strip() for x in re.split(r&quot; +&quot;, line)]
+            if len(line_data) &lt; 8 or not is_all_float(line_data): 
+                continue
+            line_data = [float(x) for x in line_data]
+            # 寻找故障停止时间的功角
+            for i in range(0, len(line_data), 2):
+                time = line_data[i]
+                power_angle = line_data[i + 1]
+
+                if time == fault_time:
+                    fault_power_angle.append(power_angle)
+                    find_flag = False
+                    break
+
+# print(fault_power_angle)</code></pre>
+<ol>
+<li><p>按行读入文件(注: 在win下生成的文件为<code>gbk</code>编码, 所以需要添加encoding), 并判断是否包含相应的字符串<font color="#FF0000">使用<code>str.find()</code>方法</font>;</p>
+</li>
+<li><p>一旦发现了数据标题标志, 将标题中的电机序号提出:</p>
+<pre><code class="python"># 原字符串为: *发电机&quot;BUS-30   100.0 &quot;输出数据列表*
+motor_index = int(re.findall(r&quot;\d+\.?\d*&quot;, line)[0])</code></pre>
+<p>使用<strong>[\d+.?\d*]</strong>可以提取类似于: [数字.数字****]的效果(其中小数点: .可要可不要!)</p>
+</li>
+<li><p>如果提取出的电机序号在给定的电机需求之内<code>list.\__contains__(e)</code>, 则将<code>find_flag</code>置为<code>True</code>, 此时表示, 要在接下来的数据中寻找所需的数据!</p>
+</li>
+<li><p>当<code>find_flag</code>被置为<code>True</code>后, 表示接下来的数据可以在下文中找到!</p>
+</li>
+<li><p>分析每一行的数据, 将数据按照<font color="#FF0000">多个空格为间隔拆分为多个数据.</font> </p>
+</li>
+<li><p>如果处理过的数据长度小于8(正常的数据应当每行为8个), 或者不全为float类型, 则这一行数据不合法! 判断<font color="#FF0000">数据是否为浮点数的函数:</font></p>
+<pre><code class="python"># 字符串小数判断
+def is_float(str):
+    if str.count(&#39;.&#39;) == 1: #小数有且仅有一个小数点
+        left = str.split(&#39;.&#39;)[0]  #小数点左边（整数位，可为正或负）
+        right = str.split(&#39;.&#39;)[1]  #小数点右边（小数位，一定为正）
+        lright = &#39;&#39; #取整数位的绝对值（排除掉负号）
+        if str.count(&#39;-&#39;) == 1 and str[0] == &#39;-&#39;: #如果整数位为负，则第一个元素一定是负号
+            lright = left.split(&#39;-&#39;)[1]
+        elif str.count(&#39;-&#39;) == 0:
+            lright = left
+        else:
+            return False
+        if right.isdigit() and lright.isdigit(): #判断整数位的绝对值和小数位是否全部为数字
+            return True
+        else:
+            return False
+    else:
+        return False
+
+# 判断一整行的数据是否都为浮点数
+def is_all_float(arr):
+    for s in arr:
+        if not is_float(s):
+            return False
+    return True
+</code></pre>
+</li>
+<li><p>如果这一簇数据符合条件, 则将数据全部浮点数化:</p>
+<pre><code class="python">line_data = [float(x) for x in line_data]</code></pre>
+</li>
+<li><p>之后寻找故障停止时间的功角数据, 由于数据为两个一组, 所以构建(0, len, 2)步长为2的index索引, 并寻找</p>
+</li>
+<li><p>一旦找到, 就将数据结果加入结果集中, 并将find_flag标志位清空.</p>
+</li>
+</ol>
+<h5 id="2-lis文件"><a href="#2-lis文件" class="headerlink" title="2): *.lis文件"></a>2): *.lis文件</h5><pre><code># File name: 33bpa.lis
+
+Wall clock : Sun Sep 08 09:52:36 2019
+
+&lt;MULTI_NODE_EQUAL_RESULT&gt;
+.#      ???             ??????            ??????           ??????             ??????
+.#                     G0+jB0(p.u.)        G1+jB1(p.u.)        G2+jB2(p.u.)       Im(kA)  Ia(deg)
+.#----------------  ------------------  ------------------  ------------------  ------------------
+B &quot;BUS-30  &quot; 100.0    0.0000    0.0000    3.4355  -51.9441    3.2023  -52.7944   30.0554  -86.2160
+B &quot;BUS-31  &quot; 100.0    0.0000    0.0000    3.9110  -30.8303    3.5087  -33.5190   17.9425  -82.7702
+B &quot;BUS-32  &quot; 100.0    0.0000    0.0000    3.6146  -36.5561    3.2913  -38.7305   21.2086  -84.3531
+........................</code></pre><p><code>*.lis</code>文件格式如上所示, 要求提取指定行的<code>R</code>与<code>jX</code>的数据. 并构建对称矩阵.</p>
+<pre><code class="py">############# 2. 正序阻抗 R与X  #################
+row = len(motor_number)
+col = len(motor_number)
+
+r_resistance_matrix = [[0] * row for c in range(col)]
+x_resistance_matrix = [[0] * row for c in range(col)]
+
+with open(data_folder + &quot;\\&quot; + lis_file, &#39;r&#39;, encoding=&#39;gbk&#39;) as f:
+    for line in f:
+        line = line.strip().replace(&quot;\&quot;&quot;, &quot;&quot;)
+        line_data = [x.strip() for x in re.split(r&quot; +&quot;, line)]
+        if line_data[0] != &quot;L&quot;:
+            continue
+
+        data_from = motor_dict[int(re.sub(r&quot;\D&quot;, &quot;&quot;, line_data[1]))]
+        data_to = motor_dict[int(re.sub(r&quot;\D&quot;, &quot;&quot;, line_data[3]))]
+        r = float(line_data[-4])
+        x = float(line_data[-3])
+
+        r_resistance_matrix[data_from][data_to] = r
+        x_resistance_matrix[data_from][data_to] = x
+
+    for i in range(row):
+        for j in range(col):
+            r_resistance_matrix[j][i] = r_resistance_matrix[i][j]
+            x_resistance_matrix[j][i] = x_resistance_matrix[i][j]
+
+# print(r_resistance_matrix)
+# print(x_resistance_matrix)</code></pre>
+<p>代码如上所示.</p>
+<ol>
+<li><p><font color="#FF0000">首先构建输出的矩阵NxN矩阵</font></p>
+<pre><code class="python">r_resistance_matrix = [[0] * row for c in range(col)]
+x_resistance_matrix = [[0] * row for c in range(col)]</code></pre>
+</li>
+<li><p>按行读入文件, 并进行数据预处理: <font color="#FF0000">删去前后空格, 替换多余符号, 拆分数据等</font></p>
+</li>
+<li><p>判断分隔的行首个所需字符为: <code>&quot;L&quot;</code></p>
+</li>
+<li><p>当满足条件时, 可以通过正则表达式提取数字:<font color="#FF0000">通过将非数字字符替换为空字符!</font></p>
+<pre><code class="python">data_from = motor_dict[int(re.sub(r&quot;\D&quot;, &quot;&quot;, line_data[1]))]
+data_to = motor_dict[int(re.sub(r&quot;\D&quot;, &quot;&quot;, line_data[3]))]</code></pre>
+<p>其中: <code>\D</code> 表示非数字字符</p>
+</li>
+<li><p>最终提取所需数据, 并通过反向索引字典, 找到对应的结果index位置, 加入!</p>
+</li>
+<li><p>最后, 根据上三角矩阵, <code>生成对角矩阵</code></p>
+<pre><code class="python">for i in range(row):
+    for j in range(col):
+        r_resistance_matrix[j][i] = r_resistance_matrix[i][j]
+        x_resistance_matrix[j][i] = x_resistance_matrix[i][j]</code></pre>
+</li>
+</ol>
+<h5 id="3-swi文件"><a href="#3-swi文件" class="headerlink" title="3): *.swi文件"></a>3): *.swi文件</h5><p>有了以上处理方法, 处理最后一个文件显得很是简单!</p>
+<pre><code class="python">############# 3. 发电机动能/平衡交流节点电压  #################
+node_voltage = list()
+motivate_energy = list()
+
+
+with open(data_folder + &quot;\\&quot; + swi_file, &#39;r&#39;, encoding=&#39;gbk&#39;) as f:
+    for line in f:
+        line = line.strip().replace(&quot;\&quot;&quot;, &quot;&quot;)
+        line_data = [x.strip() for x in re.split(r&quot; +&quot;, line)]
+        if line_data[0] != &quot;MF&quot;:
+            continue
+
+        node_voltage.append(float(line_data[2]))
+        motivate_energy.append(float(line_data[3]))
+
+# print(node_voltage)
+# print(motivate_energy)</code></pre>
+<h5 id="4-保存文件"><a href="#4-保存文件" class="headerlink" title="4): 保存文件"></a>4): 保存文件</h5><p>将文件按照配置路径保存为<code>*.txt</code>格式即可!</p>
+<pre><code class="python">def format_matrix(s):
+    return s.replace(&quot;], [&quot;, &quot;;&quot;)
+
+############# 4. 保存 #################
+with open(save_to, &#39;w&#39;) as f:
+    f.write(&quot;############# 1. 故障时各台电机功角 #################\n&quot;)
+    f.write(str(fault_power_angle) + &quot;\n\n&quot;)
+    f.write(&quot;############# 2. 正序阻抗 R与X  #################\n&quot;)
+    f.write(&quot;# 1. 电阻\n&quot;)
+    f.write(format_matrix(str(r_resistance_matrix))[1:-1] + &quot;\n\n&quot;)
+    f.write(&quot;# 2. 电抗\n&quot;)
+    f.write(format_matrix(str(x_resistance_matrix))[1:-1] + &quot;\n\n&quot;)
+    f.write(&quot;############# 3. 发电机动能/平衡交流节点电压  #################\n&quot;)
+    f.write(&quot;# 1. 节点电压\n&quot;)
+    f.write(str(node_voltage) + &quot;\n\n&quot;)
+    f.write(&quot;# 2. 动能\n&quot;)
+    f.write(str(motivate_energy) + &quot;\n&quot;)
+
+print(&quot;生成成功!&quot;)</code></pre>
+<p>此处由于保存时, <em>需要保存为MATLAB中的矩阵输入格式</em>, 所以, 可以通过将Python中的数组字符串之间的<code>], [</code>替换为<code>;</code>并删除前后多余的<code>[</code>和<code>]</code>即可!</p>
+<h3 id="三-正则表达式总结"><a href="#三-正则表达式总结" class="headerlink" title="三. 正则表达式总结"></a>三. 正则表达式总结</h3><h4 id="1-基本语法"><a href="#1-基本语法" class="headerlink" title="1. 基本语法"></a>1. 基本语法</h4><h5 id="1-元字符"><a href="#1-元字符" class="headerlink" title="1): 元字符"></a>1): 元字符</h5><table>
+<thead>
+<tr>
+<th>代码</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>.</td>
+<td>匹配除换行符外任意一个字符</td>
+<td></td>
+</tr>
+<tr>
+<td>[abc]</td>
+<td>字符集合，只能表示一个字符位置。匹配所包含的任意一个字符</td>
+<td></td>
+</tr>
+<tr>
+<td>[^abc]</td>
+<td>字符集合，只能表示一个字符位置。匹配<font color="#FF0000">除去集合内字符的任意一个字符</font></td>
+<td></td>
+</tr>
+<tr>
+<td>[a-z]</td>
+<td>字符范围，一个集合，表示一个字符位置匹配所包含的任意一个字符</td>
+<td></td>
+</tr>
+<tr>
+<td>[^a-z]</td>
+<td>字符范围，一个集合，表示一个字符位置匹配除去集合内字符的任意一个字符</td>
+<td></td>
+</tr>
+<tr>
+<td>\b</td>
+<td>匹配单词的边界</td>
+<td></td>
+</tr>
+<tr>
+<td>\B</td>
+<td>不匹配单词的边界</td>
+<td></td>
+</tr>
+<tr>
+<td>\d</td>
+<td>等同[0-9] 匹配一位数字</td>
+<td></td>
+</tr>
+<tr>
+<td>\D</td>
+<td>等同<code>[^0-9]</code>匹配一位非数字</td>
+<td></td>
+</tr>
+<tr>
+<td>\s</td>
+<td>匹配1位空白字符，包括换行符、制表符、空格等同[\f\r\n\t\v]</td>
+<td></td>
+</tr>
+<tr>
+<td>\S</td>
+<td>匹配1位非空白字符</td>
+<td></td>
+</tr>
+<tr>
+<td>\w</td>
+<td><font color="#FF0000">等同[a-zA-Z0-9_] 包含中文</font></td>
+<td></td>
+</tr>
+<tr>
+<td>\W</td>
+<td>匹配\w之外的字符</td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="2-转义"><a href="#2-转义" class="headerlink" title="2): 转义"></a>2): 转义</h5><ul>
+<li>凡是在正则表达式中有特殊意义的符号，转义时使用\</li>
+</ul>
+<h5 id="3-重复"><a href="#3-重复" class="headerlink" title="3): 重复"></a>3): 重复</h5><table>
+<thead>
+<tr>
+<th>代码</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>*</td>
+<td>前面的正则表达式重复0次或多次</td>
+<td></td>
+</tr>
+<tr>
+<td>+</td>
+<td>前面的正则表达式重复至少一次</td>
+<td></td>
+</tr>
+<tr>
+<td>？</td>
+<td>前面的正则表达式重复0次或1次</td>
+<td></td>
+</tr>
+<tr>
+<td>{n}</td>
+<td>重复n次</td>
+<td></td>
+</tr>
+<tr>
+<td>{n,}</td>
+<td>重复n次以上</td>
+<td></td>
+</tr>
+<tr>
+<td>{n,m}</td>
+<td>重复n到m次</td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="4-分组-捕获-断言"><a href="#4-分组-捕获-断言" class="headerlink" title="4): 分组(捕获)断言"></a>4): 分组(捕获)断言</h5><table>
+<thead>
+<tr>
+<th>代码</th>
+<th>说明</th>
+<th>举例</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>y</td>
+<td>匹配x或y</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(pattern)</td>
+<td>分组（捕获）后会自动分配组号从1开始可以改变优先级 \数字 匹配对应的分组（指的是前一个匹配上的分组的内容）</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?:pattern)</td>
+<td>只改变优先级不分组</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?<name>exp)(?nameexp)</name></td>
+<td>分组捕获 给组命名Python句法为(?P<name>exp)</name></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?=exp)</td>
+<td>零宽度正预测先行断言断言exp一定在匹配的右边出现</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?&lt;=exp)</td>
+<td>零宽度正回顾后发断言断言exp一定出现在匹配的左边出现</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?!exp)</td>
+<td>零宽度负预测先行断言断言exp一定不会出现在右侧</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?&lt;!exp)</td>
+<td>零宽度负回顾后发断言断言exp一定不会出现在左侧</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>(?#comment)</td>
+<td>注释</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>断言不会占用分组号</p>
+<h5 id="5-贪婪与非贪婪"><a href="#5-贪婪与非贪婪" class="headerlink" title="5): 贪婪与非贪婪"></a>5): 贪婪与非贪婪</h5><ul>
+<li>默认贪婪模式，尽可能多的匹配字符串</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>*?</td>
+<td>匹配任意次，尽可能少重复</td>
+<td></td>
+</tr>
+<tr>
+<td>+?</td>
+<td>匹配至少一次，尽可能少重复</td>
+<td></td>
+</tr>
+<tr>
+<td>??</td>
+<td>匹配0或1次，尽可能少重复</td>
+<td></td>
+</tr>
+<tr>
+<td>{n}?</td>
+<td>匹配至少n次，尽可能少重复</td>
+<td></td>
+</tr>
+<tr>
+<td>{n,m}?</td>
+<td>匹配至少n次，至多m次，尽可能少重复</td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="6-引擎选项"><a href="#6-引擎选项" class="headerlink" title="6): 引擎选项"></a>6): 引擎选项</h5><table>
+<thead>
+<tr>
+<th>代码</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IgnoreCase</td>
+<td>匹配时忽略大小写</td>
+<td>re.Ire.IGNORECASE</td>
+</tr>
+<tr>
+<td>Singleline</td>
+<td>单行模式，可穿透/n</td>
+<td>re.Sre.DOTALL</td>
+</tr>
+<tr>
+<td>Multiline</td>
+<td>多行模式</td>
+<td>re.Mre.MULTILINE</td>
+</tr>
+<tr>
+<td>IgnorePatternWhitespace</td>
+<td>忽略表达式中空白字符，若要使用空白字符</td>
+<td>re.Xre.VERBOSE</td>
+</tr>
+</tbody></table>
+<p>代码 说明 举例</p>
+<p><code>IgnoreCase</code> 匹配时忽略大小写 <code>re.Ire.IGNORECASE</code></p>
+<p><code>Singleline</code> 单行模式，可穿透<code>/n</code> <code>re.Sre.DOTALL</code></p>
+<p><code>Multiline</code> 多行模式 <code>re.Mre.MULTILINE</code></p>
+<p><code>IgnorePatternWhitespace</code> 忽略表达式中空白字符，若要使用空白字符 <code>re.Xre.VERBOSE</code></p>
+<h4 id="2-Java中使用正则表达式"><a href="#2-Java中使用正则表达式" class="headerlink" title="2. Java中使用正则表达式"></a>2. Java中使用正则表达式</h4><p>Java 提供了功能强大的正则表达式API，在<code>java.util.regex</code> 包下.</p>
+<h5 id="1-正则表达式实例"><a href="#1-正则表达式实例" class="headerlink" title="1): 正则表达式实例"></a>1): 正则表达式实例</h5><p>下面是一个简单的Java正则表达式的例子，用于在文本中搜索 <code>http://</code></p>
+<pre><code class="java">String text =  &quot;This is the text to be searched &quot; +
+        &quot;for occurrences of the http:// pattern.&quot;;
+String pattern = &quot;.*http://.*&quot;;
+boolean matches = Pattern.matches(pattern, text);
+System.out.println(&quot;matches = &quot; + matches);ches = &quot; + matches);</code></pre>
+<p>示例代码实际上没有检测找到的 <code>http://</code> 是否是一个合法超链接的一部分,如包含域名和后缀(<code>.com</code>,<code>.net</code> 等等)。代码只是简单的查找字符串 <code>http://</code> <em>是否出现</em>。</p>
+<h5 id="2-Java中关于正则表达式的API"><a href="#2-Java中关于正则表达式的API" class="headerlink" title="2): Java中关于正则表达式的API"></a>2): Java中关于正则表达式的API</h5><h6 id="Pattern-java-util-regex-Pattern"><a href="#Pattern-java-util-regex-Pattern" class="headerlink" title="Pattern: java.util.regex.Pattern"></a><strong>Pattern: java.util.regex.Pattern</strong></h6><p>类 <code>java.util.regex.Pattern</code> 简称 <code>Pattern</code>, 是Java正则表达式API中的<strong>主要入口</strong>，无论何时,需要使用正则表达式,从Pattern 类开始!</p>
+<ul>
+<li><strong>Pattern.matches()</strong></li>
+</ul>
+<p>检查一个正则表达式的模式<font color="#FF0000">是否匹配一段文本的最直接方法是调用<code>静态方法Pattern.matches()</code></font>,示例如下:</p>
+<pre><code class="java">String text    =
+        &quot;This is the text to be searched for occurrences of the pattern.&quot;;
+String pattern = &quot;.*is.*&quot;;
+boolean matches = Pattern.matches(pattern, text);
+System.out.println(&quot;matches = &quot; + matches);
+// true</code></pre>
+<p>上面代码在变量 text 中查找单词 “is” 是否出现，允许”is” 前后包含 0或多个字符(由 .* 指定).<br><font color="#FF0000">Pattern.matches() 方法适用于检查一个模式在一个文本中出现一次的情况，或适用于Pattern类的默认设置。</font></p>
+<p>如果<strong>需要匹配多次出现,甚至输出不同的匹配文本，或者只是需要非默认设置.</strong>需要通过Pattern.compile() 方法得到一个Pattern 实例。</p>
+<ul>
+<li><strong>Pattern.compile()</strong></li>
+</ul>
+<p>如果需要匹配一个正则表达式在文本中多次出现，需要通过<code>Pattern.compile()</code> 方法创建一个Pattern对象。示例如下</p>
+<pre><code class="java">String text    =
+        &quot;This is the text to be searched &quot; +
+        &quot;for occurrences of the http:// pattern.&quot;;
+String patternString = &quot;.*http://.*&quot;;
+Pattern pattern = Pattern.compile(patternString);</code></pre>
+<p>可以在Compile 方法中，指定一个特殊标志：<code>Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);</code><br>Pattern 类包含多个标志(int 类型),这些标志可以<code>控制Pattern 匹配模式的方式</code>。上面代码中的标志使模式匹配是忽略大小写.</p>
+<ul>
+<li><strong>Pattern.matcher()</strong></li>
+</ul>
+<p>一旦获得了Pattern对象，接着可以获得Matcher对象。Matcher 示例用于匹配文本中的模式.示例如下<br><code>Matcher matcher = pattern.matcher(text);</code></p>
+<p>Matcher类有一个matches()方法，可以检查文本是否匹配模式。以下是关于Matcher的一个完整例子.</p>
+<pre><code class="java">String text    =
+        &quot;This is the text to be searched &quot; +
+        &quot;for occurrences of the http:// pattern.&quot;;
+String patternString = &quot;.*http://.*&quot;;
+Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+Matcher matcher = pattern.matcher(text);
+boolean matches = matcher.matches();
+System.out.println(&quot;matches = &quot; + matches);</code></pre>
+<ul>
+<li><strong>Pattern.split()</strong></li>
+</ul>
+<p>Pattern 类的 split()方法，可以用正则表达式作为分隔符，把文本分割为String类型的数组。示例：</p>
+<pre><code class="java">String text = &quot;A sep Text sep With sep Many sep Separators&quot;;
+String patternString = &quot;sep&quot;;
+Pattern pattern = Pattern.compile(patternString);
+String[] split = pattern.split(text);
+System.out.println(&quot;split.length = &quot; + split.length);
+for(String element : split){
+    System.out.println(&quot;element = &quot; + element);
+}</code></pre>
+<p>上例中把text 文本分割为一个包含5个字符串的数组。</p>
+<ul>
+<li><strong>Pattern.pattern()</strong></li>
+</ul>
+<p>Pattern 类的 pattern 返回用于创建Pattern 对象的正则表达式,示例：</p>
+<pre><code class="java">String patternString = &quot;sep&quot;;
+Pattern pattern = Pattern.compile(patternString);
+String pattern2 = pattern.pattern();</code></pre>
+<p>上面代码中 pattern2 值为sep ，与patternString 变量相同。</p>
+<h6 id="Matcher-java-util-regex-Matcher"><a href="#Matcher-java-util-regex-Matcher" class="headerlink" title="Matcher: java.util.regex.Matcher"></a><strong>Matcher: java.util.regex.Matcher</strong></h6><p><code>java.util.regex.Matcher</code> 类用于匹配一段文本中多次出现一个正则表达式，<code>Matcher</code> 也适用于多文本中匹配同一个正则表达式。</p>
+<p><code>Matcher</code> 有很多有用的方法，详细请参考官方<code>JavaDoc</code>。这里只介绍核心方法。</p>
+<p>以下代码演示如何使用Matcher</p>
+<pre><code class="java">String text  =  &quot;This is the text to be searched for occurrences of the http:// pattern.&quot;;
+String patternString = &quot;.*http://.*&quot;;
+Pattern pattern = Pattern.compile(patternString);
+Matcher matcher = pattern.matcher(text);
+boolean matches = matcher.matches();</code></pre>
+<p>首先创建一个Pattern，然后得到Matcher ，调用matches() 方法，返回true 表示模式匹配，返回false表示不匹配。<br>        可以用Matcher 做更多的事。</p>
+<ul>
+<li><strong>创建Matcher</strong></li>
+</ul>
+<p>通过Pattern 的matcher() 方法创建一个Matcher。</p>
+<pre><code class="java">String text    =
+        &quot;This is the text to be searched &quot; +
+        &quot;for occurrences of the http:// pattern.&quot;;
+
+String patternString = &quot;.*http://.*&quot;;
+Pattern pattern = Pattern.compile(patternString);
+Matcher matcher = pattern.matcher(text);</code></pre>
+<ul>
+<li><strong>matches()</strong></li>
+</ul>
+<p>Matcher 类的 matches() 方法用于在文本中匹配正则表达式</p>
+<pre><code class="java">boolean matches = matcher.matches();</code></pre>
+<p>如果文本匹配正则表达式，matches() 方法返回true。否则返回false。</p>
+<p>matches() 方法不能用于查找正则表达式多次出现。如果需要，请使用find(), start() 和 end() 方法。</p>
+<ul>
+<li><strong>lookingAt()</strong></li>
+</ul>
+<p><code>lookingAt()</code> 与<code>matches()</code> 方法类似，最大的不同是，<code>lookingAt()</code>方法对<font color="#FF0000">文本的开头匹配</font>正则表达式；</p>
+<p>而<code>matches()</code> 对整个文本匹配正则表达式。换句话说，如果正则表达式匹配文本开头而不匹配整个文本,<code>lookingAt()</code> 返回<code>true</code>,而<code>matches()</code> 返回<code>false</code>。 示例：</p>
+<pre><code class="java">String text    =
+        &quot;This is the text to be searched &quot; +
+        &quot;for occurrences of the http:// pattern.&quot;;
+String patternString = &quot;This is the&quot;;
+Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+Matcher matcher = pattern.matcher(text);
+System.out.println(&quot;lookingAt = &quot; + matcher.lookingAt());
+System.out.println(&quot;matches   = &quot; + matcher.matches());</code></pre>
+<p>上面的例子分别对文本开头和整个文本匹配正则表达式 <code>“this is the”</code>. 匹配文本开头的方法<code>lookingAt()</code> 返回true。</p>
+<p>对整个文本匹配正则表达式的方法 <code>matches()</code> 返回<code>false</code>，<font color="#FF0000">因为整个文本包含多余的字符,而 正则表达式要求文本<code>精确匹配&quot;this is the&quot;</code>,前后又不能有额外字符。</font></p>
+<ul>
+<li><strong>find() + start() + end()</strong></li>
+</ul>
+<p><code>find()</code> 方法用于在文本中查找出现的正则表达式，文本是创建<code>Matcher</code>时，通过 <code>Pattern.matcher(text)</code> 方法传入的。<font color="#FF0000">如果在文本中多次匹配，<code>find()</code> 方法返回第一个，之后每次调用 <code>find()</code> 都会返回下一个。</font></p>
+<p><font color="#00ff00"><code>start()</code> 和 <code>end()</code> 返回每次匹配的字串在整个文本中的开始和结束位置。</font><font color="#ff0000">实际上, <code>end()</code> 返回的是字符串末尾的后一位</font>，这样，可以在把 <code>start()</code> 和 <code>end()</code> 的返回值直接用在<code>String.substring()</code> 里。</p>
+<pre><code class="java">String text    =
+        &quot;This is the text which is to be searched &quot; +
+        &quot;for occurrences of the word &#39;is&#39;.&quot;;
+String patternString = &quot;is&quot;;
+Pattern pattern = Pattern.compile(patternString);
+Matcher matcher = pattern.matcher(text);
+int count = 0;
+while(matcher.find()) {
+    count++;
+    System.out.println(&quot;found: &quot; + count + &quot; : &quot;  + matcher.start() + &quot; - &quot; + matcher.end());
+}
+
+</code></pre>
+<p>这个例子在文本中找到模式 “is” 4次，输出如下:</p>
+<pre><code>found: 1 : 2 - 4
+found: 2 : 5 - 7
+found: 3 : 23 - 25
+found: 4 : 70 - 72</code></pre><ul>
+<li><strong>reset()</strong></li>
+</ul>
+<p><font color="#00ff00"><code>reset()</code> 方法会重置<code>Matcher</code> 内部的 匹配状态。当<code>find()</code> 方法开始匹配时,Matcher 内部会记录截至当前查找的距离。调用 <code>reset()</code> 会重新从文本开头查找。</font></p>
+<p>也可以调用 <code>reset(CharSequence)</code> 方法. 这个方法重置<code>Matcher</code>,同时把一个新的字符串作为参数传入，用于代替创建 Matcher 的原始字符串。</p>
+<ul>
+<li><strong>group()</strong></li>
+</ul>
+<p>假设想在一个文本中<code>查找URL链接</code>，并且想把找到的链接提取出来。当然可以通过 <code>start()</code>和 <code>end()</code>方法完成。但是用<code>group()</code>方法更容易些。</p>
+<p><font color="#00ff00">分组在正则表达式中用括号表示，</font>例如: (John)</p>
+<p><font color="#00ff00">此正则表达式匹配John, 括号不属于要匹配的文本。括号定义了一个分组。当正则表达式匹配到文本后，可以访问分组内的部分。</font></p>
+<p>使用<code>group(int groupNo)</code> 方法访问一个分组。一个正则表达式可以有多个分组。每个分组由一对括号标记。想要访问正则表达式中某分组匹配的文本，可以把分组编号传入 <code>group(int groupNo)</code>方法。</p>
+<p><font color="#ff0000"><code>group(0)</code> 表示整个正则表达式，要获得一个有括号标记的分组，分组编号应该从1开始计算。</font></p>
+<pre><code class="java">String text    =  &quot;John writes about this, and John writes about that,&quot; +
+                        &quot; and John writes about everything. &quot;  ;
+String patternString1 = &quot;(John)&quot;;
+Pattern pattern = Pattern.compile(patternString1);
+Matcher matcher = pattern.matcher(text);
+while(matcher.find()) {
+    System.out.println(&quot;found: &quot; + matcher.group(1));
+}</code></pre>
+<p>以上代码在文本中搜索单词John从每个匹配文本中，提取分组1，就是由括号标记的部分。输出如下</p>
+<pre><code>found: John
+found: John
+found: John</code></pre><ul>
+<li><strong>多分组</strong></li>
+</ul>
+<p>上面提到，一个正则表达式可以有多个分组，例如：<code>(John) (.+?)</code><br>这个表达式匹配文本<code>John 后跟一个空格,然后跟1个或多个字符，最后跟一个空格</code>。你可能看不到最后的空格。</p>
+<p>这个表达式包括一些字符有特别意义。<font color="#00ff00">字符点 <code>.</code> 表示任意字符。 字符 <code>+</code> 表示出现一个或多个，和. 在一起表示 <code>任何字符,出现一次或多次</code>。字符<code>?</code> 表示 <em>匹配尽可能短的文本</em>。</font></p>
+<p>完整代码如下</p>
+<pre><code class="java">String text    =
+          &quot;John writes about this, and John Doe writes about that,&quot; +
+                  &quot; and John Wayne writes about everything.&quot;
+        ;
+String patternString1 = &quot;(John) (.+?) &quot;;
+Pattern pattern = Pattern.compile(patternString1);
+Matcher matcher = pattern.matcher(text);
+while(matcher.find()) {
+    System.out.println(&quot;found: &quot; + matcher.group(1) +
+                       &quot; &quot;       + matcher.group(2));
+}</code></pre>
+<p>注意代码中引用分组的方式。代码输出如下</p>
+<pre><code>found: John writes
+found: John Doe
+found: John Wayne</code></pre><ul>
+<li><strong>嵌套分组</strong></li>
+</ul>
+<p>在正则表达式中分组可以嵌套分组，例如<code>((John) (.+?))</code><br>这是之前的例子，现在放在一个大分组里. (表达式末尾有一个空格)。</p>
+<p>当遇到嵌套分组时, <font color="#00ff00">分组编号是由左括号的顺序确定的。</font><em>上例中，分组1 是那个大分组。分组2 是<code>包括John</code>的分组，分组3 是<code>包括 .+?</code> 的分组。</em>当需要通过<code>groups(int groupNo)</code> 引用分组时，了解这些非常重要。</p>
+<p>以下代码演示如何使用嵌套分组</p>
+<pre><code class="java">String text    =
+          &quot;John writes about this, and John Doe writes about that,&quot; +
+                  &quot; and John Wayne writes about everything.&quot;
+        ;
+String patternString1 = &quot;((John) (.+?)) &quot;;
+Pattern pattern = Pattern.compile(patternString1);
+Matcher matcher = pattern.matcher(text);
+while(matcher.find()) {
+    System.out.println(&quot;found:   &quot;);
+}</code></pre>
+<p>输出如下</p>
+<pre><code>found:
+found:
+found: </code></pre><ul>
+<li><strong>replaceAll() + replaceFirst()</strong></li>
+</ul>
+<p><code>replaceAll()</code> 和 <code>replaceFirst()</code> 方法可以用于<code>替换Matcher搜索字符串中的一部分</code>。<code>replaceAll()</code> 方法替换全部匹配的正则表达式，<code>replaceFirst()</code> 只替换第一个匹配的。</p>
+<p><font color="#ff0000">在处理之前，Matcher 会先重置。</font>所以这里的匹配表达式从文本开头开始计算。</p>
+<p>示例如下</p>
+<pre><code class="java">String text    =
+          &quot;John writes about this, and John Doe writes about that,&quot; +
+                  &quot; and John Wayne writes about everything.&quot;
+        ;
+String patternString1 = &quot;((John) (.+?)) &quot;;
+Pattern pattern = Pattern.compile(patternString1);
+Matcher matcher = pattern.matcher(text);
+
+String replaceAll = matcher.replaceAll(&quot;Joe Blocks &quot;);
+System.out.println(&quot;replaceAll   = &quot; + replaceAll);
+
+String replaceFirst = matcher.replaceFirst(&quot;Joe Blocks &quot;);
+System.out.println(&quot;replaceFirst = &quot; + replaceFirst);</code></pre>
+<p>输出如下</p>
+<pre><code>replaceAll = Joe Blocks about this, and Joe Blocks writes about that,
+and Joe Blocks writes about everything.
+replaceFirst = Joe Blocks about this, and John Doe writes about that,
+and John Wayne writes about everything.</code></pre><p>输出中的换行和缩进是为了可读而增加的。</p>
+<p>注意第1个字符串中所有出现 John 后跟一个单词 的地方，都被替换为 Joe Blocks 。第2个字符串中，只有第一个出现的被替换。</p>
+<ul>
+<li><strong>appendReplacement() + appendTail()</strong></li>
+</ul>
+<p><code>appendReplacement()</code> 和 <code>appendTail()</code> 方法用于<em>替换输入文本中的字符串短语，同时把替换后的字符串附加到一个 <code>StringBuffer</code> 中</em>。</p>
+<p>当<code>find()</code> 方法找到一个匹配项时，可以调用 <code>appendReplacement()</code> 方法，<font color="#00ff00">这会导致输入字符串被增加到StringBuffer 中，而且匹配文本被替换。 从上一个匹配文本结尾处开始，直到本次匹配文本会被拷贝。</font></p>
+<p><code>appendReplacement()</code> 会记录拷贝<code>StringBuffer</code> 中的内容，可以持续调用<code>find()</code>,直到没有匹配项。</p>
+<p>直到最后一个匹配项目，输入文本中剩余一部分没有拷贝到 <code>StringBuffer</code>. 这部分文本是从最后一个匹配项结尾，到文本末尾部分。通过调用 <code>appendTail()</code> 方法，可以把这部分内容拷贝到 <code>StringBuffer</code> 中.</p>
+<pre><code class="java">String text    =
+          &quot;John writes about this, and John Doe writes about that,&quot; +
+                  &quot; and John Wayne writes about everything.&quot;
+        ;
+
+String patternString1 = &quot;((John) (.+?)) &quot;;
+Pattern      pattern      = Pattern.compile(patternString1);
+Matcher      matcher      = pattern.matcher(text);
+StringBuffer stringBuffer = new StringBuffer();
+
+while(matcher.find()){
+    matcher.appendReplacement(stringBuffer, &quot;Joe Blocks &quot;);
+    System.out.println(stringBuffer.toString());
+}
+matcher.appendTail(stringBuffer);
+System.out.println(stringBuffer.toString());</code></pre>
+<p> 注意我们在<code>while循环中调用appendReplacement() 方法</code>。在循环完毕后调用<code>appendTail()</code>。<br>         代码输出如下:</p>
+<pre><code>Joe Blocks
+Joe Blocks about this, and Joe Blocks
+Joe Blocks about this, and Joe Blocks writes about that, and Joe Blocks
+Joe Blocks about this, and Joe Blocks writes about that, and Joe Blocks
+writes about everything.</code></pre><h3 id="四-附录"><a href="#四-附录" class="headerlink" title="四. 附录"></a>四. 附录</h3><p><strong>正则表达式在线测试</strong>: <a href="https://c.runoob.com/front-end/854" target="_blank" rel="noopener">https://c.runoob.com/front-end/854</a></p>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/08/给女朋友写小工具的总结之-正则表达式/" title="https://jasonkayzk.github.io/2019/09/08/给女朋友写小工具的总结之-正则表达式/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/08/给女朋友写小工具的总结之-正则表达式/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725366089"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

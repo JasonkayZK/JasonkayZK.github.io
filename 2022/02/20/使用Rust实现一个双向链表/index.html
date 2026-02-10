@@ -1,0 +1,3513 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>使用Rust实现一个双向链表 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；同时，双向链表也引入了循环引用的问题，这也是导致内存难以释放的一个场景；没想到一个简简单单的双向链表居然涉及如此之多的问题！本文就使用Unsafe Rust实现了双向链表；">
+<meta name="keywords" content="算法,Rust">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Rust实现一个双向链表">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；同时，双向链表也引入了循环引用的问题，这也是导致内存难以释放的一个场景；没想到一个简简单单的双向链表居然涉及如此之多的问题！本文就使用Unsafe Rust实现了双向链表；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-1.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-2.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.756Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Rust实现一个双向链表">
+<meta name="twitter:description" content="如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；同时，双向链表也引入了循环引用的问题，这也是导致内存难以释放的一个场景；没想到一个简简单单的双向链表居然涉及如此之多的问题！本文就使用Unsafe Rust实现了双向链表；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-1.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725320746">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?77">
+    
+    <h1>使用Rust实现一个双向链表</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年02月20日</a>
+    <a><i class="nexmoefont icon-areachart"></i>18.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 90 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/算法/">算法</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#使用Rust实现一个双向链表"><span class="toc-text">使用Rust实现一个双向链表</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据结构定义"><span class="toc-text">数据结构定义</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#链表节点定义：Node"><span class="toc-text">链表节点定义：Node</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#补充知识：协变"><span class="toc-text">补充知识：协变</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#OOP中的协变"><span class="toc-text">OOP中的协变</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#①-构造器函数中的协变"><span class="toc-text">① 构造器函数中的协变</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#②-一般函数中的协变"><span class="toc-text">② 一般函数中的协变</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Rust中的三种变化"><span class="toc-text">Rust中的三种变化</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#Rust中的子类型"><span class="toc-text">Rust中的子类型</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#Rust中的逆变、协变、不变"><span class="toc-text">Rust中的逆变、协变、不变</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#NonNull和-mut"><span class="toc-text">NonNull和*mut</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#双向链表定义：LinkedList"><span class="toc-text">双向链表定义：LinkedList</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#具体方法实现"><span class="toc-text">具体方法实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#①-构造函数：new-和Default-Trait"><span class="toc-text">① 构造函数：new()和Default Trait</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#②-首尾压入元素：push"><span class="toc-text">② 首尾压入元素：push()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#③-首尾弹出元素：pop"><span class="toc-text">③ 首尾弹出元素：pop()</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#补充内容：Option"><span class="toc-text">补充内容：Option</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#④-查看首尾元素：peek"><span class="toc-text">④ 查看首尾元素：peek()</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#实现-peek-front"><span class="toc-text">实现 peek_front()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现-peek-back"><span class="toc-text">实现 peek_back()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现-peek-front-mut"><span class="toc-text">实现 peek_front_mut()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现-peek-back-mut"><span class="toc-text">实现 peek_back_mut()</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑤-根据index查看元素：get-by-idx"><span class="toc-text">⑤ 根据index查看元素：get_by_idx()</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#补充：Rust中的错误处理"><span class="toc-text">补充：Rust中的错误处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#补充：Rust中自定义错误类型"><span class="toc-text">补充：Rust中自定义错误类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现：get-by-idx方法"><span class="toc-text">实现：get_by_idx方法</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#从头部寻找元素"><span class="toc-text">从头部寻找元素</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#补充内容：Copy-Trait"><span class="toc-text">补充内容：Copy Trait</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#从尾部寻找元素"><span class="toc-text">从尾部寻找元素</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#返回第-idx-个元素"><span class="toc-text">返回第 idx 个元素</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑥-根据index获取可变元素：get-by-idx-mut"><span class="toc-text">⑥ 根据index获取可变元素：get_by_idx_mut()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑦-在指定index-前-插入元素"><span class="toc-text">⑦ 在指定index(前)插入元素</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑧-删除index处的元素"><span class="toc-text">⑧ 删除index处的元素</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑨-三种迭代器的实现：iter、iter-mut和into-iter"><span class="toc-text">⑨ 三种迭代器的实现：iter、iter_mut和into_iter</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#迭代器类型定义"><span class="toc-text">迭代器类型定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#i-实现IntoIter"><span class="toc-text">i.实现IntoIter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ii-实现Iter"><span class="toc-text">ii.实现Iter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#iii-实现IterMut"><span class="toc-text">iii.实现IterMut</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑩-是否包含某元素：contains"><span class="toc-text">⑩ 是否包含某元素：contains()</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Rust-中和比较相关的-Trait"><span class="toc-text">Rust 中和比较相关的 Trait</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#部分等价关系：PartialEq"><span class="toc-text">部分等价关系：PartialEq</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#等价关系：Eq"><span class="toc-text">等价关系：Eq</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#偏序关系：PartialOrd"><span class="toc-text">偏序关系：PartialOrd</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#全序关系：Ord"><span class="toc-text">全序关系：Ord</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#声明范型约束"><span class="toc-text">声明范型约束</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑪-为实现Debug元素的链表实现遍历输出：traverse"><span class="toc-text">⑪ 为实现Debug元素的链表实现遍历输出：traverse()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#⑫-释放链表Drop-Trait和-clear-方法"><span class="toc-text">⑫ 释放链表Drop Trait和 clear()方法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#实现clear-方法"><span class="toc-text">实现clear()方法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#为链表添加测试用例"><span class="toc-text">为链表添加测试用例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>如何激怒一个Rust爱好者？让他用Rust实现一个双向链表即可！</p>
+<p>总所周知，Rust中是不能同时存在两个可变引用的，所以在Rust中实现双向链表就会变得非常反人类（因为需要同时存在前后节点同时指向对方的情况）；</p>
+<p>同时，双向链表也引入了循环引用的问题，这也是导致内存难以释放的一个场景；</p>
+<p>没想到一个简简单单的双向链表居然涉及如此之多的问题！</p>
+<p>本文就使用Unsafe Rust实现了双向链表；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/blob/algorithm/collection/src/list/linked_list.rs" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/blob/algorithm/collection/src/list/linked_list.rs</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="使用Rust实现一个双向链表"><a href="#使用Rust实现一个双向链表" class="headerlink" title="使用Rust实现一个双向链表"></a><strong>使用Rust实现一个双向链表</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p>在阅读本文之前，请确保你有一定的Rust基础，至少：</p>
+<ul>
+<li>大致读过了：<a href="https://doc.rust-lang.org/book/#the-rust-programming-language" target="_blank" rel="noopener">The Rust Programming Language</a></li>
+<li>对Rust中的Unsafe有一定了解，最好读过：<a href="https://doc.rust-lang.org/nomicon/" target="_blank" rel="noopener">The Rustonomicon</a></li>
+</ul>
+<p>对于链表的实现，在Rust中有多种方式，比如：</p>
+<ul>
+<li>使用 <code>Box</code> 实现（由于 <code>Box</code> 本身的限制，基本只能实现单向链表）；</li>
+<li>使用 <code>Rc + RefCell</code> 实现（由于 <code>RefCell</code> 的限制，迭代器无法很好的实现）；</li>
+<li>使用 <code>Unsafe</code> 实现；</li>
+</ul>
+<p>对于链表的实现，甚至专门有一本赫赫有名的书：</p>
+<ul>
+<li><a href="https://rust-unofficial.github.io/too-many-lists/index.html#learn-rust-with-entirely-too-many-linked-lists" target="_blank" rel="noopener">Learn Rust With Entirely Too Many Linked Lists</a></li>
+</ul>
+<p>推荐大家先阅读并跟着这本书实现其中的几种链表实现，再来阅读本文，相信你会有更多的收获！</p>
+<blockquote>
+<p>  这里也提供我学习<a href="https://rust-unofficial.github.io/too-many-lists/index.html#learn-rust-with-entirely-too-many-linked-lists" target="_blank" rel="noopener">《Learn Rust With Entirely Too Many Linked Lists》</a>这本书的源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/algorithm/too-many-lists" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/algorithm/too-many-lists</a></li>
+</ul>
+</blockquote>
+<p>最后，本文内容超过 2w 字，希望你能静下心来通篇阅读，相信你一定会有所收获！</p>
+<p>那么，废话不多说，下面来使用 Unsafe Rust 实现一个双向链表吧！</p>
+<br>
+
+<h2 id="数据结构定义"><a href="#数据结构定义" class="headerlink" title="数据结构定义"></a><strong>数据结构定义</strong></h2><h3 id="链表节点定义：Node"><a href="#链表节点定义：Node" class="headerlink" title="链表节点定义：Node"></a><strong>链表节点定义：Node</strong></h3><p>链表的节点定义、构造函数和Into辅助函数如下：</p>
+<pre><code class="rust">struct Node&lt;T&gt; {
+    val: T,
+    next: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    prev: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+}
+
+impl&lt;T&gt; Node&lt;T&gt; {
+    fn new(val: T) -&gt; Node&lt;T&gt; {
+        Node {
+            val,
+            prev: None,
+            next: None,
+        }
+    }
+
+    fn into_val(self: Box&lt;Self&gt;) -&gt; T {
+        self.val
+    }
+}</code></pre>
+<p>我知道你有很多的疑问，让我们一步一步来看；</p>
+<p>首先，为了链表的通用性，泛型是必不可少的，因此 <code>Node</code> 中实际存放的值 <code>val</code> 为泛型 T 类型；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注：此处 val 为泛型 T 类型，而非 <code>Option&lt;T&gt;</code> 类型；</strong></font></p>
+<p>  <font color="#f00"><strong>这也说明如果存在这个 Node，则该Node中必定是有值的，保证不会出现 Node 存在而 val 为 null 的情况；</strong></font></p>
+<p>  <font color="#f00"><strong>（取而代之，如果 val 的值为空，则这个 Node 就应该为 <code>None</code>）</strong></font></p>
+</blockquote>
+<br>
+
+<p>接下来，来看表示前一节点和后一节点的 <code>next</code> 和 <code>prev</code> 属性；</p>
+<p><code>next</code> 和 <code>prev</code> 的类型为：<code>Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;</code>，我们一层一层的来分析：</p>
+<p>首先：<strong><code>Option&lt;T&gt;</code> 表示该节点为空，即不存在前置节点（整个链表为空时）、或不存在后置节点（链表的尾节点）；</strong></p>
+<p>接下来，<code>NonNull</code> 为 Rust 中的一个内置类型，其是裸指针 <code>*mut T</code> 的一个包装，但是和 <code>*mut T</code> 裸指针的区别在于：</p>
+<ul>
+<li><strong><code>NonNull</code>类型即使从未解引用指针，指针也必须始终为非 null；这样一来，枚举就可以将此值用作判别（<code>Option&lt;NonNull&lt;T&gt;&gt;</code> 与 <code>*mut T</code> 具有相同的大小）； 但是，如果指针未解引用，它可能仍会悬垂！</strong></li>
+<li><strong>与 <code>*mut T</code> 不同， <code>NonNull&lt;T&gt;</code> 可以作为 <code>T</code> 的协变；这样就可以在构建协变类型时使用 <code>NonNull&lt;T&gt;</code>，但是如果在实际上不应该协变的类型中使用，则会带来风险；</strong></li>
+</ul>
+<blockquote>
+<p>  <strong>上述内容，摘自 <code>NonNull</code> 官方文档：</strong></p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/ptr/struct.NonNull.html" target="_blank" rel="noopener">https://doc.rust-lang.org/std/ptr/struct.NonNull.html</a></li>
+</ul>
+</blockquote>
+<p>上面说的云里雾里的，那到底裸指针 <code>*mut T</code> 和 <code>NonNull</code> 有什么区别呢？</p>
+<p><font color="#f00"><strong>简单来说就是 <code>NonNull</code> 提供了比 <code>*mut T</code> 更多的内容：支持协变类型、空指针优化，并且可以保证指针非空；</strong></font></p>
+<p>指针非空和空指针优化很好理解，但是这里需要补充一些关于变量类型协变的内容<strong>（已经对协变比较属性的可以直接跳过）；</strong></p>
+<br>
+
+<h4 id="补充知识：协变"><a href="#补充知识：协变" class="headerlink" title="补充知识：协变"></a><strong>补充知识：协变</strong></h4><h5 id="OOP中的协变"><a href="#OOP中的协变" class="headerlink" title="OOP中的协变"></a><strong>OOP中的协变</strong></h5><h6 id="①-构造器函数中的协变"><a href="#①-构造器函数中的协变" class="headerlink" title="① 构造器函数中的协变"></a><strong>① 构造器函数中的协变</strong></h6><p>要讲 Rust 中的协变，首先要从面向对象说起了（很多编程语言都存在协变，如<code>C#</code>）；</p>
+<p>在 OOP 中，协变很好理解：</p>
+<p>例如，如果 <code>Cat</code> 是 <code>Animal</code> 的子类型，那么<code>Cat</code>类型的表达式可用于任何出现<code>Animal</code>类型表达式的地方；</p>
+<blockquote>
+<p>  <strong>可以说：</strong></p>
+<p>  <font color="#f00"><strong>当我们基于 <code>Animal</code> 定义 <code>Cat</code> 的时候，<code>Cat</code> 相对于 <code>Animal</code> 的<a href="https://www.zhihu.com/question/22267682/answer/28974249" target="_blank" rel="noopener">内涵增加了，而外延收缩</a>了；</strong></font></p>
+<p>  <font color="#f00"><strong>并且可以认为：我们至少可以说一个猫是一个动物。所以猫是动物的子类型，记作 <code>Cat: Animal</code>；</strong></font></p>
+<p>  因为猫至少是一个动物，那么对于所有需要任何动物的地方，我都可以给一只猫：</p>
+<pre><code class="ts">  function schrödinger(sample: Animal) -&gt; bool { ... }
+  let cat = new Cat();
+  const alive = schrödinger(cat);</code></pre>
+<p>  <strong>也就是说：当 <code>T: U</code> 的时候，任何需要形式参数 <code>a: U</code> 的函数，我们都能给一个实际参数 <code>a: T</code>；</strong></p>
+<p>  <font color="#f00"><strong>这是因为：子类型至少可以被当作它的超类型；</strong></font></p>
+</blockquote>
+<p>所谓的 <strong>变型（variance）</strong> 是指：如何根据组成类型之间的子类型关系，来确定更复杂的类型之间（例如 <code>Cat</code> 数组之于<code>Animal</code>数组，返回值为 <code>Cat</code> 的函数之于返回值为 <code>Animal</code> 的函数…等等）的子类型关系；</p>
+<p>当我们用类型构造出更复杂的类型，原本类型的子类型性质可能被保持、反转、或忽略，取决于<a href="https://zh.wikipedia.org/wiki/型別構造器" target="_blank" rel="noopener">类型构造器</a>的变型性质；</p>
+<blockquote>
+<p>  <strong>类型构造器就是一些带有泛型/模板参数的类型；当填满了参数，才会成为一个实际的类型；</strong></p>
+<p>  比如：很简单的「笼子」就是 <code>Cage&lt;T&gt;</code>，其中 <code>T</code> 就是类型参数；</p>
+<p>  还有容器类型，比如 <code>List&lt;T&gt;</code>；</p>
+</blockquote>
+<p>现在回顾一下，我们现在知道一些类型之间的关系，也即是说我们知道 <code>Cat</code> 是 <code>Animal</code> 的子类型；那么对于任意的（一元）类型构造器 <code>M</code>， <code>M&lt;Cat&gt;</code> 和 <code>M&lt;Animal&gt;</code> 可能会有什么关系呢？（<a href="https://link.zhihu.com/?target=https%3A//zh.wikipedia.org/wiki/%E5%8D%8F%E5%8F%98%E4%B8%8E%E9%80%86%E5%8F%98" target="_blank" rel="noopener">Wiki</a>）</p>
+<ul>
+<li><strong>协变（covariance）：<code>M&lt;Cat&gt;: M&lt;Animal&gt;</code> 它们维持内部参数的关系不变；</strong></li>
+<li><strong>逆变（contravariance）：<code>M&lt;Animal&gt;: M&lt;Cat&gt;</code> 它们的关系被反转了；</strong></li>
+<li><strong>不变（invariance）：两者没有任何子类型关系；</strong></li>
+</ul>
+<p>直觉上来说，只要有协变就够了：</p>
+<p>薛定谔想要一个笼子，里面装着一种动物，他不关心是什么动物（<code>Cage&lt;Animal&gt;</code>），你给薛定谔一只装着猫的笼子（<code>Cage&lt;Cat&gt;</code>），薛定谔把这个猫当作一种动物做实验；</p>
+<p>也就是说在需要 <code>Cage&lt;Animal&gt;</code> 的地方都可以给一个 <code>Cage&lt;Cat&gt;</code> ；</p>
+<p>然而，这显然是不对的！</p>
+<p>考虑这样一个情况：</p>
+<pre><code class="ts">let cage: Cage&lt;Cat&gt; = new Cage();
+function capture(x: Cage&lt;Animal&gt;) {
+    x.inner = new Dog();
+}
+capture(cat);</code></pre>
+<p>因为协变规则，对 <code>capture</code> 来说笼子是： <code>Cage&lt;Animal&gt;</code>，往笼子里塞一个狗，完全没问题；</p>
+<p>但是对于调用者来说，笼子的类型还是 <code>Cage&lt;Cat&gt;</code>，这就破坏了类型安全：你接下来的代码期望这是装猫的笼子，其实里面装了一个狗！</p>
+<p><font color="#f00"><strong>所以：如果一个容器是只读的，才能协变，不然很容易就能把一些特殊的容器协变到更一般的容器，再往里面塞进不应该塞的类型；</strong></font></p>
+<p>再考虑 <code>Cage&lt;T&gt;</code> 对 <code>T</code> 逆变的情况：<code>Cage&lt;Animal&gt;: Cage&lt;Dog&gt;</code>；</p>
+<p>也就是说当函数需要 <code>Cage&lt;Dog&gt;</code>的时候，总能传给函数一个 <code>Cage&lt;Animal&gt;</code>，函数当作 <code>Cage&lt;Dog&gt;</code> 来处理！</p>
+<p>一般来说这很荒谬，<code>Cage&lt;Animal&gt;</code> 里面的动物可能是一只猫，强行当作一个狗来处理肯定会爆炸；</p>
+<p>但是对于上面的 <code>capture</code> 函数是有意义的，它不关心笼子里有什么，只往里面塞一个准备好的狗，也就是说：<font color="#f00"><strong>对于只写的类型可以用逆变；</strong></font></p>
+<p><font color="#f00"><strong>那么对于可读又可写的类型，当然就是不变了：我们不能做出任何假定，不然有可能爆炸；**</strong></font></p>
+<br>
+
+<h6 id="②-一般函数中的协变"><a href="#②-一般函数中的协变" class="headerlink" title="② 一般函数中的协变"></a><strong>② 一般函数中的协变</strong></h6><p>还有一种特殊的类型，规则有点奇异，那就是<strong>函数类型</strong>：考虑一元函数，按照函数的箭头记法，把函数类型记作 <code>T -&gt; U</code>，其中 <code>T</code> 是逆变的而 <code>U</code> 是协变的；</p>
+<p>返回值是协变的很好理解：我需要函数 <code>F</code> 最终返回一只动物，那么最终返回一只猫的函数是可接受的；（可以不断地扩大类型域）</p>
+<p>当参数是逆变可能有点奇怪了：考虑需要计算猫的年龄的情况： <code>Cat -&gt; Age</code>：</p>
+<p>给一个通用的，可以计算所有动物的年龄的函数 <code>Animal -&gt; Age</code> 来代替也是很好的：<code>Animal -&gt; Age</code> 的定义域 <code>Animal</code> 中那些 <code>Cat</code> 以外的值被截取掉了（我们只会传 <code>Cat</code>），就变成很棒的 <code>Cat -&gt; Age</code>；</p>
+<p>所以任何时候，对需要一个一元函数 <code>T: U, T -&gt; V</code> 的情况，它的参数 <code>T</code> 可以用 <code>U</code> 来代替，只需要简单地无视 <code>U</code> 类型除 <code>T</code> 以外的取值就行了；</p>
+<blockquote>
+<p>  <strong>下面一段话摘自维基百科，说的是同一个意思：</strong></p>
+<p>  <font color="#f00"><strong>某些编程语言需要指明什么时候一个函数类型是另一个函数类型的子类型，也就是说：在一个期望某个函数类型的上下文中，什么时候可以安全地使用另一个函数类型；</strong></font></p>
+<p>  <font color="#f00"><strong>我们可以说：函数f 可以安全替换函数g，如果与函数g 相比，函数f 接受更一般的参数类型，返回更特化的结果类型；</strong></font></p>
+<p>  例如：</p>
+<p>  函数类型<code>Cat-&gt;Cat</code>可安全用于期望 <code>Cat-&gt;Animal</code> 的地方；</p>
+<p>  类似地，函数类型 <code>Animal-&gt;Animal</code> 可用于期望 <code>Cat-&gt;Animal</code> 的地方；</p>
+<p>  典型地，在 <code>Animal a=Fn(Cat(...))</code> 这种语境下进行调用，由于 Cat 是 Animal 的子类，所以即使 Fn 接受一只 Animal 也同样是安全的！</p>
+<p>  一般规则是：</p>
+<blockquote>
+<p>  <strong>S1 → S2 ≦ T1 → T2 当T1 ≦ S1且S2 ≦ T2</strong></p>
+</blockquote>
+<p>  换句话说，<strong>类型构造符→对输入类型是逆变的而对输出类型是协变的；</strong></p>
+<p>  这一规则首先被<a href="https://zh.wikipedia.org/wiki/协变与逆变#cite_note-1" target="_blank" rel="noopener">Luca Cardelli正式提出</a>；</p>
+</blockquote>
+<p>综合起来，也就是说：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-1.svg" alt="rust-double-linked-list-1.svg"></p>
+<br>
+
+<h5 id="Rust中的三种变化"><a href="#Rust中的三种变化" class="headerlink" title="Rust中的三种变化"></a><strong>Rust中的三种变化</strong></h5><p>上面讲述了 OOP 中的协变，再来看 Rust 对于协变的定义；</p>
+<p>众所周知，Rust 中是不存在类似于 OOP 中的继承的（不光Rust没有，同一时期的Go等语言都没有！），不算Trait的话，结构体或者枚举之间也都没有子类型关系；</p>
+<p>但是Rust中有 <code>lifetime</code>，<code>lifetime</code>是和通常类型平行的另一套类型（另一个范畴），而<strong>Rust中的子类型就是对于lifetime而言的！</strong></p>
+<br>
+
+<h6 id="Rust中的子类型"><a href="#Rust中的子类型" class="headerlink" title="Rust中的子类型"></a><strong>Rust中的子类型</strong></h6><p>子类型是一种序关系，不一定是像继承那样的超类型直接包含子类型（动物包含猫）；</p>
+<p>在 lifetime 中，外层的 lifetime 是它所包含的内层 lifetime 的子类型： <code>&#39;big: &#39;small</code>：</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：<code>外层的 lifetime 是它所包含的内层 lifetime 的子类型</code>，这里的顺序和直觉上是相反的！</strong></font></p>
+</blockquote>
+<p>如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/rust-double-linked-list-2.jpg" alt="rust-double-linked-list-2.jpg"></p>
+<p>这张图中的子类型关系应当是：</p>
+<ul>
+<li><code>&#39;static: &#39;big: &#39;small_1</code>；</li>
+<li><code>&#39;static: &#39;big: &#39;small_2</code>；</li>
+</ul>
+<p><strong>即：<code>&#39;static</code> 是所有lifetime的子类型！</strong></p>
+<blockquote>
+<p>  <strong>lifetime 就是作用域，作用域是很标准的嵌套关系，所以Rust的规则有点反直觉；</strong></p>
+<p>  对于集合，子集扩张到超集往往是恰当的，但一个作用域本身不应该被当作一个集合；</p>
+<p>  我们可以说：一只猫<strong>至少</strong>是一个动物；</p>
+<p>  但对于lifetime：不能说 <code>&#39;small_1</code> <strong>至少</strong>是 <code>&#39;big</code>，而应该说 <code>&#39;big</code> <strong>至少</strong>是<code>&#39;small_1</code>，也<strong>至少</strong>是 <code>&#39;small_2</code>；</p>
+</blockquote>
+<p><font color="#f00"><strong>lifetime 存在的意义就是：界定资源不应该超出一个范围，也就是说：扩张 lifetime 往往是危险的，而收缩（只读引用）lifetime是安全的；</strong></font></p>
+<blockquote>
+<p>  <strong>此处如果遵循直觉，按照嵌套关系排列：</strong></p>
+<p>  <strong>也就是 <code>&#39;small_1: &#39;big: &#39;static</code>，小的作用域 <code>&#39;small_1</code> 就可以协变到全局作用域 <code>&#39;static</code> ；</strong></p>
+<p>  <strong>那么在被读取的对象被销毁后，编译器还允许代码继续试图读取它，就会爆炸，整个lifetime系统就失效了！</strong></p>
+</blockquote>
+<p>可以通过下面几个方式来理解：</p>
+<ol>
+<li><strong><code>&#39;small_1</code> 的 lifetime 代表「包含 <code>&#39;small_1</code> 的作用域的集合」；而 <code>&#39;static</code> 就是「包含全局作用域的集合」只有一个元素；所以很显然后者是前者的子集，因为全局作用域包含了 <code>&#39;small_1</code>；</strong></li>
+<li><strong>越小的作用域，包含了它的外层作用域就越多；</strong></li>
+<li><strong>lifetime 类型所关联的作用域是内涵而不是外延，内涵增多则外延减少；正如 <code>Cat</code> 就是 <code>Animal</code> 增多内涵而来的，它的外延只有各种猫，而 <code>Animal</code> 的外延有各种动物；</strong></li>
+</ol>
+<br>
+
+<h6 id="Rust中的逆变、协变、不变"><a href="#Rust中的逆变、协变、不变" class="headerlink" title="Rust中的逆变、协变、不变"></a><strong>Rust中的逆变、协变、不变</strong></h6><blockquote>
+<p>  <strong><a href="https%3A//doc.rust-lang.org/nomicon/subtyping.html">死灵书：subtype</a>原文详细地讲了这一块！</strong></p>
+</blockquote>
+<p>简而言之，在Rust中：</p>
+<ul>
+<li><font color="#f00"><strong>协变（covariance）：<code>M&lt;&#39;small&gt;: M&lt;&#39;small&gt;</code> 即维持 lifetime 越来越收紧；</strong></font></li>
+<li><font color="#f00"><strong>逆变（contravariance）：<code>M&lt;&#39;big&gt;: M&lt;&#39;small&gt;</code>，lifetime反转，在Rust中非常少见！</strong></font></li>
+<li><font color="#f00"><strong>不变（invariance）：两者的 lifetime 并没有直接关系；</strong></font></li>
+</ul>
+<p>我们已知：</p>
+<p><strong><code>&amp;</code> 和 <code>&amp;mut</code> 都是一个类型构造器，接受一个lifetime <code>&#39;a</code> 和另一个类型 <code>T</code>：</strong></p>
+<p>有一般规律：</p>
+<ul>
+<li><p><font color="#f00"><strong>① <code>&amp;&#39;a T</code> 对 <code>&#39;a</code> 和 <code>T</code> 协变，因为 <code>&amp;</code> 是只读的，传参数的时候，试图收缩lifetime是安全的；</strong></font></p>
+</li>
+<li><p><font color="#f00"><strong>② <code>&amp;&#39;a mut T</code> 对 <code>&#39;a</code> 协变，对 <code>T</code> 不变：</strong></font></p>
+</li>
+</ul>
+<p>这是因为：传参数的时候，收紧一个可变作用域的范围是安全的，调用者还维持着未收紧的作用域；</p>
+<ul>
+<li><font color="#f00"><strong>③ <code>fn(T) -&gt; U</code> 是对 <code>T</code> 逆变对 <code>U</code> 协变：</strong></font></li>
+</ul>
+<p>原因和上文所述一样：当传入的参数是一个函数的时候，我们可以安全地收缩这个函数的定义域，扩张这个函数的陪域，<strong>除此处外Rust中应该没有逆变；</strong></p>
+<ul>
+<li><font color="#f00"><strong>④ 只读或拥有（owning）的容器都是协变的，如：<code>Box</code>, <code>Vec</code>都是协变的：</strong></font></li>
+</ul>
+<p>这在别的语言中会爆炸，但是Rust对可变性的限制导致可以安全地当作协变：</p>
+<p>当我们拿到一个容器的所有权的时候，外部别处就无法访问了，可以安全地对它协变而不用担心爆炸；</p>
+<ul>
+<li><font color="#f00"><strong>⑤ <code>Cell&lt;T&gt;``RefCell&lt;T&gt;</code>，在内部是可读写的，所以是不变；</strong></font></li>
+</ul>
+<p>正如文中的例子一样：</p>
+<pre><code class="rust">fn overwrite&lt;T: Copy&gt;(covarianced: &amp;mut T, short: &amp;mut T) {
+    *covarianced = *short;
+}
+
+fn main() {
+    let mut forever: &amp;&#39;static str = &quot; 我会活到世界末日 &quot;;
+    &#39;small {
+        let short = String::from(&quot; 我马上死了 &quot;);
+        overwrite(&amp;mut forever, &amp;mut &amp;*short);
+    }
+    // 爆炸！用到了已经被释放的内存
+    println!(&quot;{}&quot;, forever);
+}</code></pre>
+<p>如果在一次函数调用时：</p>
+<p>一个 <code>forever: &amp;mut &amp;&#39;static T</code> 能够协变到 <code>covarianced: &amp;mut &amp;&#39;small T</code> ，我们就可以把一个 <code>short: &amp;&#39;small T</code> 存进协变后的参数 <code>covarianced: &amp;mut &amp;&#39;small T</code>；</p>
+<p>这对于调用者来说，引用 <code>covarianced</code> 的类型依然是 <code>&amp;mut &amp;&#39;static T</code>，却存了一个更短命的引用 <code>short</code>；</p>
+<p>当 <code>short</code> 被销毁的时候，<code>a</code> 还维持着引用，就…会炸；</p>
+<p>至于这里为什么不能用逆变，原因很简单，就是 <code>&amp;mut T</code> ，<code>T</code> 是可读可写的，如果能扩张 <code>T</code> 的作用域（逆变），读取出来存到别的地方还是会炸；</p>
+<blockquote>
+<p>  if variance would allow you to store a short-lived value in a longer-lived slot, then invariance must be used.</p>
+</blockquote>
+<blockquote>
+<p>  具体协变、逆变和不变相关内容可以阅读：</p>
+<ul>
+<li><a href="https://zh.wikipedia.org/wiki/%E5%8D%8F%E5%8F%98%E4%B8%8E%E9%80%86%E5%8F%98" target="_blank" rel="noopener">维基百科-协变与逆变</a></li>
+<li><a href="https://doc.rust-lang.org/nomicon/vec/vec-layout.html" target="_blank" rel="noopener">https://doc.rust-lang.org/nomicon/vec/vec-layout.html</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/41814387" target="_blank" rel="noopener">逆变、协变与子类型，以及Rust</a></li>
+<li><a href="https://link.zhihu.com/?target=https%3A//doc.rust-lang.org/nomicon/subtyping.html" target="_blank" rel="noopener">死灵书：lifetime的子类型及逆变协变</a></li>
+<li><a href="https://ehsanmkermani.com/2019/03/16/variance-in-rust-an-intuitive-explanation/" target="_blank" rel="noopener">Variance in Rust: An intuitive explanation</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h5 id="NonNull和-mut"><a href="#NonNull和-mut" class="headerlink" title="NonNull和*mut"></a><strong><code>NonNull</code>和<code>*mut</code></strong></h5><p>NonNull的官方注释如下：</p>
+<pre><code>*mut T but non-zero and covariant.
+This is often the correct thing to use when building data structures using raw pointers, but is ultimately more dangerous to use because of its additional properties. If you&#39;re not sure if you should use NonNull&lt;T&gt;, just use *mut T!
+Unlike *mut T, the pointer must always be non-null, even if the pointer is never dereferenced. This is so that enums may use this forbidden value as a discriminant -- Option&lt;NonNull&lt;T&gt;&gt; has the same size as *mut T. However the pointer may still dangle if it isn&#39;t dereferenced.
+Unlike *mut T, NonNull&lt;T&gt; was chosen to be covariant over T. This makes it possible to use NonNull&lt;T&gt; when building covariant types, but introduces the risk of unsoundness if used in a type that shouldn&#39;t actually be covariant. (The opposite choice was made for *mut T even though technically the unsoundness could only be caused by calling unsafe functions.)
+Covariance is correct for most safe abstractions, such as Box, Rc, Arc, Vec, and LinkedList. This is the case because they provide a public API that follows the normal shared XOR mutable rules of Rust.
+If your type cannot safely be covariant, you must ensure it contains some additional field to provide invariance. Often this field will be a PhantomData type like PhantomData&lt;Cell&lt;T&gt;&gt; or PhantomData&lt;&amp;&#39;a mut T&gt;.
+Notice that NonNull&lt;T&gt; has a From instance for &amp;T. However, this does not change the fact that mutating through a (pointer derived from a) shared reference is undefined behavior unless the mutation happens inside an UnsafeCell&lt;T&gt;. The same goes for creating a mutable reference from a shared reference. When using this From instance without an UnsafeCell&lt;T&gt;, it is your responsibility to ensure that as_mut is never called, and as_ptr is never used for mutation.</code></pre><p><strong>首先，NonNull就是 <code>*mut T</code>，但是不会等于零；</strong></p>
+<p>随后，NonNull是协变：<strong>【即有一个子生命周期<code>Small</code>和父生命周期 <code>Longer</code>，NonNull维持了 <code>NonNull&lt;Small&gt;</code> 也是<code>NonNull&lt;Longer&gt;</code>的生命周期的关系！】；</strong></p>
+<p><strong>同时，<code>NonNull&lt;T&gt;</code> 不会拥有 <code>T</code>，因为其本身只是一个指针<code>*mut T</code>，没有拥有的语义；</strong></p>
+<blockquote>
+<p>  <strong>因此需要借助 PhantomData 进行标注；</strong></p>
+</blockquote>
+<p><strong>最后，NonNull 可以做空指针优化：</strong></p>
+<blockquote>
+<p>  <code>Option&lt;Rc&lt;T&gt;&gt;</code>跟<code>Rc&lt;T&gt;</code>占用相同的内存大小，这个叫<a href="https://link.zhihu.com/?target=https%3A//rust-lang.github.io/unsafe-code-guidelines/layout/enums.html%23discriminant-elision-on-option-like-enums" target="_blank" rel="noopener">discriminant elision</a>；</p>
+<p>  <strong>空指针优化能够实现的原因在于：</strong></p>
+<p>  <font color="#f00"><strong>因为 enum 通常需要一个标志（discriminant）来区分究竟是哪一个variant，但是Option只有两个variant的enum，其中一个variant，有一些非法的值（叫niches），这些非法的值可以充当None一样的variant，所以就不用标志了，从而enum与variant占用一样的大小；</strong></font></p>
+</blockquote>
+<br>
+
+<p>最后，再来回顾 <code>next</code> 和 <code>prev</code> 的类型为：<code>Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;</code>；</p>
+<p>即， <code>next</code> 和 <code>prev</code> 最终指向了另一个和自己相同的类型：<code>Node&lt;T&gt;</code>；</p>
+<p>这是合理的，因为在整个 <code>Node</code> 类型中，所有的属性的大小在编译期都是可以被确定的<strong>（泛型类型T 在编译器被绑定，而 <code>next</code> 和 <code>prev</code> 为两个固定大小的裸指针）</strong>！</p>
+<pre><code class="rust">struct Node&lt;T&gt; {
+    val: T,
+    next: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    prev: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+}</code></pre>
+<blockquote>
+<p>  <strong>注意：Rust的编译器要求，在编译期所有的属性的大小都是确定的！</strong></p>
+<p>  例如，下面的代码是无法通过编译的：</p>
+<pre><code class="rust">  struct WrongNode&lt;T&gt; {
+      data: T,
+      next: WrongNode&lt;T&gt;,
+  }</code></pre>
+<p>  因为 <code>next</code> 字段拥有的大小可能是无限的，无法计算；</p>
+<p>  这也是为什么通常情况下，单向链表需要借助智能指针 Box 将结构体转化为指针：</p>
+<pre><code class="rust">  struct WrongNode&lt;T&gt; {
+      data: T,
+      next: Box&lt;WrongNode&lt;T&gt;&gt;,
+  }</code></pre>
+<p>  <strong>但是在双向链表中，使用 Box 是行不通的，因为会出现一个节点同时存在多个可变引用的情况，因此需要使用裸指针；</strong></p>
+</blockquote>
+<p>最后，一个简单的构造函数，和 into 转换函数，用于将 Box 中的 <code>Node&lt;T&gt;</code> 转为含有所有权的 <code>T</code> 类型，这个函数下面会用到：</p>
+<pre><code class="rust">impl&lt;T&gt; Node&lt;T&gt; {
+    fn new(val: T) -&gt; Node&lt;T&gt; {
+        Node {
+            val,
+            prev: None,
+            next: None,
+        }
+    }
+
+    fn into_val(self: Box&lt;Self&gt;) -&gt; T {
+        self.val
+    }
+}</code></pre>
+<p>链表节点的具体内容大概就是这么多，接下来我们来看整个双向链表的定义；</p>
+<br>
+
+<h3 id="双向链表定义：LinkedList"><a href="#双向链表定义：LinkedList" class="headerlink" title="双向链表定义：LinkedList"></a><strong>双向链表定义：LinkedList</strong></h3><p>双向链表的定义如下：</p>
+<pre><code class="rust">pub struct LinkedList&lt;T&gt; {
+    length: usize,
+    head: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    tail: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    _marker: PhantomData&lt;Box&lt;Node&lt;T&gt;&gt;&gt;,
+}</code></pre>
+<p>在双向链表中，定义了：</p>
+<ul>
+<li><strong>链表的头尾节点：</strong><code>head</code> 和 <code>tail</code>，类型和上面的 <code>Node</code> 内部的指针一样：<code>Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;</code>，这里不再介绍；</li>
+<li><strong>length：</strong>维护双向链表的当前长度；</li>
+</ul>
+<p>重点来看一下：<strong>_marker</strong>；</p>
+<p><strong>_marker</strong> 被声明为 <code>PhantomData&lt;Box&lt;Node&lt;T&gt;&gt;&gt;</code> 类型，对于 PhantomData 的说明如下：</p>
+<pre><code>Zero-sized type used to mark things that &quot;act like&quot; they own a T.
+Adding a PhantomData&lt;T&gt; field to your type tells the compiler that your type acts as though it stores a value of type T, even though it doesn&#39;t really. This information is used when computing certain safety properties.</code></pre><p>即 <strong>_marker</strong> 是一个标注字段，其目的就是告诉编译器：LinkedList 拥有 <code>Box&lt;Node&lt;T&gt;&gt;</code>，明示编译器我们很可能在LinkedList 的 drop 函数里面也 drop 掉 <code>Box&lt;Node&lt;T&gt;&gt;</code>；</p>
+<blockquote>
+<p>  一个比较常见的场景如下：</p>
+<p>  <strong>由于在 LinkedList 中，<code>head</code> 和 <code>tail</code> 都以指针的形式存在；</strong></p>
+<p>  <strong>而在实现迭代器时，必须要求标注当前泛型 <code>T</code> 的声明周期，此时我们就需要通过使用<code>PhantomData</code> 对变量的所有权进行声明，并对生命周期进行标注！</strong></p>
+</blockquote>
+<p>以上就是我们要实现的双向链表的完整定义；</p>
+<blockquote>
+<p>  <strong>需要注意的是：</strong></p>
+<p>  <font color="#f00"><strong>为了体现封装性，Node 和 LinkedList 中的所有字段都是对外不可见的！</strong></font></p>
+</blockquote>
+<p>接下来我们会逐步实现双向链表的相关API，并尽量对性能做优化；</p>
+<br>
+
+<h2 id="具体方法实现"><a href="#具体方法实现" class="headerlink" title="具体方法实现"></a><strong>具体方法实现</strong></h2><h3 id="①-构造函数：new-和Default-Trait"><a href="#①-构造函数：new-和Default-Trait" class="headerlink" title="① 构造函数：new()和Default Trait"></a><strong>① 构造函数：new()和Default Trait</strong></h3><p>构造函数的实现非常简单：</p>
+<pre><code class="rust">impl&lt;T&gt; LinkedList&lt;T&gt; {
+    pub fn new() -&gt; Self {
+        Self {
+            length: 0,
+            head: None,
+            tail: None,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl&lt;T&gt; Default for LinkedList&lt;T&gt; {
+    fn default() -&gt; Self {
+        Self::new()
+    }
+}</code></pre>
+<p>在 <code>new()</code> 方法中，我们直接创建了一个 LinkedList 类型的对象（<strong>此处的<code>Self</code>代指的就是 LinkedList 类型</strong>）并返回；</p>
+<blockquote>
+<p>  <strong>注意到：</strong></p>
+<p>  <strong>在给<code>_marker</code>进行赋值时，我们直接使用了PhantomData；</strong></p>
+<p>  <font color="#f00"><strong>这是因为实际上PhantomData是一个ZST（Zero-Size Type），即无内存大小类型；</strong></font></p>
+<p>  从 <code>PhantomData</code> 的定义中我们也能看出来：</p>
+<pre><code class="rust">  #[lang = &quot;phantom_data&quot;]
+  #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+  pub struct PhantomData&lt;T: ?Sized&gt;;</code></pre>
+<p>  <font color="#f00"><strong>得益于Rust的优化，这些结构体在编译后都是不会占用内存大小的！</strong></font></p>
+<p>  <font color="#f00"><strong>因此，我们的 <code>_marker</code> 字段在编译后，甚至不会占用内存空间！</strong></font></p>
+</blockquote>
+<p>接下来，我们为 LinkedList 简单实现了 <code>Default</code> Trait，这使得我们可以通过两种方式创建出一个 LinkedList：</p>
+<pre><code class="rust">let list: LinkedList&lt;i32&gt; = LinkedList::default();
+let list: LinkedList&lt;i32&gt; = LinkedList::new();</code></pre>
+<br>
+
+<h3 id="②-首尾压入元素：push"><a href="#②-首尾压入元素：push" class="headerlink" title="② 首尾压入元素：push()"></a><strong>② 首尾压入元素：push()</strong></h3><p>在将一个元素压入双向链表时，需要注意：我们需要获取元素完整的所有权；</p>
+<p>具体在链表头部压入元素的代码如下：</p>
+<pre><code class="rust">/// Adds the given node to the front of the list.
+pub fn push_front(&amp;mut self, val: T) {
+    // Use box to help generate raw ptr
+    let mut node = Box::new(Node::new(val));
+    node.next = self.head;
+    node.prev = None;
+    let node = NonNull::new(Box::into_raw(node));
+
+    match self.head {
+        None =&gt; self.tail = node,
+        Some(head) =&gt; unsafe { (*head.as_ptr()).prev = node },
+    }
+
+    self.head = node;
+    self.length += 1;
+}</code></pre>
+<p>首先，我们使用入参中的 <code>val</code> 创建了一个链表节点Node，并使用 <code>Box</code> 包装（<strong>这么做是方便我们后面直接从 Box 获取到裸指针</strong>）；</p>
+<p>随后，对 node 进行赋值：</p>
+<p>由于是在头部插入，因此新节点的下一个元素便是当前链表的头节点，而新节点的上一个元素是空（因为当前节点会成为新的链表的头节点）；</p>
+<blockquote>
+<p>  <strong>这里得益于Rust中各种智能指针都实现了 <code>Deref</code> Trait，并且编译器会对具体的类型进行一系列 <code>ref/deref</code> 的类型推导（这一点和Golang极为相似）；</strong></p>
+<p>  <strong>因此，尽管我们使用 <code>Box</code> 对 Node 进行了一层包装，但 node 使用起来和未包装的体验完全一致！</strong></p>
+</blockquote>
+<p>接下来，使用 <code>Box::into_raw(node)</code>，将 node 转为裸指针；</p>
+<p>下面是 <code>Box::into_raw</code> 的官方文档：</p>
+<pre><code>Consumes the Box, returning a wrapped raw pointer.
+消费Box，并返回一个裸指针。
+
+The pointer will be properly aligned and non-null.
+（函数保证）指针在内存中正确对齐并且非空。
+
+After calling this function, the caller is responsible for the memory previously managed by the Box. 
+调用此函数后，调用者负责之前由 Box 管理的内存。
+
+In particular, the caller should properly destroy T and release the memory, taking into account the memory layout used by Box. The easiest way to do this is to convert the raw pointer back into a Box with the Box::from_raw function, allowing the Box destructor to perform the cleanup.
+特别是，调用者应该适当地销毁 T 并释放内存，同时考虑到 Box 使用的内存布局。最简单的方法是使用 Box::from_raw 函数将原始指针转换回 Box，从而允许 Box 析构函数执行清理。
+
+Note: this is an associated function, which means that you have to call it as Box::into_raw(b) instead of b.into_raw(). This is so that there is no conflict with a method on the inner type.
+注意：这是一个关联函数，这意味着您必须将其称为 Box::into_raw(b) 而不是 b.into_raw()。这样就不会与内部类型的方法发生冲突。</code></pre><p>可以看到，<strong>当对某个被 Box 包装的变量调用了 <code>Box::into_raw</code> 后，变量将会被转化为裸指针，同时指针指向的内存的管理权会被交给我们自己；</strong></p>
+<p>什么意思呢？</p>
+<p><strong>通常情况下在Rust中，当一个变量退出了自己的作用域后，Rust便会自动调用其 <code>drop</code> 函数释放其占用的内存（这也是为什么尽管Rust没有GC，没有free函数，也能保证内存的安全的原因）；</strong></p>
+<p>但是如果我们对某个被 Box 包装的变量调用了 <code>Box::into_raw</code> 后，之前的变量便被转为了一个裸指针！</p>
+<p>此时我们只能通过这个裸指针去访问原来的变量；</p>
+<blockquote>
+<p>  <strong>实际上 <code>Box::new()</code> 就是创建了一个指向具体变量值的指针；</strong></p>
+<p>  <strong>而 Box 作为智能指针，在退出作用域后，会直接释放指针的内存，以及指针指向的变量的内存（类似于C++中的 unique_prt ）</strong></p>
+</blockquote>
+<p><code>Box::into_raw</code> 所做的其实就是消费掉 Box 并返回指针，并且保证不会像 Box 退出作用域后释放指针指向的内存（<strong>否则暴露的指针指向的是野内存，之后取数据会出问题，并且释放也会出问题！</strong>）；</p>
+<p><strong>因此，需要我们自己保存这个裸指针，并在适当时候释放这个裸指针指向的内存！</strong></p>
+<p>那么如何释放由 Box 转换所得的裸指针指向的内存呢？</p>
+<p>文档写的也非常清楚：</p>
+<p><font color="#f00"><strong>最简单的方法是使用 <code>Box::from_raw</code> 函数将原始指针转换回 Box，从而允许 Box 析构函数执行清理；</strong></font></p>
+<p><font color="#f00"><strong>所以我们只需要将裸指针再转为实际的 Box，然后通过 Box 退出作用域后直接释放内存即可；</strong></font></p>
+<blockquote>
+<p>  <strong>注：上面的技巧在 Unsafe Rust 中非常常见！</strong></p>
+<p>  <strong>在下面的代码中，我们会大量使用！</strong></p>
+</blockquote>
+<br>
+
+<p>在将 node 转为裸指针后，接下来判断当前链表的头节点是否为空：</p>
+<pre><code class="rust">match self.head {
+    None =&gt; self.tail = node,
+    Some(head) =&gt; unsafe { (*head.as_ptr()).prev = node },
+}</code></pre>
+<p>如果为空，则将链表的尾节点也指向这个新节点即可；</p>
+<p>如果头节点不为空，则需要将当前链表头节点的前一个元素赋值为新的节点；</p>
+<p><strong>注意，这里使用到了 <code>unsafe</code>，因为我们需要将链表中的头指针 <code>head</code> 裸指针进行解引用并修改其 <code>prev</code> 值；</strong></p>
+<blockquote>
+<p>  <font color="#f00"><strong>Rust中，只有五类可以在 Unsafe Rust 中进行而不能在 Safe Rust 中进行的操作：</strong></font></p>
+<ul>
+<li><p><strong>解引用裸指针</strong></p>
+</li>
+<li><p><strong>调用不安全的函数或方法</strong></p>
+</li>
+<li><p><strong>访问或修改可变静态变量</strong></p>
+</li>
+<li><p><strong>实现不安全 trait</strong></p>
+</li>
+<li><p><strong>访问 <code>union</code> 的字段</strong></p>
+<p>同时，<strong><code>unsafe</code> 并不会关闭借用检查器或禁用任何其他 Rust 安全检查：如果在不安全代码中使用引用，它仍会被检查；<code>unsafe</code> 关键字只是提供了那五个不会被编译器检查内存安全的功能，你仍然能在不安全块中获得某种程度的安全；</strong></p>
+<p>再者，<strong><code>unsafe</code> 不意味着块中的代码就一定是危险的或者必然导致内存安全问题：其意图在于作为程序员你将会确保 <code>unsafe</code> 块中的代码以有效的方式访问内存；</strong></p>
+</li>
+</ul>
+</blockquote>
+<p>在修改了当前链表头节点的 <code>prev</code> 后，我们将新的节点设为链表的头节点，然后将链表长度加一，便完成了：</p>
+<pre><code class="rust">self.head = node;
+self.length += 1;</code></pre>
+<br>
+
+<p>相对应的，我们有 <code>push_back</code>：</p>
+<pre><code class="rust">pub fn push_back(&amp;mut self, val: T) {
+    // Use box to help generate raw ptr
+    let mut node = Box::new(Node::new(val));
+    node.next = None;
+    node.prev = self.tail;
+    let node = NonNull::new(Box::into_raw(node));
+
+    match self.tail {
+        None =&gt; self.head = node,
+        // Not creating new mutable (unique!) references overlapping `element`.
+        Some(tail) =&gt; unsafe { (*tail.as_ptr()).next = node },
+    }
+
+    self.tail = node;
+    self.length += 1;
+}</code></pre>
+<p>和上面非常类似，这里不多赘述了；</p>
+<br>
+
+<h3 id="③-首尾弹出元素：pop"><a href="#③-首尾弹出元素：pop" class="headerlink" title="③ 首尾弹出元素：pop()"></a><strong>③ 首尾弹出元素：pop()</strong></h3><p><code>pop()</code> 函数会将头部或者尾部的元素弹出；</p>
+<p>所谓弹出就是：将元素从链表中删除，并且返回具有所有权的 <code>T</code>（如果存在的话）；</p>
+<p>同时，为了确切的表达是否存在元素，返回值我们使用 <code>Option&lt;T&gt;</code> 类型表示；</p>
+<p>下面来实现从头部弹出元素的方法 <code>pop_front</code>；</p>
+<p>代码如下所示：</p>
+<pre><code class="rust">/// Removes the first element and returns it, or `None` if the list is
+/// empty.
+///
+/// This operation should compute in *O*(1) time.
+pub fn pop_front(&amp;mut self) -&gt; Option&lt;T&gt; {
+    self.head.map(|node| {
+        self.length -= 1;
+
+        unsafe {
+            let node = Box::from_raw(node.as_ptr());
+
+            self.head = node.next;
+
+            match self.head {
+                None =&gt; self.tail = None,
+                Some(head) =&gt; (*head.as_ptr()).prev = None,
+            }
+            node.into_val()
+        }
+    })
+}</code></pre>
+<blockquote>
+<p>  <strong>注意到上面的代码风格，只是调用了 <code>self.head.map()</code> 即完成了所有功能；</strong></p>
+<p>  <strong>这种函数式编程的风格在Rust中非常常见；</strong></p>
+</blockquote>
+<h4 id="补充内容：Option"><a href="#补充内容：Option" class="headerlink" title="补充内容：Option"></a><strong>补充内容：Option</strong></h4><p>在解释上面的代码之前，这里需要补充一些关于 <code>Option</code> 的知识：</p>
+<p>在 Rust 中所有的变量一定都不为 Null，即不会发生空指针；</p>
+<p>例如，下面的结构体：</p>
+<pre><code class="rust">struct Foo {
+    x: String,
+    y: String,
+}
+
+let foo = Foo {
+    x: &quot;foo&quot;.to_string(),
+    y: &quot;bar&quot;.to_string(),
+};</code></pre>
+<p>如果不对 x 或 y 初始化，则将导致编译错误！</p>
+<p><strong>而 Null 值的语义就是通过枚举类型 Option 来显示标注的！</strong></p>
+<p>Option 的定义如下：</p>
+<pre><code class="rust">#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[rustc_diagnostic_item = &quot;Option&quot;]
+#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+pub enum Option&lt;T&gt; {
+    /// No value.
+    #[lang = &quot;None&quot;]
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    None,
+    /// Some value of type `T`.
+    #[lang = &quot;Some&quot;]
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    Some(#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)] T),
+}</code></pre>
+<p>其中，<code>None</code> 即对应了语义上的 <code>Null</code>，而 <code>Some(T)</code> 表示存在一个值；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意到，在 Option 中也存在空指针优化！</strong></font></p>
+<p>  <font color="#f00"><strong>因此 <code>Option&lt;T&gt;</code> 占用的内存大小和 <code>T</code> 是完全相同的！</strong></font></p>
+</blockquote>
+<blockquote>
+<p>  <font color="#f00"><strong>枚举 Option 在设计上的思考：</strong></font></p>
+<p>  <font color="#f00"><strong>如果你确定某个变量一定不为空，则无需使用 Option 来包装类型，此时在使用时，完全不需要担心会产生空指针等异常；</strong></font></p>
+<p>  <font color="#f00"><strong>只有在你不确定某个变量是否一定有值时，才需要使用 Option 进行包装；</strong></font></p>
+<p>  在使用 Option 时：</p>
+<p>  <font color="#f00"><strong>由于 <code>Option&lt;T&gt;</code> 类型和 <code>T</code> 类型是完全不同的两个类型，Rust 会要求使用者显式的处理空指针的情况（取值为<code>None</code>的情况），因此极大的避免了空指针的行为！</strong></font></p>
+<p>  见：</p>
+<ul>
+<li><a href="https://cloud.tencent.com/developer/article/1677524" target="_blank" rel="noopener">后悔发明Null：堪称CS史上最严重错误，至少造成10亿美金损失</a></li>
+</ul>
+</blockquote>
+<p>例如，修改上面的例子：</p>
+<pre><code class="rust">struct Foo {
+    x: Option&lt;String&gt;,
+    y: Option&lt;String&gt;,
+}
+
+let foo = Foo {
+    x: Option::from(&quot;foo&quot;.to_string()),
+    y: None,
+};</code></pre>
+<p>此时就可以表示一个None值；</p>
+<br>
+
+<p>简单介绍了 <code>Option</code> 后，下面来看一下 <code>self.head.map()</code>；</p>
+<p>在 Rust 中，可能会存在很多 Option，如果需要将一个 Option 进行处理后，再返回另一个 Option 通常需要三个步骤：</p>
+<p><code>判断 Option A 是 Some</code> =&gt; <code>解出 A</code> =&gt; <code>处理A，得到结果B</code> =&gt; <code>判断B是否为None</code> =&gt; <code>包装并返回 Option B</code></p>
+<p>整个步骤异常繁杂：</p>
+<pre><code class="rust">struct Foo {
+    x: Option&lt;String&gt;,
+    y: Option&lt;String&gt;,
+}
+
+let a = Foo {
+    x: Option::from(&quot;foo&quot;.to_string()),
+    y: None,
+};
+
+let mut b: String = &quot;&quot;.to_string();
+if a.x.is_some() {
+    b = a.x.unwrap();
+}
+
+let res = if b.ends_with(&quot;0&quot;) {
+    Some(b)
+} else {
+    None
+};
+
+println!(&quot;{:?}&quot;, res); // None</code></pre>
+<p>考虑到这种场景非常常见，因此 Rust 在 Option 中提供了 <code>map</code> 方法：</p>
+<pre><code class="rust">pub const fn map&lt;U, F&gt;(self, f: F) -&gt; Option&lt;U&gt;
+where
+F: ~const FnOnce(T) -&gt; U,
+F: ~const Drop,
+{
+    match self {
+        Some(x) =&gt; Some(f(x)),
+        None =&gt; None,
+    }
+}</code></pre>
+<p>用于将一个 <code>Option&lt;T&gt;</code> 类型转换为 <code>Option&lt;U&gt;</code> 类型；</p>
+<p>因此，上面的例子可以直接被简化为：</p>
+<pre><code class="rust">let res = a.x.map(|str| {
+    if str.ends_with(&quot;o&quot;) {
+        str
+    } else {
+        None
+    }
+});</code></pre>
+<br>
+
+<p>经过上面的补充知识可以知道，<code>self.head.map()</code> 会处理整个弹出逻辑，并将头节点转换为返回值弹出；</p>
+<p>如果 head 为空，<code>map</code> 函数会直接返回 None；</p>
+<p>下面具体来看 <code>map</code> 函数中 Lambda表达式的逻辑：</p>
+<pre><code class="rust">|node| {
+    self.length -= 1;
+
+    unsafe {
+        let node = Box::from_raw(node.as_ptr());
+
+        self.head = node.next;
+
+        match self.head {
+            None =&gt; self.tail = None,
+            Some(head) =&gt; (*head.as_ptr()).prev = None,
+        }
+        node.into_val()
+    }
+}</code></pre>
+<p>此时，node 表示已经从 Option 中解出来的类型，即：<code>NonNull&lt;Node&lt;T&gt;&gt;</code>，裸指针类型；</p>
+<p>根据我们之前说的，首先使用 <code>Box::from_raw</code> 将裸指针还原为 <code>Box&lt;Node&lt;T&gt;&gt;</code> 类型（为返回头节点数据做准备）；</p>
+<p>然后将链表的头节点指向当前节点的下一个节点；</p>
+<p>随后，修改链表头节点的内容：</p>
+<p>判断当前链表头节点是否为 None（弹出元素后是否变为空链表）：</p>
+<ul>
+<li>如果链表为空，则将尾节点也置为 <code>None</code>；</li>
+<li>否则链表不为空，将当前链表头节点的 <code>prev</code> 置为 <code>None</code>（表示当前 节点已经变为链表的头节点）；</li>
+</ul>
+<p>最后，使用前文提到的 <code>into_val</code> 函数，将 <code>Box&lt;Node&lt;T&gt;&gt;</code> 中的值取出，完成；</p>
+<br>
+
+<p>同样的，尾部弹出一个元素：</p>
+<pre><code class="rust">/// Removes the last element from a list and returns it, or `None` if
+/// it is empty.
+///
+/// This operation should compute in *O*(1) time.
+pub fn pop_back(&amp;mut self) -&gt; Option&lt;T&gt; {
+  self.tail.map(|node| {
+    self.length -= 1;
+
+    unsafe {
+      let node = Box::from_raw(node.as_ptr());
+
+      self.tail = node.prev;
+
+      match self.tail {
+        None =&gt; self.head = None,
+        Some(tail) =&gt; (*tail.as_ptr()).next = None,
+      }
+      node.into_val()
+    }
+  })
+}</code></pre>
+<br>
+
+<h3 id="④-查看首尾元素：peek"><a href="#④-查看首尾元素：peek" class="headerlink" title="④ 查看首尾元素：peek()"></a><strong>④ 查看首尾元素：peek()</strong></h3><p>由于在 Rust 中是区分元素所有权，并且区分可变和不可变引用的（未标注 <code>mut</code> 默认为不可变引用）；</p>
+<p>因此在 Rust 中实现 <code>peek()</code> 和在其他编程语言中略有不同！</p>
+<p>我们需要分别实现：</p>
+<ul>
+<li><code>peek()</code>：返回不可变引用类型；</li>
+<li><code>peek_mut()</code>：返回可变引用类型；</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>需要注意的是：上面两个方法仅仅返回元素的引用，而元素的所有权还是在链表中；</strong></font></p>
+</blockquote>
+<h4 id="实现-peek-front"><a href="#实现-peek-front" class="headerlink" title="实现 peek_front()"></a><strong>实现 <code>peek_front()</code></strong></h4><p>先来实现 <code>peek_front()</code>，代码如下：</p>
+<pre><code class="rust">pub fn peek_front(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+    unsafe {
+      self.head.as_ref().map(|node| &amp;node.as_ref().val)
+    }
+}</code></pre>
+<p>代码非常简洁，只有一行；我们一个方法一个方法的来看；</p>
+<p>首先，和之前类似，Option 提供了 <code>as_ref</code> 方法，可以将 <code>Option&lt;T&gt;</code> 转为 <code>Option&lt;&amp;T&gt;</code> 而不用频繁的拆包再包装；</p>
+<p>之后再次调用 <code>map</code> 方法（<strong>注意，此时 node 的类型为 <code>&amp;NonNull&lt;Node&lt;T&gt;&gt;</code>，即裸指针的引用类型</strong>），<strong>将当前 Option 中的 裸指针引用转为 <code>Option&lt;&amp;T&gt;</code> ，即Node节点的引用；</strong></p>
+<p>在上面的 <code>&amp;node.as_ref().val</code> 中：</p>
+<p>首先 <code>node.as_ref()</code> 做的事情是：</p>
+<pre><code class="rust">#[stable(feature = &quot;nonnull&quot;, since = &quot;1.25.0&quot;)]
+#[rustc_const_unstable(feature = &quot;const_ptr_as_ref&quot;, issue = &quot;91822&quot;)]
+#[must_use]
+#[inline]
+pub const unsafe fn as_ref&lt;&#39;a&gt;(&amp;self) -&gt; &amp;&#39;a T {
+  // SAFETY: the caller must guarantee that `self` meets all the
+  // requirements for a reference.
+  unsafe { &amp;*self.as_ptr() }
+}</code></pre>
+<p>即，<code>as_ref</code> 会将裸指针解引用，并将实际的Node节点元素的引用返回，即：<code>&amp;Node&lt;T&gt;</code>;</p>
+<blockquote>
+<p>  <strong>这里直接支持这个操作的原因是因为：</strong></p>
+<p>  <font color="#f00"><strong>我们使用了 <code>NonNull</code> 类型，保证了指针一定不为空，即：裸指针一定不为空指针！</strong></font></p>
+</blockquote>
+<p>随后，我们取出 <code>node.as_ref().val</code> 即：<strong>裸指针对应Node节点的 val 字段，我们真正返回的元素！</strong></p>
+<p><strong>最后 <code>&amp;node.as_ref().val</code> 表示取 node 节点 val 元素的引用！</strong></p>
+<blockquote>
+<p>  <strong>总结：</strong></p>
+<p>  <strong><code>&amp;node.as_ref().val</code> 的顺序为：</strong></p>
+<pre><code class="rust">  &amp;((node.as_ref()).val)</code></pre>
+<p>  <strong>上面的函数和取引用操作缺一不可！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="实现-peek-back"><a href="#实现-peek-back" class="headerlink" title="实现 peek_back()"></a><strong>实现 <code>peek_back()</code></strong></h4><p>对应的，<code>peek_back()</code>，代码如下：</p>
+<pre><code class="rust">pub fn peek_back(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+  unsafe { self.tail.as_ref().map(|node| &amp;node.as_ref().val) }
+}</code></pre>
+<p>这里不再赘述！</p>
+<br>
+
+<h4 id="实现-peek-front-mut"><a href="#实现-peek-front-mut" class="headerlink" title="实现 peek_front_mut()"></a><strong>实现 <code>peek_front_mut()</code></strong></h4><p>除了返回引用类型的元素之外，我们还要能返回可变引用类型：<code>Option&lt;&amp;mut T&gt;</code>：</p>
+<p>使得用户能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！</p>
+<p>实现 <code>peek_front()</code> 的代码同样非常简洁，代码如下：</p>
+<pre><code class="rust">pub fn peek_front_mut(&amp;mut self) -&gt; Option&lt;&amp;mut T&gt; {
+  unsafe { self.head.as_mut().map(|node| &amp;mut node.as_mut().val) }
+}</code></pre>
+<p>相比于仅返回引用类型（只读）的情况，这里的修改主要是：</p>
+<ul>
+<li><code>as_ref</code> 改为了 <code>as_mut</code>；</li>
+<li><code>&amp;node</code> 改为了 <code>&amp;mut node</code>；</li>
+</ul>
+<p>思考一下，为什么这里需要将这么多的引用改为可变引用呢？</p>
+<p>首先，你需要明确一点：</p>
+<p><font color="#f00"><strong>在 Rust 中，如果修改一个容器中的元素，首先这个容器需要是可变的！</strong></font></p>
+<p>那么，<code>head.as_mut()</code> 就获取了一个可变的裸指针（<strong>即，这个裸指针指向的内存是可变的，而不是这个指针可变！</strong>）；</p>
+<p>进而，此时 node 的类型为 <code>&amp;mut NonNull&lt;Node&lt;T&gt;&gt;</code>；</p>
+<p>随后，调用 node 的 <code>as_mut</code> 方法：</p>
+<pre><code class="rust">#[stable(feature = &quot;nonnull&quot;, since = &quot;1.25.0&quot;)]
+#[rustc_const_unstable(feature = &quot;const_ptr_as_ref&quot;, issue = &quot;91822&quot;)]
+#[must_use]
+#[inline]
+pub const unsafe fn as_mut&lt;&#39;a&gt;(&amp;mut self) -&gt; &amp;&#39;a mut T {
+  // SAFETY: the caller must guarantee that `self` meets all the
+  // requirements for a mutable reference.
+  unsafe { &amp;mut *self.as_ptr() }
+}</code></pre>
+<p>可以看到，调用裸指针的 <code>as_mut</code> 方法需要一个可变指针 <code>&amp;mut self</code>，这也是为什么上面使用了<code>head.as_mut()</code>；</p>
+<p>随后  <code>node.as_mut</code> 方法，返回一个裸指针解引用后的 Node 的可变引用：<code>&amp;mut Node&lt;T&gt;</code>；</p>
+<p>最后，<code>&amp;mut node.as_mut().val</code> 生成了 <code>&amp;mut T</code>，即Node节点对应的可变引用！</p>
+<br>
+
+<h4 id="实现-peek-back-mut"><a href="#实现-peek-back-mut" class="headerlink" title="实现 peek_back_mut()"></a><strong>实现 <code>peek_back_mut()</code></strong></h4><p>对应的，<code>peek_back_()</code>，代码如下：</p>
+<pre><code class="rust">pub fn peek_back_mut(&amp;mut self) -&gt; Option&lt;&amp;mut T&gt; {
+  unsafe { self.tail.as_mut().map(|node| &amp;mut node.as_mut().val) }
+}</code></pre>
+<p>这里不再赘述！</p>
+<br>
+
+<h3 id="⑤-根据index查看元素：get-by-idx"><a href="#⑤-根据index查看元素：get-by-idx" class="headerlink" title="⑤ 根据index查看元素：get_by_idx()"></a><strong>⑤ 根据index查看元素：<code>get_by_idx()</code></strong></h3><p>有了查看首尾元素，我们自然还需要根据 index 索引查看任意位置的元素；</p>
+<p>但是这里需要明确一点：</p>
+<p><strong>api调用方很有可能传入了一个非法的index值，如：-1、超过链表长度的值等；</strong></p>
+<p>这个时候有两种处理方法：</p>
+<ul>
+<li>返回 None；</li>
+<li>返回错误；</li>
+</ul>
+<p>在这里，我们选择返回错误：</p>
+<p><strong>因为，如果仅仅返回 None，api调用方不能确定是因为 index 传错而导致的 None，还是链表本身就是空的！</strong></p>
+<p>下面我们补充一些关于 Rust 中错误处理的知识（<strong>已经对这个内容很熟悉的同学可以跳过这部分</strong>）！</p>
+<h4 id="补充：Rust中的错误处理"><a href="#补充：Rust中的错误处理" class="headerlink" title="补充：Rust中的错误处理"></a><strong>补充：Rust中的错误处理</strong></h4><p>目前，主流的错误处理方法主要包括：</p>
+<ul>
+<li>try-catch：Java、C++；</li>
+<li>panic-recover：Go；</li>
+<li>error handling：Go；</li>
+<li>……；</li>
+</ul>
+<blockquote>
+<p>  详见：</p>
+<ul>
+<li><a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86" target="_blank" rel="noopener">异常处理</a></li>
+</ul>
+</blockquote>
+<p>总的来说，在 Rust 中主要有两种错误处理方式（和 Golang 比较类似）：</p>
+<ul>
+<li><strong>显式的 <code>panic</code>：主要用于测试，以及处理不可恢复的错误；（在原型开发中这很有用，比如 用来测试还没有实现的函数，不过这时使用 <code>unimplemented</code> 更能表达意图；）</strong></li>
+<li><strong>使用枚举 <code>Result</code>：当错误有可能发生，且应当由调用者处理时使用；</strong></li>
+</ul>
+<p>通常情况下，我们都使用枚举 Result：</p>
+<pre><code class="rust">#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[must_use = &quot;this `Result` may be an `Err` variant, which should be handled&quot;]
+#[rustc_diagnostic_item = &quot;Result&quot;]
+#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+pub enum Result&lt;T, E&gt; {
+    /// Contains the success value
+    #[lang = &quot;Ok&quot;]
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    Ok(#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)] T),
+
+    /// Contains the error value
+    #[lang = &quot;Err&quot;]
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    Err(#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)] E),
+}</code></pre>
+<p>可以说，<a href="https://rustwiki.org/zh-CN/std/result/enum.Result.html" target="_blank" rel="noopener"><code>Result</code></a> 是 <a href="https://rustwiki.org/zh-CN/std/option/enum.Option.html" target="_blank" rel="noopener"><code>Option</code></a> 类型的更丰富的版本，描述的是可能的<strong>错误</strong>，而不是可能的<strong>不存在</strong>；</p>
+<p>也就是说，<code>Result&lt;T，E&gt;</code> 可以有两个结果的其中一个：</p>
+<ul>
+<li><code>Ok&lt;T&gt;</code>：找到 <code>T</code> 元素；</li>
+<li><code>Err&lt;E&gt;</code>：找到 <code>E</code> 元素，<code>E</code> 即表示错误的类型；</li>
+</ul>
+<br>
+
+<h4 id="补充：Rust中自定义错误类型"><a href="#补充：Rust中自定义错误类型" class="headerlink" title="补充：Rust中自定义错误类型"></a><strong>补充：Rust中自定义错误类型</strong></h4><p>有时候，我们可能需要自定义一些错误类型，如：<code>index不合法</code>；</p>
+<p>我们可以通过为我们的类型实现 <code>error::Error</code> Trait：</p>
+<pre><code class="rust">use std::{error, fmt};
+
+#[derive(Debug, Clone)]
+pub struct IndexOutOfRangeError;
+
+impl fmt::Display for IndexOutOfRangeError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        write!(f, &quot;index out of range&quot;)
+    }
+}
+
+impl error::Error for IndexOutOfRangeError {}</code></pre>
+<p>上面的代码定义了一个 <code>IndexOutOfRangeError</code> 类型，并实现了 <code>error::Error</code> Trait；</p>
+<blockquote>
+<p>  <strong><code>error::Error</code> 中有许多方法可以重写以提供更多关于错误的信息，例如：</strong></p>
+<ul>
+<li>backtrace；</li>
+<li>description；</li>
+<li>……</li>
+</ul>
+</blockquote>
+<p>接下来，我们就可以在我们的代码中使用这个错误了，例如：</p>
+<pre><code class="rust">pub fn get_by_idx(&amp;self, idx: usize) -&gt; Result&lt;Option&lt;&amp;T&gt;, Box&lt;dyn Error&gt;&gt; {
+  ......
+}</code></pre>
+<blockquote>
+<p>  更多关于 Rust 中错误处理见：</p>
+<ul>
+<li><a href="https://rustwiki.org/zh-CN/rust-by-example/error.html" target="_blank" rel="noopener">错误处理</a></li>
+<li><a href="https://rustwiki.org/zh-CN/book/ch09-00-error-handling.html" target="_blank" rel="noopener">Rust 官方文档</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="实现：get-by-idx方法"><a href="#实现：get-by-idx方法" class="headerlink" title="实现：get_by_idx方法"></a><strong>实现：get_by_idx方法</strong></h4><p>get_by_idx方法的代码如下：</p>
+<pre><code class="rust">pub fn get_by_idx(&amp;self, idx: usize) -&gt; Result&lt;Option&lt;&amp;T&gt;, Box&lt;dyn Error&gt;&gt; {
+  let len = self.length;
+
+  if idx &gt;= len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  // Iterate towards the node at the given index, either from the start or the end,
+  // depending on which would be faster.
+  let offset_from_end = len - idx - 1;
+  let mut cur;
+  if idx &lt;= offset_from_end {
+    // Head to Tail
+    cur = self.head;
+    for _ in 0..idx {
+      match cur.take() {
+        None =&gt; {
+          cur = self.head;
+        }
+        Some(current) =&gt; unsafe {
+          cur = current.as_ref().next;
+        },
+      }
+    }
+  } else {
+    // Tail to Head
+    cur = self.tail;
+    for _ in 0..offset_from_end {
+      match cur.take() {
+        None =&gt; {
+          cur = self.tail;
+        }
+        Some(current) =&gt; unsafe {
+          cur = current.as_ref().prev;
+        },
+      }
+    }
+  }
+
+  unsafe { Ok(cur.as_ref().map(|node| &amp;node.as_ref().val)) }
+}</code></pre>
+<p>下面来看一下代码；</p>
+<p>首先，判断用户传入的索引index是否大于了链表长度： <code>idx &gt;= len</code>；</p>
+<blockquote>
+<p>  <strong>注意：这里并没有校验索引小于0，因为 <code>idx</code> 是 <code>usize</code> 类型的，一定不会小于0了！</strong></p>
+</blockquote>
+<p>随后，我们计算 <code>offset_from_end</code>，来判断是从链表头部到 index 近，还是尾部近（<strong>充分利用我们双向链表的优势</strong>）！</p>
+<h5 id="从头部寻找元素"><a href="#从头部寻找元素" class="headerlink" title="从头部寻找元素"></a><strong>从头部寻找元素</strong></h5><p>如果 <code>idx &lt;= offset_from_end</code>，说明从头部到 index 的距离更近：</p>
+<pre><code class="rust">// Head to Tail
+cur = self.head;
+for _ in 0..idx {
+  match cur.take() {
+    None =&gt; {
+      cur = self.head;
+    }
+    Some(current) =&gt; unsafe {
+      cur = current.as_ref().next;
+    },
+  }
+}</code></pre>
+<p>首先，代码将链表头部 <code>移动</code> 给了 <code>cur</code>；</p>
+<br>
+
+<h6 id="补充内容：Copy-Trait"><a href="#补充内容：Copy-Trait" class="headerlink" title="补充内容：Copy Trait"></a><strong>补充内容：Copy Trait</strong></h6><p>看到这里，有人就会有疑问了：<strong>Rust 中的 <code>=</code> 是 <code>move</code> 语义，这样做原链表中的 head 不就变成空值了！</strong></p>
+<p>的确，Rust中的 <code>=</code> 是 <code>move</code> 语义，但是<font color="#f00"><strong>在Rust中存在另两个 Trait：<code>Clone &amp; Copy</code>：</strong></font></p>
+<pre><code class="rust">/// A common Trait for the ability to explicitly duplicate an object.
+#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+#[lang = &quot;clone&quot;]
+#[rustc_diagnostic_item = &quot;Clone&quot;]
+#[rustc_trivial_field_reads]
+pub trait Clone: Sized {
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    #[must_use = &quot;cloning is often expensive and is not expected to have side effects&quot;]
+    fn clone(&amp;self) -&gt; Self;
+
+    #[inline]
+    #[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+    fn clone_from(&amp;mut self, source: &amp;Self) {
+        *self = source.clone()
+    }
+}
+
+
+/// Types whose values can be duplicated simply by copying bits.
+#[stable(feature = &quot;rust1&quot;, since = &quot;1.0.0&quot;)]
+#[lang = &quot;copy&quot;]
+#[rustc_unsafe_specialization_marker]
+#[rustc_diagnostic_item = &quot;Copy&quot;]
+pub trait Copy: Clone {
+    // Empty.
+}</code></pre>
+<p>Clone 很好理解，就是由一个类型的实例创建出另一个相同类型的实例；</p>
+<p>而实现Copy的类型（<strong>实现Copy需要先实现Clone</strong>），可以使用简单字节copy的方式复制；</p>
+<p><font color="#f00"><strong>与Clone不同，Copy方式是隐式作用于类型变量，通过赋值语句来完成；</strong></font></p>
+<blockquote>
+<p>  <strong>这一点有些类似于 Java 中的基本类型（如，int、double）；</strong></p>
+<p>  <font color="#f00"><strong>并非所有的对象都需要使用对象包装，有些时候：直接对类型进行字节copy的成本要比生成一个指向对象的引用指针还要低！</strong></font></p>
+</blockquote>
+<p>以下面的代码为例：</p>
+<pre><code class="rust">let mut x = Some(1);
+let y = x;
+let z = x.take();
+println!(&quot;{:?} {:?} {:?}&quot;, x, y, z); // None Some(1) Some(1)</code></pre>
+<p>上面的 <code>y = x</code> 为 Copy 语义，因此最终、y、z 都是存在值的！</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注：在 Rust 中默认是 Move 语义，但是如果实现了 Copy Trait就会变为 Copy 语义；</strong></font></p>
+<p>  <font color="#f00"><strong>因此，明确一个变量是否实现了 Copy Trait 是非常重要的</strong></font></p>
+</blockquote>
+<p> <code>NonNull</code> 便实现了Clone 和 Copy Trait：</p>
+<pre><code class="rust">#[stable(feature = &quot;nonnull&quot;, since = &quot;1.25.0&quot;)]
+impl&lt;T: ?Sized&gt; Clone for NonNull&lt;T&gt; {
+    #[inline]
+    fn clone(&amp;self) -&gt; Self {
+        *self
+    }
+}
+
+#[stable(feature = &quot;nonnull&quot;, since = &quot;1.25.0&quot;)]
+impl&lt;T: ?Sized&gt; Copy for NonNull&lt;T&gt; {}</code></pre>
+<p>因此上面的 <code>cur = self.head;</code> 最终会将变量 <code>cur</code> 也赋值为指向链表头部的裸指针；</p>
+<blockquote>
+<p>  <strong>补充内容：Option 中的 take 方法：</strong></p>
+<p>  <strong>将 <code>Option&lt;T&gt;</code> 中的值 <code>T</code> 取出，如果 Option 为 None，则返回 None；</strong> </p>
+</blockquote>
+<br>
+
+<p>随后，从头部开始遍历，直到第 idx 个节点：</p>
+<pre><code class="rust">for _ in 0..idx {
+  match cur.take() {
+    None =&gt; {
+      cur = self.head;
+    }
+    Some(current) =&gt; unsafe {
+      cur = current.as_ref().next;
+    },
+  }
+}</code></pre>
+<p>这段代码比较简单，执行完后，cur 就指向了链表中的第 idx 个节点；</p>
+<br>
+
+<h5 id="从尾部寻找元素"><a href="#从尾部寻找元素" class="headerlink" title="从尾部寻找元素"></a><strong>从尾部寻找元素</strong></h5><p>如果 idx 节点离链表尾部比较近，则将会从尾部向前遍历；</p>
+<p>代码如下：</p>
+<pre><code class="rust">else {
+  // Tail to Head
+  cur = self.tail;
+  for _ in 0..offset_from_end {
+    match cur.take() {
+      None =&gt; {
+        cur = self.tail;
+      }
+      Some(current) =&gt; unsafe {
+        cur = current.as_ref().prev;
+      },
+    }
+  }
+}</code></pre>
+<p>这一段代码与从头开始遍历极为相似，这里不再赘述！</p>
+<br>
+
+<h5 id="返回第-idx-个元素"><a href="#返回第-idx-个元素" class="headerlink" title="返回第 idx 个元素"></a><strong>返回第 idx 个元素</strong></h5><p>经过上面的处理，最终会找到指向第 idx 个元素的裸指针：cur；</p>
+<p>最后，我们返回这个指针指向的节点中的值即可：</p>
+<pre><code class="rust">unsafe { Ok(cur.as_ref().map(|node| &amp;node.as_ref().val)) }</code></pre>
+<p>至此，我们的根据 index 查看元素的方法已经完成！</p>
+<br>
+
+<h3 id="⑥-根据index获取可变元素：get-by-idx-mut"><a href="#⑥-根据index获取可变元素：get-by-idx-mut" class="headerlink" title="⑥ 根据index获取可变元素：get_by_idx_mut()"></a><strong>⑥ 根据index获取可变元素：get_by_idx_mut()</strong></h3><p>有了根据 index 获取只读元素的 <code>get_by_idx</code>，很自然的想到还会有获取可变元素的 <code>get_by_idx_mut</code>；</p>
+<p>与 <code>get_by_idx</code> 不同，<code>get_by_idx_mut</code> 的使用场景在内部实现中也会被大量用到，例如：</p>
+<ul>
+<li>根据元素插入指定的 index 位置；</li>
+<li>删除指定 index 位置的元素；</li>
+<li>……</li>
+</ul>
+<p>因此，我们可以实现一个内部方法：返回指向 index 对应节点的可变裸指针来达到代码复用的效果：</p>
+<pre><code class="rust"> fn _get_by_idx_mut(&amp;self, idx: usize) -&gt; Result&lt;Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;, Box&lt;dyn Error&gt;&gt; {
+   let len = self.length;
+
+   if idx &gt;= len {
+     return Err(Box::new(IndexOutOfRangeError {}));
+   }
+
+   // Iterate towards the node at the given index, either from the start or the end,
+   // depending on which would be faster.
+   let offset_from_end = len - idx - 1;
+   let mut cur;
+   if idx &lt;= offset_from_end {
+     // Head to Tail
+     cur = self.head;
+     for _ in 0..idx {
+       match cur.take() {
+         None =&gt; {
+           cur = self.head;
+         }
+         Some(current) =&gt; unsafe {
+           cur = current.as_ref().next;
+         },
+       }
+     }
+   } else {
+     // Tail to Head
+     cur = self.tail;
+     for _ in 0..offset_from_end {
+       match cur.take() {
+         None =&gt; {
+           cur = self.tail;
+         }
+         Some(current) =&gt; unsafe {
+           cur = current.as_ref().prev;
+         },
+       }
+     }
+   }
+
+   Ok(cur)
+}</code></pre>
+<p>代码与 <code>get_by_idx</code> 方法即为相似，只是把 cur 声明为了 mut，并且直接返回 <code>Ok(cur)</code>！</p>
+<p>随后，直接使用这个内部方法实现我们的 <code>get_by_idx_mut</code> 方法：</p>
+<pre><code class="rust">pub fn get_by_idx_mut(&amp;self, idx: usize) -&gt; Result&lt;Option&lt;&amp;mut T&gt;, Box&lt;dyn Error&gt;&gt; {
+  let mut cur = self._get_by_idx_mut(idx)?;
+  unsafe { Ok(cur.as_mut().map(|node| &amp;mut node.as_mut().val)) }
+}</code></pre>
+<br>
+
+<h3 id="⑦-在指定index-前-插入元素"><a href="#⑦-在指定index-前-插入元素" class="headerlink" title="⑦ 在指定index(前)插入元素"></a><strong>⑦ 在指定index(前)插入元素</strong></h3><p>经过前面的一些铺垫，这里实现的方法就显得比较常规了！</p>
+<p>具体代码如下：</p>
+<pre><code class="rust">pub fn insert_by_idx(&amp;mut self, idx: usize, data: T) -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+  let len = self.length;
+
+  if idx &gt; len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  if idx == 0 {
+    return Ok(self.push_front(data));
+  } else if idx == len {
+    return Ok(self.push_back(data));
+  }
+
+  unsafe {
+    // Create Node
+    let mut spliced_node = Box::new(Node::new(data));
+    let before_node = self._get_by_idx_mut(idx - 1)?;
+    let after_node = before_node.unwrap().as_mut().next;
+    spliced_node.prev = before_node;
+    spliced_node.next = after_node;
+    let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+    // Insert Node
+    before_node.unwrap().as_mut().next = spliced_node;
+    after_node.unwrap().as_mut().prev = spliced_node;
+  }
+
+  self.length += 1;
+
+  Ok(())
+}</code></pre>
+<p>首先，如果 idx 大于 len，则返回错误（<strong>这里可以相等，这相当于在链表尾部插入一个元素</strong>）；</p>
+<p>随后，为了避免一些样板代码：</p>
+<ul>
+<li><code>idx==0</code>可以被简化为：push_front；</li>
+<li><code>idx == len</code>可以被简化为：push_back；</li>
+</ul>
+<p>如果是在链表的中间节点插入元素，则：</p>
+<pre><code class="rust"> // Create Node
+let mut spliced_node = Box::new(Node::new(data));
+let before_node = self._get_by_idx_mut(idx - 1)?;
+let after_node = before_node.unwrap().as_mut().next;
+spliced_node.prev = before_node;
+spliced_node.next = after_node;
+let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+// Insert Node
+before_node.unwrap().as_mut().next = spliced_node;
+after_node.unwrap().as_mut().prev = spliced_node;</code></pre>
+<p>首先，创建一个新的元素：<code>Box::new(Node::new(data))</code>；</p>
+<p>随后使用我们之前写过的方法：<code>self._get_by_idx_mut(idx - 1)?</code>，取出将要插入的 index 的前一个元素：before_node；</p>
+<blockquote>
+<p>  <strong>补充知识：<code>?</code>操作符</strong></p>
+<p>  如果你使用过 Kotlin 你就会对这个操作符很熟悉：</p>
+<p>  <strong><code>?</code>操作符放在一个返回 Result 类型的函数后：</strong></p>
+<ul>
+<li><strong>如果函数返回 Error，则该函数会直接 return Error；</strong></li>
+<li><strong>否则，函数调用成功，返回函数的返回值；</strong></li>
+</ul>
+<p>  <strong><code>?</code>操作符经常用在如果调用函数发生错误，直接返回错误的场景，用于简化代码；</strong></p>
+</blockquote>
+<p>然后，通过 <code>let after_node = before_node.unwrap().as_mut().next;</code> 获取当前 index 处的节点（<strong>因为插入新节点只需要修改这两个节点即可！</strong>）；</p>
+<p>最后，修改待插入的节点的 <code>prev</code> 和 <code>next</code>，然后将节点插入：</p>
+<pre><code class="rust">spliced_node.prev = before_node;
+spliced_node.next = after_node;
+let spliced_node = NonNull::new(Box::into_raw(spliced_node));
+
+// Insert Node
+before_node.unwrap().as_mut().next = spliced_node;
+after_node.unwrap().as_mut().prev = spliced_node;</code></pre>
+<blockquote>
+<p>  <strong>注：这里使用 <code>unwrap()</code> 直接获取节点的值是因为，我们能够保证这些节点一定不为 None！</strong></p>
+<p>  <strong>否则会产生 panic 错误！</strong></p>
+</blockquote>
+<br>
+
+<h3 id="⑧-删除index处的元素"><a href="#⑧-删除index处的元素" class="headerlink" title="⑧ 删除index处的元素"></a><strong>⑧ 删除index处的元素</strong></h3><p>有了在 index 前插入元素，下面我们继续实现删除 index 处元素的逻辑；</p>
+<p>和在 index 处插入元素类似：</p>
+<ul>
+<li>如果 <code>index &gt;= len</code>，则报错（此时 index 没有元素，我们也不能移除元素）；</li>
+<li>如果 <code>idx == 0</code>，调用 pop_front；</li>
+<li>如果 <code>idx == len -1</code>，调用 pop_back；</li>
+</ul>
+<p>否则，进入移除在链表内部节点的逻辑；</p>
+<p>代码如下：</p>
+<pre><code class="rust">/// Removes the element at the given index and returns it.
+///
+/// This operation should compute in *O*(*n*) time.
+pub fn remove_by_idx(&amp;mut self, idx: usize) -&gt; Result&lt;T, Box&lt;dyn Error&gt;&gt; {
+  let len = self.length;
+
+  if idx &gt;= len {
+    return Err(Box::new(IndexOutOfRangeError {}));
+  }
+
+  if idx == 0 {
+    return Ok(self.pop_front().unwrap());
+  } else if idx == len - 1 {
+    return Ok(self.pop_back().unwrap());
+  };
+
+  let cur = self._get_by_idx_mut(idx)?.unwrap();
+
+  self.unlink_node(cur);
+
+  unsafe {
+    let unlinked_node = Box::from_raw(cur.as_ptr());
+    Ok(unlinked_node.val)
+  }
+}</code></pre>
+<p>如果 index 为链表内部节点，则在移除时：</p>
+<p>首先，通过 <code>self._get_by_idx_mut(idx)?.unwrap();</code> 获取在 index 处的裸指针（待移除节点对应指针）；</p>
+<p>随后，调用 <code>unlink_node</code> 方法将该节点从链表中移除：</p>
+<pre><code class="rust">/// Unlinks the specified node from the current list.
+///
+/// Warning: this will not check that the provided node belongs to the current list.
+///
+/// This method takes care not to create mutable references to `element`,
+/// to maintain validity of aliasing pointers.
+#[inline]
+fn unlink_node(&amp;mut self, mut node: NonNull&lt;Node&lt;T&gt;&gt;) {
+  let node = unsafe { node.as_mut() }; // this one is ours now, we can create an &amp;mut.
+
+  // Not creating new mutable (unique!) references overlapping `element`.
+  match node.prev {
+    Some(prev) =&gt; unsafe { (*prev.as_ptr()).next = node.next },
+    // this node is the head node
+    None =&gt; self.head = node.next,
+  };
+
+  match node.next {
+    Some(next) =&gt; unsafe { (*next.as_ptr()).prev = node.prev },
+    // this node is the tail node
+    None =&gt; self.tail = node.prev,
+  };
+
+  self.length -= 1;
+}</code></pre>
+<p><strong>unlink_node 的逻辑非常简单，就是：</strong></p>
+<p><strong>修改待移除节点的前一个节点和后一个节点的指针，使得自身节点被移出原链表！</strong></p>
+<p>最后，代码通过：<code>Box::from_raw</code> 将裸指针还原为实际的 <code>Box&lt;Node&lt;T&gt;&gt;</code> 类型，并将节点中的元素值返回！</p>
+<pre><code class="rust">unsafe {
+  let unlinked_node = Box::from_raw(cur.as_ptr());
+  Ok(unlinked_node.val)
+}</code></pre>
+<blockquote>
+<p>  <strong>注：remove_by_idx 方法签名为：</strong></p>
+<p>  <strong><code>remove_by_idx(&amp;mut self, idx: usize) -&gt; Result&lt;T, Box&lt;dyn Error&gt;&gt;</code></strong></p>
+<p>  <font color="#f00"><strong>即，remove_by_idx 方法会直接将节点移除，并将在节点存放元素的所有权返回给方法调用者！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="⑨-三种迭代器的实现：iter、iter-mut和into-iter"><a href="#⑨-三种迭代器的实现：iter、iter-mut和into-iter" class="headerlink" title="⑨ 三种迭代器的实现：iter、iter_mut和into_iter"></a><strong>⑨ 三种迭代器的实现：iter、iter_mut和into_iter</strong></h3><p>对应于 Rust 变量存在的三种形式（<code>&amp;self</code>、<code>&amp;mut self</code>、<code>self</code>），迭代器也被分为了三种：</p>
+<ul>
+<li><strong>IntoIter：获取元素所有权的迭代器，迭代器会获取原容器中全部元素所有权到迭代器中，随后被消耗掉；</strong></li>
+<li><strong>Iter：不可变引用类型的迭代器，即：对容器进行只读迭代；</strong></li>
+<li><strong>IterMut：可变引用类型的迭代器，即：不获取容器中元素的所有权，但是获取元素的可变引用进行迭代（可以在遍历时修改原容器中元素的值）；</strong></li>
+</ul>
+<h4 id="迭代器类型定义"><a href="#迭代器类型定义" class="headerlink" title="迭代器类型定义"></a><strong>迭代器类型定义</strong></h4><p>首先我们为链表定义这三种迭代器类型：</p>
+<pre><code class="rust">pub struct IntoIter&lt;T&gt; {
+    list: LinkedList&lt;T&gt;,
+}
+
+pub struct Iter&lt;&#39;a, T: &#39;a&gt; {
+    head: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    tail: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    len: usize,
+    _marker: PhantomData&lt;&amp;&#39;a Node&lt;T&gt;&gt;,
+}
+
+pub struct IterMut&lt;&#39;a, T: &#39;a&gt; {
+    head: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    tail: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+    len: usize,
+    _marker: PhantomData&lt;&amp;&#39;a mut Node&lt;T&gt;&gt;,
+}</code></pre>
+<p>对于 IntoIter 的结构声明是明确的，因为 IntoIter 会获取整个链表所有节点的所有权，因此直接将链表的所有权转移至 IntoIter 中即可；</p>
+<p>但是对于 Iter 和 IterMut 而言，我们需要 Copy 当前链表的头节点和尾节点，而非获取链表的所有权；</p>
+<p>同时，<strong>对于 Iterator 的 Item 如果是引用类型，则需要指定对应元素的生命周期；</strong></p>
+<p><strong>但是由于 head 和 tail 中存放的是裸指针（即表示，其内存分配是由我们来管理的！），因此此时再次需要使用 <code>PhantomData</code> 来避免编译器对于生命周期的检查问题；</strong></p>
+<p>相对应的，下面是在双向链表中实现的各个类型的迭代器的构造方法：</p>
+<pre><code class="rust">pub fn into_iter(self) -&gt; IntoIter&lt;T&gt; {
+  IntoIter { list: self }
+}
+
+pub fn iter(&amp;self) -&gt; Iter&lt;&#39;_, T&gt; {
+  Iter {
+    head: self.head,
+    tail: self.tail,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}
+
+pub fn iter_mut(&amp;mut self) -&gt; IterMut&lt;&#39;_, T&gt; {
+  IterMut {
+    head: self.head,
+    tail: self.tail,
+    len: self.length,
+    _marker: PhantomData,
+  }
+}</code></pre>
+<p>除了 IntoIter 直接获取的链表的所有权，Iter 和 IterMut 都是仅仅 Copy 裸指针；</p>
+<p>至此，我们对三种迭代器的定义完成，下面来具体实现每一种迭代器；</p>
+<br>
+
+<h4 id="i-实现IntoIter"><a href="#i-实现IntoIter" class="headerlink" title="i.实现IntoIter"></a><strong>i.实现IntoIter</strong></h4><p>IntoIter的实现非常简单，因为我们已经完全将链表的所有权交给了 IntoIter；</p>
+<p>因此，如果需要正向遍历，我们直接调用 pop_front 即可；而如果需要反向遍历，我们只需要调用 pop_back；</p>
+<p>代码如下：</p>
+<pre><code class="rust">impl&lt;T&gt; Iterator for IntoIter&lt;T&gt; {
+    type Item = T;
+
+    #[inline]
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        self.list.pop_front()
+    }
+
+    #[inline]
+    fn size_hint(&amp;self) -&gt; (usize, Option&lt;usize&gt;) {
+        (self.list.length, Some(self.list.length))
+    }
+}
+
+impl&lt;T&gt; DoubleEndedIterator for IntoIter&lt;T&gt; {
+    #[inline]
+    fn next_back(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        self.list.pop_back()
+    }
+}</code></pre>
+<p>由于双向链表可以从两个方向迭代，因此我们为 IntoIter 同时实现了两个 Trait：</p>
+<ul>
+<li><strong>Iterator：正向迭代器；</strong></li>
+<li><strong>DoubleEndedIterator：反向迭代器；</strong></li>
+</ul>
+<p>在实现 Iterator 时：</p>
+<p>首先，<code>type Item = T;</code> 声明了迭代器返回值类型为 <code>T</code>;</p>
+<p>而 <code>next</code> 就是用 pop_front 方法实现；</p>
+<p>同理，DoubleEndedIterator 使用 pop_back 方法实现；</p>
+<p><font color="#f00"><strong>需要注意的是：</strong></font></p>
+<p><font color="#f00"><strong>由于 IntoIter 获取了整个链表的所有权，而我们是通过裸指针实现的链表，即我们需要手动管理这部分内存；</strong></font></p>
+<p><font color="#f00"><strong>因此，我们需要手动为 IntoIter 实现 Drop Trait，以确保在 IntoIter 退出作用域后，能够准备的释放掉那些还没有被 move 出去的元素！</strong></font></p>
+<p>具体实现代码如下：</p>
+<pre><code class="rust">impl&lt;T&gt; Drop for IntoIter&lt;T&gt; {
+    fn drop(&amp;mut self) {
+        // only need to ensure all our elements are read;
+        // buffer will clean itself up afterwards.
+        for _ in &amp;mut *self {}
+
+        println!(&quot;IntoIter has been dropped!&quot;)
+    }
+}</code></pre>
+<p>代码非常简单，我们直接通过 for 循环将 IntoIter 中还未被消费的元素直接取出来，然后忽略掉即可！</p>
+<blockquote>
+<p>  <strong>注1：</strong></p>
+<p>  <font color="#f00"><strong>这里的 <code>for _ in &amp;mut *self {}</code> 实际上就是调用的迭代器本身的 <code>next</code> 方法去取元素；</strong></font></p>
+<p>  <font color="#f00"><strong>而 <code>next</code> 是调用的链表的 pop_front 方法，该方法最终会调用 <code>Box::from_raw</code> 将裸指针转为具体的元素返回，因此实现了内存释放；</strong></font></p>
+</blockquote>
+<blockquote>
+<p>  <strong>注2：</strong></p>
+<p>  <font color="#f00"><strong>这里所做的也仅仅是将元素取出，并忽略（退出作用域）；</strong></font></p>
+<p>  <font color="#f00"><strong>具体的内存释放还要依赖于具体的范型类型 <code>T</code> 本身！</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="ii-实现Iter"><a href="#ii-实现Iter" class="headerlink" title="ii.实现Iter"></a><strong>ii.实现Iter</strong></h4><p>相比于 IntoIter，在实现 Iter 时，我们需要自己手动维护 head 和 tail 裸指针；</p>
+<p>具体代码如下：</p>
+<pre><code class="rust">impl&lt;&#39;a, T&gt; Iterator for Iter&lt;&#39;a, T&gt; {
+    type Item = &amp;&#39;a T;
+
+    #[inline]
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        if self.len == 0 {
+            None
+        } else {
+            self.head.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    let node = &amp;*node.as_ptr();
+                    self.head = node.next;
+                    &amp;node.val
+                }
+            })
+        }
+    }
+
+    #[inline]
+    fn size_hint(&amp;self) -&gt; (usize, Option&lt;usize&gt;) {
+        (self.len, Some(self.len))
+    }
+
+    #[inline]
+    fn last(mut self) -&gt; Option&lt;&amp;&#39;a T&gt; {
+        self.next_back()
+    }
+}
+
+impl&lt;&#39;a, T&gt; DoubleEndedIterator for Iter&lt;&#39;a, T&gt; {
+    fn next_back(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        if self.len == 0 {
+            None
+        } else {
+            self.tail.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    // Need an unbound lifetime to get &#39;a
+                    let node = &amp;*node.as_ptr();
+                    self.tail = node.prev;
+                    &amp;node.val
+                }
+            })
+        }
+    }
+}</code></pre>
+<p>正向和反向遍历实现起来也比较简单，具体的实现逻辑这里就不再赘述了；</p>
+<p><font color="#f00"><strong>需要注意的是：</strong></font></p>
+<p><font color="#f00"><strong>因为 Iter 本质上只是对我们的链表中的 head、tail 以及 length 等属性进行了 Copy，而各个元素的所有权依然在链表中；</strong></font></p>
+<p><font color="#f00"><strong>并且， head、tail 以及 length 实际上都是一个整型数字；</strong></font></p>
+<p><font color="#f00"><strong>因此我们不需要为特别为 Iter 实现 Drop 方法，因为 Iter 中的所有类型均已经由 Rust 标准库实现了 Drop！</strong></font></p>
+<br>
+
+<h4 id="iii-实现IterMut"><a href="#iii-实现IterMut" class="headerlink" title="iii.实现IterMut"></a><strong>iii.实现IterMut</strong></h4><p>IterMut 的实现和 Iter 的实现几乎完全一致，只是将类型换为了：<code>type Item = &amp;&#39;a mut T</code>；</p>
+<p>具体实现的代码如下：</p>
+<pre><code class="rust">impl&lt;&#39;a, T&gt; Iterator for IterMut&lt;&#39;a, T&gt; {
+    type Item = &amp;&#39;a mut T;
+
+    #[inline]
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        if self.len == 0 {
+            None
+        } else {
+            self.head.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    let node = &amp;mut *node.as_ptr();
+                    self.head = node.next;
+                    &amp;mut node.val
+                }
+            })
+        }
+    }
+
+    #[inline]
+    fn size_hint(&amp;self) -&gt; (usize, Option&lt;usize&gt;) {
+        (self.len, Some(self.len))
+    }
+
+    #[inline]
+    fn last(mut self) -&gt; Option&lt;&amp;&#39;a mut T&gt; {
+        self.next_back()
+    }
+}
+
+impl&lt;&#39;a, T&gt; DoubleEndedIterator for IterMut&lt;&#39;a, T&gt; {
+    #[inline]
+    fn next_back(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        if self.len == 0 {
+            None
+        } else {
+            self.tail.map(|node| {
+                self.len -= 1;
+
+                unsafe {
+                    // Need an unbound lifetime to get &#39;a
+                    let node = &amp;mut *node.as_ptr();
+                    self.tail = node.prev;
+                    &amp;mut node.val
+                }
+            })
+        }
+    }
+}</code></pre>
+<p>这里不再赘述！</p>
+<br>
+
+<h3 id="⑩-是否包含某元素：contains"><a href="#⑩-是否包含某元素：contains" class="headerlink" title="⑩ 是否包含某元素：contains()"></a><strong>⑩ 是否包含某元素：contains()</strong></h3><p>实现了迭代器之后，我们便很容易通过迭代器来遍历判断链表中是否包含某个元素；</p>
+<p>这里我们只需要只读权限即可，因此使用 iter 获取不可变引用的迭代器即可，代码如下：</p>
+<pre><code class="rust">/// Returns `true` if the `LinkedList` contains an element equal to the given value.
+///
+/// This operation should compute in *O*(*n*) time.
+///
+/// # Examples
+///
+/// ```
+/// use collection::list::linked_list::LinkedList;
+///
+/// let mut list = LinkedList::new();
+///
+/// list.push_back(0);
+/// list.push_back(1);
+/// list.push_back(2);
+///
+/// assert_eq!(list.contains(&amp;0), true);
+/// assert_eq!(list.contains(&amp;10), false);
+/// ```
+pub fn contains(&amp;self, elem: &amp;T) -&gt; bool
+where
+T: PartialEq&lt;T&gt;,
+{
+  self.iter().any(|x| x == elem)
+}</code></pre>
+<p>代码非常简单，调用不可变引用迭代器 iter 的 any 方法，判断是否存在和 elem 相等的元素；</p>
+<p>代码虽然很简单，这里还是有两个可以补充的内容：</p>
+<ul>
+<li>Rust 中和比较相关的 Trait：Eq、PartialOrd、Ord等；</li>
+<li>声明范型约束；</li>
+</ul>
+<p>下面分别来看；</p>
+<h4 id="Rust-中和比较相关的-Trait"><a href="#Rust-中和比较相关的-Trait" class="headerlink" title="Rust 中和比较相关的 Trait"></a><strong>Rust 中和比较相关的 Trait</strong></h4><p>在 <code>core::cmp.rs</code> 模块里定义了用于两值之间比较的几个 Trait，分别是:</p>
+<ul>
+<li><strong>PartialEq</strong></li>
+<li><strong>Eq</strong></li>
+<li><strong>PartialOrd</strong></li>
+<li><strong>Ord</strong></li>
+</ul>
+<p>这四个 Trait 之间有这样一个关系:</p>
+<ul>
+<li>Eq 基于 PartialEq，即： <code>pub trait Eq: PartialEq</code>；</li>
+<li>PartialOrd 基于 PartialEq，即 <code>pub trait PartialOrd: PartialEq</code>；</li>
+<li>Ord 基于 Eq 和 PartialOrd， <code>pub trait PartialOrd: Eq + PartialOrd&lt;Self&gt;</code>；</li>
+</ul>
+<p>同时还定义了比较结果 <code>Ordering</code> 这样一个枚举类型：</p>
+<pre><code class="rust">pub enum Ordering {
+    Less = -1,
+    Equal = 0,
+    Greater = 1,
+}</code></pre>
+<p>下面具体来看每一种 Trait 分别表示什么；</p>
+<h5 id="部分等价关系：PartialEq"><a href="#部分等价关系：PartialEq" class="headerlink" title="部分等价关系：PartialEq"></a><strong>部分等价关系：PartialEq</strong></h5><p>先说最基础的 <code>PartialEq</code>, 这个 trait 定义了两个方法:</p>
+<ul>
+<li>eq：两个值相等的话就返回 <code>true</code>, 需要使用者自行定义该方法；</li>
+<li>ne： 两个值不相等的话就返回 <code>true</code>；</li>
+</ul>
+<p><code>PartialEq trait</code> 实现了<a href="https://en.wikipedia.org/wiki/Partial_equivalence_relation" target="_blank" rel="noopener">部分等价关系 Partial_equivalence_relation</a>，这种数值关系有以下特性:</p>
+<ul>
+<li>对称性 (symmetric): 如果 <code>a == b</code>, 那么 <code>b == a</code>；</li>
+<li>可传递性 (transitive): 如果 <code>a == b</code> 且 <code>b == c</code>, 那么 <code>a == c</code>；</li>
+</ul>
+<p>所有的基本数据类型都实现了 <code>PartialEq trait</code>，它们都定义在 <a href="https://blog.biofan.org/2019/08/rust-cmp/cmp.rs" target="_blank" rel="noopener">cmp.rs</a> 源代码文件里；</p>
+<p>并且，平时使用时只需要用 <code>#[derive]</code> 的方法实现即可，就像这样:</p>
+<pre><code class="rust">#[derive(PartialEq)]
+pub struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}</code></pre>
+<p>编译器会默认实现类似下面的代码：</p>
+<pre><code class="rust">impl PartialEq for Person {
+    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+        self.id == other.id &amp;&amp;
+            self.name == other.name &amp;&amp;
+            self.height == other.height
+    }
+}</code></pre>
+<p>但如果我们在比较两个 <code>Person</code> 时，只想通过 <code>id</code> 属性来确定是不是同一个人，则可以手动定义 <code>PartialEq Trait</code> 的实现：</p>
+<pre><code class="rust">impl PartialEq for Person {
+    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+        self.id == other.id
+    }
+}</code></pre>
+<br>
+
+<h5 id="等价关系：Eq"><a href="#等价关系：Eq" class="headerlink" title="等价关系：Eq"></a><strong>等价关系：Eq</strong></h5><p><code>Eq Trait</code> 实现了 <a href="https://en.wikipedia.org/wiki/Equivalence_relation" target="_blank" rel="noopener">等价关系 Equivalence_relation</a>，该数值关系具有以下特性：</p>
+<ul>
+<li>对称性 (symmetric): 如果 <code>a == b</code>, 那么 <code>b == a</code></li>
+<li>可传递性 (transitive): 如果 <code>a == b</code> 且 <code>b == c</code>, 那么 <code>a == c</code></li>
+<li>自反性 (reflexive): <code>a == a</code></li>
+</ul>
+<p><font color="#f00"><strong><code>Eq Trait</code> 基于 <code>PartialEq Trait</code>，但在此之上并没有添加新的方法定义；</strong></font></p>
+<p><font color="#f00"><strong>这个 Trait 只是用于给编译器提示：这是个 <code>等份关系</code> 而不是个 <code>部分等价关系</code>； 因为编译器并不能检测 <code>自反性 (reflexive)</code>！</strong></font></p>
+<p><strong>例如，在标准库中, 只有 f32 和 f64 没有实现 <code>Eq Trait</code>, 因为浮点值有两个特殊的值：</strong></p>
+<ul>
+<li><strong>NAN；</strong></li>
+<li><strong>INFINITY；</strong></li>
+</ul>
+<p><strong>它们本身是不可比较的，即： <code>NAN != NAN</code>；</strong></p>
+<p>我们可以来测试一下:</p>
+<pre><code class="rust">println!(&quot;NAN == NAN ? {}&quot;, std::f64::NAN == std::f64::NAN);</code></pre>
+<p>打印的结果是：</p>
+<pre><code>NAN == NAN ? false</code></pre><p>所以，上面的示例中定义的 <code>struct Person</code> 是无法用 <code>#[derive(Eq)]</code> 的方法定义的：</p>
+<pre><code class="rust">#[derive(Eq)]
+struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}</code></pre>
+<p>编译器会报出以下错误：</p>
+<pre><code class="bash">188 |     height: f64,
+    |     ^^^^^^^^^^^ the trait `std::cmp::Eq` is not implemented for `f64`
+    |
+    = note: required by `std::cmp::AssertParamIsEq`</code></pre>
+<p>但我们可以手动实现该 Trait：</p>
+<pre><code class="rust">struct Person {
+    pub id: u32,
+    pub name: String,
+    pub height: f64,
+}
+
+impl Eq for Person {}</code></pre>
+<br>
+
+<h5 id="偏序关系：PartialOrd"><a href="#偏序关系：PartialOrd" class="headerlink" title="偏序关系：PartialOrd"></a><strong>偏序关系：PartialOrd</strong></h5><p><code>PartialOrd Trait</code> 基于 <code>PartialEq Trait</code> 实现，它新定义了几个方法：</p>
+<ul>
+<li>partial_cmp：需要使用者实现本方法，返回两值的比较结果；</li>
+<li>lt, le, gt, ge 已经定义好；</li>
+</ul>
+<p>偏序关系有以下特性：</p>
+<ul>
+<li>不对称性 antisymmetry: 如果 <code>a &lt; b</code> 那么 <code>!(a &gt; b)</code>；</li>
+<li>可传递性 transitive: 如果 <code>a &lt; b</code> 且 <code>b &lt; c</code> 那么 <code>a &lt; c</code>；</li>
+</ul>
+<p><strong>标准库里的所有基本类型都已实现该 Trait；</strong></p>
+<p><strong>自定义类型可以直接使用 <code>#[derive]</code> 的方式由编译器实现该 Trait；</strong></p>
+<p><strong>或者也可像下面这样手动实现（这里是以身高来排序的）：</strong></p>
+<pre><code class="rust">impl PartialOrd for Person {
+    fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;std::cmp::Ordering&gt; {
+        self.height.partial_cmp(&amp;other.height)
+    }
+}</code></pre>
+<br>
+
+<h5 id="全序关系：Ord"><a href="#全序关系：Ord" class="headerlink" title="全序关系：Ord"></a><strong>全序关系：Ord</strong></h5><p><code>Ord Trait</code> 基于 <code>PartialOrd Trait</code> 和 <code>Eq Trait</code> 实现，它新定义了几个方法：</p>
+<ul>
+<li>cmp：需要使用者实现本方法，返回两值的比较结果；</li>
+<li>max, min, clamp 已经定义好；</li>
+</ul>
+<p>全序关系有以下特性：</p>
+<ul>
+<li><font color="#f00"><strong>完整的不对称性 (total antisymmetry): <code>a &lt; b</code>, <code>a == b</code>, <code>a &gt; b</code> 这三种结果只有一个是真；</strong></font></li>
+<li><font color="#f00"><strong>可传递性 (transitive): 如果 <code>a &lt; b</code> 且 <code>b &lt; c</code> 那么 <code>a &lt; c</code>；</strong></font></li>
+</ul>
+<p><strong>在标准库中，f32 和 f64 没有实现 <code>Ord Trait</code>！</strong></p>
+<p><strong>同样是因为： <code>NAN</code> 和 <code>INFINITY</code> 的 不确定性， <code>NAN</code> 和 <code>INFINITY</code> 无法跟其它浮点值比较大小；</strong></p>
+<blockquote>
+<p>  <strong>更详细关于 Rust 中的比较可见：</strong></p>
+<ul>
+<li><a href="https://blog.biofan.org/2019/08/rust-cmp/" target="_blank" rel="noopener">https://blog.biofan.org/2019/08/rust-cmp/</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Equivalence_relation" target="_blank" rel="noopener">Equivalence_relation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Partial_equivalence_relation" target="_blank" rel="noopener">Partial_equivalence_relation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Total_order" target="_blank" rel="noopener">Total_order</a></li>
+<li><a href="https://blog.biofan.org/2019/08/rust-cmp/cmp.rs" target="_blank" rel="noopener">nightly 版的 cmp.rs 源代码</a></li>
+<li><a href="https://wenku.baidu.com/view/58f21acdba4cf7ec4afe04a1b0717fd5360cb29a.html" target="_blank" rel="noopener">Part 3 Equivalence relations 等价关系与偏序关系</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="声明范型约束"><a href="#声明范型约束" class="headerlink" title="声明范型约束"></a><strong>声明范型约束</strong></h4><p>有些时候，我们需要限定范型的具体类型实现了一些 Trait 之后才能绑定另一些方法（最经典的：我们需要约束一个范型可比较才能为其实现排序）；</p>
+<p>此时我们就需要在说实现的方法中声明范型约束；</p>
+<p>Rust 中实现范型约束的方式有两种：</p>
+<pre><code class="rust">impl &lt;A: TraitB + TraitC, D: TraitE + TraitF&gt; MyTrait&lt;A, D&gt; for YourType {}
+
+// 当分别指定泛型的类型和约束时，使用 where 会更清晰
+
+impl &lt;A, D&gt; MyTrait&lt;A, D&gt; for YourType where
+    A: TraitB + TraitC,
+    D: TraitE + TraitF {}</code></pre>
+<blockquote>
+<p>  <strong>其实目前 Golang 中的范型也是采用了这种方式来对类型做限制；</strong></p>
+<p>  <strong>但是 Golang 中的范型和 Rust 中还是非常不一样的！</strong></p>
+</blockquote>
+<p><font color="#f00"><strong>Rust 中的范型和 C++ 的实现方式非常类似，即：</strong></font></p>
+<p><font color="#f00"><strong>对每一种具体类型生成其对应的代码，而非类似于 Java 中的类型擦除后进行类型转换，从而实现了：<code>零成本抽象</code>；</strong></font></p>
+<p><font color="#f00"><strong>同时，Rust 在编译时会分析究竟有哪些类型满足了范型约束，而只为那些满足了约束的具体类型实现方法！</strong></font></p>
+<br>
+
+<h3 id="⑪-为实现Debug元素的链表实现遍历输出：traverse"><a href="#⑪-为实现Debug元素的链表实现遍历输出：traverse" class="headerlink" title="⑪ 为实现Debug元素的链表实现遍历输出：traverse()"></a><strong>⑪ 为实现Debug元素的链表实现遍历输出：traverse()</strong></h3><p>经过上面对范型约束的讲解，我们可以为实现了 Debug Trait 的、类型为范型 <code>&lt;T&gt;</code> 元素实现遍历打印的方法：</p>
+<pre><code class="rust">impl&lt;T: Debug&gt; LinkedList&lt;T&gt; {
+    pub fn traverse(&amp;self) {
+        print!(&quot;{{ ");
+        for (idx, x) in self.iter().enumerate() {
+            print!(" [{}: {:?}] ", idx, *x)
+        }
+        println!(" }}&quot;);
+    }
+}</code></pre>
+<p>此时：</p>
+<p><strong>如果具体的类型 T 实现了 Debug Trait，则 Rust 编译器会自动的为装有该类型的链表生成上面的方法；</strong></p>
+<p><strong>而如果类型 T 并未实现 Debug Trait，此时 Rust 编译器不会为其对应的链表类型生成上面的方，此时如果在此链表上调用了 traverse 方法，编译器会报错，从而保证了正确的类型约束！</strong></p>
+<p>在这里，可能有些同学会有一些疑问：为什么不直接使用 <code>#[derive]</code> 让编译器自动帮我们生成打印链表的方法？</p>
+<p>例如：</p>
+<pre><code class="rust">#[derive(Debug)]
+impl&lt;T&gt; LinkedList&lt;T&gt; {
+  ......
+}</code></pre>
+<p>然而，这是不可能的！</p>
+<p>因为在我们的双向链表中：相邻的两个节点均为循环引用！</p>
+<p><strong>即：节点A ↔ 节点B</strong></p>
+<p>因此如果使用编译器为我们生成的代码，我们将会陷入死循环，永远也无法退出输出循环！</p>
+<blockquote>
+<p>  关于引用循环，见：</p>
+<ul>
+<li><a href="https://kaisery.github.io/trpl-zh-cn/ch15-06-reference-cycles.html#引用循环与内存泄漏" target="_blank" rel="noopener">引用循环与内存泄漏</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="⑫-释放链表Drop-Trait和-clear-方法"><a href="#⑫-释放链表Drop-Trait和-clear-方法" class="headerlink" title="⑫ 释放链表Drop Trait和 clear()方法"></a><strong>⑫ 释放链表Drop Trait和 clear()方法</strong></h3><p>回顾之前，我们为 IntoIter 实现了 Drop Trait；</p>
+<p>这是因为： <strong>IntoIter 获取了链表的完整所有权，因此需要代替链表管理其内部元素的内存（或者说是生命周期）；</strong></p>
+<p>现在，我们<strong>还需要为链表本身实现 Drop Trait：</strong></p>
+<p><font color="#f00"><strong>以确保在链表退出其作用域后（此后再也无法访问此链表），内部元素的内存能够正常的被释放；</strong></font></p>
+<p>这里在实现时，参考了 Rust 源码中 LinkedList 中 Drop Trait的实现：</p>
+<pre><code class="rust">impl&lt;T&gt; Drop for LinkedList&lt;T&gt; {
+    fn drop(&amp;mut self) {
+        struct DropGuard&lt;&#39;a, T&gt;(&amp;&#39;a mut LinkedList&lt;T&gt;);
+
+        impl&lt;&#39;a, T&gt; Drop for DropGuard&lt;&#39;a, T&gt; {
+            fn drop(&amp;mut self) {
+                // Continue the same loop we do below. This only runs when a destructor has
+                // panicked. If another one panics this will abort.
+                while self.0.pop_front().is_some() {}
+            }
+        }
+
+        while let Some(node) = self.pop_front() {
+            let guard = DropGuard(self);
+            drop(node);
+            mem::forget(guard);
+        }
+
+        println!(&quot;LinkedList dropped!&quot;)
+    }
+}</code></pre>
+<p>在这里，我们定义了一个 DropGuard，其内部只有 LinkedList 类型的属性，并再次为其也实现了 Drop Trait：</p>
+<pre><code class="rust">impl&lt;&#39;a, T&gt; Drop for DropGuard&lt;&#39;a, T&gt; {
+  fn drop(&amp;mut self) {
+    // Continue the same loop we do below. This only runs when a destructor has
+    // panicked. If another one panics this will abort.
+    while self.0.pop_front().is_some() {}
+  }
+}</code></pre>
+<p>此处如此设计的原因是：</p>
+<p>确保在执行下面这段释放链表元素占用内存的代码时：</p>
+<pre><code class="rust">while let Some(node) = self.pop_front() {
+  let guard = DropGuard(self);
+  drop(node);
+  mem::forget(guard);
+}
+
+println!(&quot;LinkedList dropped!&quot;)</code></pre>
+<p>如果出现了 panic，则此时 DropGuard 可以再次尝试释放内存；</p>
+<p>而释放链表元素本身的代码非常简单，这里不再赘述；</p>
+<p>为链表实现了 Drop Trait 之后，我们可以很简单的为其实现 clear 方法，而无需担心内存泄露，下面我们来实现 clear 方法；</p>
+<br>
+
+<h4 id="实现clear-方法"><a href="#实现clear-方法" class="headerlink" title="实现clear()方法"></a><strong>实现clear()方法</strong></h4><p>clear 方法非常简单：</p>
+<pre><code class="rust">pub fn clear(&amp;mut self) {
+  *self = Self::new();
+}</code></pre>
+<p>这是得益于我们为双向链表实现了 Drop Trait；</p>
+<p>因此，<strong>我们可以直接创建一个新的空双向链表来直接覆盖原链表，来实现 clear() 方法；</strong></p>
+<p><strong>而原链表在退出作用域之后会自动调用其 drop 方法，清空内部的节点以及对应元素，释放内存！</strong></p>
+<br>
+
+<h2 id="为链表添加测试用例"><a href="#为链表添加测试用例" class="headerlink" title="为链表添加测试用例"></a><strong>为链表添加测试用例</strong></h2><p>在 Rust 中，我们可以很方便的添加测试用例（甚至是在同一个文件中）；</p>
+<p>下面是为链表添加的一些测试用例：</p>
+<pre><code class="rust">#[cfg(test)]
+mod test {
+    use crate::list::linked_list::LinkedList;
+
+    #[test]
+    fn test_compiling() {}
+
+    #[test]
+    fn test_push_and_pop() {
+        let mut list = _new_list_i32();
+
+        assert_eq!(list.length, 5);
+        list.traverse();
+
+        assert_eq!(list.pop_front(), Some(-1));
+        assert_eq!(list.pop_back(), Some(i32::MAX));
+
+        assert_eq!(list.length, 3);
+        list.traverse();
+    }
+
+    #[test]
+    fn test_peak() {
+        let mut list = _new_list_string();
+
+        assert_eq!(list.peek_front(), Some(&amp;String::from(&quot;abc&quot;)));
+        assert_eq!(list.peek_back(), Some(&amp;String::from(&quot;hij&quot;)));
+
+        let cur = list.peek_front_mut();
+        assert_eq!(cur, Some(&amp;mut String::from(&quot;abc&quot;)));
+        cur.map(|x| x.push(&#39; &#39;));
+
+        let cur = list.peek_back_mut();
+        assert_eq!(cur, Some(&amp;mut String::from(&quot;hij&quot;)));
+        cur.map(|x| x.push(&#39; &#39;));
+
+        assert_eq!(list.peek_front(), Some(&amp;String::from(&quot;abc &quot;)));
+        assert_eq!(list.peek_back(), Some(&amp;String::from(&quot;hij &quot;)));
+        assert_eq!(list.length, 3);
+
+        list.traverse();
+    }
+
+    #[test]
+    fn test_get_idx() {
+        let list = _new_list_i32();
+
+        assert_eq!(list.get_by_idx(2).unwrap(), Some(&amp;456));
+        assert_eq!(list.get_by_idx(3).unwrap(), Some(&amp;789));
+
+        print!(&quot;before change: &quot;);
+        list.traverse();
+        let cur = list.get_by_idx_mut(2).unwrap().unwrap();
+        assert_eq!(cur, &amp;mut 456);
+
+        *cur &lt;&lt;= 1;
+        print!(&quot;after change: &quot;);
+        list.traverse();
+
+        assert_eq!(list.get_by_idx(2).unwrap(), Some(&amp;(456 &lt;&lt; 1)));
+    }
+
+    #[test]
+    fn test_get_idx_err() {
+        let list = _new_list_i32();
+
+        assert!(list.get_by_idx(99).is_err());
+        assert!(list.get_by_idx_mut(99).is_err());
+    }
+
+    #[test]
+    fn test_insert_idx() {
+        let mut list = LinkedList::new();
+
+        list.push_back(String::from(&quot;1&quot;));
+        list.push_back(String::from(&quot;2&quot;));
+        list.push_back(String::from(&quot;3&quot;));
+
+        list.insert_by_idx(1, String::from(&quot;99&quot;)).unwrap();
+        list.traverse();
+
+        assert_eq!(list.get_by_idx(0).unwrap(), Some(&amp;String::from(&quot;1&quot;)));
+        assert_eq!(list.get_by_idx(1).unwrap(), Some(&amp;String::from(&quot;99&quot;)));
+    }
+
+    #[test]
+    fn test_insert_idx_err() {
+        let mut list = LinkedList::new();
+
+        assert!(list.insert_by_idx(99, String::from(&quot;99&quot;)).is_err());
+    }
+
+    #[test]
+    fn test_remove_idx() {
+        let mut list = LinkedList::new();
+
+        list.push_back(String::from(&quot;1&quot;));
+        list.push_back(String::from(&quot;2&quot;));
+        list.push_back(String::from(&quot;3&quot;));
+
+        let removed = list.remove_by_idx(1).unwrap();
+        list.traverse();
+
+        assert_eq!(removed, String::from(&quot;2&quot;));
+
+        assert_eq!(list.get_by_idx(0).unwrap(), Some(&amp;String::from(&quot;1&quot;)));
+        assert_eq!(list.get_by_idx(1).unwrap(), Some(&amp;String::from(&quot;3&quot;)));
+    }
+
+    #[test]
+    fn test_remove_idx_err() {
+        let mut list: LinkedList&lt;i32&gt; = LinkedList::new();
+
+        assert!(list.remove_by_idx(99).is_err());
+    }
+
+    #[test]
+    fn test_contains() {
+        let list = _new_list_i32();
+
+        assert!(list.contains(&amp;-1));
+        assert!(!list.contains(&amp;-2));
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut list = _new_list_zst();
+
+        assert_eq!(list.length(), 3);
+
+        list.clear();
+
+        assert_eq!(list.length(), 0);
+    }
+
+    #[test]
+    fn test_iterator() {
+        let mut list1 = _new_list_i32();
+
+        print!(&quot;before change: &quot;);
+        list1.traverse();
+        list1.iter_mut().for_each(|x| *x = *x - 1);
+        print!(&quot;after change: &quot;);
+        list1.traverse();
+
+        let list2 = _new_list_string();
+        let list2_to_len = list2.into_iter().map(|x| x.len()).collect::&lt;Vec&lt;usize&gt;&gt;();
+        println!(
+            &quot;transform list2 into len vec, list2_to_len: {:?}&quot;,
+            list2_to_len
+        );
+
+        // Compiling err:
+        // list2.traverse()
+    }
+
+    struct ZeroSizeType {}
+
+    fn _new_list_i32() -&gt; LinkedList&lt;i32&gt; {
+        let mut list = LinkedList::new();
+
+        list.push_front(456);
+        list.push_front(123);
+        list.push_back(789);
+        list.push_front(-1);
+        list.push_back(i32::MAX);
+
+        list
+    }
+
+    fn _new_list_string() -&gt; LinkedList&lt;String&gt; {
+        let mut list = LinkedList::new();
+
+        list.push_front(String::from(&quot;def&quot;));
+        list.push_front(String::from(&quot;abc&quot;));
+        list.push_back(String::from(&quot;hij&quot;));
+
+        list
+    }
+
+    fn _new_list_zst() -&gt; LinkedList&lt;ZeroSizeType&gt; {
+        let mut list = LinkedList::new();
+
+        list.push_front(ZeroSizeType {});
+        list.push_front(ZeroSizeType {});
+        list.push_back(ZeroSizeType {});
+
+        list
+    }
+}</code></pre>
+<p>执行下面的命令即可进行测试：</p>
+<pre><code class="bash">$ cargo test      
+   Compiling collection v0.1.0 (/Users/kylinkzhang/self-workspace/rust-learn/collection)
+    Finished test [unoptimized + debuginfo] target(s) in 1.18s
+     Running unittests (target/debug/deps/collection-617cd44adb150cd7)
+
+running 12 tests
+test list::linked_list::test::test_contains ... ok
+test list::linked_list::test::test_clear ... ok
+test list::linked_list::test::test_compiling ... ok
+test list::linked_list::test::test_insert_idx_err ... ok
+test list::linked_list::test::test_get_idx ... ok
+test list::linked_list::test::test_get_idx_err ... ok
+test list::linked_list::test::test_insert_idx ... ok
+test list::linked_list::test::test_peak ... ok
+test list::linked_list::test::test_remove_idx ... ok
+test list::linked_list::test::test_remove_idx_err ... ok
+test list::linked_list::test::test_iterator ... ok
+test list::linked_list::test::test_push_and_pop ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests collection
+
+running 2 tests
+test src/list/linked_list.rs - list::linked_list::LinkedList&lt;T&gt;::contains (line 289) ... ok
+test src/list/linked_list.rs - list::linked_list::LinkedList&lt;T&gt;::peek_front (line 141) ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.39s</code></pre>
+<p>除了会执行由 <code>mod test</code> 声明的测试用例之外，<code>cargo test</code> 还会测试代码注释中的测试用例；</p>
+<p>例如：</p>
+<pre><code class="rust">/// Returns `true` if the `LinkedList` contains an element equal to the given value.
+///
+/// This operation should compute in *O*(*n*) time.
+///
+/// # Examples
+///
+/// ```
+/// use collection::list::linked_list::LinkedList;
+///
+/// let mut list = LinkedList::new();
+///
+/// list.push_back(0);
+/// list.push_back(1);
+/// list.push_back(2);
+///
+/// assert_eq!(list.contains(&amp;0), true);
+/// assert_eq!(list.contains(&amp;10), false);
+/// ```
+pub fn contains(&amp;self, elem: &amp;T) -&gt; bool
+where
+T: PartialEq&lt;T&gt;,
+{
+  self.iter().any(|x| x == elem)
+}</code></pre>
+<p>另外，非常值得注意的是，我在测试用例中<strong>特别加入了对 ZST(Zero-Size Type) 的测试；</strong></p>
+<p>这个测试是非常重要的，因为在 Rust 中充斥着大量<a href="https://nomicon.purewhite.io/exotic-sizes.html#零大小类型-zsts" target="_blank" rel="noopener">零大小类型 (ZSTs)</a>！</p>
+<p>例如：</p>
+<pre><code class="rust">struct Nothing; // 无字段意味着没有大小
+
+// 所有字段都无大小意味着整个结构体无大小！
+struct LotsOfNothing {
+    foo: Nothing,
+    qux: (),      // 空元组无大小
+    baz: [u8; 0], // 空数组无大小
+}</code></pre>
+<p>就其本身而言，零尺寸类型（ZSTs）由于显而易见的原因是相当无用的；然而，就像 Rust 中许多奇怪的布局选择一样，它们的潜力在通用语境中得以实现：</p>
+<p><font color="#f00"><strong>在 Rust 中，任何产生或存储 ZST 的操作都可以被简化为无操作（no-op）！</strong></font></p>
+<p>首先，存储它甚至没有意义——它不占用任何空间；另外，这种类型的值只有一个，所以任何加载它的操作都可以直接凭空产生它——这也是一个无操作（no-op），因为它不占用任何空间；</p>
+<p>这方面最极端的例子之一是 Set 和 Map：</p>
+<p>给定一个<code>Map&lt;Key, Value&gt;</code>，通常可以实现一个<code>Set&lt;Key&gt;</code>，作为<code>Map&lt;Key, UselessJunk&gt;</code>的一个薄封装；</p>
+<p>在许多语言中，这仍然需要为无用的封装分配空间，并进行存储和加载无用封装的工作，然后将其丢弃；因为，通常情况下对于编译器来说，分析这些类型是否是有用的，是非常困难的！</p>
+<p><strong>然而在 Rust 中，我们可以直接说<code>Set&lt;Key&gt; = Map&lt;Key, ()&gt;</code>！</strong></p>
+<p><font color="#f00"><strong>而 Rust 可以静态地知道每个加载和存储都是无用的，而且没有分配有任何大小；其结果是，单例化的代码基本上是 HashSet 的自定义实现，而没有任何 HashMap 要支持值所带来的开销！</strong></font></p>
+<p><font color="#f00"><strong>安全的代码不需要担心 ZST，但是 Unsafe Rust 必须小心没有大小的类型的后果！特别是，指针偏移是无操作的，而分配器通常<a href="https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc" target="_blank" rel="noopener">需要一个非零的大小</a>；</strong></font></p>
+<p><font color="#f00"><strong>因此在设计时需要特别注意：对 ZST 的引用（包括空片），就像所有其他的引用一样，必须是非空的，并且适当地对齐！</strong></font></p>
+<p><font color="#f00"><strong>解引用 ZST 的空指针或未对齐指针是<a href="https://nomicon.purewhite.io/what-unsafe-does.html" target="_blank" rel="noopener">未定义的行为</a>，就像其他类型的引用一样；</strong></font></p>
+<blockquote>
+<p>  更多关于 ZST 见：</p>
+<ul>
+<li><a href="https://nomicon.purewhite.io/exotic-sizes.html#非正常大小的类型" target="_blank" rel="noopener">非正常大小的类型</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>呼呼~！你终于在 Rust 中实现了一个令人满意的双向链表，并加入了大量的测试用例来保证其逻辑的正确性！</p>
+<p>经过了实现这个双向链表，我想你应该能学到下面这么多内容：</p>
+<ul>
+<li>Unsafe 用法；</li>
+<li>逆变、协变和不变；</li>
+<li>Rust 中部分类型的用法：<ul>
+<li>NonNull；</li>
+<li>PhantomData；</li>
+<li>Option；</li>
+<li>……</li>
+</ul>
+</li>
+<li>Rust 中的常用 Trait：<ul>
+<li>Default；</li>
+<li>Copy；</li>
+<li>Clone；</li>
+<li>……</li>
+</ul>
+</li>
+<li>Rust中的比较：<ul>
+<li>PartialEq</li>
+<li>Eq</li>
+<li>PartialOrd</li>
+<li>Ord</li>
+</ul>
+</li>
+<li>Rust 中的 单元测试、文档测试以及文档注释；</li>
+<li>Rust 中的三种迭代器：IntoIter、Iter 和 IterMut；</li>
+<li>Rust 中的错误处理以及如何自定义错误类型；</li>
+<li>……</li>
+</ul>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/blob/algorithm/collection/src/list/linked_list.rs" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/blob/algorithm/collection/src/list/linked_list.rs</a></li>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/algorithm/too-many-lists" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/algorithm/too-many-lists</a></li>
+</ul>
+<p>相关书籍推荐：</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/book/#the-rust-programming-language" target="_blank" rel="noopener">The Rust Programming Language</a></li>
+<li><a href="https://course.rs/" target="_blank" rel="noopener">Rust语言圣经(Rust教程 Rust Course)</a></li>
+<li><a href="https://rust-unofficial.github.io/too-many-lists/index.html#learn-rust-with-entirely-too-many-linked-lists" target="_blank" rel="noopener">Learn Rust With Entirely Too Many Linked Lists</a></li>
+<li><a href="https://doc.rust-lang.org/nomicon/" target="_blank" rel="noopener">The Rustonomicon</a></li>
+<li><a href="https://exphp.github.io/unsafe-gotchas/intro.html" target="_blank" rel="noopener">Unsafe Gotchas</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/" title="https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/02/20/使用Rust实现一个双向链表/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725320885"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

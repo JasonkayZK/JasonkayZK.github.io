@@ -1,0 +1,3455 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>浅谈协程 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在前一篇文章《浅谈函数调用》中，我们讲述了函数调用的底层实现，也看到了函数是如何切换上下文，并保存相关信息的；本文在上篇文章的基础之上，探讨最近非常火热的协程的底层实现；">
+<meta name="keywords" content="C++,技术杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈协程">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/06/03/浅谈协程/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在前一篇文章《浅谈函数调用》中，我们讲述了函数调用的底层实现，也看到了函数是如何切换上下文，并保存相关信息的；本文在上篇文章的基础之上，探讨最近非常火热的协程的底层实现；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-3.jpeg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-5.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JasonkayZK/blog_static@2022-06/images/coroutine-4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-6.png">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.763Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈协程">
+<meta name="twitter:description" content="在前一篇文章《浅谈函数调用》中，我们讲述了函数调用的底层实现，也看到了函数是如何切换上下文，并保存相关信息的；本文在上篇文章的基础之上，探讨最近非常火热的协程的底层实现；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-1.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725318758">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?23">
+    
+    <h1>浅谈协程</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年06月03日</a>
+    <a><i class="nexmoefont icon-areachart"></i>16.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 75 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/C/">C++</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/C/">C++</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/技术杂谈/">技术杂谈</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#浅谈协程"><span class="toc-text">浅谈协程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是协程"><span class="toc-text">什么是协程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#补充：线程上下文"><span class="toc-text">补充：线程上下文</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#线程时间消耗分析"><span class="toc-text">线程时间消耗分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#线程内存消耗分析"><span class="toc-text">线程内存消耗分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#如何保存上下文"><span class="toc-text">如何保存上下文</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#使用setjmp-longjmp"><span class="toc-text">使用setjmp/longjmp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用ucontext"><span class="toc-text">使用ucontext</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#getcontext"><span class="toc-text">getcontext</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#setcontext"><span class="toc-text">setcontext</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#makecontext"><span class="toc-text">makecontext</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#swapcontext"><span class="toc-text">swapcontext</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#协程的类别"><span class="toc-text">协程的类别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#有栈协程"><span class="toc-text">有栈协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#无栈协程"><span class="toc-text">无栈协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#对称协程与非对称协程"><span class="toc-text">对称协程与非对称协程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#关于协程的一些其他内容"><span class="toc-text">关于协程的一些其他内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#N-1-amp-N-M-协程"><span class="toc-text">N:1 &amp; N:M 协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程的组成"><span class="toc-text">协程的组成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程的调度"><span class="toc-text">协程的调度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程相关工具"><span class="toc-text">协程相关工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程-amp-线程的对比"><span class="toc-text">协程&amp;线程的对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程对-CPU-IO-的影响"><span class="toc-text">协程对 CPU/IO 的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#C-20标准中的协程"><span class="toc-text">C++20标准中的协程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#动手实现协程"><span class="toc-text">动手实现协程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#基于汇编实现的有栈协程"><span class="toc-text">基于汇编实现的有栈协程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#协程环境"><span class="toc-text">协程环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#协程状态"><span class="toc-text">协程状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#协程实例"><span class="toc-text">协程实例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#上下文实例"><span class="toc-text">上下文实例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#测试代码"><span class="toc-text">测试代码</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#基于ucontext实现的无栈协程"><span class="toc-text">基于ucontext实现的无栈协程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#协程调用函数的定义"><span class="toc-text">协程调用函数的定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#协程实例-1"><span class="toc-text">协程实例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#协程调度Schedule"><span class="toc-text">协程调度Schedule</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#协程的创建-coroutine-new"><span class="toc-text">协程的创建: coroutine_new</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#coroutine-resume（READY-gt-RUNNING）"><span class="toc-text">coroutine_resume（READY -&gt; RUNNING）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#协程的切出：coroutine-yield"><span class="toc-text">协程的切出：coroutine_yield</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#coroutine-resume（SUSPEND-gt-RUNNING）"><span class="toc-text">coroutine_resume（SUSPEND -&gt; RUNNING）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#补充：共享栈"><span class="toc-text">补充：共享栈</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#测试代码-1"><span class="toc-text">测试代码</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结-1"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在前一篇文章<a href="/2022/06/01/浅谈函数调用/">《浅谈函数调用》</a>中，我们讲述了函数调用的底层实现，也看到了函数是如何切换上下文，并保存相关信息的；</p>
+<p>本文在上篇文章的基础之上，探讨最近非常火热的协程的底层实现，剖析开源库 libco 的实现，并在此基础之上实现一个简单的协程；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/coroutine" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/coroutine</a></li>
+</ul>
+<p>相关文章：</p>
+<ul>
+<li><a href="/2022/06/01/浅谈函数调用/">《浅谈函数调用》</a></li>
+<li><a href="/2022/06/03/浅谈协程/">《浅谈协程》</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="浅谈协程"><a href="#浅谈协程" class="headerlink" title="浅谈协程"></a><strong>浅谈协程</strong></h1><h2 id="什么是协程"><a href="#什么是协程" class="headerlink" title="什么是协程"></a><strong>什么是协程</strong></h2><p>我们可以简单的认为：协程就是用户态的线程，但是上下文切换的时机是靠调用方（写代码的开发人员）自身去控制的；</p>
+<p>同时，协程和用户态线程非常接近，用户态线程之间的切换不需要陷入内核，但部分操作系统中用户态线程的切换需要内核态线程的辅助；</p>
+<p>下面是一个简单的例子：</p>
+<pre><code class="c++">void A() {
+   cout &lt;&lt; 1 &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; 2 &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; 3 &lt;&lt; &quot; &quot;;
+}
+
+void B() {
+   cout &lt;&lt; &quot;x&quot; &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; &quot;y&quot; &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; &quot;z&quot; &lt;&lt; &quot; &quot;;
+}
+
+int main(void) {
+  A();
+  B();
+}</code></pre>
+<p>在单线程中，上述函数的输出为：</p>
+<pre><code>1 2 3 x y z</code></pre><p>如果我们用 libco 库将上面程序改造一下：</p>
+<pre><code class="cpp">void A() {
+   cout &lt;&lt; 1 &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; 2 &lt;&lt; &quot; &quot;;
+   co_yield_ct();  // 切出到主协程
+   cout &lt;&lt; 3 &lt;&lt; &quot; &quot;;
+}
+
+void B() {
+   cout &lt;&lt; &quot;x&quot; &lt;&lt; &quot; &quot;;
+   co_yield_ct();  // 切出到主协程
+   cout &lt;&lt; &quot;y&quot; &lt;&lt; &quot; &quot;;
+   cout &lt;&lt; &quot;z&quot; &lt;&lt; &quot; &quot;;
+}
+
+int main(void) {
+  ...  // 主协程
+  co_resume(A);  // 启动协程 A
+  co_resume(B);  // 启动协程 B
+  co_resume(A);  // 从协程 A 切出处继续执行
+  co_resume(B);  // 从协程 B 切出处继续执行
+}</code></pre>
+<p>同样在单线程中，改造后的程序输出如下：</p>
+<pre><code>1 2 x 3 y z</code></pre><p>可以看出，切出操作是由 <code>co_yield_ct()</code> 函数实现的，而协程的启动和恢复是由 <code>co_resume</code> 实现的；</p>
+<p>函数 <code>A()</code> 和 <code>B()</code> 并不是一个执行完才执行另一个，而是产生了 “交叉执行“ 的效果，这就是通过协程实现的！</p>
+<p>线程挺好的，我们为什么需要协程呢？</p>
+<p>因为有些时候我们在执行一些操作（尤其是IO操作）时，不希望去做<code>“创建一个新的线程”</code>这种重量级的操作来异步处理；</p>
+<p>而是希望：<strong>在当前线程执行中，暂时切换到其他任务中执行，同时在IO真正准备好了之后，再切换回来继续执行！</strong></p>
+<p>相比于多开一个线程来操作，使用协程的好处：</p>
+<ul>
+<li><strong>减少了线程的重复高频创建；</strong></li>
+<li><strong>尽量避免线程的阻塞；</strong></li>
+<li><strong>提升代码的可维护与可理解性（毕竟不需要考虑多线程那一套东西了）；</strong></li>
+</ul>
+<blockquote>
+<p>  更多协程的好处：</p>
+<ul>
+<li><a href="https://www.zhihu.com/question/20511233" target="_blank" rel="noopener">https://www.zhihu.com/question/20511233</a></li>
+</ul>
+</blockquote>
+<p>同时，下面是一些协程的特点：</p>
+<ul>
+<li><strong>协程可以主动让出 CPU 时间片；（注意：不是当前线程让出 CPU 时间片，而是线程内的某个协程让出时间片供同线程内其他协程运行；）</strong></li>
+<li><strong>协程可以恢复 CPU 上下文；当另一个协程继续执行时，其需要恢复 CPU 上下文环境；</strong></li>
+<li><strong>协程有个管理者，管理者可以选择一个协程来运行，其他协程要么阻塞，要么ready，或者died；</strong></li>
+<li><strong>运行中的协程将占有当前线程的所有计算资源；</strong></li>
+<li><strong>协程天生有栈属性，而且是 lock free；</strong></li>
+</ul>
+<p>不理解这些协程特点也不要紧，下文都会讲到；</p>
+<br>
+
+<h2 id="补充：线程上下文"><a href="#补充：线程上下文" class="headerlink" title="补充：线程上下文"></a><strong>补充：线程上下文</strong></h2><blockquote>
+<p>  线程的上下文切换是操作系统相关知识，需要深入了解的见我的上一篇文章：</p>
+<ul>
+<li><p><a href="/2022/06/01/浅谈函数调用/">《浅谈函数调用》</a></p>
+<p>里面有非常详细的描述；</p>
+</li>
+</ul>
+</blockquote>
+<p>下图中展示了线程在运行过程 CPU 需要的一些信息（CPU Context，CPU 上下文），比如通用寄存器、栈信息（EBP/ESP）等，进程/线程切换时需要保存与恢复这些信息；</p>
+<p>而进程/内核态线程切换的时候需要与OS内核进行交互，保存/读取 CPU 上下文信息；</p>
+<h3 id="线程时间消耗分析"><a href="#线程时间消耗分析" class="headerlink" title="线程时间消耗分析"></a><strong>线程时间消耗分析</strong></h3><p>内核态（Kernel）的一些数据是共享的，读写时需要同步机制，所以操作一旦陷入内核态就会消耗更多的时间；</p>
+<p>进程需要与操作系统中所有其他进程进行资源争抢，且操作系统中资源的锁是全局的；线程之间的数据一般在进程内共享，所以线程间资源共享相比如进程而言要轻一些；</p>
+<p>虽然很多操作系统（比如 Linux）进程与线程区别不是非常明显，但线程还是比进程要轻；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-1.png" alt="Coroutine-1.png"></p>
+<p>线程的切换（Context Switch）相比于其他操作而言并不是非常耗时，如<a href="https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/" target="_blank" rel="noopener">下图</a>所示（2018年）：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-2.png" alt="Coroutine-2.png"></p>
+<p>参考这篇 <a href="https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/" target="_blank" rel="noopener">Linux线程相关文章</a>，Linux 2.6 之后 Linux 多线程的性能提高了很多，大部分场景下线程切换耗时在 2us 左右；</p>
+<p>下面是 <a href="https://www.youtube.com/watch?v=KXuZi9aeGTw" target="_blank" rel="noopener"> Linux 下线程切换耗时统计</a>（2013 年）：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-3.jpeg" alt="Coroutine-3.jpeg"></p>
+<p><strong>正常情况下线程可用的 CPU 时间片都在数十毫秒级别，而线程切换占总耗时的千分之几以内，协程的使用可以将这个损耗进一步降低（主要是去除了其他操作，比如 futex 等）；</strong></p>
+<br>
+
+<h3 id="线程内存消耗分析"><a href="#线程内存消耗分析" class="headerlink" title="线程内存消耗分析"></a><strong>线程内存消耗分析</strong></h3><p>不是所有编程语言或者系统都支持一次创建很多线程！</p>
+<p><strong>例如，在 x32 系统中即使使用了虚内存空间，因为进程能访问的虚内存空间大概是 3GB，所以单进程最多创建 300 多条线程（假设系统为每条线程分配 10M 栈空间），太多线程甚至还伴随着由于线程切换而触发缺页中断的风险；</strong></p>
+<p>如果我们创建很多线程（比如 x64 系统下创建 1 万个线程），不考虑优先级且假设 CPU 有 10 个核心，那么每个线程每秒有 1ms 的时间片，整个业务的耗时大概是：</p>
+<ul>
+<li><code>(n-1) * 1 + n * 0.001(n−1)∗1+n∗0.001秒</code>；</li>
+<li><code>（n 是线程在处理业务的过程中被调度的次数）</code>；</li>
+</ul>
+<p>如果大量线程之间存在资源竞争，那么系统行为将难以预测；</p>
+<p>所以在有限的资源下创建大量线程是极其不合理的，服务线程的个数和 CPU 核心数应该在一个合理的比例内；</p>
+<blockquote>
+<p>  操作系统线程调度可参考：</p>
+<ul>
+<li><a href="https://help.perforce.com/sourcepro/current/HTML/index.html#page/SourcePro_Core/threadsug-ThreadPackage.22.118.html" target="_blank" rel="noopener">https://help.perforce.com/sourcepro/current/HTML/index.html#page/SourcePro_Core/threadsug-ThreadPackage.22.118.html</a></li>
+</ul>
+</blockquote>
+<p>在默认情况下，Linux 系统给每条线程分配的栈空间最大是 6～8MB，这个大小是上限，也是虚内存空间，并不是每条线程真实的栈使用情况；</p>
+<p>线程真实栈内存使用会随着线程执行而变化，如果线程只使用了少量局部变量，那么真实线程栈可能只有几十个字节的大小；系统在维护线程时需要分配额外的空间，所以线程数的增加还是会提高内存资源的消耗；</p>
+<blockquote>
+<p>  <strong>通过上面的分析我们可以知道：</strong></p>
+<p>  <strong>如果业务处理时间远小于 IO 耗时，线程切换非常频繁，那么使用协程是不错的选择；</strong></p>
+<p>  <strong>并且，协程的优势并不仅仅是减少线程之间切换，从编程的角度来看，协程的引入简化了异步编程；</strong></p>
+<p>  <strong>同时，协程为一些异步编程提供了无锁的解决方案；</strong></p>
+<p>  即：</p>
+<p>  <font color="#f00"><strong>协程可以用同步编程的方式实现异步编程才能实现的功能；</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="如何保存上下文"><a href="#如何保存上下文" class="headerlink" title="如何保存上下文"></a><strong>如何保存上下文</strong></h3><p>很多地方把协程称为 Subroutine；Subroutine是什么？就是函数！</p>
+<blockquote>
+<p>  <strong>上古时期的计算机科学家们早就给出了概念：Coroutine就是可以中断并恢复执行的Subroutine；</strong></p>
+<p>  因此从这个角度来看协程拥有调用栈并不是一个奇怪的事情；</p>
+</blockquote>
+<p>再来思考，Coroutine与Subroutine相比有什么区别？区别仅有一个就是：</p>
+<p>Coroutine可以中断并恢复，对应的操作就是 <code>yield/resume</code>；</p>
+<blockquote>
+<p>  <strong>这样看来Subroutine不过是Coroutine的一个子集罢了；也就是说把协程当做一个特殊的函数调用：</strong></p>
+<ul>
+<li><strong>可以中断并恢复</strong></li>
+</ul>
+</blockquote>
+<p>既然可以把 Coroutine 当做一个特殊的函数调用，那么如何像切换函数一样去切换Coroutine呢？难点在于：</p>
+<ul>
+<li><font color="#f00"><strong>除了像函数一样切换出去，还要在某种条件满足的时候切换回来；</strong></font></li>
+</ul>
+<p><font color="#f00"><strong>通常的做法是：在协程内部存储自身的上下文，并在需要切换的时候把上下文切换；我们知道上下文其实本质上就是寄存器，所以保存上下文实际上就是把寄存器的值保存下来；</strong></font></p>
+<p>相对应的，有下面几种方法：</p>
+<ul>
+<li><font color="#f00"><strong>使用 <code>setjmp/longjmp</code>；</strong></font></li>
+<li><font color="#f00"><strong>使用汇编保存寄存器中的值，libco就使用了这种方法；</strong></font></li>
+<li><font color="#f00"><strong>使用 <code>ucontext.h</code> 这个封装好的库也可以帮我们完成上下文的相关工作；</strong></font></li>
+</ul>
+<blockquote>
+<p>  关于<code>setjmp.h</code>：</p>
+<ul>
+<li><a href="https://zh.m.wikipedia.org/zh-hans/Setjmp.h" target="_blank" rel="noopener">https://zh.m.wikipedia.org/zh-hans/Setjmp.h</a></li>
+</ul>
+<p>  <strong>需要注意的是：</strong></p>
+<p>  <font color="#f00"><strong>setjmp/longjmp 一般不能作为协程实现的底层机制，因为 setjmp/longjmp 对栈信息的支持有限；</strong></font></p>
+</blockquote>
+<blockquote>
+<p>  关于 <code>ucontext.h</code>：</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Setcontext" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Setcontext</a></li>
+</ul>
+</blockquote>
+<p>下面分别来看 <code>setjmp</code> 和 <code>ucontext</code> 方法，至于使用汇编的方法，会在本文讲解有栈协程是讲述；</p>
+<br>
+
+<h4 id="使用setjmp-longjmp"><a href="#使用setjmp-longjmp" class="headerlink" title="使用setjmp/longjmp"></a><strong>使用setjmp/longjmp</strong></h4><p>下面代码模拟了单线程并发执行两个 <code>while(true){...}</code> 函数；</p>
+<blockquote>
+<p>  源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/coroutine/setjmp_demo" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/coroutine/setjmp_demo</a></li>
+</ul>
+</blockquote>
+<p>setjmp_demo/setjmp_demo.cc</p>
+<pre><code class="c++">#include &lt;cstdlib&gt;
+#include &lt;cstdio&gt;
+#include &lt;setjmp.h&gt;
+
+int max_iteration = 9;
+int iter;
+
+jmp_buf Main;
+jmp_buf PointPing;
+jmp_buf PointPong;
+
+void Ping() {
+    if (setjmp(PointPing) == 0) longjmp(Main, 1); // 可以理解为重置，reset the world
+    while (1) {
+        printf(&quot;%3d : Ping-&quot;, iter);
+        if (setjmp(PointPing) == 0) longjmp(PointPong, 1);
+    }
+}
+
+void Pong() {
+    if (setjmp(PointPong) == 0) longjmp(Main, 1);
+    while (1) {
+        printf(&quot;Pong\n&quot;);
+        iter++;
+        if (iter &gt; max_iteration) exit(0);
+        if (setjmp(PointPong) == 0) longjmp(PointPing, 1);
+    }
+}
+
+int main(int argc, char* argv[]) {
+    iter = 1;
+    if (setjmp(Main) == 0) Ping();
+    if (setjmp(Main) == 0) Pong();
+    longjmp(PointPing, 1);
+}</code></pre>
+<p>首先，我们定义了三个保存调用栈的节点：</p>
+<ul>
+<li><code>jmp_buf Main;</code></li>
+<li><code>jmp_buf PointPing;</code></li>
+<li><code>jmp_buf PointPong;</code></li>
+</ul>
+<p>并在 main 函数中首先创建（启动）了两个函数：Ping、Pong；</p>
+<p>在使用 <code>longjmp(PointPing, 1);</code> 之后，<code>PointPing</code> 不再是0，从而启动了 Ping 协程；</p>
+<p>此后，函数 Ping 和 函数 Pong 在 <code>while (1)</code> 中交替执行，而不再返回 main 函数中；</p>
+<p>最后，当 <code>iter &gt; max_iteration</code> 时，调用 <code>exit(0)</code> 退出！</p>
+<p>通过命令 <code>g++ -std=c++11 setjmp_demo.cc -o setjmp_demo</code> 编译后执行 <code>./setjmp_demo</code> ，输出如下：</p>
+<pre><code class="basic">1 : Ping-Pong
+2 : Ping-Pong
+3 : Ping-Pong
+4 : Ping-Pong
+5 : Ping-Pong
+6 : Ping-Pong
+7 : Ping-Pong
+8 : Ping-Pong
+9 : Ping-Pong</code></pre>
+<p>虽然上面实现了比较简单的函数切换，但是实际上我们无法通过 <code>setjmp.h</code>库获取到真正的上下文信息；</p>
+<p>如果想要真正获取到上下文信息，可以使用 <code>ucontext.h</code> 库；</p>
+<br>
+
+<h4 id="使用ucontext"><a href="#使用ucontext" class="headerlink" title="使用ucontext"></a><strong>使用ucontext</strong></h4><blockquote>
+<p>  下面关于 ucontext 的介绍源自：</p>
+<ul>
+<li><p><a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/ucontext.h.html" target="_blank" rel="noopener">http://pubs.opengroup.org/onlinepubs/7908799/xsh/ucontext.h.html</a></p>
+<p>实际上，ucontext lib 已经不推荐使用了，但依旧是不错的协程入门资料；</p>
+<p>其他底层协程库实现可以查看：</p>
+</li>
+<li><p><a href="https://www.boost.org/doc/libs/1_77_0/libs/context/doc/html/index.html" target="_blank" rel="noopener">Boost.Context</a></p>
+</li>
+<li><p><a href="https://github.com/tboox/tbox" target="_blank" rel="noopener">tbox</a></p>
+<p>协程库的对比可以参考：</p>
+</li>
+<li><p><a href="https://github.com/tboox/benchbox/wiki/switch" target="_blank" rel="noopener">https://github.com/tboox/benchbox/wiki/switch</a></p>
+</li>
+</ul>
+</blockquote>
+<p>linux 系统一般都存在 ucontext 这个 C语言库，这个库主要用于：<strong>操控当前线程下的 CPU 上下文；</strong></p>
+<p><font color="#f00"><strong>和 <code>setjmp/longjmp</code> 不同，<code>ucontext</code> 直接提供了设置函数运行时栈的方式（<code>makecontext</code>），避免不同函数栈空间的重叠；</strong></font></p>
+<blockquote>
+<p>  需要注意的是：</p>
+<p>  <font color="#f00"><strong>ucontext 只操作与当前线程相关的 CPU 上下文，所以下文中涉及 ucontext 的上下文均指当前线程的上下文；（一般CPU 有多个核心，一个线程在某一时刻只能使用其中一个，所以 ucontext 只涉及一个与当前线程相关的 CPU 核心）</strong></font></p>
+</blockquote>
+<p><code>ucontext.h</code> 头文件中定义了 <code>ucontext_t</code> 这个结构体，这个结构体中至少包含以下成员：</p>
+<pre><code class="cpp">ucontext_t *uc_link     // next context
+sigset_t    uc_sigmask  // 阻塞信号阻塞
+stack_t     uc_stack    // 当前上下文所使用的栈
+mcontext_t  uc_mcontext // 实际保存 CPU 上下文的变量，这个变量与平台&amp;机器相关，最好不要访问这个变量</code></pre>
+<blockquote>
+<p>  <strong>可移植的程序最好不要读取与修改 <code>ucontext_t</code> 中的 <code>uc_mcontext</code>，因为不同平台下 <code>uc_mcontext</code> 的实现是不同的；</strong></p>
+</blockquote>
+<p>同时，<code>ucontext.h</code> 头文件中定义了四个函数，下面分别介绍：</p>
+<pre><code class="cpp">int  getcontext(ucontext_t *); // 获得当前 CPU 上下文
+int  setcontext(const ucontext_t *);// 重置当前 CPU 上下文
+void makecontext(ucontext_t *, (void *)(), int, ...); // 修改上下文信息，比如设置栈指针
+int  swapcontext(ucontext_t *, const ucontext_t *);</code></pre>
+<p>下面分别来看；</p>
+<br>
+
+<h5 id="getcontext"><a href="#getcontext" class="headerlink" title="getcontext"></a><strong>getcontext</strong></h5><pre><code class="cpp">#include &lt;ucontext.h&gt;
+int getcontext(uconte t_t *ucp);</code></pre>
+<p><font color="#f00"><strong><code>getcontext</code> 函数使用当前 CPU 上下文初始化 ucp 所指向的结构体，初始化的内容包括： CPU 寄存器、信号 mask 和当前线程所使用的栈空间；</strong></font></p>
+<p><strong>返回值</strong>：</p>
+<ul>
+<li><strong>getcontext 成功返回 0，失败返回 -1；</strong></li>
+</ul>
+<br>
+
+<h5 id="setcontext"><a href="#setcontext" class="headerlink" title="setcontext"></a><strong>setcontext</strong></h5><pre><code class="c++">#include &lt;ucontext.h&gt;
+int setcontext(ucontext_t *ucp);</code></pre>
+<p><strong>和 <code>getcontext</code> 函数类似，<code>setcontext</code> 函数用于：设置CPU 寄存器、信号 mask 和当前线程所使用的栈空间；</strong></p>
+<p><strong>需要特别注意的是：</strong></p>
+<p><font color="#f00"><strong>如果函数 <code>setcontext</code> 执行成功，那么调用 <code>setcontext</code> 的函数将不会返回，因为当前 CPU 的上下文已经交给其他函数或者过程了，当前函数完全放弃了 对 CPU 的“所有权”！</strong></font></p>
+<blockquote>
+<p>  <strong>getcontext 和 setcontext 的应用：</strong></p>
+<p>  <strong>当信号处理函数需要执行的时候，当前线程的上下文需要保存起来，随后进入信号处理阶段；</strong></p>
+</blockquote>
+<br>
+
+<h5 id="makecontext"><a href="#makecontext" class="headerlink" title="makecontext"></a><strong>makecontext</strong></h5><pre><code class="cpp">#include &lt;ucontext.h&gt;
+void makecontext(ucontext_t *ucp, (void *func)(), int argc, ...);</code></pre>
+<p><strong><code>makecontext</code> 修改由 <code>getcontext</code> 创建的上下文 <code>ucp</code>；</strong></p>
+<p><font color="#f00"><strong>如果 <code>ucp</code> 指向的上下文由 <code>swapcontext</code> 或 <code>setcontext</code> 恢复，那么当前线程将执行传递给 <code>makecontext</code> 的函数 <code>func(...)</code>！</strong></font></p>
+<p><font color="#f00"><strong>执行 makecontext 后需要为新上下文分配一个栈空间，如果不创建，那么新函数<code>func</code>执行时会使用旧上下文的栈，而这个栈可能已经不存在了！</strong></font></p>
+<p><font color="#f00"><strong>同时，argc 必须和 func 中整型参数的个数相等；</strong></font></p>
+<br>
+
+<h5 id="swapcontext"><a href="#swapcontext" class="headerlink" title="swapcontext"></a><strong>swapcontext</strong></h5><pre><code class="c++">#include &lt;ucontext.h&gt;
+int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);</code></pre>
+<p><strong><code>swapcontext</code> 将当前上下文信息保存到 <code>oucp</code> 中并使用 <code>ucp</code> 重置 CPU 上下文；</strong></p>
+<p><strong>返回值</strong>：</p>
+<ul>
+<li>成功则返回 0；</li>
+<li>失败返回 -1 并置 <code>errno</code>；</li>
+</ul>
+<p><strong>如果 <code>ucp</code> 所指向的上下文没有足够的栈空间以执行余下的过程，<code>swapcontext</code> 将返回 -1；</strong></p>
+<br>
+
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h5><p>相比于 <code>setjml</code> 略微简单的功能，使用 <code>ucontext</code> 我们可以方便的获取当前调用函数的上下文，进而实现协程！</p>
+<br>
+
+<h2 id="协程的类别"><a href="#协程的类别" class="headerlink" title="协程的类别"></a><strong>协程的类别</strong></h2><p>协程的实现不只有一种，很多活跃的语言如 Python、Java、Golang等都是支持协程的；</p>
+<p>尽管这些协程可能名称不同，甚至用法也不同，但它们都可以被划分为两大类：</p>
+<ul>
+<li><font color="#f00"><strong>有栈（stackful）协程，这类协程的实现类似于内核态线程的实现，不同协程间切换还是要切换对应的栈上下文，只是不用陷入内核而已；例如：goroutine、libco；</strong></font></li>
+<li><font color="#f00"><strong>无栈（stackless）协程，无栈协程的上下文都会放到公共内存中，在协程切换时使用状态机来切换，而不用切换对应的上下文（因为都已经在堆中了），因此相比有栈协程要轻量许多；例如：C++20、Rust、JavaScript 中的协程；</strong></font></li>
+</ul>
+<blockquote>
+<p>  <strong>这里所谓的有栈、无栈：</strong></p>
+<p>  <font color="#f00"><strong>并不是说这个协程运行的时候有没有栈，而是说协程之间是否存在调用栈（Callback Stack）；</strong></font></p>
+</blockquote>
+<p>同时，根据协程之间是否有明显的调用关系，我们又可以把协程分为：</p>
+<ul>
+<li><font color="#f00"><strong>非对称协程：协程之间有明显的调用关系；</strong></font></li>
+<li><font color="#f00"><strong>对称协程：协程之间无明显的调用关系</strong></font></li>
+</ul>
+<blockquote>
+<p>  例如，协程 A 调用了协程 B：</p>
+<ul>
+<li><strong>如果只有 B 完成之后才能调用 A，那么此时 A/B 是非对称协程；</strong></li>
+<li><strong>如果 A/B 被调用的概率相同，那么此时 A/B 是对称协程；</strong></li>
+</ul>
+</blockquote>
+<p>下面我们分别来看；</p>
+<br>
+
+<h3 id="有栈协程"><a href="#有栈协程" class="headerlink" title="有栈协程"></a><strong>有栈协程</strong></h3><blockquote>
+<p>  <strong>注：下面讲解的内容需要读者具有一定的汇编以及函数调用知识，建议先阅读我的上一篇文章：</strong></p>
+<ul>
+<li><p><a href="/2022/06/01/浅谈函数调用/">《浅谈函数调用》</a></p>
+<p>之后再看！</p>
+</li>
+</ul>
+</blockquote>
+<p>开源库 libco 就是通过汇编语言实现的有栈协程库，我们来看一看libco中对于32位机器的上下文切换操作是如何完成的：</p>
+<p>通过分析代码看到，无论是 <code>co_yield_ct</code> 还是 <code>co_resume</code>，在协程切出和恢复时，都调用了同一个函数<code>co_swap</code>，在这个函数中调用了 <code>coctx_swap</code> 来实现协程的切换，这一函数的原型是：</p>
+<pre><code class="c++">void coctx_swap( coctx_t *,coctx_t* ) asm(&quot;coctx_swap&quot;);</code></pre>
+<p>两个参数都是 <code>coctx_t *</code> 指针类型，其中第一个参数表示要切出的协程，第二个参数表示切出后要进入的协程；</p>
+<p><code>coctx_swap</code> 函数便是用汇编实现的，我们这里只关注 x86-64 相关的部分，其代码如下：</p>
+<pre><code class="assembly">coctx_swap:
+   leaq 8(%rsp),%rax
+   leaq 112(%rdi),%rsp
+   pushq %rax
+   pushq %rbx
+   pushq %rcx
+   pushq %rdx
+
+   pushq -8(%rax) //ret func addr
+
+   pushq %rsi
+   pushq %rdi
+   pushq %rbp
+   pushq %r8
+   pushq %r9
+   pushq %r12
+   pushq %r13
+   pushq %r14
+   pushq %r15
+
+   movq %rsi, %rsp
+   popq %r15
+   popq %r14
+   popq %r13
+   popq %r12
+   popq %r9
+   popq %r8
+   popq %rbp
+   popq %rdi
+   popq %rsi
+   popq %rax //ret func addr
+   popq %rdx
+   popq %rcx
+   popq %rbx
+   popq %rsp
+   pushq %rax
+
+   xorl %eax, %eax
+   ret</code></pre>
+<p>可以看出，<code>coctx_swap</code> 中并未像常规被调用函数一样创立新的栈帧；</p>
+<p>先看前两条语句：</p>
+<pre><code class="assembly">leaq 8(%rsp),%rax
+leaq 112(%rdi),%rsp</code></pre>
+<p><code>leaq</code> 用于把其第一个参数的值赋值给第二个寄存器参数；</p>
+<p>而第一条语句用来把 <code>8(%rsp)</code> 的本身的值存入到 <code>%rax</code> 中；</p>
+<blockquote>
+<p>  <strong>注意：</strong></p>
+<p>  <strong>这里使用的并不是 <code>8(%rsp)</code> 指向的值，而是把 8(%rsp) 表示的地址赋值给了 %rax，这一地址是父函数栈帧中除返回地址外栈帧顶的位置；</strong></p>
+</blockquote>
+<p>在第二条语句 <code>leaq 112(%rdi), %rsp</code> 中，<code>%rdi</code> 存放的是<code>coctx_swap</code> 第一个参数的值，这一参数是指向 <code>coctx_t</code> 类型的指针，表示当前要切出的协程，这一类型的定义如下：</p>
+<pre><code class="cpp">struct coctx_t {
+    void *regs[ 14 ]; 
+    size_t ss_size;
+    char *ss_sp;
+};</code></pre>
+<p>因而 <code>112(%rdi)</code> 表示的就是第一个协程的 <code>coctx_t</code> 中 <code>regs[14]</code> 数组的下一个64位地址；</p>
+<p>而接下来的语句：</p>
+<pre><code class="assembly">pushq %rax   
+pushq %rbx
+pushq %rcx
+pushq %rdx
+pushq -8(%rax) //ret func addr
+pushq %rsi
+pushq %rdi
+pushq %rbp
+pushq %r8
+pushq %r9
+pushq %r12
+pushq %r13
+pushq %r14
+pushq %r15</code></pre>
+<p>第一条语句 <code>pushq %rax</code> 用于把 <code>%rax</code> 的值放入到 <code>regs[13]</code> 中，<code>resg[13]</code> 用来存储第一个协程的 <code>%rsp</code> 的值。这时 <code>%rax</code> 中的值是第一个协程 <code>coctx_swap</code> 父函数栈帧除返回地址外栈帧顶的地址；</p>
+<p>由于 <code>regs[]</code> 中有单独的元素存储返回地址，栈中再保存返回地址是无意义的，因而把父栈帧中除返回地址外的栈帧顶作为要保存的 <code>%rsp</code> 值是合理的；当协程恢复时，把保存的 <code>regs[13]</code> 的值赋值给 <code>%rsp</code> 即可恢复本协程 <code>coctx_swap</code> 父函数堆栈指针的位置；</p>
+<p>第一条语句之后的语句就是用 <code>pushq</code> 把各CPU 寄存器的值依次从 <code>regs</code> 尾部向前压入；</p>
+<p>即通过调整 <code>%rsp</code> 把 <code>regs[14]</code> 当作堆栈，然后利用 <code>pushq</code> 把寄存器的值和返回地址存储到 <code>regs[14]</code> 整个数组中；</p>
+<p>并且，<code>regs[14]</code> 数组中各元素与其要存储的寄存器对应关系如下：</p>
+<pre><code>//-------------
+// 64 bit
+//low | regs[0]: r15 |
+//    | regs[1]: r14 |
+//    | regs[2]: r13 |
+//    | regs[3]: r12 |
+//    | regs[4]: r9  |
+//    | regs[5]: r8  | 
+//    | regs[6]: rbp |
+//    | regs[7]: rdi |
+//    | regs[8]: rsi |
+//    | regs[9]: ret |  //ret func addr, 对应 rax
+//    | regs[10]: rdx |
+//    | regs[11]: rcx | 
+//    | regs[12]: rbx |
+//hig | regs[13]: rsp |</code></pre><p>接下来的汇编语句：</p>
+<pre><code class="assembly">movq %rsi, %rsp
+popq %r15
+popq %r14
+popq %r13
+popq %r12
+popq %r9
+popq %r8
+popq %rbp
+popq %rdi
+popq %rsi
+popq %rax //ret func addr
+popq %rdx
+popq %rcx
+popq %rbx
+popq %rsp</code></pre>
+<p>这里用的方法还是通过改变 <code>%rsp</code> 的值，把某块内存当作栈来使用；</p>
+<p>第一句 <code>movq %rsi, %rsp</code> 就是让 <code>%rsp</code> 指向 <code>coctx_swap</code> 第二个参数，这一参数表示要进入的协程。而第二个参数也是<code>coctx_t</code> 类型的指针，即执行完 <code>movq</code> 语句后，<code>%rsp</code> 指向了第二个参数 <code>coctx_t</code> 中 <code>regs[0]</code>，而之后的 <code>pop</code> 语句就是用 <code>regs[0-13]</code> 中的值填充 cpu 的寄存器，这里需要注意的是 <code>popq</code> 会使得 <code>%rsp</code> 的值增加而不是减少，这一点保证了会从 <code>regs[0]</code> 到 <code>regs[13]</code> 依次弹出到 cpu 寄存器中；</p>
+<p>在执行完最后一句 <code>popq %rsp</code> 后，<code>%rsp</code> 已经指向了新协程要恢复的栈指针（即新协程之前调用 <code>coctx_swap</code> 时父函数的栈帧顶指针），由于每个协程都有一个自己的栈空间，可以认为这一语句使得 <code>%rsp</code> 指向了要进入协程的栈空间；</p>
+<p><code>coctx_swap</code> 中最后三条语句如下：</p>
+<pre><code class="assembly">pushq %rax
+xorl %eax, %eax
+ret</code></pre>
+<p><code>pushq %rax</code> 用来把 <code>%rax</code> 的值压入到新协程的栈中，这时 <code>%rax</code> 是要进入的目标协程的返回地址，即要恢复的执行点；然后用 <code>xorl</code> 把 <code>%rax</code> 低32位清0以实现地址对齐；最后 <code>ret</code> 语句用来弹出栈的内容，并跳转到弹出的内容表示的地址处，而弹出的内容正好是上面 <code>pushq %rax</code> 时压入的 <code>%rax</code> 的值，即之前保存的此协程的返回地址；</p>
+<p>即最后这三条语句实现了转移到新协程返回地址处执行，从而完成了两个协程的切换；</p>
+<p>可以看出，这里通过调整 <code>%rsp</code> 的值来恢复新协程的栈，并利用了 <code>ret</code> 语句来实现修改指令寄存器 <code>%rip</code> 的目的，通过修改 <code>%rip</code> 来实现程序运行逻辑跳转；</p>
+<blockquote>
+<p>  注意：</p>
+<p>  <font color="#f00"><strong><code>%rip</code> 的值不能直接修改，只能通过 <code>call</code> 或 <code>ret</code> 之类的指令来间接修改；</strong></font></p>
+</blockquote>
+<p><font color="#f00"><strong>整体上看来，协程的切换其实就是： cpu 寄存器内容特别是 <code>%rip</code> 和 <code>%rsp</code> 的写入和恢复，因为 cpu 的寄存器决定了程序从哪里执行（%rip) 和使用哪个地址作为堆栈 （%rsp）；</strong></font></p>
+<p>寄存器的写入和恢复如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-5.png" alt="Coroutine-5.png"></p>
+<p>执行完上图的流程，就将之前 cpu 寄存器的值保存到了协程A 的 regs[14] 中，而将协程B regs[14] 的内容写入到了寄存器中，从而使执行逻辑跳转到了 B 协程 regs[14] 中保存的返回地址处开始执行，即实现了协程的切换（从A 协程切换到了B协程执行）；</p>
+<blockquote>
+<p>  详细关于 libco 的实现细节：</p>
+<ul>
+<li><a href="https://www.zhihu.com/question/52193579" target="_blank" rel="noopener">https://www.zhihu.com/question/52193579</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27409164" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/27409164</a></li>
+<li><a href="https://github.com/yyrdl/libco-code-study" target="_blank" rel="noopener">https://github.com/yyrdl/libco-code-study</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="无栈协程"><a href="#无栈协程" class="headerlink" title="无栈协程"></a><strong>无栈协程</strong></h3><p><strong>无栈协程的本质就是一个状态机（state machine）</strong>，它可以理解为在另一个角度去看问题，即：</p>
+<ul>
+<li><strong>同一协程协程的切换本质不过是指令指针寄存器的改变；</strong></li>
+</ul>
+<p>首先，我们来看一个使用 libco 的协程的例子（当然libco是一个有栈协程）：</p>
+<pre><code class="c++">void* test(void* para){
+    co_enable_hook_sys();
+    int i = 0;
+    poll(0, 0, 0. 1000); // 协程切换执行权，1000ms后返回
+    i++;
+    poll(0, 0, 0. 1000); // 协程切换执行权，1000ms后返回
+    i--;
+    return 0;
+}
+
+int main(){
+    stCoRoutine_t* routine;
+    co_create(&amp;routine, NULL, test, 0); // 创建一个协程
+    co_resume(routine); 
+    co_eventloop( co_get_epoll_ct(),0,0 );
+    return 0;
+}</code></pre>
+<p>这段代码实际的意义就是：主协程跑一个协程去执行 test 函数，在test中我们需要两次从协程中切换出去，这里对应了两个 poll 操作（hook机制），hook后的 poll 所做的事情就是把当前协程的CPU执行权切换到调用栈的上一层，并在超时或注册的 fd 就绪时返回（当然样例这里就只是超时了）；</p>
+<p>如果是无栈协程，实现相同逻辑的代码是怎么样的呢？</p>
+<p>其实就是翻译成类似于以下状态机的代码：</p>
+<pre><code class="c++">class test_coroutine {
+    int i;
+    int __state = 0;
+    void MoveNext() {
+        switch(__state) {
+        case 0:
+            return frist();
+        case 1:
+            return second();
+        case 2:
+            return third();
+        }
+    }
+    void frist() {
+        i = 0;
+        __state = 1;
+    }
+    void second() {
+        i++;
+        _state = 2;
+    }
+    void third() {
+        i--;
+    }
+};</code></pre>
+<p>我们可以看到：相比与有栈协程中的 test 函数，这里<strong>把整个协程抽象成一个类，以原本需要执行切换的语句处为界限，把函数划分为几个部分，并在某一个部分执行完以后进行状态转移，在下一次调用此函数的时候就会执行下一部分；</strong></p>
+<p>这样的话我们就完全没有必要像有栈协程那样显式的执行上下文切换了，我们只需要一个简易的调度器来调度这些函数即可；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>在 Rust 中，async 也是一个语法糖，实际上编译后就是实现了类似于上面的代码结构！</strong></font></p>
+<p>  <font color="#f00"><strong>感兴趣的可以去看《async book》</strong></font></p>
+</blockquote>
+<p>从执行时栈的角度来看：</p>
+<p><font color="#f00"><strong>其实所有的协程共用的都是一个栈，即系统栈，也就也不必我们自行去给协程分配栈，因为是函数调用，我们当然也不必去显示的保存寄存器的值；</strong></font></p>
+<p><font color="#f00"><strong>而且相比有栈协程把局部变量放在新开的空间上，无栈协程直接使用系统栈使得CPU cache局部性更好，同时也使得无栈协程的中断和函数返回几乎没有区别，这样也可以凸显出无栈协程的高效；</strong></font></p>
+<br>
+
+<h3 id="对称协程与非对称协程"><a href="#对称协程与非对称协程" class="headerlink" title="对称协程与非对称协程"></a><strong>对称协程与非对称协程</strong></h3><p>前文中也简单提到了对称和非对称协程，这里也简单聊一下吧！</p>
+<p>其实对于“对称”这个名词，阐述的实际是：<strong>协程之间的关系；</strong></p>
+<p>用大白话来说就是：<strong>对称协程就是说协程之间人人平等，没有谁调用谁一说，大家都是一样的，而非对称协程就是协程之间存在明显的调用关系；</strong></p>
+<p>简单来说就是这样：</p>
+<ul>
+<li><strong>对称协程 Symmetric Coroutine：任何一个协程都是相互独立且平等的，调度权可以在任意协程之间转移；</strong></li>
+<li><strong>非对称协程 Asymmetric Coroutine：协程出让调度权的目标只能是它的调用者，即协程之间存在调用和被调用关系；</strong></li>
+</ul>
+<p><strong>其实两者的实现我觉得其实差异不大，非对称协程其实就是拥有调用栈，而非对称协程则是大家都平等，不需要调用栈，只需要一个数据结构存储所有未执行完的协程即可；</strong></p>
+<p>至于哪种更优？这个需要分情况：</p>
+<p>如果你使用协程的目的是为了优化一些 IO 密集型应用，那么协程切换出去的时候就是它等待事件到来的时候，此时你就算切换过去也没有什么意义，还不如等到事件到来的时候自动切换回去；</p>
+<p>其实上面说的是有一些问题，因为这个执行权的切换实际上是（调用者–被调用者）之间的切换，对称就是它们之间都是平等的，就是假如A协程执行了B，C协程，那么B协程可以切换回A，也可以切换回C；而非对称只能是B切换回A，A切换回C，C再切换回A，以此类推；</p>
+<p>这样看起来显然非对称协程相比之下更为符合我们的认知，因为对称协程目前我不知道如何选择一个合适的协程来获得CPU执行权，正如上面所说，此协程可能正在等待事件；当然如果调度算法足够优秀的话，对称协程也是可取的；</p>
+<br>
+
+<h2 id="关于协程的一些其他内容"><a href="#关于协程的一些其他内容" class="headerlink" title="关于协程的一些其他内容"></a><strong>关于协程的一些其他内容</strong></h2><h3 id="N-1-amp-N-M-协程"><a href="#N-1-amp-N-M-协程" class="headerlink" title="N:1 &amp; N:M 协程"></a><strong>N:1 &amp; N:M 协程</strong></h3><p>我们知道，和线程绑定的协程只有在对应线程运行的时候才有被执行的可能，如果对应线程中的某一个协程完全占有了当前线程，那么当前线程中的其他所有协程都不会被执行；</p>
+<p>同时，协程的所有信息都保存在上下文（Contex）对象中，将不同上下文分发给不同的线程就可以实现协程的跨线程执行，如此，协程被阻塞的概率将减小；</p>
+<p>因此，借用 <a href="https://github.com/apache/incubator-brpc/blob/master/docs/cn/bthread.md" target="_blank" rel="noopener">BRPC</a> 中对 <code>N:M</code> 协程的介绍，来解释下什么是 <code>N:M</code> 协程；</p>
+<blockquote>
+<p>  <strong>我们常说的协程通常指的是 <code>N:1</code> 线程库，即所有的协程运行于一个系统线程中，计算能力和各类eventloop库等价；</strong></p>
+<p>  <strong>由于不跨线程，协程之间的切换不需要系统调用，可以非常快(100ns-200ns)，受 cache 一致性的影响也小；</strong></p>
+<p>  <strong>但代价是协程无法高效地利用多核，代码必须非阻塞，否则所有的协程都被卡住……</strong></p>
+</blockquote>
+<p><code>bthread</code> 是一个 <code>M:N</code> 线程库，一个<code>bthread</code>被卡住不会影响其他<code>bthread</code>；</p>
+<p>其中的关键技术有两点：</p>
+<ul>
+<li><strong>work stealing 调度；</strong></li>
+<li><strong>butex；</strong></li>
+</ul>
+<p>前者让 bthread 更快地被调度到更多的核心上，后者让 bthread 和 pthread 可以相互等待和唤醒，这两点协程都不需要；</p>
+<blockquote>
+<p>  更多brpc的线程见：</p>
+<ul>
+<li><a href="https://github.com/apache/incubator-brpc/blob/master/docs/cn/threading_overview.md" target="_blank" rel="noopener">https://github.com/apache/incubator-brpc/blob/master/docs/cn/threading_overview.md</a></li>
+</ul>
+</blockquote>
+<p>这么看来 貌似 bthread 自己实现了 golang 的 goroutine？</p>
+<p>表面看起来的却如此：两者都实现了 M:N 用户态线程；</p>
+<p>但是事实上， golang 中的 goroutine 的实现要更为复杂一些：</p>
+<p>bthread 的设计比较接近 go 1.0 版本：OS 线程不会动态增加，在有大量的阻塞性 syscall 下，会有影响；</p>
+<p>而 go 1.1 之后的设计就是动态增减 OS 线程，而且提供了 LockOSThread，可以让 goroutine 和 OS 线程 1:1；</p>
+<blockquote>
+<p>  关于这个问题，见：</p>
+<ul>
+<li><a href="https://www.zhihu.com/question/65549422" target="_blank" rel="noopener">https://www.zhihu.com/question/65549422</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="协程的组成"><a href="#协程的组成" class="headerlink" title="协程的组成"></a><strong>协程的组成</strong></h3><p>通过上面的描述，<code>N:M</code> 模式下的协程其实就是可用户确定调度顺序的用户态线程，与系统级线程对照可以将协程框架分为以下几个模块：</p>
+<ul>
+<li><font color="#f00"><strong>协程上下文：对应操作系统中的 <a href="https://blog.csdn.net/github_36487770/article/details/60144610" target="_blank" rel="noopener">PCB/TCB(Process/Thread Control Block)</a>；</strong></font></li>
+<li><font color="#f00"><strong>保存协程上下文的容器：对应操作系统中保存 PCB/TCB 的容器，一般是一个列表（在实际实现时，协程上下文容器可以使用一个也可以使用多个，比如：普通协程队列、定时的协程优先队列等）；</strong></font></li>
+<li><font color="#f00"><strong>协程的执行器：</strong></font><ul>
+<li><font color="#f00"><strong>协程的调度器，对应操作系统中的进程/线程调度器；</strong></font></li>
+<li><font color="#f00"><strong>执行协程的 worker 线程，对应实际线程/进程所使用的 CPU 核心；</strong></font></li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="协程的调度"><a href="#协程的调度" class="headerlink" title="协程的调度"></a><strong>协程的调度</strong></h3><p>协程的调度与 OS 线程调度十分相似，如<a href="https://www.cyhone.com/articles/analysis-of-cloudwu-coroutine/" target="_blank" rel="noopener">下图协程调度示例</a>所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JasonkayZK/blog_static@2022-06/images/coroutine-4.png" alt="Coroutine-4.png"></p>
+<br>
+
+<h3 id="协程相关工具"><a href="#协程相关工具" class="headerlink" title="协程相关工具"></a><strong>协程相关工具</strong></h3><p>系统级线程有锁（mutex）、条件变量（condition）等工具，协程也有对应的工具；比如： <a href="https://github.com/yyzybb537/libgo" target="_blank" rel="noopener">libgo</a> 提供了协程之间使用的锁 <code>Co_mutex/Co_rwmutex</code> ；</p>
+<p>不同协程框架对工具的支持程度不同，实现方式也不尽相同；对此问题，本文不做深入介绍；</p>
+<p><strong>系统级线程和协程处于不同的系统层级，所以两者的同步工具不完全通用，如果在协程中使用了线程的锁（例如：<code>std::mutex</code>），则整个线程将会被阻塞，当前线程将不会再调度与执行其他协程；</strong></p>
+<blockquote>
+<p>  最简单的例子：</p>
+<p>  <strong>如果在一个协程中使用了 <code>sleep</code>，那么这个线程下的所有协程全部都会被阻塞！</strong></p>
+<p>  <strong>在使用协程时，这种方法是非常低效的！</strong></p>
+</blockquote>
+<br>
+
+<h3 id="协程-amp-线程的对比"><a href="#协程-amp-线程的对比" class="headerlink" title="协程&amp;线程的对比"></a><strong>协程&amp;线程的对比</strong></h3><table>
+<thead>
+<tr>
+<th><strong>内容</strong></th>
+<th>线程</th>
+<th>协程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>调度方式</strong></td>
+<td>线程由系统控制，一般没有优先级；</td>
+<td>协程由编程者控制，协程之间可以有优先级；</td>
+</tr>
+<tr>
+<td><strong>调度速度</strong></td>
+<td>相比协程，较慢</td>
+<td>协程几乎比线程快一个数量级；<br>协程调用由编码者控制，可以减少无效的调度；</td>
+</tr>
+<tr>
+<td><strong>资源占用</strong></td>
+<td>线程由系统控制；</td>
+<td>协程可以控制内存占用量，灵活性更好；</td>
+</tr>
+<tr>
+<td><strong>创建数量</strong></td>
+<td>相比于协程，占用更多内存；</td>
+<td>协程的使用更灵活（有优先级控制、资源使用可控），调度速度更快，相比于线程而言调度损耗更小；<br><strong>因此真实可创建且有效的协程数量可以比线程多很多，这是使用协程实现异步编程的重要基础；</strong><br><strong>但是因为调度与资源的限制，有效协程的数量也是有上限的</strong></td>
+</tr>
+</tbody></table>
+<br>
+
+<h3 id="协程对-CPU-IO-的影响"><a href="#协程对-CPU-IO-的影响" class="headerlink" title="协程对 CPU/IO 的影响"></a><strong>协程对 CPU/IO 的影响</strong></h3><p>协程的目的在于剔除线程的阻塞，尽可能提高 CPU 的利用率；</p>
+<p>很多服务在处理业务时需要请求第三方服务，向第三方服务发起 RPC 调用；RPC 调用的网络耗时一般耗时在毫秒级别，RPC 服务的处理耗时也可能在毫秒级别，如果当前服务使用同步调用，即 RPC 返回后才进行后续逻辑，那么一条线程每秒处理的业务数量是可以估算的；</p>
+<p>假设每次业务处理花费在 RPC 调用上的耗时是 20ms，那么一条线程一秒最多处理 50 次请求！</p>
+<p>如果在等待 RPC 返回时当前线程没有被系统调度转换为 Ready 状态，那当前 CPU 核心就会空转，浪费了 CPU 资源！通过增加线程数量提高系统吞吐量的效果非常有限，而且创建大量线程也会造成其他问题！</p>
+<p>协程虽然不一定能减少一次业务请求的耗时，但一定可以提升系统的吞吐量：</p>
+<ul>
+<li>当前业务只有一次第三方 RPC 的调用，那么协程不会减少业务处理的耗时，但可以提升 QPS；</li>
+<li>当前业务需要多个第三方 RPC 调用，<strong>同时创建多个协程可以让多个 RPC 调用一起执行，则当前业务的 RPC 耗时由耗时最长的 RPC 调用决定；</strong></li>
+</ul>
+<br>
+
+<h2 id="C-20标准中的协程"><a href="#C-20标准中的协程" class="headerlink" title="C++20标准中的协程"></a><strong>C++20标准中的协程</strong></h2><p><strong>虽然 C++ 20 标准中引入了协程，但是 C++20 只引入了协程需要的底层支持，所以直接使用相对比较难，不过很多库已经提供了封装，比如：</strong></p>
+<ul>
+<li><a href="https://github.com/chriskohlhoff/asio" target="_blank" rel="noopener">ASIO</a>；</li>
+<li><a href="https://github.com/lewissbaker/cppcoro" target="_blank" rel="noopener">cppcoro</a>；</li>
+</ul>
+<p>需要说明的是：C++20 协程的<a href="https://zhuanlan.zhihu.com/p/85440615" target="_blank" rel="noopener">性能</a>还是非常高的，等 C++23 提供简化后的 lib，我们就可以非常方便地使用协程了！</p>
+<p>就目前而言，编译协程相关代码需要 g++10 或者更高版本（clang++12 对协程支持有限）：</p>
+<blockquote>
+<p>  可以通过下面的命令安装：</p>
+<ul>
+<li>Mac：<code>brew install gcc@10</code>；</li>
+<li>Ubuntu：<code>apt install gcc-10</code> / <code>apt install g++-10</code>；</li>
+</ul>
+</blockquote>
+<p>下面我写了一个使用 C++20 标准中协程的例子：</p>
+<p>cpp20_demo/cpp_20_demo.cc</p>
+<pre><code class="c++">#include &lt;coroutine&gt;
+#include &lt;iostream&gt;
+
+struct HelloCoroutine {
+
+    struct HelloPromise {
+
+        HelloCoroutine get_return_object() {
+            return std::coroutine_handle&lt;HelloPromise&gt;::from_promise(*this);
+        }
+
+        std::suspend_never initial_suspend() { return {}; }
+
+        std::suspend_always final_suspend() noexcept { return {}; }
+
+        void unhandled_exception() {}
+    };
+
+    using promise_type = HelloPromise;
+
+    HelloCoroutine(std::coroutine_handle&lt;HelloPromise&gt; h) : handle(h) {}
+
+    std::coroutine_handle&lt;HelloPromise&gt; handle;
+};
+
+HelloCoroutine hello() {
+    std::cout &lt;&lt; &quot;Hello &quot; &lt;&lt; std::endl;
+    co_await std::suspend_always{};
+    std::cout &lt;&lt; &quot;world!&quot; &lt;&lt; std::endl;
+}
+
+int main() {
+    HelloCoroutine coro = hello();
+
+    std::cout &lt;&lt; &quot;calling resume&quot; &lt;&lt; std::endl;
+    coro.handle.resume();
+
+    std::cout &lt;&lt; &quot;destroy&quot; &lt;&lt; std::endl;
+    coro.handle.destroy();
+
+    return 0;
+}</code></pre>
+<p>编译执行后输出：</p>
+<pre><code>Hello 
+calling resume
+world!
+destroy</code></pre><blockquote>
+<p>  由于篇幅有限，这里不再详述C++20标准中的协程使用了；</p>
+<p>  如果想更深入的学习，可以参考：</p>
+<ul>
+<li><a href="http://cppstd20.com/" target="_blank" rel="noopener">《C++20 - The Complete Guide》——Nicolai M. Josuttis</a>，<a href="http://www.josuttis.com/" target="_blank" rel="noopener">作者官网</a>值得一看；</li>
+<li><a href="https://zhuanlan.zhihu.com/p/355100152" target="_blank" rel="noopener">如何编写 C++ 20 协程(Coroutines)</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/59178345" target="_blank" rel="noopener">协程入门</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1882417" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1882417</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/coroutines" target="_blank" rel="noopener">https://en.cppreference.com/w/cpp/language/coroutines</a></li>
+<li><a href="https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html" target="_blank" rel="noopener">https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="动手实现协程"><a href="#动手实现协程" class="headerlink" title="动手实现协程"></a><strong>动手实现协程</strong></h2><p>上面文章的内容基本上已经把整个协程介绍的七七八八了；</p>
+<p>看了这么多内容，你是不是心动想要自己动手写一个协程库了呢？</p>
+<p>那么，跟随下面的内容，一起使用C++实现协程吧！</p>
+<p>是的，有栈协程、无栈协程都会实现一遍！</p>
+<br>
+
+<h3 id="基于汇编实现的有栈协程"><a href="#基于汇编实现的有栈协程" class="headerlink" title="基于汇编实现的有栈协程"></a><strong>基于汇编实现的有栈协程</strong></h3><p>首先我们来使用汇编来实现一个有栈协程，这里参考的是微信开源的 libco；</p>
+<blockquote>
+<p>  源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/coroutine/stack_co" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/coroutine/stack_co</a></li>
+</ul>
+</blockquote>
+<h4 id="协程环境"><a href="#协程环境" class="headerlink" title="协程环境"></a><strong>协程环境</strong></h4><p>本例中实现的协程不支持跨线程，而是每个线程分配一个环境，来维护该线程下运行中的协程之间的层次关系；</p>
+<p>代码如下：</p>
+<p>stack_co/environment.h</p>
+<pre><code class="c++">#ifndef COROUTINE_ENVIRONMENT_H
+#define COROUTINE_ENVIRONMENT_H
+
+#include &quot;coroutine.h&quot;
+
+#include &lt;cstddef&gt;
+#include &lt;cstring&gt;
+#include &lt;functional&gt;
+#include &lt;memory&gt;
+
+namespace stack_co {
+
+    class Coroutine;
+
+    class Environment {
+        friend class Coroutine;
+
+    public:
+        // Thread-local instance
+        static Environment &amp;instance();
+
+        // Factory method
+        template&lt;typename Entry, typename ...Args&gt;
+        std::shared_ptr&lt;Coroutine&gt; create_coroutine(Entry &amp;&amp;entry, Args &amp;&amp;...arguments);
+
+        // No copy constructor
+        Environment(const Environment &amp;) = delete;
+
+        // No Assignment Operator
+        Environment &amp;operator=(const Environment &amp;) = delete;
+
+        // Get current coroutine in the stack
+        Coroutine *current();
+
+    private:
+        // No explicit constructor
+        Environment();
+
+        void push(std::shared_ptr&lt;Coroutine&gt; coroutine);
+
+        void pop();
+
+    private:
+        // Coroutine calling stack
+        std::array&lt;std::shared_ptr&lt;Coroutine&gt;, 1024&gt; _c_stack;
+
+        // Top of the coroutine calling stack
+        size_t _c_stack_top;
+
+        // Main coroutine(root)
+        std::shared_ptr&lt;Coroutine&gt; _main;
+    };
+
+    // A default factory method
+    template&lt;typename Entry, typename ...Args&gt;
+    inline std::shared_ptr&lt;Coroutine&gt; Environment::create_coroutine(Entry &amp;&amp;entry, Args &amp;&amp;...arguments) {
+        return std::make_shared&lt;Coroutine&gt;(
+                this, std::forward&lt;Entry&gt;(entry), std::forward&lt;Args&gt;(arguments)...);
+    }
+
+} // namespace stack_co
+
+#endif //COROUTINE_ENVIRONMENT_H</code></pre>
+<p>上面的代码定义了协程运行的环境（Environment）；</p>
+<p><strong>需要注意的是：</strong></p>
+<p><strong>我们显式的删除了 Environment 的拷贝构造函数和赋值运算符，并且将构造函数声明为 <code>private</code>，仅提供工厂方法来创建 Environment 实例；</strong></p>
+<p><strong>而 Environment 在实现时，使用的是 <code>thread_local</code>，从而保证了每个线程仅会存在单个实例！</strong></p>
+<p>对外暴露了 <code>current</code> 方法用于获取当前环境下调用栈中的协程；</p>
+<p>而三个成员变量是用来保存或记录当前调用协程的：</p>
+<ul>
+<li><code>_c_stack</code>；</li>
+<li><code>_c_stack_top</code>；</li>
+<li><code>_main</code>；</li>
+</ul>
+<p>Environment 类对应的实现：</p>
+<p>stack_co/environment.cc</p>
+<pre><code class="c++">#include &quot;environment.h&quot;
+
+namespace stack_co {
+
+    Environment &amp;Environment::instance() {
+        static thread_local Environment env;
+        return env;
+    }
+
+    Coroutine *Environment::current() {
+        return this-&gt;_c_stack[this-&gt;_c_stack_top - 1].get();
+    }
+
+    void Environment::push(std::shared_ptr&lt;Coroutine&gt; coroutine) {
+        _c_stack[_c_stack_top++] = std::move(coroutine);
+    }
+
+    void Environment::pop() {
+        _c_stack_top--;
+    }
+
+    Environment::Environment() : _c_stack_top(0) {
+        _main = std::make_shared&lt;Coroutine&gt;(this, []() {});
+        push(_main);
+    }
+
+} // namespace stack_co</code></pre>
+<p>实现内容比较简单，主要是：</p>
+<ul>
+<li><code>instance</code>：工厂方法；</li>
+<li><code>current</code>：获取当前环境下栈顶的协程实例；</li>
+<li><code>push/pop</code>：协程压栈/出栈；</li>
+</ul>
+<p>下面来看协程实例相关的定义；</p>
+<br>
+
+<h4 id="协程状态"><a href="#协程状态" class="headerlink" title="协程状态"></a><strong>协程状态</strong></h4><p>协程相关的状态在 <code>status.h</code> 头文件中定义了：</p>
+<p>stack_co/status.h</p>
+<pre><code class="c++">#ifndef COROUTINE_STATUS_H
+#define COROUTINE_STATUS_H
+
+namespace stack_co {
+
+    // The status of the coroutine
+    struct Status {
+        using Bitmask = unsigned char;
+
+        constexpr static Bitmask MAIN = 1 &lt;&lt; 0;
+        constexpr static Bitmask IDLE = 1 &lt;&lt; 1;
+        constexpr static Bitmask RUNNING = 1 &lt;&lt; 2;
+        constexpr static Bitmask EXIT = 1 &lt;&lt; 3;
+
+        Bitmask operator&amp;(Bitmask mask) const { return flag &amp; mask; }
+
+        Bitmask operator|(Bitmask mask) const { return flag | mask; }
+
+        Bitmask operator^(Bitmask mask) const { return flag ^ mask; }
+
+        void operator&amp;=(Bitmask mask) { flag &amp;= mask; }
+
+        void operator|=(Bitmask mask) { flag |= mask; }
+
+        void operator^=(Bitmask mask) { flag ^= mask; }
+
+        Bitmask flag;
+    };
+} // namespace stack_co
+
+#endif //COROUTINE_STATUS_H</code></pre>
+<p>协程相关的状态主要包括了下面几类：</p>
+<ul>
+<li>MAIN：仅作为协程入口调用栈的标记；</li>
+<li>IDLE：空闲状态；</li>
+<li>RUNNING：执行中；</li>
+<li>EXIT：线程退出；</li>
+</ul>
+<p>并重载了一些运算符；</p>
+<br>
+
+<h4 id="协程实例"><a href="#协程实例" class="headerlink" title="协程实例"></a><strong>协程实例</strong></h4><p>协程的实例主要是用于支持接口 <code>resume</code> 和 <code>yield</code>；</p>
+<p>代码如下：</p>
+<p>stack_co/coroutine.h</p>
+<pre><code class="c++">#ifndef COROUTINE_COROUTINE_H
+#define COROUTINE_COROUTINE_H
+
+#include &quot;status.h&quot;
+#include &quot;context.h&quot;
+
+#include &lt;functional&gt;
+#include &lt;memory&gt;
+
+namespace stack_co {
+
+    class Environment;
+
+    class Coroutine : public std::enable_shared_from_this&lt;Coroutine&gt; {
+        friend class Environment;
+
+        friend class Context;
+
+    public:
+        static Coroutine &amp;current();
+
+        // 测试当前控制流是否位于协程上下文
+        static bool test();
+
+        // 获取当前运行时信息
+        // 目前仅支持运行、退出、主协程的判断
+        Status runtime() const;
+
+        bool exit() const;
+
+        bool running() const;
+
+        // 核心操作：resume和yield
+
+        // usage: Coroutine::current().yield()
+        static void yield();
+
+        // Note1: 允许处于EXIT状态的协程重入，从而再次resume
+        //        如果不使用这种特性，则用exit() / running()判断
+        //
+        // Note2: 返回值可以得知resume并执行后的运行时状态
+        //        但是这个值只适用于简单的场合
+        //        如果接下来其它协程的运行也影响了该协程的状态
+        //        那建议用runtime()获取
+        Status resume();
+
+        Coroutine(const Coroutine &amp;) = delete;
+
+        Coroutine(Coroutine &amp;&amp;) = delete;
+
+        Coroutine &amp;operator=(const Coroutine &amp;) = delete;
+
+        Coroutine &amp;operator=(Coroutine &amp;&amp;) = delete;
+
+    public:
+
+        // 构造Coroutine执行函数，entry为函数入口，对应传参为arguments...
+        // Note: 出于可重入的考虑，entry强制为值语义
+        template&lt;typename Entry, typename ...Args&gt;
+        Coroutine(Environment *master, Entry entry, Args ...arguments)
+                : _entry([=] { entry(/*std::move*/(arguments)...); }),
+                  _master(master) {}
+
+    private:
+        static void call_when_finish(Coroutine *coroutine);
+
+    private:
+        Status _runtime{};
+
+        Context _context{};
+
+        std::function&lt;void()&gt; _entry;
+
+        Environment *_master;
+    };
+
+} // namespace stack_co
+
+#endif //COROUTINE_COROUTINE_H</code></pre>
+<p>在 Coroutine 中定义了：</p>
+<ul>
+<li><code>_runtime</code>：当前线程的状态；</li>
+<li><code>_context</code>：当前协程的上下文信息（核心！）；</li>
+<li><code>_entry</code>：协程函数入口；</li>
+<li><code>_master</code>：协程调用环境；</li>
+</ul>
+<p>对应的方法实现：</p>
+<p>stack_co/coroutine.cc</p>
+<pre><code class="c++">#include &quot;coroutine.h&quot;
+#include &quot;environment.h&quot;
+
+namespace stack_co {
+
+    Coroutine &amp;Coroutine::current() {
+        return *Environment::instance().current();
+    }
+
+    bool Coroutine::test() {
+        return current()._context.test();
+    }
+
+    Status Coroutine::runtime() const {
+        return _runtime;
+    }
+
+    bool Coroutine::exit() const {
+        return _runtime &amp; Status::EXIT;
+    }
+
+    bool Coroutine::running() const {
+        return _runtime &amp; Status::RUNNING;
+    }
+
+    Status Coroutine::resume() {
+        if (!(_runtime &amp; Status::RUNNING)) {
+            _context.prepare(Coroutine::call_when_finish, this);
+            _runtime |= Status::RUNNING;
+            _runtime &amp;= ~Status::EXIT;
+        }
+        auto previous = _master-&gt;current();
+        _master-&gt;push(shared_from_this());
+        _context.switch_from(&amp;previous-&gt;_context);
+        return _runtime;
+    }
+
+    void Coroutine::yield() {
+        auto &amp;coroutine = current();
+        auto &amp;currentContext = coroutine._context;
+
+        coroutine._master-&gt;pop();
+
+        auto &amp;previousContext = current()._context;
+        previousContext.switch_from(&amp;currentContext);
+    }
+
+    void Coroutine::call_when_finish(Coroutine *coroutine) {
+        auto &amp;routine = coroutine-&gt;_entry;
+        auto &amp;runtime = coroutine-&gt;_runtime;
+        if (routine) routine();
+        runtime ^= (Status::EXIT | Status::RUNNING);
+        // coroutine-&gt;yield();
+        yield();
+    }
+
+} // namespace stack_co</code></pre>
+<p>协程内部的各种操作主要是调用其内部的 Context 实现的，下面我们来看；</p>
+<br>
+
+<h4 id="上下文实例"><a href="#上下文实例" class="headerlink" title="上下文实例"></a><strong>上下文实例</strong></h4><p>上下文信息 <code>Context</code> 用于维护协程 Coroutine 的函数调用信息；</p>
+<p><font color="#f00"><strong>需要注意的是：上下文需要确保内存布局准确无误才能使用；</strong></font></p>
+<p><font color="#f00"><strong>一个<code>context</code>的起始地址必须是<code>regs[0]</code>，否则会影响后面的协程切换正确性；</strong></font></p>
+<p>代码如下：</p>
+<p>stack_co/context.h</p>
+<pre><code class="c++">#ifndef COROUTINE_CONTEXT_H
+#define COROUTINE_CONTEXT_H
+
+#include &lt;cstddef&gt;
+#include &lt;cstring&gt;
+#include &lt;iterator&gt;
+
+namespace stack_co {
+
+    class Coroutine;
+
+    /**
+     * The context of coroutine(in x86-64)
+     *
+     * low | _registers[0]: r15  |
+     *     | _registers[1]: r14  |
+     *     | _registers[2]: r13  |
+     *     | _registers[3]: r12  |
+     *     | _registers[4]: r9   |
+     *     | _registers[5]: r8   |
+     *     | _registers[6]: rbp  |
+     *     | _registers[7]: rdi  |
+     *     | _registers[8]: rsi  |
+     *     | _registers[9]: ret  |
+     *     | _registers[10]: rdx |
+     *     | _registers[11]: rcx |
+     *     | _registers[12]: rbx |
+     * hig | _registers[13]: rsp |
+     *
+     */
+    class Context final {
+    public:
+        using Callback = void (*)(Coroutine *);
+        using Word = void *;
+
+        constexpr static size_t STACK_SIZE = 1 &lt;&lt; 17;
+        constexpr static size_t RDI = 7;
+        constexpr static size_t RSI = 8;
+        constexpr static size_t RET = 9;
+        constexpr static size_t RSP = 13;
+
+    public:
+        void prepare(Callback ret, Word rdi);
+
+        void switch_from(Context *previous);
+
+        bool test();
+
+    private:
+        Word get_stack_pointer();
+
+        void fill_registers(Word sp, Callback ret, Word rdi, ...);
+
+    private:
+        /**
+         * We must ensure that registers are at the top of the memory layout.
+         *
+         * So the Context must have no virtual method, and len at least 14!
+         */
+        Word _registers[14];
+
+        char _stack[STACK_SIZE];
+    };
+
+} // namespace stack_co
+
+#endif //COROUTINE_CONTEXT_H</code></pre>
+<p>对应的 C++ 文件：</p>
+<p>stack_co/context.cc</p>
+<pre><code class="c++">#include &quot;context.h&quot;
+
+extern &quot;C&quot; {
+extern void switch_context(stack_co::Context *, stack_co::Context *) asm(&quot;switch_context&quot;);
+}
+
+namespace stack_co {
+
+    void Context::switch_from(Context *previous) {
+        switch_context(previous, this);
+    }
+
+    void Context::prepare(Context::Callback ret, Context::Word rdi) {
+        Word sp = get_stack_pointer();
+        fill_registers(sp, ret, rdi);
+    }
+
+    bool Context::test() {
+        char current;
+        ptrdiff_t diff = std::distance(std::begin(_stack), &amp;current);
+        return diff &gt;= 0 &amp;&amp; diff &lt; STACK_SIZE;
+    }
+
+    Context::Word Context::get_stack_pointer() {
+        auto sp = std::end(_stack) - sizeof(Word);
+        sp = decltype(sp)(reinterpret_cast&lt;size_t&gt;(sp) &amp; (~0xF));
+        return sp;
+    }
+
+    void Context::fill_registers(Word sp, Callback ret, Word rdi, ...) {
+        ::memset(_registers, 0, sizeof _registers);
+        auto pRet = (Word *) sp;
+        *pRet = (Word) ret;
+        _registers[RSP] = sp;
+        _registers[RET] = *pRet;
+        _registers[RDI] = rdi;
+    }
+
+} // namespace stack_co</code></pre>
+<p>其中，C++中的实现使用了汇编：</p>
+<p>stack_co/switch_context.S</p>
+<pre><code class="assembly">.globl switch_context
+.type  switch_context, @function
+switch_context:
+    movq %rsp, %rax
+    movq %rax, 104(%rdi)
+    movq %rbx, 96(%rdi)
+    movq %rcx, 88(%rdi)
+    movq %rdx, 80(%rdi)
+    movq 0(%rax), %rax
+    movq %rax, 72(%rdi)
+    movq %rsi, 64(%rdi)
+    movq %rdi, 56(%rdi)
+    movq %rbp, 48(%rdi)
+    movq %r8, 40(%rdi)
+    movq %r9, 32(%rdi)
+    movq %r12, 24(%rdi)
+    movq %r13, 16(%rdi)
+    movq %r14, 8(%rdi)
+    movq %r15, (%rdi)
+
+    movq 48(%rsi), %rbp
+    movq 104(%rsi), %rsp
+    movq (%rsi), %r15
+    movq 8(%rsi), %r14
+    movq 16(%rsi), %r13
+    movq 24(%rsi), %r12
+    movq 32(%rsi), %r9
+    movq 40(%rsi), %r8
+    movq 56(%rsi), %rdi
+    movq 72(%rsi), %rax
+    movq 80(%rsi), %rdx
+    movq 88(%rsi), %rcx
+    movq 96(%rsi), %rbx
+    movq 64(%rsi), %rsi
+
+    movq %rax, (%rsp)
+    xorq %rax, %rax
+    ret</code></pre>
+<p>上面的 Context 的核心功能 <code>switch_context</code> 主要就是通过汇编 <code>stack_co/switch_context.S</code> 实现的，主要核心就是一个<code>switch</code>过程；</p>
+<p>这里调用时<code>rdi</code>（previous）和<code>rsi</code>（next）分别指向<code>Context</code>实例的地址；</p>
+<p>首先是保存当前的寄存器上下文到 previous 的 _registers 中：</p>
+<ul>
+<li>真实的<code>rsp</code>存放到 previous 的 104 中（13*8，可能是位于栈区的rsp，也可能是协程伪造的rsp），而返回地址放到previous的 72 中；</li>
+<li>其余的按部就班赋值到 previous 的 _registers 中；</li>
+</ul>
+<p>恢复过程则是从<code>next</code>的_registers中恢复：</p>
+<ul>
+<li>首次启动时已经由<code>preapre</code>方法把必要的 ret 和函数传参rdi被写到_registers上了，因此恢复时相当于直接调用对应函数（既调用<code>callWhenFinish(next)</code>，里面嵌套着实际的用户回调）；</li>
+<li>如果非首次启动，那么ret就是协程执行中的控制流；</li>
+<li>不管怎样，在恢复时，把当前 <code>rsp</code> 覆盖 <code>return address</code>，然后使用 <code>ret</code> 指令执行后就能切换到对应的控制流；</li>
+</ul>
+<p>具体的汇编含义在前文中已经完完整整讲述了，这里不再赘述；</p>
+<p>而其他的方法，如：<code>prepare</code>、<code>get_stack_pointer</code>、<code>fill_registers</code>实际上都是为了获取当前调用栈的上下文信息；</p>
+<blockquote>
+<p>  <strong>补充：汇编扩展名的差异</strong></p>
+<p>  上文中的汇编文件命名为：<code>switch_context.S</code>；</p>
+<p>  在Unix/Linux系统中:</p>
+<ul>
+<li><p><code>.a</code>是静态库的常用扩展(也就是用多个<code>.o</code>文件制作的档案<code>ar(1)</code>)，动态库，即共享对象，使用<code>.so</code>；</p>
+</li>
+<li><p><code>.s</code>用于asm编译器输出(<code>gcc -S foo.c</code>生成asm输出，默认文件名为<code>foo.s</code>)；</p>
+</li>
+<li><p><strong><code>.S</code>用于手写的asm源文件，并且<code>.S</code>适用于GNU <code>as</code>语法中的asm，无论是否使用任何C预处理器功能；</strong></p>
+<p>例如，在 <a href="https://sourceware.org/git/?p=glibc.git;a=tree;f=sysdeps" target="_blank" rel="noopener">glibc的源代码树中使用<code>.S</code>的所有ASM源文件</a>；</p>
+</li>
+</ul>
+<p>  <strong>通常情况下：</strong></p>
+<ul>
+<li><strong>具有gcc背景的人可能将他们的MIPS asm放入文件<code>.S</code>或<code>.s</code>文件中；</strong></li>
+<li><strong>而具有更多NASM/YASM经验(或Windows)的人可能会选择<code>.asm</code> 扩展名；</strong></li>
+</ul>
+<p>  <strong>但是建议不要使用 <code>.s</code> 文件，因为它很容易被覆盖：<code>gcc -S foo.c</code>；</strong></p>
+<p>  参考文章：</p>
+<ul>
+<li><a href="https://qa.1r1g.com/sf/ask/2386901751/?lastactivity#" target="_blank" rel="noopener">汇编文件:.a .s .asm之间的差异</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a><strong>测试代码</strong></h4><p>测试代码如下：</p>
+<p>stack_co/stack_co_test.cc</p>
+<pre><code class="c++">#include &quot;coroutine.h&quot;
+#include &quot;environment.h&quot;
+#include &quot;utils.h&quot;
+
+#include &lt;iostream&gt;
+
+namespace stack_co {
+
+    namespace this_coroutine {
+
+        inline void yield() {
+            return ::stack_co::Coroutine::yield();
+        }
+
+    } // namespace this_coroutine
+
+    inline bool test() {
+        return Coroutine::test();
+    }
+
+    inline Environment &amp;open() {
+        return Environment::instance();
+    }
+
+} // namespace stack_co
+
+void where() {
+    std::cout &lt;&lt; &quot;running code in a &quot;
+              &lt;&lt; (stack_co::test() ? &quot;coroutine&quot; : &quot;thread&quot;)
+              &lt;&lt; std::endl;
+}
+
+void print1() {
+    std::cout &lt;&lt; 1 &lt;&lt; std::endl;
+    stack_co::this_coroutine::yield();
+    std::cout &lt;&lt; 2 &lt;&lt; std::endl;
+}
+
+void print2(int i, stack_co::Coroutine *co1) {
+    std::cout &lt;&lt; i &lt;&lt; std::endl;
+    co1-&gt;resume();
+    where();
+    std::cout &lt;&lt; &quot;bye&quot; &lt;&lt; std::endl;
+}
+
+int main() {
+    auto &amp;env = stack_co::open();
+    auto co1 = env.create_coroutine(print1);
+    auto co2 = env.create_coroutine(print2, 3, co1.get());
+    co1-&gt;resume();
+    co2-&gt;resume();
+    where();
+    return 0;
+}</code></pre>
+<p>上面的代码首先在 main 函数中创建了一个 Environment，随后加入了两个函数：</p>
+<pre><code class="c++">auto co1 = env.create_coroutine(print1);
+auto co2 = env.create_coroutine(print2, 3, co1.get());</code></pre>
+<p>随后启动两个协程；</p>
+<p>首先进入 <code>print1</code>，打印 <code>1</code>；</p>
+<p>然后， <code>print1</code> 释放 CPU，切换至 <code>print2</code> 打印 <code>3</code>；</p>
+<p>然后，在 <code>print2</code> 函数中回复协程1，继续进入 <code>print1</code> 中执行，并打印 <code>2</code>；</p>
+<p>然后，<code>print1</code> 函数退出，调用栈返回至 <code>print2</code> 中，调用 <code>where</code> 函数；</p>
+<p>然后，在 <code>print2</code> 函数中打印 <code>bye</code>；</p>
+<p>最后，<code>print2</code> 函数返回，在main函数中调用 <code>where</code>；</p>
+<p>代码执行后，输出结果如下：</p>
+<pre><code>1
+3
+2
+running code in a coroutine
+bye
+running code in a thread</code></pre><p>可以看到，跟随着代码来看协程的调用栈的切换是很清晰的！</p>
+<blockquote>
+<p>  实际上微信开源的 libco 不仅提供了一套类 pthread 的协程通信机制，同时可以零改造地将三方库的阻塞 IO 调用进行协程化；</p>
+<p>  感兴趣的可以看：</p>
+<ul>
+<li><a href="https://www.cyhone.com/articles/analysis-of-libco/" target="_blank" rel="noopener">微信 libco 协程库源码分析</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="基于ucontext实现的无栈协程"><a href="#基于ucontext实现的无栈协程" class="headerlink" title="基于ucontext实现的无栈协程"></a><strong>基于<code>ucontext</code>实现的无栈协程</strong></h3><p>上面的例子是使用汇编实现的有栈协程，相对应的，我们继续使用 <code>ucontext</code> 库来实现一个无栈协程；</p>
+<blockquote>
+<p>  源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/coroutine/stackless_co" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/coroutine/stackless_co</a></li>
+</ul>
+</blockquote>
+<h4 id="协程调用函数的定义"><a href="#协程调用函数的定义" class="headerlink" title="协程调用函数的定义"></a><strong>协程调用函数的定义</strong></h4><p>为了简单起见，我们这里定义的协程可以调用的函数签名为：</p>
+<p>stackless_co/utils.h</p>
+<pre><code class="c++">typedef void (*coroutine_func)(Schedule *, void *ud);</code></pre>
+<p>在调用时，可以传入一个 arg 结构体，来使用；</p>
+<p>例如：</p>
+<pre><code class="c++">struct args {
+    int n;
+};</code></pre>
+<p>作为参数 <code>*ud</code>；</p>
+<blockquote>
+<p>  <strong>同时，考虑到参数的通用性，这里使用了 <code>void*</code> 作为入参和返回值；</strong></p>
+</blockquote>
+<br>
+
+<h4 id="协程实例-1"><a href="#协程实例-1" class="headerlink" title="协程实例"></a><strong>协程实例</strong></h4><p>协程的定义如下：</p>
+<p>stackless_co/coroutine.h</p>
+<pre><code class="c++">#ifndef COROUTINE_COROUTINE_H
+#define COROUTINE_COROUTINE_H
+
+#include &quot;utils.h&quot;
+#include &quot;schedule.h&quot;
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;cassert&gt;
+#include &lt;cstddef&gt;
+#include &lt;cstring&gt;
+#include &lt;cstdint&gt;
+
+#if __APPLE__ &amp;&amp; __MACH__
+#include &lt;sys/ucontext.h&gt;
+#else
+
+#include &lt;ucontext.h&gt;
+
+#endif
+
+namespace stackless_co {
+
+    class Schedule;
+
+    class Coroutine {
+    public:
+
+        static Coroutine *new_co(Schedule *s, coroutine_func func, void *ud);
+
+        void delete_co();
+
+        inline coroutine_func get_func() {
+            return func;
+        }
+
+        inline ucontext_t *get_ctx() {
+            return &amp;ctx;
+        }
+
+        inline int get_status() {
+            return status;
+        }
+
+        inline ptrdiff_t get_size() {
+            return this-&gt;size;
+        }
+
+        inline char *get_stack() {
+            return this-&gt;stack;
+        }
+
+        inline ptrdiff_t get_cap() {
+            return this-&gt;cap;
+        }
+
+        inline void *get_ud() {
+            return this-&gt;ud;
+        }
+
+        inline void set_status(int status) {
+            this-&gt;status = status;
+        }
+
+        inline void set_stack(char *stack) {
+            this-&gt;stack = stack;
+        }
+
+        inline void set_cap(ptrdiff_t cap) {
+            this-&gt;cap = cap;
+        }
+
+        inline void set_size(ptrdiff_t size) {
+            this-&gt;size = size;
+        }
+
+    private:
+        coroutine_func func;
+        void *ud;
+        ucontext_t ctx;
+        ptrdiff_t cap;
+        ptrdiff_t size;
+        int status;
+        char *stack;
+    };
+
+} // namespace stackless_co
+
+#endif //COROUTINE_COROUTINE_H</code></pre>
+<p>协程 Coroutine 的定义比较简单，主要用于存放一些协程的信息，并无特殊逻辑；</p>
+<p>具体的几个成员变量定义如下：</p>
+<ul>
+<li><code>func</code>：协程所用的函数；</li>
+<li><code>ud</code>：协程参数；</li>
+<li><code>ctx</code>：协程上下文；</li>
+<li><code>cap</code>：已经分配的内存大小；</li>
+<li><code>size</code>：当前协程运行时栈，保存起来后的大小；</li>
+<li><code>status</code>：协程当前的状态；</li>
+<li><code>stack</code>：当前协程的保存起来的运行时栈；</li>
+</ul>
+<p>并且：</p>
+<ul>
+<li>方法 <code>coroutine_new</code> 负责创建并初始化一个新协程对象，同时将该协程对象放到协程调度器里面；</li>
+<li>方法 <code>delete_co</code> 用于关闭当前协程，并释放协程中的资源；</li>
+</ul>
+<p>对应的实现：</p>
+<p>stackless_co/coroutine.cc</p>
+<pre><code class="c++">#include &quot;utils.h&quot;
+#include &quot;coroutine.h&quot;
+#include &quot;schedule.h&quot;
+
+namespace stackless_co {
+
+    Coroutine *Coroutine::new_co(Schedule *s, coroutine_func func, void *ud) {
+        auto *co = new(Coroutine);
+        co-&gt;func = func;
+        co-&gt;ud = ud;
+        co-&gt;cap = 0;
+        co-&gt;size = 0;
+        co-&gt;status = Schedule::COROUTINE_READY;
+        co-&gt;stack = nullptr;
+        return co;
+    }
+
+    void Coroutine::delete_co() {
+        free(this-&gt;stack);
+        free(this);
+    }
+
+} // namespace stackless_co</code></pre>
+<p>方法实现非常简单，这里不再赘述了；</p>
+<br>
+
+<h4 id="协程调度Schedule"><a href="#协程调度Schedule" class="headerlink" title="协程调度Schedule"></a><strong>协程调度Schedule</strong></h4><p>我们通过 Schedule 类来调度协程；</p>
+<p>stackless_co/schedule.h</p>
+<pre><code class="c++">#ifndef COROUTINE_SCHEDULE_H
+#define COROUTINE_SCHEDULE_H
+
+#include &quot;utils.h&quot;
+#include &quot;coroutine.h&quot;
+
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;cassert&gt;
+#include &lt;cstring&gt;
+#include &lt;cstdint&gt;
+
+#if __APPLE__ &amp;&amp; __MACH__
+#include &lt;sys/ucontext.h&gt;
+#else
+
+#include &lt;ucontext.h&gt;
+
+#endif
+
+namespace stackless_co {
+
+    class Coroutine;
+
+    class Schedule {
+
+    private:
+
+        static void _save_stack(Coroutine *C, char *top);
+
+    public:
+        static Schedule *coroutine_open();
+
+        static void main_func(uint32_t low32, uint32_t hi32);
+
+        void coroutine_close();
+
+        int coroutine_new(coroutine_func, void *ud);
+
+        void coroutine_resume(int id);
+
+        int coroutine_status(int id);
+
+        int coroutine_running() const;
+
+        void coroutine_yield();
+
+    public:
+
+        constexpr static int COROUTINE_DEAD = 0;
+
+        constexpr static int COROUTINE_READY = 1;
+
+        constexpr static int COROUTINE_RUNNING = 2;
+
+        constexpr static int COROUTINE_SUSPEND = 3;
+
+    private:
+        constexpr static int STACK_SIZE = 1024 * 1024;
+
+        constexpr static int DEFAULT_COROUTINE = 16;
+
+    private:
+        char stack[STACK_SIZE];
+        ucontext_t main;
+        int nco;
+        int cap;
+        int running;
+        Coroutine **co;
+    };
+
+} // namespace stackless_co
+
+#endif //COROUTINE_SCHEDULE_H</code></pre>
+<p>协程调度器 <code>Schedule</code> 负责管理用其创建的所有协程，其中有几个成员变量非常重要：</p>
+<ul>
+<li><strong><code>Coroutine **co</code>： 是一个一维数组，存放了目前其管理的所有协程；</strong></li>
+<li><strong><code>ucontext_t main</code>： 主协程的上下文，方便后面协程执行完后切回到主协程；</strong></li>
+<li><strong><code>char stack[STACK_SIZE]</code>： 所有协程的运行时栈，具体共享栈的原理会在下文讲到；</strong></li>
+</ul>
+<p>此外：</p>
+<ul>
+<li><strong><code>coroutine_open</code> 是 <code>Schedule</code> 的工厂方法，负责创建并初始化一个协程调度器；</strong></li>
+<li><strong><code>coroutine_close</code> 负责销毁协程调度器以及清理其管理的所有协程；</strong></li>
+<li><strong><code>coroutine_resume/coroutine_resume</code> 分别用于释放、恢复当前协程；</strong></li>
+</ul>
+<p>对应实现如下：</p>
+<p>stackless_co/schedule.cc</p>
+<pre><code class="c++">#include &quot;utils.h&quot;
+#include &quot;schedule.h&quot;
+#include &quot;coroutine.h&quot;
+
+#include &lt;cstdlib&gt;
+#include &lt;cassert&gt;
+#include &lt;cstring&gt;
+#include &lt;cstdint&gt;
+
+#if __APPLE__ &amp;&amp; __MACH__
+
+#include &lt;sys/ucontext.h&gt;
+
+#else
+
+#include &lt;ucontext.h&gt;
+
+#endif
+
+
+namespace stackless_co {
+
+    Schedule *Schedule::coroutine_open() {
+        auto *s = new(Schedule);
+        s-&gt;nco = 0;
+        s-&gt;cap = DEFAULT_COROUTINE;
+        s-&gt;running = -1;
+        s-&gt;co = (Coroutine **) malloc(sizeof(Coroutine) * s-&gt;cap);
+        memset(s-&gt;co, 0, sizeof(struct coroutine *) * s-&gt;cap);
+        return s;
+    }
+
+    void Schedule::main_func(uint32_t low32, uint32_t hi32) {
+        uintptr_t ptr = (uintptr_t) low32 | ((uintptr_t) hi32 &lt;&lt; 32);
+        auto *s = (Schedule *) ptr;
+        int id = s-&gt;running;
+        Coroutine *c = s-&gt;co[id];
+        c-&gt;get_func()(s, c-&gt;get_ud());
+        c-&gt;delete_co();
+        s-&gt;co[id] = nullptr;
+        --s-&gt;nco;
+        s-&gt;running = -1;
+    }
+
+    void Schedule::coroutine_close() {
+        int i;
+        for (i = 0; i &lt; this-&gt;cap; i++) {
+            Coroutine *inner_co = this-&gt;co[i];
+            if (inner_co) {
+                inner_co-&gt;delete_co();
+            }
+        }
+        free(this-&gt;co);
+        this-&gt;co = nullptr;
+        free(this);
+    }
+
+    int Schedule::coroutine_new(coroutine_func func, void *ud) {
+        Coroutine *inner_co = Coroutine::new_co(this, func, ud);
+
+        if (this-&gt;nco &gt;= this-&gt;cap) {
+            int id = this-&gt;cap;
+            this-&gt;co = (Coroutine **) realloc(this-&gt;co, this-&gt;cap * 2 * sizeof(Coroutine));
+            memset(this-&gt;co + this-&gt;cap, 0, sizeof(struct coroutine *) * this-&gt;cap);
+            this-&gt;co[this-&gt;cap] = inner_co;
+            this-&gt;cap *= 2;
+            ++this-&gt;nco;
+            return id;
+        } else {
+            int i;
+            for (i = 0; i &lt; this-&gt;cap; i++) {
+                int id = (i + this-&gt;nco) % this-&gt;cap;
+                if (this-&gt;co[id] == nullptr) {
+                    this-&gt;co[id] = inner_co;
+                    ++this-&gt;nco;
+                    return id;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    void Schedule::coroutine_resume(int id) {
+        assert(this-&gt;running == -1);
+        assert(id &gt;= 0 &amp;&amp; id &lt; this-&gt;cap);
+        Coroutine *c = this-&gt;co[id];
+        if (c == nullptr) return;
+
+        int status = c-&gt;get_status();
+        auto ptr = (uintptr_t) this;
+        switch (status) {
+            case COROUTINE_READY:
+
+                getcontext(c-&gt;get_ctx());
+                c-&gt;get_ctx()-&gt;uc_stack.ss_sp = this-&gt;stack;
+                c-&gt;get_ctx()-&gt;uc_stack.ss_size = STACK_SIZE;
+                c-&gt;get_ctx()-&gt;uc_link = &amp;this-&gt;main;
+                this-&gt;running = id;
+                c-&gt;set_status(COROUTINE_RUNNING);
+
+                makecontext(c-&gt;get_ctx(), (void (*)()) main_func, 2, (uint32_t) ptr, (uint32_t) (ptr &gt;&gt; 32));
+                swapcontext(&amp;this-&gt;main, c-&gt;get_ctx());
+                break;
+            case COROUTINE_SUSPEND:
+                memcpy(this-&gt;stack + STACK_SIZE - c-&gt;get_size(), c-&gt;get_stack(), c-&gt;get_size());
+                this-&gt;running = id;
+                c-&gt;set_status(COROUTINE_RUNNING);
+                swapcontext(&amp;this-&gt;main, c-&gt;get_ctx());
+                break;
+            default:
+                assert(0);
+        }
+    }
+
+    int Schedule::coroutine_status(int id) {
+        assert(id &gt;= 0 &amp;&amp; id &lt; this-&gt;cap);
+        if (this-&gt;co[id] == nullptr) {
+            return COROUTINE_DEAD;
+        }
+        return this-&gt;co[id]-&gt;get_status();
+    }
+
+    int Schedule::coroutine_running() const {
+        return this-&gt;running;
+    }
+
+    void Schedule::coroutine_yield() {
+        int id = this-&gt;running;
+        assert(id &gt;= 0);
+        Coroutine *c = this-&gt;co[id];
+        assert((char *) &amp;c &gt; this-&gt;stack);
+        _save_stack(c, this-&gt;stack + STACK_SIZE);
+        c-&gt;set_status(COROUTINE_SUSPEND);
+        this-&gt;running = -1;
+        swapcontext(c-&gt;get_ctx(), &amp;this-&gt;main);
+    }
+
+    void Schedule::_save_stack(Coroutine *c, char *top) {
+        char dummy = 0;
+        assert(top - &amp;dummy &lt;= STACK_SIZE);
+        if (c-&gt;get_cap() &lt; top - &amp;dummy) {
+            free(c-&gt;get_stack());
+            c-&gt;set_cap(top - &amp;dummy);
+            c-&gt;set_stack(static_cast&lt;char *&gt;(malloc(c-&gt;get_cap())));
+        }
+
+        c-&gt;set_size(top - &amp;dummy);
+        memcpy(c-&gt;get_stack(), &amp;dummy, c-&gt;get_size());
+    }
+
+} // namespace stackless_co</code></pre>
+<p>下面分别来看；</p>
+<br>
+
+<h5 id="协程的创建-coroutine-new"><a href="#协程的创建-coroutine-new" class="headerlink" title="协程的创建: coroutine_new"></a><strong>协程的创建: coroutine_new</strong></h5><pre><code class="c++">int Schedule::coroutine_new(coroutine_func func, void *ud) {
+  Coroutine *inner_co = Coroutine::new_co(this, func, ud);
+
+  if (this-&gt;nco &gt;= this-&gt;cap) {
+    int id = this-&gt;cap;
+    this-&gt;co = (Coroutine **) realloc(this-&gt;co, this-&gt;cap * 2 * sizeof(Coroutine));
+    memset(this-&gt;co + this-&gt;cap, 0, sizeof(struct coroutine *) * this-&gt;cap);
+    this-&gt;co[this-&gt;cap] = inner_co;
+    this-&gt;cap *= 2;
+    ++this-&gt;nco;
+    return id;
+  } else {
+    int i;
+    for (i = 0; i &lt; this-&gt;cap; i++) {
+      int id = (i + this-&gt;nco) % this-&gt;cap;
+      if (this-&gt;co[id] == nullptr) {
+        this-&gt;co[id] = inner_co;
+        ++this-&gt;nco;
+        return id;
+      }
+    }
+  }
+
+  return 0;
+}</code></pre>
+<p><strong><code>coroutine_new</code> 负责创建并初始化一个新协程对象，同时将该协程对象放到协程调度器里面；</strong></p>
+<p>这里的实现有两个非常值得学习的点：</p>
+<ul>
+<li><font color="#f00"><strong>扩容：当目前尚存活的线程个数 <code>nco</code> 已经等于协程调度器的容量 <code>cap</code> 了，这个时候需要对协程调度器进行扩容，这里直接就是非常经典简单的 2 倍扩容；</strong></font></li>
+<li><font color="#f00"><strong>如果无需扩容，则需要找到一个空的位置，放置初始化好的协程；这里从第 <code>nco</code> 位开始寻找（<code>nco</code> 代表当前存活的个数；因为一般来说，前面几位最开始都是存活的，从第 <code>nco</code> 位开始找，效率会更高；</strong></font></li>
+</ul>
+<p>这样，一个协程对象就被创建好，此时该协程的状态是 <code>READY</code>，但尚未正式执行；</p>
+<p>我们需要调用  <code>coroutine_resume</code> 方法启动协程；</p>
+<p>下面来看  <code>coroutine_resume</code> 方法；</p>
+<br>
+
+<h5 id="coroutine-resume（READY-gt-RUNNING）"><a href="#coroutine-resume（READY-gt-RUNNING）" class="headerlink" title="coroutine_resume（READY -&gt; RUNNING）"></a><strong>coroutine_resume（READY -&gt; RUNNING）</strong></h5><p>调用 <code>coroutine_resume</code> 方法会切入到指定协程中执行；</p>
+<p>此时，当前正在执行的协程的上下文会被保存起来，同时上下文替换成新的协程，并将该协程的状态置为 <code>RUNNING</code>；</p>
+<p>进入 <code>coroutine_resume</code> 函数的前置状态有两个 <code>READY</code> 和 <code>SUSPEND</code>，这两个状态下 <code>coroutine_resume</code> 的处理方法也是有很大不同！</p>
+<p>我们先看下协程在 READY 状态下进行 <code>coroutine_resume</code> 的流程：</p>
+<p>这块代码比较短，但是非常重要，所以我就直接贴代码了：</p>
+<pre><code class="java">// 初始化 ucontext_t 结构体，将当前的上下文放到 C-&gt;ctx 里面
+getcontext(c-&gt;get_ctx());
+
+// 将当前协程的运行时栈的栈顶设置为 s-&gt;stack，每个协程都这么设置，这就是所谓的共享栈。（注意，这里是栈顶）
+c-&gt;get_ctx()-&gt;uc_stack.ss_sp = this-&gt;stack;
+c-&gt;get_ctx()-&gt;uc_stack.ss_size = STACK_SIZE;
+c-&gt;get_ctx()-&gt;uc_link = &amp;this-&gt;main;
+this-&gt;running = id;
+c-&gt;set_status(COROUTINE_RUNNING);
+
+// 设置执行 c-&gt;ctx 函数, 并将 s 作为参数传进去
+makecontext(c-&gt;get_ctx(), (void (*)()) main_func, 2, (uint32_t) ptr, (uint32_t) (ptr &gt;&gt; 32));
+
+// 将当前的上下文放入 s-&gt;main 中，并将 c-&gt;ctx 的上下文替换到当前上下文
+swapcontext(&amp;this-&gt;main, c-&gt;get_ctx());</code></pre>
+<p>这段函数非常的重要，有几个不可忽视的点：</p>
+<ul>
+<li><strong><code>getcontext(c-&gt;get_ctx());</code>初始化 ucontext_t 结构体，将当前的上下文放到 <code>c-&gt;ctx</code> 里面；</strong></li>
+<li><strong><code>c-&gt;get_ctx()-&gt;uc_stack.ss_sp = this-&gt;stack;</code> 设置当前协程的运行时栈，也是共享栈；</strong></li>
+<li><strong><code>c-&gt;get_ctx()-&gt;uc_link = &amp;this-&gt;main;</code> 如果协程执行完，则切换到 <code>s-&gt;main</code> 主协程中进行执行；如果不设置，则默认为 nullptr，那么协程执行完，整个程序就结束了；</strong></li>
+</ul>
+<p>接下来是 <code>makecontext</code>，这个函数用来设置对应 ucontext 的执行函数；如上，将 <code>c-&gt;ctx</code> 的执行函数体设置为了 <code>mainfunc</code>；</p>
+<p><code>makecontext</code> 后面的两个参数也非常有意思：</p>
+<p><font color="#f00"><strong>可以看出来其入参是把一个指针掰成了两个 int 作为参数传给 <code>mainfunc</code>；而在 <code>mainfunc</code> 的实现可以看到，其又会把这两个 int 拼成 <code>Schedule*</code>；</strong></font></p>
+<p>为什么不直接传 <code>Schedule*</code>，而要这么做，通过先拆两半，再在函数中拼起来呢？</p>
+<p><font color="#f00"><strong>这是因为 <code>makecontext</code> 的函数指针的参数是 <code>uint32_t</code> 类型，在 64 位系统下，一个 <code>uint32_t</code> 没法承载一个指针, 所以基于兼容性的考虑，才采用了这种做法；</strong></font></p>
+<p>接下来调用了 <code>swapcontext</code> 函数，这个函数比较简单，但也非常核心：</p>
+<p><strong>其作用是将当前的上下文内容放入 <code>s-&gt;main</code> 中，并使用 <code>c-&gt;ctx</code> 的上下文替换到当前上下文（类似于前文汇编的作用）；</strong></p>
+<p>这样的话，就会执行新的上下文对应的程序了；（在 coroutine 中, 也就是开始执行 <code>mainfunc</code> 这个函数，<code>mainfunc</code> 是对用户提供的协程函数的封装）；</p>
+<br>
+
+<h5 id="协程的切出：coroutine-yield"><a href="#协程的切出：coroutine-yield" class="headerlink" title="协程的切出：coroutine_yield"></a><strong>协程的切出：coroutine_yield</strong></h5><p>调用 <code>coroutine_yield</code> 可以使当前正在运行的协程切换到主协程中运行；此时，该协程会进入 <code>SUSPEND</code> 状态；</p>
+<p><code>coroutine_yield</code> 的具体实现依赖于两个行为：</p>
+<ul>
+<li><strong>调用 <code>_save_stack</code> 将当前协程的栈保存起来，本例中协程的实现是基于共享栈的，所以协程的栈内容需要单独保存起来；</strong></li>
+<li><strong><code>swapcontext</code> 将当前上下文保存到当前协程的 ucontext 里面，同时替换当前上下文为主协程的上下文；这样的话，当前协程会被挂起，主协程会被继续执行；</strong></li>
+</ul>
+<p>这里有个点极其关键，就是：如何保存当前协程的运行时栈，即如何获取整个栈的内存空间；</p>
+<blockquote>
+<p>  <strong>注：</strong></p>
+<p>  <font color="#f00"><strong>我们都知道，调用栈的生长方向是从高地址往低地址；</strong></font></p>
+<p>  <font color="#f00"><strong>因此，我们只要找到栈的栈顶和栈底的地址，就可以找到整个栈内存空间了；</strong></font></p>
+</blockquote>
+<p>因为协程的运行时栈的内存空间是自己分配的（在 coroutine_resume 阶段设置了 <code>c-&gt;ctx.uc_stack.ss_sp = s.this-&gt;stack</code>）；</p>
+<p>根据以上理论，栈的生长方向是高地址到低地址，因此：</p>
+<p><font color="#f00"><strong>栈底的就是内存地址最大的位置，即 <code>s-&gt;stack + STACK_SIZE</code> 就是栈底位置；</strong></font></p>
+<p>那么，如何找到栈顶的位置呢？</p>
+<p>是通过下面的方法做的：</p>
+<pre><code class="c++">void Schedule::_save_stack(Coroutine *c, char *top) {
+  char dummy = 0;
+  assert(top - &amp;dummy &lt;= STACK_SIZE);
+  if (c-&gt;get_cap() &lt; top - &amp;dummy) {
+    free(c-&gt;get_stack());
+    c-&gt;set_cap(top - &amp;dummy);
+    c-&gt;set_stack(static_cast&lt;char *&gt;(malloc(c-&gt;get_cap())));
+  }
+
+  c-&gt;set_size(top - &amp;dummy);
+  memcpy(c-&gt;get_stack(), &amp;dummy, c-&gt;get_size());
+}</code></pre>
+<p>这里特意使用到了一个 dummy 变量，这个 dummy 的作用非常关键也非常巧妙；</p>
+<p><font color="#f00"><strong>因为 dummy 变量是刚刚分配到栈上的，因此，此时就位于 栈的最顶部位置；</strong></font></p>
+<p>并且，此时整个内存布局如下图所示：<br><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/coroutine-6.png" alt="coroutine-6.png"></p>
+<p><font color="#f00"><strong>因此整个栈的大小就是从栈底到栈顶，<code>s-&gt;stack + STACK_SIZE - &amp;dummy</code>；</strong></font></p>
+<p><font color="#f00"><strong>最后又调用了 memcpy 将当前运行时栈的内容，拷贝到了 <code>c-&gt;stack</code> 中保存了起来！</strong></font></p>
+<br>
+
+<h5 id="coroutine-resume（SUSPEND-gt-RUNNING）"><a href="#coroutine-resume（SUSPEND-gt-RUNNING）" class="headerlink" title="coroutine_resume（SUSPEND -&gt; RUNNING）"></a><strong>coroutine_resume（SUSPEND -&gt; RUNNING）</strong></h5><p>当协程被 <code>yield</code> 之后会进入 <code>SUSPEND</code> 阶段，对该协程调用 <code>coroutine_resume</code> 会再次切入该协程；</p>
+<p>这部分的代码如下：</p>
+<pre><code class="c++">memcpy(this-&gt;stack + STACK_SIZE - c-&gt;get_size(), c-&gt;get_stack(), c-&gt;get_size());
+this-&gt;running = id;
+c-&gt;set_status(COROUTINE_RUNNING);
+swapcontext(&amp;this-&gt;main, c-&gt;get_ctx());</code></pre>
+<p>这里的实现有两个重要的点：</p>
+<ul>
+<li><strong><code>memcpy(this-&gt;stack + STACK_SIZE - c-&gt;get_size(), c-&gt;get_stack(), c-&gt;get_size());</code>：我们知道，在 <code>yield</code> 的时候，协程的栈内容保存到了 C-&gt;stack 数组中；这个时候，就是用 <code>memcpy</code> 把协程的之前保存的栈内容，重新拷贝到运行时栈里面；这里有个点，拷贝的开始位置，需要简单计算下 <code>s-&gt;stack + STACK_SIZE - c-&gt;size</code> 这个位置就是之前协程的栈顶位置；</strong></li>
+<li><strong><code>swapcontext(&amp;this-&gt;main, c-&gt;get_ctx());</code> 交换上下文；这点在上文有具体描述；</strong></li>
+</ul>
+<br>
+
+<h5 id="补充：共享栈"><a href="#补充：共享栈" class="headerlink" title="补充：共享栈"></a><strong>补充：共享栈</strong></h5><p>共享栈这个词在 libco 中提到的多，其实 coroutine 也是用的共享栈模型；</p>
+<p><strong>共享栈</strong>这个东西说起来很玄乎，实际原理不复杂：<font color="#f00"><strong>本质就是所有的协程在运行的时候都使用同一个栈空间；</strong></font></p>
+<p>有共享栈自然就有非共享栈，也就是每个协程的栈空间都是独立的，固定大小：</p>
+<ul>
+<li>好处是协程切换的时候，内存不用拷贝来拷贝去；</li>
+<li>坏处则是 <strong>内存空间浪费</strong>；</li>
+</ul>
+<p><font color="#f00"><strong>因为栈空间在运行时不能随时扩容，否则如果有指针操作执行了栈内存，扩容后将导致指针失效；</strong></font></p>
+<p><font color="#f00"><strong>因此，为了防止栈内存不够，每个协程都要预先开一个足够的栈空间使用；当然很多协程在实际运行中也用不了这么大的空间，就必然造成内存的浪费和开辟大内存造成的性能损耗；</strong></font></p>
+<p><font color="#f00"><strong>共享栈则是提前开了一个足够大的栈空间（如上面的实现 <code>STACK_SIZE = 1024 * 1024;</code>，即<code>1M</code>大小)；所有的栈运行的时候，都使用这个栈空间；</strong></font></p>
+<p>并且设置每个协程的运行时栈：</p>
+<pre><code class="c++">c-&gt;ctx.uc_stack.ss_sp = s-&gt;stack;
+c-&gt;ctx.uc_stack.ss_size = STACK_SIZE;</code></pre>
+<p><font color="#f00"><strong>对协程调用 <code>yield</code> 的时候，该协程栈内容暂时保存起来，保存的时候需要用到多少内存就开多少，这样就减少了内存的浪费（即_save_stack 函数的内容）；</strong></font></p>
+<p><font color="#f00"><strong>当 <code>resume</code> 该协程的时候，协程之前保存的栈内容，会被重新拷贝到运行时栈中；</strong></font></p>
+<p>这就是所谓的共享栈的原理；</p>
+<br>
+
+<h4 id="测试代码-1"><a href="#测试代码-1" class="headerlink" title="测试代码"></a><strong>测试代码</strong></h4><p>具体的测试代码如下：</p>
+<p>stackless_co/stackless_co_test.cc</p>
+<pre><code class="c++">#include &quot;schedule.h&quot;
+
+#include &lt;cstdio&gt;
+
+struct args {
+    int n;
+};
+
+void foo(stackless_co::Schedule *s, void *ud) {
+    args *arg = static_cast&lt;args *&gt;(ud);
+    int start = arg-&gt;n;
+    for (int i = 0; i &lt; 5; i++) {
+        printf(&quot;coroutine %d : %d\n&quot;, s-&gt;coroutine_running(), start + i);
+        s-&gt;coroutine_yield();
+    }
+}
+
+void test(stackless_co::Schedule *s) {
+    struct args arg1 = {0};
+    struct args arg2 = {100};
+
+    int co1 = s-&gt;coroutine_new(foo, &amp;arg1);
+    int co2 = s-&gt;coroutine_new(foo, &amp;arg2);
+    printf(&quot;main start\n&quot;);
+
+    while (s-&gt;coroutine_status(co1) &amp;&amp; s-&gt;coroutine_status(co2)) {
+        s-&gt;coroutine_resume(co1);
+        s-&gt;coroutine_resume(co2);
+    }
+    printf(&quot;main end\n&quot;);
+}
+
+int main() {
+    auto *s = stackless_co::Schedule::coroutine_open();
+    test(s);
+    s-&gt;coroutine_close();
+
+    return 0;
+}</code></pre>
+<p>上面的代码首先利用 <code>coroutine_open</code> 创建了协程调度器 <code>s</code>，用来统一管理全部的协程；</p>
+<p>同时，在 test 函数中，创建了两个协程 co1 和 co2，不断的反复 <code>yield</code> 和 <code>resume</code> 协程，直至两个协程执行完毕；</p>
+<p>执行后输出：</p>
+<pre><code>main start
+coroutine 0 : 0
+coroutine 1 : 100
+coroutine 0 : 1
+coroutine 1 : 101
+coroutine 0 : 2
+coroutine 1 : 102
+coroutine 0 : 3
+coroutine 1 : 103
+coroutine 0 : 4
+coroutine 1 : 104
+main end</code></pre><p>可以看到，我们实现的代码也可以完成协程的功能！</p>
+<br>
+
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>本文首先介绍了：</p>
+<ul>
+<li>什么是协程；</li>
+<li>协程的优势；</li>
+<li>协程的一些特点等；</li>
+</ul>
+<p>随后温习了线程上下文相关的知识，包括：</p>
+<ul>
+<li>线程时间、内存消耗；</li>
+<li>如何保存上下文：<code>setjmp/longjmp</code>、<code>ucontext</code>、汇编；</li>
+</ul>
+<p>紧接着介绍了几种协程的实现种类：</p>
+<ul>
+<li>有栈和无栈协程；</li>
+<li>对称与非对称协程；</li>
+</ul>
+<p>然后探讨了关于协程的一些其他内容，包括：</p>
+<ul>
+<li>N:1 &amp; N:M 协程；</li>
+<li>协程的组成；</li>
+<li>协程的调度；</li>
+<li>协程相关的工具：锁、条件变量等；</li>
+<li>协程和线程的对比；</li>
+<li>协程对 CPU/IO 的影响；</li>
+</ul>
+<p>随后是实践部分，包括：</p>
+<ul>
+<li>使用 C++20 标准中的协程；</li>
+<li>动手实践协程：<ul>
+<li>基于汇编实现的有栈协程；</li>
+<li>基于<code>ucontext</code>实现的无栈协程；</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/coroutine" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/coroutine</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://www.zhihu.com/question/20511233" target="_blank" rel="noopener">https://www.zhihu.com/question/20511233</a></li>
+<li><a href="https://www.cnblogs.com/lidabo/p/15745123.html" target="_blank" rel="noopener">https://www.cnblogs.com/lidabo/p/15745123.html</a></li>
+<li><a href="https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/" target="_blank" rel="noopener">https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27409164" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/27409164</a></li>
+<li><a href="https://www.zhihu.com/question/52193579/answer/447612082" target="_blank" rel="noopener">https://www.zhihu.com/question/52193579/answer/447612082</a></li>
+<li><a href="http://www.caturra.cc/2022/05/29/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E5%8D%8F%E7%A8%8B/" target="_blank" rel="noopener">http://www.caturra.cc/2022/05/29/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E5%8D%8F%E7%A8%8B/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/347445164" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/347445164</a></li>
+<li><a href="https://www.cyhone.com/articles/analysis-of-libco/" target="_blank" rel="noopener">https://www.cyhone.com/articles/analysis-of-libco/</a></li>
+<li><a href="https://www.cyhone.com/articles/analysis-of-cloudwu-coroutine/" target="_blank" rel="noopener">https://www.cyhone.com/articles/analysis-of-cloudwu-coroutine/</a></li>
+</ul>
+<p>参考项目：</p>
+<ul>
+<li><a href="https://github.com/cloudwu/Coroutine" target="_blank" rel="noopener">https://github.com/cloudwu/Coroutine</a></li>
+<li><a href="https://github.com/Caturra000/co" target="_blank" rel="noopener">https://github.com/Caturra000/co</a></li>
+<li><a href="https://github.com/yyrdl/libco-code-study" target="_blank" rel="noopener">https://github.com/yyrdl/libco-code-study</a></li>
+<li><a href="https://github.com/Tencent/libco" target="_blank" rel="noopener">https://github.com/Tencent/libco</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/06/03/浅谈协程/" title="https://jasonkayzk.github.io/2022/06/03/浅谈协程/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/06/03/浅谈协程/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725318895"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

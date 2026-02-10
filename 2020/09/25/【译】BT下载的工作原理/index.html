@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>【译】BT下载的工作原理 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="之前有写过几篇关于如何下载、部署Aria2并且进行离线BT下载的文章；但是对于BT的基本原理，如何实现的还是不太明白；今天RSS上看到一篇非常好的文章，讲的很清楚，但是是英文的，就翻译了一下，分享给大家；">
+<meta name="keywords" content="技术杂谈,BitTorrent">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】BT下载的工作原理">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/09/25/【译】BT下载的工作原理/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="之前有写过几篇关于如何下载、部署Aria2并且进行离线BT下载的文章；但是对于BT的基本原理，如何实现的还是不太明白；今天RSS上看到一篇非常好的文章，讲的很清楚，但是是英文的，就翻译了一下，分享给大家；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt2.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt3.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt6.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt7.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt8.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt9.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt10.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt11.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt12.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt13.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt14.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt15.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt16.svg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt17.svg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.751Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【译】BT下载的工作原理">
+<meta name="twitter:description" content="之前有写过几篇关于如何下载、部署Aria2并且进行离线BT下载的文章；但是对于BT的基本原理，如何实现的还是不太明白；今天RSS上看到一篇非常好的文章，讲的很清楚，但是是英文的，就翻译了一下，分享给大家；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt1.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725338584">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?74">
+    
+    <h1>【译】BT下载的工作原理</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年09月25日</a>
+    <a><i class="nexmoefont icon-areachart"></i>9.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 38 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/技术杂谈/">技术杂谈</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/BitTorrent/">BitTorrent</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/技术杂谈/">技术杂谈</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#【译】BT下载的工作原理"><span class="toc-text">【译】BT下载的工作原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#谁创造了BitTorrent？"><span class="toc-text">谁创造了BitTorrent？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BT-vs-传统CS下载模式"><span class="toc-text">BT vs 传统CS下载模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BitTorrent概述"><span class="toc-text">BitTorrent概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#种子描述文件中有什么？"><span class="toc-text">种子描述文件中有什么？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-声明-Announce"><span class="toc-text">① 声明(Announce)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-信息-Info"><span class="toc-text">② 信息(Info)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-共享文件大小-Length"><span class="toc-text">③ 共享文件大小(Length)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#④-文件名-Name"><span class="toc-text">④ 文件名(Name)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#⑤-文件块大小-Pieces-Length"><span class="toc-text">⑤ 文件块大小(Pieces Length)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#⑥-文件块-Pieces"><span class="toc-text">⑥ 文件块(Pieces)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BT下载中的块选择算法-Piece-Selection-Algorithm"><span class="toc-text">BT下载中的块选择算法(Piece Selection Algorithm)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是子块-Sub-Pieces-和块选择算法-Piece-Selection-Algorithm"><span class="toc-text">什么是子块(Sub-Pieces)和块选择算法(Piece Selection Algorithm)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-严格优先级-Strict-Policy"><span class="toc-text">① 严格优先级(Strict Policy)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-稀有度优先-Rarest-First"><span class="toc-text">② 稀有度优先(Rarest First)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-随机开始下载的第一个文件块-Random-First-Piece"><span class="toc-text">③ 随机开始下载的第一个文件块(Random First Piece)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#④-残局模式-Endgame-Mode"><span class="toc-text">④ 残局模式(Endgame Mode)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用“以牙还牙”算法分配资源"><span class="toc-text">使用“以牙还牙”算法分配资源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#阻塞算法-The-choking-Algorithm"><span class="toc-text">阻塞算法(The choking Algorithm)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开放检测-optimistic-unchoking"><span class="toc-text">开放检测(optimistic unchoking)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#反对歧视-Anti-snubbing"><span class="toc-text">反对歧视(Anti-snubbing)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#仅上传对等点-Upload-Only"><span class="toc-text">仅上传对等点(Upload Only)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是跟踪器-Tracker-？"><span class="toc-text">什么是跟踪器(Tracker)？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#公共Tracker"><span class="toc-text">公共Tracker</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#私有Tracker"><span class="toc-text">私有Tracker</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多Tracker种子"><span class="toc-text">多Tracker种子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#磁力链接-无Tracker种子-Magnet-Links-Trackerless-Torrents"><span class="toc-text">磁力链接 - 无Tracker种子(Magnet Links - Trackerless Torrents)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分布式哈希表-Distributed-Hash-Tables-和Kademlia协议"><span class="toc-text">分布式哈希表(Distributed Hash Tables)和Kademlia协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#路由表-Routing-Table"><span class="toc-text">路由表(Routing Table)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#攻击BitTorrent"><span class="toc-text">攻击BitTorrent</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Torrent-Poisoning"><span class="toc-text">Torrent Poisoning</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#防御BitTorrent攻击"><span class="toc-text">防御BitTorrent攻击</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>之前有写过几篇关于如何下载、部署Aria2并且进行离线BT下载的文章；但是对于BT的基本原理，如何实现的还是不太明白；</p>
+<p>今天RSS上看到一篇非常好的文章，讲的很清楚，但是是英文的，就翻译了一下，分享给大家；</p>
+<p>原文链接：</p>
+<ul>
+<li><a href="https://skerritt.blog/bit-torrent/" target="_blank" rel="noopener">How Does BitTorrent Work? a Plain English Guide</a></li>
+</ul>
+<p>对于搭建Aria2离线下载服务器感兴趣的可以看我的这几篇文章：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2020/05/01/Aria2安装与配置/">Aria2安装与配置</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/05/02/使用Aria2搭建你自己的离线下载服务器/">使用Aria2搭建你自己的离线下载服务器</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/05/02/解决Aria2的BT下载速度慢或没速度的问题/">解决Aria2的BT下载速度慢或没速度的问题</a></li>
+</ul>
+<a id="more"></a>
+
+<br>
+
+<h2 id="【译】BT下载的工作原理"><a href="#【译】BT下载的工作原理" class="headerlink" title="【译】BT下载的工作原理"></a>【译】BT下载的工作原理</h2><blockquote>
+<br>
+
+<p>BitTorrent是用于传输大文件的最常见协议之一。2013年2月，BitTorrent占全球所有带宽的3.35％，占文件共享专用总带宽6％的一半以上。– <a href="https://blog.paloaltonetworks.com/app-usage-risk-report-visualization/" target="_blank" rel="noopener">3.35% of all worldwide bandwidth</a></p>
+</blockquote>
+<p>本文不会讲解如何通过BT下载文件(这是一个好的客户端需要做的)；</p>
+<p>我们之间进入正题，来看一看BT使用到了哪些技术；</p>
+<p>任何人都可以阅读这篇文章，即使是那些对于网络或BitTorrent的知识一无所知的读者；</p>
+<br>
+
+<h3 id="谁创造了BitTorrent？"><a href="#谁创造了BitTorrent？" class="headerlink" title="谁创造了BitTorrent？"></a>谁创造了BitTorrent？</h3><p> <a href="https://en.wikipedia.org/wiki/Bram_Cohen" target="_blank" rel="noopener">Bram Cohen</a>于2001年发明了BitTorrent协议，并且Cohen用Python编写了第一个客户端实现。</p>
+<p>科恩收集了一些免费的不可描述内容，来吸引Beta测试人员在2002年夏天使用BitTorrent。</p>
+<br>
+
+<h3 id="BT-vs-传统CS下载模式"><a href="#BT-vs-传统CS下载模式" class="headerlink" title="BT vs 传统CS下载模式"></a>BT vs 传统CS下载模式</h3><p>在传统下载中，服务器上传文件，而客户端下载文件。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt1.png" alt="bt1.png"></p>
+<p>而由于服务器的带宽限制，导致一些热门的文件下载效率变得十分低下，例如：500个人下载同一个文件将使服务器承受巨大压力。这种压力会限制服务器的上传速度，因此客户端无法快速下载文件。</p>
+<p>其次，CS模式的成本很高。我们支付的带宽会随着文件的热门程度而增加。</p>
+<p>最后，CS模式是中心化的。如果服务器挂了，则这个文件就无法被任何人下载了！</p>
+<p>而BT下载致力于解决这些问题：</p>
+<table>
+<thead>
+<tr>
+<th><strong>Client-Server</strong></th>
+<th><strong>BitTorrent</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>中心化</td>
+<td>去中心化</td>
+</tr>
+<tr>
+<td>热门资源限制服务器性能</td>
+<td>热门资源无性能限制</td>
+</tr>
+<tr>
+<td>设备费用昂贵；资源热门程度决定了设备开销</td>
+<td>设备开销不会随着资源热门而变化</td>
+</tr>
+</tbody></table>
+<p>我们知道，BT下载是通过对等网实现的(peer-to-peer，P2P)；而在对等网络中，每个对等点都连接到网络中的每个其他对等点。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt2.svg" alt="bt2.svg"></p>
+<p>而半中心化的对等网络是：拥有一个或多个权限比其他大多数对等点更高的对等网络。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt3.svg" alt="bt3.svg"></p>
+<br>
+
+<h3 id="BitTorrent概述"><a href="#BitTorrent概述" class="headerlink" title="BitTorrent概述"></a>BitTorrent概述</h3><p>BitTorrent是一种共享文件的方式，通常用于大型文件。 BitTorrent是单个下载源共享文件（例如服务器）的一种替代方法。并且，BitTorrent可以有效地在较低带宽上工作。</p>
+<p>BitTorrent客户端的第一版没有搜索引擎，也没有对等交换，想要上传文件的用户必须创建一个小的torrent描述符文件(<em>torrent descriptor file</em>)，然后将其上传到torrent索引站点。</p>
+<p>当用户想要共享文件时，他们会将文件做成种子文件(seed their file)。该用户称为做种人(<em>seeder</em>)。他们将种子文件上传到交换站点(exchange)（我们稍后再讨论）。想要下载该文件的任何人都将首先下载此种子描述符。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt4.png" alt="bt4.png"></p>
+<p>我们称呼那些下载用户为对等点(peers)。他们的BT客户端将连接到BT tracker服务器（稍后讨论），并且tracker将向对等点发送种子集群中其他种子和对等点的IP地址列表。此处的集群指的是与某种子相关的所有PC。</p>
+<p>种子文件描述符中包含了我们正在下载的文件的tracker服务器和元数据的列表。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt5.png" alt="bt5.png"></p>
+<p>对等点将会连接到种子对应的IP并下载文件的<strong>一个部分</strong>。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt6.png" alt="bt6.png"></p>
+<p>当对等点完成下载(一个文件分片)后，它们可以充当种子提供者。虽然，可以在下载种子的同时充当种子提供者（这是很常见的）。</p>
+<p>种子被文件共享给对等点后，该对等点也将充当种子提供者。在BitTorrent中，多个人可以上传相同的文件，而对于CS来说，只有一个服务器可以上传文件。</p>
+<p>BitTorrent会将文件切分成称为pieces的块，每个块都有固定的大小(最后一个文件除外)。但是切分的块大小是不固定的，有时是256KB，有时是1MB。当每个对等点收到一个块时，它们就成为这个文件块的其他对等点的种子(become a seed of that piece for other peers)。</p>
+<p>在使用BitTorrent时，我们没有使用单一的下载源。因此，我们可能会从国内下载一些文件块，然后从国外下载一些国内没有的文件块。</p>
+<p>协议会对文件块进行哈希(<a href="https://skerritt.blog/hash-functions/" target="_blank" rel="noopener">hashes</a>)处理，以确保种子对应的原始文件没有被篡改。然后将哈希值存储在torrent描述符中，并上传至tracker服务器。</p>
+<p>这就是BT下载的基本概述了。接下来我会深入讲解BT下载的底层原理。并回答下列问题：</p>
+<ul>
+<li>如果对等点仅下载文件但从不上传，会发生什么？</li>
+<li>我们从哪里下载，又在给谁上传？</li>
+<li>什么是磁力链接( magnet link )？</li>
+<li>什么是种子描述符( torrent descriptor )？</li>
+<li>哈希使用到的是什么算法？</li>
+<li>BT是如何选择下载的文件块的？</li>
+<li>……</li>
+</ul>
+<br>
+
+<h3 id="种子描述文件中有什么？"><a href="#种子描述文件中有什么？" class="headerlink" title="种子描述文件中有什么？"></a>种子描述文件中有什么？</h3><p>种子描述文件是一个字典(dictionary)（或被称为哈希表，HashMap）文件。</p>
+<p>文件被定义为：</p>
+<h4 id="①-声明-Announce"><a href="#①-声明-Announce" class="headerlink" title="① 声明(Announce)"></a><strong>① 声明(Announce)</strong></h4><p>这个字段中包括了tracker服务器的URL。还记得我们之前需要连接tracker服务器来查找使用同一文件的其他对等点吗？我们通过使用torrent描述文件中的announce key来找到tracker服务器。</p>
+<hr>
+<h4 id="②-信息-Info"><a href="#②-信息-Info" class="headerlink" title="② 信息(Info)"></a><strong>② 信息(Info)</strong></h4><p>这个字段映射到了另一个词典列表，而字典列表中的元素个数取决于该种子共享的文件个数。字典列表中的key包括：</p>
+<ul>
+<li><strong>Files(Info中的子字典，是一个列表)</strong>：Files仅在共享多个文件时存在，Files中的每个字典对应一个文件。这些列表中的每一个字典都有2个key：<ul>
+<li><strong>Length：</strong>文件大小（以字节为单位）。</li>
+<li><strong>Path：</strong>对应于子目录名称的字符串列表，最后一个是实际文件名。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="③-共享文件大小-Length"><a href="#③-共享文件大小-Length" class="headerlink" title="③ 共享文件大小(Length)"></a><strong>③ 共享文件大小(Length)</strong></h4><p>文件大小（以字节为单位）（仅在共享一个文件时）</p>
+<hr>
+<h4 id="④-文件名-Name"><a href="#④-文件名-Name" class="headerlink" title="④ 文件名(Name)"></a><strong>④ 文件名(Name)</strong></h4><p>建议的文件名。或建议的目录名称。</p>
+<hr>
+<h4 id="⑤-文件块大小-Pieces-Length"><a href="#⑤-文件块大小-Pieces-Length" class="headerlink" title="⑤ 文件块大小(Pieces Length)"></a><strong>⑤ 文件块大小(Pieces Length)</strong></h4><p>单个文件块字节数。</p>
+<p>文件块大小必须是2的幂，并且至少为16Kb；</p>
+<blockquote>
+  <br>
+
+<p>  注： 2^8Kb = 256Kb = 262144b</p>
+</blockquote>
+<hr>
+<h4 id="⑥-文件块-Pieces"><a href="#⑥-文件块-Pieces" class="headerlink" title="⑥ 文件块(Pieces)"></a><strong>⑥ 文件块(Pieces)</strong></h4><p>一个存放文件块哈希值的列表：我们将文件数据分成几块。分别计算这些块的哈希值，并将其存储在列表中。</p>
+<p>BitTorrent使用SHA-1算法，而SHA-1返回160位的哈希值，所以所有文件块的哈希值都将是一个长度为20个字节的倍数的字符串。</p>
+<p>如果单个种子文件中包含了多个文件，则将会按照文件在文件目录中出现的顺序串联起来，形成文件块。</p>
+<p>种子中的所有文件块均为完整块长度，只有单个文件中的最后一个块可能较短。</p>
+<p>现在，我能猜到你在想什么。</p>
+<blockquote>
+  <br>
+
+<p>  这都0202年了，还在用SHA-1？</p>
+</blockquote>
+<p>我也同意，并且现在BT下载的哈希算法已经慢慢迁移到了SHA265：<a href="http://bittorrent.org/beps/bep_0052.html" target="_blank" rel="noopener">BitTorrent is moving from SHA-1 to SHA256.</a> </p>
+<p>如果你对于种子描述文件的结构还是很困惑也不用担心！我设计了下面这个JSON文件，描述了种子文件的结构。</p>
+<pre><code class="json">{
+    &quot;Announce&quot;: &quot;url of tracker&quot;,
+    &quot;Info&quot;: {
+        &quot;Files&quot;: [
+            {
+                &quot;Length&quot;: 16,
+                &quot;path&quot;: &quot;/folder/to/path&quot;
+            },
+            {
+                &quot;length&quot;: 193,
+                &quot;path&quot;: &quot;/another/folder&quot;
+            }
+        ]
+    },
+    &quot;length&quot;: 192,
+    &quot;name&quot;:&quot; Ubuntu.iso&quot;,
+    &quot;Pieces length&quot;: 262144,
+    &quot;Pieces&quot;: [AAF4C61DDCC5E8A2DABEDE0F3B482CD9AEA9434D, CFEA2496442C091FDDD1BA215D62A69EC34E94D0]
+}</code></pre>
+<br>
+
+<h3 id="BT下载中的块选择算法-Piece-Selection-Algorithm"><a href="#BT下载中的块选择算法-Piece-Selection-Algorithm" class="headerlink" title="BT下载中的块选择算法(Piece Selection Algorithm)"></a>BT下载中的块选择算法(Piece Selection Algorithm)</h3><p>BitTorrent下载中最大的问题之一是“我应该选择下载哪些文件？”</p>
+<p>对于传统的CS模型，我们将下载整个文件；但是现在，我们需要选择要下载的部分。</p>
+<p> 选择一个好的顺序来下载片断，对提高性能非常重要。一个差的文件块选择算法可能导致所有的文件块都处于下载中，或者另一种情况，没有任何一个片段会被上载给其它对等点。</p>
+<p>在BT中块选择的算法思想就是：下载其他人没有的文件块，即稀有文件块。通过下载稀有的文件块，我们可以通过上传该块来减少稀有文件块的稀有度。</p>
+<br>
+
+<h3 id="什么是子块-Sub-Pieces-和块选择算法-Piece-Selection-Algorithm"><a href="#什么是子块-Sub-Pieces-和块选择算法-Piece-Selection-Algorithm" class="headerlink" title="什么是子块(Sub-Pieces)和块选择算法(Piece Selection Algorithm)"></a>什么是子块(Sub-Pieces)和块选择算法(Piece Selection Algorithm)</h3><p>BitTorrent使用TCP，一种用于数据包的传输协议。TCP具有一种被称为慢启动(<a href="https://www.isi.edu/nsnam/DIRECTED_RESEARCH/DR_HYUNAH/D-Research/slow-start-tcp.html" target="_blank" rel="noopener">slow start</a>)的机制。</p>
+<p>慢启动是一种平衡TCP网络连接速度的机制。它会逐步增加传输的数据量，直到找到网络的最大承载能力，如下图：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt7.svg" alt="bt7.svg"></p>
+<p>其中，cwdn代表拥塞窗口。</p>
+<p>TCP之所以这样做，是因为：如果我们一次发送16个连接请求，可能会导致服务器无法使用该流量，最终网络发生拥塞。所有，如果我们不定期发送数据，则TCP可能会以比正常速度慢的速度限制网络连接。</p>
+<p>BitTorrent协议会保证将数据细分为更多的子数据块来发送数据，每个子块的大小约为16KB。一个块的大小不是固定的，但大约为1MB。</p>
+<p>同时BitTorrent协议始终有一定数量的请求连接（五个），用于子块管道(sub-piece pipe-lined)。当下载一个新的子块时，客户端将发送一个新请求，从而有助于加快速度。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt8.svg" alt="bt8.svg"></p>
+<p>同时子块可以被其他的对等点下载；</p>
+<p>对于块选择算法来说，有两大原则：</p>
+<ul>
+<li>严格规则(Strict Policy)；</li>
+<li>稀有度优先(Rarest First)；</li>
+</ul>
+<h4 id="①-严格优先级-Strict-Policy"><a href="#①-严格优先级-Strict-Policy" class="headerlink" title="① 严格优先级(Strict Policy)"></a><strong>① 严格优先级(Strict Policy)</strong></h4><p>一旦BitTorrent客户端发起了一个文件块的子块的请求，则该文件块的任何剩余子块都将先于其他文件块的任何子块被请求。 这样，可以尽可能快的获得一个完整的片断。</p>
+<blockquote>
+<br>
+
+<p>Once the BitTorrent client requests a sub-piece of a piece, any  remaining sub-pieces of that piece are requested before any sub-pieces  from other pieces. </p>
+</blockquote>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt9.svg" alt="bt9.svg"></p>
+<p>在此图中，就是需要先下载该文件块的其他的所有子块，而不是开始下载另一个文件块。</p>
+<hr>
+<h4 id="②-稀有度优先-Rarest-First"><a href="#②-稀有度优先-Rarest-First" class="headerlink" title="② 稀有度优先(Rarest First)"></a><strong>② 稀有度优先(Rarest First)</strong></h4><p>BitTorrent下载的核心策略就是选择最稀有的文件块(pick the rarest first)，所以我们要下载其他对等点拥有的最少的文件块。</p>
+<p>这样我们就可以将那些稀有的文件块变得不再稀有(‘un-rare’)。因为，如果只有一个对等点有这个文件块并且他下线了，则将没有人能够获得完整文件。</p>
+<p>这个原则带来了很多好处：</p>
+<p><strong>Ⅰ。提高种子可靠性(Growing the seed)</strong></p>
+<p>首先，选择最稀有的文件块确保了我们仅从种子中下载新的文件块。</p>
+<p>例如：稀有种子在一开始会成为下载瓶颈，仅有单个对等点含有该文件快。</p>
+<p>而一个下载者可以看到他的对等点拥有哪些文件块，从而最稀有优先原则将使我们从种子中获取那些尚未由其他对等点上传的文件块。</p>
+<p>让我们将其可视化：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt10.svg" alt="bt10.svg"></p>
+<p>虽然图中没有画出，但是各个对等点之间也是是相互连接的。</p>
+<p>每个指向子文件块的箭头代表该对等点已下载对应内容。所以可以看到，我们已经下载了除了种子没有其他人拥有的子块，这意味着此子块很稀有。</p>
+<p>同时可以看到，我们的上传速度高于种子的上传速度，因此所有其他的对等点都希望从我们这里下载。此外，他们也希望首先下载到最稀有的子块，因为我们是最稀有子块的2位持有者之一。</p>
+<p>当每个对等点都从我们这里下载时，我们也可以从他们那里更快地下载。这就是针锋相对算法(“tit-for-tat algorithm”)（稍后讨论）。</p>
+<p><strong>Ⅱ。提高下载速度(Increased download speed)</strong></p>
+<p>持有文件块的对等点越多，下载速度就越快。这是因为我们可以从其他对等点那里下载子块。</p>
+<p><strong>Ⅲ。上传支持(Enable uploading)</strong></p>
+<p>稀有文件块是其他对等点最想要的，而获得稀有文件块也意味着对等点会对从我们的上传感兴趣。稍后我们将看到，我们上传的越多，我们可以下载的也越多。</p>
+<p><strong>Ⅳ。最常见的块在最后(Most common last)</strong></p>
+<p>将最常见的文件块留在下载末尾是明智的。由于许多对等点都拥有此文件块，因此能够下载它们的可能性比稀有文件块大得多。</p>
+<p><strong>Ⅴ。避免稀有块丢失(Prevent rarest piece missing)</strong></p>
+<p>当种子提供者断开连接时，稀有度优先原则保证了文件的所有部分都会分配到其余对等点。</p>
+<hr>
+<h4 id="③-随机开始下载的第一个文件块-Random-First-Piece"><a href="#③-随机开始下载的第一个文件块-Random-First-Piece" class="headerlink" title="③ 随机开始下载的第一个文件块(Random First Piece)"></a><strong>③ 随机开始下载的第一个文件块(Random First Piece)</strong></h4><p>当我们刚下载时，我们还没有任何可以上传的内容，所以我们需要很快的获取到第一块。而此时，稀有度优先原则是很慢的，所以BT协议会随机选择一块开始下载；直到第一块下载并检查完成。此后，“稀有优先”策略才会开始。</p>
+<hr>
+<h4 id="④-残局模式-Endgame-Mode"><a href="#④-残局模式-Endgame-Mode" class="headerlink" title="④ 残局模式(Endgame Mode)"></a><strong>④ 残局模式(Endgame Mode)</strong></h4><p>当(某个块)下载接近完成，但是还需要等待传输速率较慢的对等点上传时，可能会造成下载延迟，从而降低了传输效率。为了防止这种情况，其余的子块是从当前集群中的所有对等点中请求的。</p>
+<p>还记得严格原则(Strict-Policy)吗？BT下载时，总是有数个待处理的子块请求：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt11.svg" alt="bt11.svg"></p>
+<p>假设我们正在从2个对等点下载，而还有另外1个我们未从中下载的对等点。</p>
+<p>当请求的对等点缺少相应的子块时，BT协议会将请求广播给集群中所有对等点，而这有助于我们获取文件的最后一块。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt12.svg" alt="bt12.svg"></p>
+<p>如果对等点缺少子块，他们会将消息发送回我们。</p>
+<p>一旦一个子块到达，我们将发送一条取消消息，告诉其他对等方忽略我们的请求。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt13.svg" alt="bt13.svg"></p>
+<br>
+
+<h3 id="使用“以牙还牙”算法分配资源"><a href="#使用“以牙还牙”算法分配资源" class="headerlink" title="使用“以牙还牙”算法分配资源"></a>使用“以牙还牙”算法分配资源</h3><p> <strong>以牙还牙</strong>（英语：tit-for-tat）是一个用于<a href="https://zh.wikipedia.org/wiki/博弈論" target="_blank" rel="noopener">博弈论</a>的重复<a href="https://zh.wikipedia.org/wiki/囚徒困境" target="_blank" rel="noopener">囚徒困境</a>（reiterated prisoner’s dilemma）非常有效的策略。这策略最先由数学家<a href="https://zh.wikipedia.org/w/index.php?title=阿納托·拉普伯特&action=edit&redlink=1" target="_blank" rel="noopener">阿纳托·拉普伯特</a>（Anatol Rapoport）提出，并在密歇根大学社会学家<a href="https://zh.wikipedia.org/wiki/羅伯特·阿克塞爾羅" target="_blank" rel="noopener">罗伯特·阿克塞尔罗</a>（Robert Axelrod）有关囚徒困境的研究中击败其他方法，脱颖而出，成为解决囚徒困境的最佳策略。</p>
+<p>这一策略有两个步骤：</p>
+<ol>
+<li>第一个回合选择合作；</li>
+<li>下一回合是否选合作要看上一回对方是否合作，若对方上一回背叛，此回合我亦背叛；若对方上一回合作，此回合继续合作；</li>
+</ol>
+<p>“以牙还牙”策略有四个特点： </p>
+<ol>
+<li>友善：“以牙还牙”者开始一定采取合作态度，不会背叛对方；</li>
+<li>报复性：遭到对方背叛，“以牙还牙”者一定会还击报复；</li>
+<li>宽恕：当对方停止背叛，“以牙还牙”者会原谅对方，继续合作；</li>
+<li>不羡慕对手：“以牙还牙”者个人永远不会得到最大利益，整个策略以全体的最大利益为依归；</li>
+</ol>
+<br>
+
+<h3 id="阻塞算法-The-choking-Algorithm"><a href="#阻塞算法-The-choking-Algorithm" class="headerlink" title="阻塞算法(The choking Algorithm)"></a>阻塞算法(The choking Algorithm)</h3><p>当一个对等点收到另一个对等点的请求时，它可以选择拒绝向该请求发送文件块(但我们仍然可以从他们那里下载)。如果发生这种情况，则称对方被“choked”了。</p>
+<p>当对等点合作时，他们上传文件；而当对等点不合作时，他们“阻塞”了与其他对等点的连接；而原则就是上传文件块给那些已上传给过我们的对等点；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt14.svg" alt="bt14.svg"></p>
+<p>而阻塞算法最终理想的结果就是：同时进行多个双向连接并最终达到帕累托最优(Pareto Efficiency)</p>
+<blockquote>
+  <br>
+
+<p>  如果没有其他分配方式能够使某个人的状况更好也没有一个人的状况更差，那么我们认为分配是帕累托最优的。</p>
+</blockquote>
+<p>因此，最大的问题是，如何确定哪些对等点会被阻塞而哪些不会被阻塞呢？</p>
+<p>在默认情况下，客户端将仅保留默认的同时上传数量(max_uploads，max_uploads的默认值为4)，而所有对该客户端的其他请求都将标记为“choked”。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt15.png" alt="bt15.png"></p>
+<p>如上图中，种子阻塞了与对等点的连接，因为它已达到其最大上传数量。此后，对等点将保持阻塞状态，直到发送了取消阻塞消息为止。</p>
+<p>而当前的下载速率决定了要取消阻塞对等点。这里以每10秒计算一次最近20秒的下载速率平均值来决定。因为BT下载使用的是TCP协议（慢启动），因此快速阻塞和取消阻塞的效率并不高( 频繁的阻塞和疏通peers造成资源浪费)。</p>
+<p>所以，根据这个原则：如果我们的上传速率很高，则会有更多的对等点允许我们从他们那里下载。即，<strong>如果我们是优秀的上传者，我们可以获得更高的下载率(This means that we can get a higher download rate if we are a good uploader)</strong>。这是BitTorrent协议的最重要功能。</p>
+<blockquote>
+<br>
+
+<p>文件下载片断选择是为了提高系统的总效率，而阻塞算法是为了提高个人用户的公平性和效率：作为取自于用户并用之于用户的分布式系统，整个系统的效率和个人用户的公平性至关重要！</p>
+<p>BitTorrent的片断下载策略保证了最大的下载效率和稳健的完整性，而阻塞算法鼓励个人用户上传。BitTorrent的阻塞算法并不记录历史，也就是对用户以前的上传、下载行为没有记录。</p>
+<p>而有些最近版本的BitTorrent已经能对帐户的上传、下载信息做出统计，然后转化为积分，但积分还没有和用户的下载优先级绑定，而且积分也只是简单的统计上传流量，上传的内容和上传的目标用户也没有分析，简单的积分策略并不能应对五花八门Spamming技术，积分算法应该是上传和下载流量的比数，且积分增加速度随着上传的不同目标用户和不同上传内容数量的增加而增加！</p>
+</blockquote>
+<p>这个协议禁止了许多“搭便车的人(free riders)”，即：只下载但不上传的对等点。这是为了使整个对等网络高效，所以所有对等都需要为网络做出贡献；</p>
+<blockquote>
+<br>
+
+<p>除此之外：</p>
+<p>对方被阻塞的另一个常见例子是，对等点不需要下载文件块。</p>
+</blockquote>
+<p>同时，为了确保对等点之间的公平，有一个适当的机制确保了各对等点可以轮流下载其他对等点的文件块，这个机制被称为：“开放检测”(optimistic unchoking)。</p>
+<br>
+
+<h3 id="开放检测-optimistic-unchoking"><a href="#开放检测-optimistic-unchoking" class="headerlink" title="开放检测(optimistic unchoking)"></a>开放检测(optimistic unchoking)</h3><p> 如果只是简单的为提供最好的下载速率的对等点们提供上传速度，那么就没有办法来发现那些空闲的连接是否比当前正使用的连接更好。</p>
+<p>为了解决这个问题，在任何时候，每个对等点都拥有一个被称为“optimistic  unchoking”的连接，这个连接总是保持畅通状态，而不论它的下载速率是怎样的。</p>
+<p>每隔30秒，会重新计算一次哪个连接应该是“optimistic  unchoking”。如果此“optimistic  unchoking”连接比当前连接的某个非阻塞的连接下载速率要快，那么这个“optimistic  unchoking”将会取代那个连接；</p>
+<blockquote>
+  <br>
+
+<p>  因为即使是TPC协议，30秒足以让上传能力达到最大，下载能力也相应的达到最大。</p>
+</blockquote>
+<p>“optimistic  unchoking”连接是随机选择的。同时，这也允许了那些不上传并仅下载文件的对等设备下载文件，即使他们拒绝合作（尽管它们将以慢得多的速度下载）</p>
+<br>
+
+<h3 id="反对歧视-Anti-snubbing"><a href="#反对歧视-Anti-snubbing" class="headerlink" title="反对歧视(Anti-snubbing)"></a>反对歧视(Anti-snubbing)</h3><p> 某些情况下，一个对等点可能会被它所有的对等点都阻塞了，这种情况下，它将会保持较低的下载速率直到通过“optimistic  unchoking”找到了更好peers。</p>
+<p>为了减轻这种问题，如果某个对等点在60秒钟内没有收到来自特定对等点的任何文件，则将认为它已被对方对等点 “怠慢”了，于是不再为对方提供上传，除非对方是“optimistic  unchoking”。如果这种情况频繁发生，会导致多于一个的并发的“optimistic unchoking”。  </p>
+<br>
+
+<h3 id="仅上传对等点-Upload-Only"><a href="#仅上传对等点-Upload-Only" class="headerlink" title="仅上传对等点(Upload Only)"></a>仅上传对等点(Upload Only)</h3><p>我们看到，使用在BitTorrent中实现的阻塞算法，我们更喜欢对我们友好的对等点。如果我可以从他们那里快速下载，我们也允许他们从我那里快速上传。</p>
+<p>但是如果某个对等点完成了下载，它就无法使用此阻塞算法判断要取消阻塞哪些对等点；</p>
+<p>此时，将使用新的阻塞算法：不再通过下载速率（因为下载速率已经为0了）来决定为哪些对等点提供上载，而是优先选择那些从它这里得到更好的上载速率的对等点。这样做的理由是可以尽可能的利用上载带宽，从而确保文件块上传速度更快，并且复制速度更快。           </p>
+<br>
+
+<h3 id="什么是跟踪器-Tracker-？"><a href="#什么是跟踪器-Tracker-？" class="headerlink" title="什么是跟踪器(Tracker)？"></a>什么是跟踪器(Tracker)？</h3><p>Tracker是一种特殊类型的服务器，可帮助对等点之间进行通信。</p>
+<p>BitTorrent中的通信很重要。想一下，我们是如何了解其他对等点的存在的？</p>
+<p>Tracker知道文件的拥有者以及拥有量。</p>
+<p>但是，当对等下载开始后，就无需Tracker即可继续通信。</p>
+<p>实际上，自从为无追踪程序的种子创建分布式哈希表(distributed hash table，DHT)方法以来，BitTorrent Tracker在很大程度上是多余的。</p>
+<h4 id="公共Tracker"><a href="#公共Tracker" class="headerlink" title="公共Tracker"></a>公共Tracker</h4><p>公共Tracker是任何人都可以使用的Tracker。</p>
+<p>海盗湾（Pirate Bay）是最受欢迎的公共Tracker之一，直到2009年其禁用了Tracker，而选择了磁链（即将讨论）。</p>
+<blockquote>
+<br>
+
+<p>引自： <a href="https://arstechnica.com/tech-policy/2009/11/pirate-bay-kills-its-own-bittorrent-tracker/" target="_blank" rel="noopener">The Pirate Bay operated one of the most popular public trackers until disabling it in 2009</a></p>
+</blockquote>
+<hr>
+<h4 id="私有Tracker"><a href="#私有Tracker" class="headerlink" title="私有Tracker"></a>私有Tracker</h4><p>私人Tracker是私人的，它们通过要求用户在网站上注册来限制使用。</p>
+<p>控制注册的方法通常是邀请系统。要使用此类Tracker，我们需要被邀请。</p>
+<hr>
+<h4 id="多Tracker种子"><a href="#多Tracker种子" class="headerlink" title="多Tracker种子"></a>多Tracker种子</h4><p>多Tracker种子是在一个种子文件中包含多个Tracker。如果一个Tracker发生故障，这将提供冗余，其他Tracker可以继续维护种子文件创建的集群。</p>
+<p>但是，使用此配置，单个种子可能有多个未互相连接的集群：一些用户可以连接到一个特定的Tracker，而无法连接到另一个，这很糟糕！因为，这会创建很多不相交的集群，这会阻碍torrent传输其描述的文件的效率。</p>
+<br>
+
+<h3 id="磁力链接-无Tracker种子-Magnet-Links-Trackerless-Torrents"><a href="#磁力链接-无Tracker种子-Magnet-Links-Trackerless-Torrents" class="headerlink" title="磁力链接 - 无Tracker种子(Magnet Links - Trackerless Torrents)"></a>磁力链接 - 无Tracker种子(Magnet Links - Trackerless Torrents)</h3><p>之前，我谈到了Pirate Bay停用了Tracker并开始使用无tracker的种子。</p>
+<p>当我们下载种子时，我们会得到该种子的哈希值。要在没有tracker的情况下下载种子，我们需要找到其他也在下载种子的对等点。为此，我们需要使用分布式哈希表(distributed hash table，DHT)。</p>
+<p>下面让我们探索分布式哈希表。</p>
+<br>
+
+<h3 id="分布式哈希表-Distributed-Hash-Tables-和Kademlia协议"><a href="#分布式哈希表-Distributed-Hash-Tables-和Kademlia协议" class="headerlink" title="分布式哈希表(Distributed Hash Tables)和Kademlia协议"></a>分布式哈希表(Distributed Hash Tables)和Kademlia协议</h3><p>分布式哈希表是一种分布式存储方法。这种网络不需要中心节点服务器，而是每个客户端负责一个小范围的路由，并负责存储一小部分资料，从而实现整个DHT网络的定位和存储。和中心节点服务器不同，DHT网络中的各节点并不需要维护整个网络的信息，而是只在节点中存储其临近的后继节点信息，大幅减少了带宽的占用和资源的消耗。DHT网络还在与关键字最接近的节点上复制备份冗余信息，避免了单一节点失效问题。 </p>
+<p> BitTorrent的DHT网络是使用Kademlia协议（以下简称Kad），一个点对点（P2P）的&lt; 键,  值&gt;元组存储和查询系统。</p>
+<blockquote>
+  <br>
+
+<p>  Kad是美国纽约大学的PetarP. Maymounkov和David  Mazieres.在2002年发布的一项研究结果：《Kademlia: A peerto -peer information system  based on the XOR  metric》。</p>
+<p>  Kademlia拥有许多的令人惊喜的特点，这些特点是任何以前的P2P系统所无法同时提供的。它减少了节点必须发送的用来相互认识的配置消息的数量。在做键查询的同时,  配置消息将会被自动传播。节点拥有足够的知识和灵活性来通过低时延路径发送查询请求。</p>
+<p>  Kademlia使用平行的、异步的查询请求来避免节点失效所带来的超时时延。通过节点记录相互的存在的算法可以抵抗某些基本的拒绝服务（DoS）攻击。 </p>
+</blockquote>
+<p>分布式哈希表为我们提供了类似于字典的接口，但是节点分布在整个网络中。DHT的核心在于：通过散列特定的key可以找到存储对应的特定key的节点。</p>
+<p>实际上，这意味着，每个对等点都将成为一个微型tracker(mini-tracker)。</p>
+<p>每个节点（实现DHT协议的客户端/服务器）都有一个唯一的标识符，称为“节点ID”(Node Id)。我们从与BitTorrent信息哈希相同的160位空间中随机选择节点ID。</p>
+<p>信息哈希(Infohashes)是以下内容的SHA-1哈希：</p>
+<ul>
+<li>ITEM：文件大小和路径（带文件名的路径）；</li>
+<li>Name：被索引时的名称；</li>
+<li>Piece length：单块文件大小；</li>
+<li>Pieces：该种子文件的每一块的SHA-1哈希值；</li>
+<li>Private：限制访问标记；</li>
+</ul>
+<blockquote>
+<br>
+
+<p>关于Infohashes：<a href="https://stackoverflow.com/questions/28348678/what-exactly-is-the-info-hash-in-a-torrent-file" target="_blank" rel="noopener">What exactly is the info_Hash in a torrent file</a></p>
+</blockquote>
+<p>我们使用距离度量(distance metric)来比较两个节点ID或 一个节点ID和一个infohash的“接近度”(closeness)；</p>
+<p>节点必须具有包含其他几个节点的联系信息的路由表。从而，节点在DHT中知道彼此。他们知道许多节点的id与他们自己的很接近，但也有很少节点的id与他们很远。</p>
+<p>距离度量是XOR(异或)，被解释为一个整数：</p>
+<p> distance(A,B)=|A⊕B| </p>
+<p>数值越小越接近。</p>
+<p>当一个节点想要为一个种子找到对等节点时，他们使用distance metric来比较种子的infohash和路由表中节点的ID，或者一个节点的ID和另一个节点的ID。</p>
+<p>然后，他们联系路由表中最靠近infohash的节点，并向他们请求下载种子的对等点的联系信息。</p>
+<p>如果这个被联系的节点知道种子的对等点，他们返回对等点的联系信息响应。否则，被联系的节点必须用他的路由表中最靠近infohash的节点来响应请求种子的信息。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt16.svg" alt="bt16.svg"></p>
+<p>原始节点查询更接近infohash的节点，直到找不到更接近的节点为止。在节点完成搜索后，客户端将自己的对等联系信息(peer contact information)插入到与种子信息最接近的id响应节点上。在未来，其他节点可以很容易地找到我们（原始节点）。</p>
+<p>对等点查询的返回值包括一个被称为“token”的不透明值(opaque value)。一个节点要宣布它的控制对等点正在下载一个种子，它必须在最近的一次对等查询中展示从同一被查询的对等点接收到的令牌。</p>
+<p>当一个节点试图“发布(announce)”一个种子时，被查询的节点会根据查询节点的IP地址检查令牌。这是为了防止恶意主机为种子注册其他主机。(This is to prevent malicious hosts from signing up other hosts for torrents)</p>
+<p>查询节点也会将一个令牌返回到他接收令牌的同一个节点。在令牌被分发后，我们必须在一个合理的时间内接受令牌(We must accept tokens for a reasonable amount of time after they have been distributed.)。</p>
+<p>BitTorrent对于这个令牌的实现是：使用IP地址和每5分钟更改一次的密码的SHA-1哈希，并且接受最多10分钟以前的令牌。</p>
+<br>
+
+<h3 id="路由表-Routing-Table"><a href="#路由表-Routing-Table" class="headerlink" title="路由表(Routing Table)"></a>路由表(Routing Table)</h3><p>每个节点都会维护一个已知的好节点(known good nodes)的路由表。我们在DHT中使用路由表起始点(starting points)进行查询，同时我们从路由表返回节点以响应来自其他节点的查询。</p>
+<p>并非我们了解的所有节点都是平等的。有些是“好”的，有些则不是。许多使用DHT的节点可以发送查询和接收响应，但是不能响应来自其他节点的查询。并且每个节点的路由表必须只包含已知的好节点(good node)：</p>
+<p>一个好的节点是一个节点在过去15分钟内响应了我们的一个查询。如果一个节点在过去15分钟内响应了我们的查询并向我们发送了一个查询，那么它也是一个好节点。</p>
+<p>一个节点在15分钟不活动之后，节点就会变得可疑(questionable)。</p>
+<p>而当节点无法响应一个或者多个连续的查询时(fail to respond to multiple queries in a row)，它们就会变得糟糕(bad)。</p>
+<p>并且我们在查询时良好的节点会优先于状态未知的节点。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/bt17.svg" alt="bt17.svg"></p>
+<p>一个路由表覆盖了从0到2^160的整个节点ID空间。我们将路由表细分为“桶(buckets)”，每个桶覆盖部分空间。</p>
+<p>一个空表有一个bucket，其ID空间范围为min=0, max=2^160。</p>
+<p>空表只有一个bucket，因此任何节点都必须包含在其中。在一个桶变“满(full)*”之前，每个桶只能容纳K个节点，目前是8个。</p>
+<p>当一个bucket中已经填满已知的好节点(full of known good nodes)时，我们可以不再添加节点，除非我们自己的节点ID在bucket的范围内。此时，这个桶会被两个桶替换，每个桶都是旧桶的一半。旧桶中的节点被分布在新桶中。</p>
+<p>对于只有一个bucket的新表，我们总是将完整的bucket分割为覆盖范围为0 - 2^159 和 2^159 - 2^160。</p>
+<p>当桶中满是好的节点时，我们只需丢弃新节点。当桶中的节点变坏(被确认变坏)时，我们才用一个新节点替换它们。</p>
+<blockquote>
+  <br>
+
+<p>  当节点被认为是有问题(questionable)的，并且在过去15分钟内没有任何响应，那么最近最少无响应的节点将被ping。节点响应或不响应。响应意味着我们移动到下一个节点。我们重复这样做，直到找到一个没有响应的节点。</p>
+<p>  如果我们没有找到，那么这个桶就被认为是好的。</p>
+<p>  当我们确实找到一个节点无响应时，我们会在丢弃该节点并用新的好节点替换它们之前，再尝试ping一次。</p>
+</blockquote>
+<p>同时，每个桶都维护了一个“最后更改(last changed)”属性，以显示其存储内容的“新鲜程度(fresh)”。</p>
+<p>当桶中的一个节点被ping并响应，或一个新节点被添加到桶中，或一个节点被另一个节点替换时，将会更新桶的last changed属性。</p>
+<p>如果last changed属性在最近15分钟内没有更新，则会刷新bucket。</p>
+<br>
+
+<h3 id="攻击BitTorrent"><a href="#攻击BitTorrent" class="headerlink" title="攻击BitTorrent"></a>攻击BitTorrent</h3><p>对BitTorrent网络的攻击很少，因为一切都是公开的，比如：我们的IP地址，我们下载的东西等；</p>
+<p>有人可能会问，为什么要攻击开放网络？为什么要攻击一个完全开放的网络？</p>
+<p>在<a href="https://www.exploit-db.com/" target="_blank" rel="noopener">Exploit-DB</a>上只列出了7个条目，并且大多数都是针对特定的客户。</p>
+<p>对BitTorrent网络的主要攻击目的是阻止盗版。我们谈到这里还没有谈到盗版，但它通常是BitTorrent的同义词。</p>
+<p>bt的主要攻击手段是bt中毒(Torrent Poisoning)。</p>
+<h4 id="Torrent-Poisoning"><a href="#Torrent-Poisoning" class="headerlink" title="Torrent Poisoning"></a>Torrent Poisoning</h4><p>这种攻击的目的是获取盗版内容的对等点的IP地址或以某种方式修改文件内容。</p>
+<p>麦当娜(Madonna)发行的《Madonna’s American Life》专辑就是内容中毒的一个例子。在发行之前，曲目发行的长度和文件大小类似。歌曲中有一段麦当娜说：</p>
+<blockquote>
+<br>
+
+<p>“What the fuck do you think you’re doing?”</p>
+</blockquote>
+<p>随后是几分钟的沉默。</p>
+<p>下面是一些使种子中毒的方法。</p>
+<p><strong>① Index Poisoning</strong></p>
+<p>索引允许用户定位具有所需内容的对等节点的IP地址。这种攻击方法可以让对等点的搜索变得困难。</p>
+<p>攻击者会在索引中插入大量无效信息，以阻止用户找到正确的信息。</p>
+<p>其思想是通过让对等点尝试从无效对等点下载片段来减慢下载速度。</p>
+<p><strong>② Decoy Insertion</strong></p>
+<p>他们将文件的损坏版本插入网络。</p>
+<p>想象一下，一个文件有500份拷贝，其中只有2份是真正的文件，这会阻止盗版者找到真正的文件。</p>
+<p>但是，大多数有种子列表的网站都有投票系统。这阻止了这种攻击，因为搜索的顶部充满了未损坏的文件。</p>
+<p>在GameDevTycoon中，损坏的文件是在正版文件上传到盗版网站之前发布的。盗版者不知道的是，文件已经损坏。在盗版游戏中除了无法获得胜利，其他一切都是正常的！</p>
+<br>
+
+<h3 id="防御BitTorrent攻击"><a href="#防御BitTorrent攻击" class="headerlink" title="防御BitTorrent攻击"></a>防御BitTorrent攻击</h3><p>最受欢迎的种子是由多年来建立融洽关系的个人或团体发布的。而在私人tracker上，种子的资源可以指向个人。所有，有毒的种子可以很快被贴上标签，从而传播也可以被禁止。</p>
+<p>换而言之，在公共tracker上，下载由受信任团体制作的种子更可取。毕竟，你是喜欢从Ubuntu团队下载Ubuntu，还是从用户xxx- hackers - elite - ghost - protocol- xxx下载？</p>
+<p>在公共tracker中，如果一个种子是有毒的，该种子会被报告和删除。</p>
+<p>防御bt攻击最简单的方法是使用一个与你无关的IP地址，无论这是通过VPN还是其他服务(The simplest way to defend against a BitTorrent attack is to use an IP address not associated with you. Whether this is through a VPN or some other service)。</p>
+<br>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过阅读本文，我想你学到了：</p>
+<ul>
+<li>什么是BitTorrent；</li>
+<li>什么是Torrent描述符文件；</li>
+<li>BitTorrent如何选择对等点；</li>
+<li>BitTorrent如何选择文件块；</li>
+<li>严格的优先级（Strict Priority）；</li>
+<li>最少的优先（Rarest First） </li>
+<li>残局模式（Endgame Mode） </li>
+<li>阻塞算法（Choking Algorithms） </li>
+<li>以牙还牙算法（tit-for-tat）；</li>
+<li>帕累托效率（Pareto Efficiency） </li>
+<li>开放检测（Optimistic Unchoking） </li>
+<li>反对歧视（Anti-snubbing） </li>
+<li>仅仅上传（Upload Only） </li>
+<li>什么是tracker；</li>
+<li>对BitTorrent网络的攻击；</li>
+<li>……</li>
+</ul>
+<p>如果你想继续深入了解BitTorrent：</p>
+<ul>
+<li><a href="https://allenkim67.github.io/programming/2016/05/04/how-to-make-your-own-bittorrent-client.html" target="_blank" rel="noopener">Build your own BitTorrent client</a></li>
+<li><a href="https://www.bittorrent.org/beps/bep_0000.html" target="_blank" rel="noopener">Explore BitTorrent’s proposals (BEPs) to learn more about how it works, and what’s next for the algorithm</a></li>
+<li><a href="https://www.bittorrent.org/beps/bep_0003.html" target="_blank" rel="noopener">Read the official BitTorrent specification</a></li>
+</ul>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>原文链接：</p>
+<ul>
+<li><a href="https://skerritt.blog/bit-torrent/" target="_blank" rel="noopener">How Does BitTorrent Work? a Plain English Guide</a></li>
+</ul>
+<p>对于搭建Aria2离线下载服务器感兴趣的可以看我的这几篇文章：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2020/05/01/Aria2安装与配置/">Aria2安装与配置</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/05/02/使用Aria2搭建你自己的离线下载服务器/">使用Aria2搭建你自己的离线下载服务器</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/05/02/解决Aria2的BT下载速度慢或没速度的问题/">解决Aria2的BT下载速度慢或没速度的问题</a></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/09/25/【译】BT下载的工作原理/" title="https://jasonkayzk.github.io/2020/09/25/【译】BT下载的工作原理/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/09/25/【译】BT下载的工作原理/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725338764"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

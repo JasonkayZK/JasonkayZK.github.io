@@ -1,0 +1,3508 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Redis面试相关问题 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本篇总结了Redis在面试中经常碰到的一些问题, 以及在项目开发中Redis常见的问题">
+<meta name="keywords" content="Redis,Java面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis面试相关问题">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/02/05/Redis面试相关问题/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本篇总结了Redis在面试中经常碰到的一些问题, 以及在项目开发中Redis常见的问题">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/13230160-6c08ae68fe9a796f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/815">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/13230160-2046b77640392660.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/913">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/13230160-34c1a3f8ec81a652.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/876">
+<meta property="og:image" content="http://img1.tuicool.com/NjYjYvF.png!web?_=6182478">
+<meta property="og:image" content="http://img2.tuicool.com/YrqaY3f.png!web?_=6182478">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.745Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis面试相关问题">
+<meta name="twitter:description" content="本篇总结了Redis在面试中经常碰到的一些问题, 以及在项目开发中Redis常见的问题">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/13230160-6c08ae68fe9a796f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/815">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725351761">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?3">
+    
+    <h1>Redis面试相关问题</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年02月05日</a>
+    <a><i class="nexmoefont icon-areachart"></i>15.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 72 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Redis/">Redis</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java面试/">Java面试</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Redis/">Redis</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis功能-使用场景"><span class="toc-text">Redis功能, 使用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis操作"><span class="toc-text">Redis操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis数据结构"><span class="toc-text">Redis数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis的3个高级数据结构"><span class="toc-text">Redis的3个高级数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis设计"><span class="toc-text">Redis设计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis的hotkey"><span class="toc-text">Redis的hotkey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis事务"><span class="toc-text">Redis事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis订阅发布"><span class="toc-text">Redis订阅发布</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis实现分布式锁"><span class="toc-text">Redis实现分布式锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis实现分布式Session"><span class="toc-text">Redis实现分布式Session</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis实现SSO"><span class="toc-text">Redis实现SSO</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis持久化"><span class="toc-text">Redis持久化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis架构模式"><span class="toc-text">Redis架构模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis集群-如何保证同步…"><span class="toc-text">Redis集群(如何保证同步…)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#缓存算法-LRU等"><span class="toc-text">缓存算法(LRU等)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一致性哈希算法？什么是哈希槽？"><span class="toc-text">一致性哈希算法？什么是哈希槽？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免"><span class="toc-text">什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>本篇总结了Redis在面试中经常碰到的一些问题, 以及在项目开发中Redis常见的问题, 主要包括:</p>
+<ul>
+<li>Redis功能, 使用场景(缓存, 分布式事务…)</li>
+<li>Redis操作</li>
+<li>Redis数据结构</li>
+<li>Redis设计(前缀, 名称等)</li>
+<li>Redis的hotkey</li>
+<li>Redis事务</li>
+<li>Redis实现分布式锁</li>
+<li>Redis持久化</li>
+<li>Redis架构模式(一主一从[Master-Slave], Redis集群[Redis-Cluster], 哨兵模式[Redis-Sentinel])</li>
+<li>Redis集群(如何保证同步…)</li>
+<li>缓存算法(LRU等)</li>
+<li>一致性哈希算法？什么是哈希槽？</li>
+<li>什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免?</li>
+<li>……</li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h3 id="Redis功能-使用场景"><a href="#Redis功能-使用场景" class="headerlink" title="Redis功能, 使用场景"></a>Redis功能, 使用场景</h3><p><strong>① 说明</strong></p>
+<p>key—value型数据库，支持:</p>
+<ul>
+<li>string</li>
+<li>list</li>
+<li>set</li>
+<li>zset</li>
+<li>hash</li>
+</ul>
+<p>对这些数据的<strong>操作都是原子性的，Redis为了保证效率会定期持久化数据</strong></p>
+<p>端口：6379</p>
+<p><strong>默认16个数据库，下标从0开始</strong></p>
+<p><strong>单线程：redis是单线程+io多路复用：检查文件描述的就绪状态</strong></p>
+<p><strong>② Redis功能</strong></p>
+<ul>
+<li>解决应用服务器的cpu和内存压力</li>
+<li>减少io的读操作，减轻io的压力</li>
+<li>关系型数据库的扩展性不强，难以改变表结构</li>
+</ul>
+<p><strong>③ 使用场景</strong></p>
+<ul>
+<li><strong>数据高并发的读写</strong></li>
+<li><strong>海量数据的读写</strong></li>
+<li><strong>对扩展性要求高的数据</strong></li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>例如:</strong></p>
+<ul>
+<li>缓存会话（单点登录）</li>
+<li>分布式锁，比如：使用setnx</li>
+<li>各种排行榜或计数器</li>
+<li>商品列表或用户基础数据列表等</li>
+<li>使用list作为消息对列</li>
+<li>秒杀，库存扣减等</li>
+</ul>
+<p><strong>各数据结构的应用场景:</strong></p>
+<ul>
+<li><p><strong>String:</strong> </p>
+<p>例如: </p>
+<ul>
+<li>可以直接用作计数器</li>
+<li>统计在线人数</li>
+<li>另外<strong>String类型是二进制存储安全的</strong>，所以也可以使用它来存储图片，甚至是视频等</li>
+</ul>
+</li>
+<li><p><strong>Hash:</strong></p>
+<p>存放键值对</p>
+<ul>
+<li><p>一般可以用来存某个对象的基本属性信息: 例如，用户信息，商品信息等;</p>
+</li>
+<li><p>另外，由于hash的大小在小于配置的大小的时候使用的是ziplist结构，比较节约内存，所以针对大量的数据存储可以考虑使用hash来分段存储来达到压缩数据量，节约内存的目的; 例如，对于大批量的商品对应的图片地址名称: </p>
+<p>比如：商品编码固定是10位，可以选取前7位做为hash的key,后三位作为field，图片地址作为value。这样每个hash表都不超过999个，只要把redis.conf中的hash-max-ziplist-entries改为1024即可</p>
+</li>
+</ul>
+</li>
+<li><p><strong>List:</strong></p>
+<p>列表类型</p>
+<ul>
+<li>可以用于实现消息队列;</li>
+<li>也可以使用它提供的range命令，做分页查询功能</li>
+</ul>
+</li>
+<li><p><strong>Set:</strong></p>
+<p>集合，整数的有序列表可以直接使用set</p>
+<ul>
+<li>可以用作某些去重功能，例如用户名不能重复等</li>
+<li>还可以对集合进行交集，并集操作，来查找某些元素的共同点</li>
+</ul>
+</li>
+<li><p><strong>ZSet:</strong></p>
+<p>有序集合</p>
+<ul>
+<li>使用范围查找</li>
+<li>排行榜功能</li>
+<li>topN功能</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><strong>④ 不适场景</strong></p>
+<ul>
+<li>需要事务支持（非关系型数据库）[Redis也支持事务…]</li>
+<li>结构化查询储存，关系复杂</li>
+</ul>
+<br>
+
+<h3 id="Redis操作"><a href="#Redis操作" class="headerlink" title="Redis操作"></a>Redis操作</h3><p><strong>Redis提供的命令</strong></p>
+<ul>
+<li>redis-benchmark：性能测试工具</li>
+<li>redis-server：启动redis服务器</li>
+<li>redis-cli：启动redis客户端，操作入口</li>
+</ul>
+<p><strong>命令</strong></p>
+<p><strong>① Key操作</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>keys *</code></td>
+<td>查看当前库所有的键</td>
+<td>不推荐<br><br>在数据量巨大时会导致卡死</td>
+</tr>
+<tr>
+<td><code>exists &lt;key&gt;</code></td>
+<td>判断是否存在key</td>
+<td></td>
+</tr>
+<tr>
+<td><code>del &lt;key&gt;</code></td>
+<td>删除某个键</td>
+<td></td>
+</tr>
+<tr>
+<td><code>expire &lt;key&gt; &lt;second&gt;</code></td>
+<td>设置键过期时间 单位是s秒</td>
+<td></td>
+</tr>
+<tr>
+<td><code>ttl &lt;key&gt;</code></td>
+<td>查看还有多少秒过期<br><br>-1表示永不过期<br><br>-2表示已经过期</td>
+<td></td>
+</tr>
+<tr>
+<td><code>move &lt;key&gt; &lt;db&gt;</code></td>
+<td>把键移到另一个库下</td>
+<td></td>
+</tr>
+<tr>
+<td><code>dbsize</code></td>
+<td>查看数据库key的数量</td>
+<td></td>
+</tr>
+<tr>
+<td><code>flushdb</code></td>
+<td>清空当前库</td>
+<td></td>
+</tr>
+<tr>
+<td><code>flushall</code></td>
+<td>通杀所有库</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>② String类型</strong></p>
+<p>String是二进制安全的，可以包含任何数据源，最大512Mb</p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>get &lt;key&gt;</code></td>
+<td>查看对应的键值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>set &lt;key&gt; &lt;value&gt;</code></td>
+<td>添加键值对</td>
+<td></td>
+</tr>
+<tr>
+<td><code>append &lt;key&gt; &lt;value&gt;</code></td>
+<td>将给定的value追加到原值的末尾</td>
+<td></td>
+</tr>
+<tr>
+<td><code>strlen &lt; key &gt;</code></td>
+<td>获取值得长度</td>
+<td></td>
+</tr>
+<tr>
+<td><code>setnx &lt;key&gt; &lt;value&gt;</code></td>
+<td>当key不存在的时候设置key值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>incr &lt;key&gt;</code></td>
+<td>将key中储存的数字加1，如果为空，则值为1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>decr &lt;key&gt;</code></td>
+<td>将key中储存的数字减1，如果为空，则值为-1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>incrby/decrby &lt;key&gt; &lt;step&gt;</code></td>
+<td>将key中的数字增减step</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>String批量处理:</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>mset &lt;key1&gt; &lt;value1&gt; &lt;key2&gt; &lt;value2&gt;</code></td>
+<td>同时设置多个键值对</td>
+<td></td>
+</tr>
+<tr>
+<td><code>mget &lt;key1&gt; &lt;key 2&gt;</code></td>
+<td>同时获得多个值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>msetnx &lt;key1&gt; &lt;value1&gt; &lt;key2&gt; &lt;value2&gt;</code></td>
+<td>当给定的key都不存在时设置</td>
+<td></td>
+</tr>
+<tr>
+<td><code>getrange &lt;key&gt; &lt;start&gt; &lt;stop&gt;</code></td>
+<td>类似substring</td>
+<td></td>
+</tr>
+<tr>
+<td><code>setrange &lt;key&gt; &lt;start&gt; &lt;stop&gt;</code></td>
+<td>类似substring覆盖原始值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>setex &lt;key&gt; &lt;过期时间&gt; &lt;value&gt;</code></td>
+<td>设置键值的同时，给定过期时间</td>
+<td></td>
+</tr>
+<tr>
+<td><code>getset &lt;key&gt; &lt;value&gt;</code></td>
+<td>以旧换新，设置了新的值同时得到旧值</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>② List链表</strong></p>
+<ul>
+<li>特点:<ul>
+<li><strong>单键多值</strong></li>
+<li>Redis列表是简单的字符串列表，从左或者从右插入</li>
+<li><strong>底层是双向链表，对两端的操作性能很高，通过下标查询性能很低</strong></li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>lpush/rpush &lt;key&gt; &lt;value1&gt; &lt;value2&gt; …</code></td>
+<td>从左或从右插入多个值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>lpop/rpop &lt;key&gt;</code></td>
+<td>从左边或右边吐出一个值，<strong>值光键亡</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rpoplpush &lt;key1&gt; &lt;key2&gt;</code></td>
+<td>从key1 右边吐出一个值到key2的左边</td>
+<td></td>
+</tr>
+<tr>
+<td><code>lrange &lt;key&gt; &lt;index&gt;</code></td>
+<td>按照索引下标获取元素 从左到右</td>
+<td></td>
+</tr>
+<tr>
+<td><code>lindex &lt;key&gt; &lt;index&gt;</code></td>
+<td>按照索引下标获取元素 从左到右</td>
+<td></td>
+</tr>
+<tr>
+<td><code>llen &lt;key&gt;</code></td>
+<td>获取列表长度</td>
+<td></td>
+</tr>
+<tr>
+<td>`linsert <key> before</key></td>
+<td>after <value> <newvalue>`</newvalue></value></td>
+<td>在key中value前/后插入newvalue</td>
+</tr>
+</tbody></table>
+<p><strong>③ Set</strong></p>
+<p>类似list的无序集合，保证列表中不会有重复数据，<strong>底层是一个value为null的hash表</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sadd &lt;key&gt; &lt;value1&gt; &lt;value2&gt;</code></td>
+<td>将多个元素加入到key中，重复值忽略</td>
+<td></td>
+</tr>
+<tr>
+<td><code>smembers &lt;key&gt;</code></td>
+<td>取出该集合的所有值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sismember &lt;key&gt; &lt;value&gt;</code></td>
+<td>判断集合key中是否有该value值</td>
+<td>有就1 没有0</td>
+</tr>
+<tr>
+<td><code>scard &lt;key&gt;</code></td>
+<td>返回该集合的元素个数</td>
+<td></td>
+</tr>
+<tr>
+<td><code>srem &lt;key&gt; &lt;value1&gt; &lt;value2&gt;</code></td>
+<td>删除集合中的某个元素</td>
+<td></td>
+</tr>
+<tr>
+<td><code>spop &lt;key&gt;</code></td>
+<td>随机吐出该集合一个值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>srandmember &lt;key&gt; &lt;n&gt;</code></td>
+<td>随机从集合中取出n个值，不会从集合中删除</td>
+<td></td>
+</tr>
+<tr>
+<td><code>smove &lt;key1&gt; &lt;key2&gt; &lt;value&gt;</code></td>
+<td>将key1中的value 移动到key2 中</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sinter &lt;key1&gt; &lt;key2&gt;</code></td>
+<td>返回两个集合的交集元素</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sunion &lt;key1&gt; &lt;key2&gt;</code></td>
+<td>返回两个集合的并集</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>④ Hash</strong></p>
+<p>键值对集合，类似map &lt;String, Object&gt;</p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hset &lt;key&gt; &lt;filed&gt; &lt;value&gt;</code></td>
+<td>给key集合中的field键赋值value</td>
+<td></td>
+</tr>
+<tr>
+<td><code>hget &lt;key1&gt; &lt;field&gt;</code></td>
+<td>从key1集合field键中取出value</td>
+<td></td>
+</tr>
+<tr>
+<td><code>hmset &lt;key1&gt; &lt;field1&gt; &lt;value1&gt; &lt;field2&gt; &lt;value2&gt;</code></td>
+<td>批量设置hash的值</td>
+<td></td>
+</tr>
+<tr>
+<td><code>hexists &lt;key&gt; &lt;field&gt;</code></td>
+<td>查看key中的field 是否存在</td>
+<td></td>
+</tr>
+<tr>
+<td><code>hkeys &lt;key&gt;</code></td>
+<td>列出key中所有的filed</td>
+<td></td>
+</tr>
+<tr>
+<td><code>hvals &lt;key&gt;</code></td>
+<td>列出该hash集合中所有的value</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>⑤ zset</strong></p>
+<p>与set集合非常相似，<strong>但是每个成员都关联了score，可以用来排序</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>命令</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>zadd&lt;key&gt;&lt;score1&gt;&lt;member1&gt;&lt;score2&gt;&lt;member2&gt;</code></td>
+<td>将一个或多个元素以及score加入zset</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrange&lt;key&gt;&lt;start&gt;&lt;stop&gt; withscore</code></td>
+<td>返回下标在区间内的集合，带有score</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrangebylex &lt;key&gt; &lt;min&gt; &lt;max&gt; [limit offset count]</code></td>
+<td>通过字典区间返回有序集合的成员</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrangebyscore &lt;key&gt; &lt;min&gt; &lt;max&gt;[withscore] [limit offset count]</code></td>
+<td>返回key中 score介于min和max中的成员，升序排列</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrevrangerbyscore &lt;key&gt; &lt;min&gt; &lt;max&gt; [withscore] [limit offset count]</code></td>
+<td>降序</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zincrby &lt;key&gt; &lt;increment&gt; &lt;member&gt;</code></td>
+<td>在key集合中的value上增加increment</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrem &lt;key&gt; &lt;member&gt;</code></td>
+<td>删除key集合下的指定元素</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zcount &lt;key&gt; &lt;min&gt;&lt;member&gt;</code></td>
+<td>计算在有序集合中指定区间分数的成员数</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zcord &lt;key&gt;</code></td>
+<td>获取集合中的元素个数</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zrank &lt;key&gt;&lt;member&gt;</code></td>
+<td>查询value在key中的排名，从0开始</td>
+<td></td>
+</tr>
+<tr>
+<td><code>zlexcount &lt;key&gt; &lt;min&gt; &lt;max&gt;</code></td>
+<td>计算有序集合中指定字典区间内成员数量</td>
+<td></td>
+</tr>
+</tbody></table>
+<br>
+
+<h3 id="Redis数据结构"><a href="#Redis数据结构" class="headerlink" title="Redis数据结构"></a>Redis数据结构</h3><p><strong>① 字符串</strong></p>
+<p>redis设计了一种简单动态字符串(SDS[Simple Dynamic String])作为底层实现:</p>
+<blockquote>
+<br>
+
+<p><strong>说明: redis是使用C语言开发，但C中并没有字符串类型，只能使用指针或符数组的形式表示一个字符串</strong></p>
+</blockquote>
+<p>定义SDS对象，此对象中包含三个属性：</p>
+<ul>
+<li>len: buf中已经占有的长度(表示此字符串的实际长度)</li>
+<li>free: buf中未使用的缓冲区长度</li>
+<li>buf[]: 实际保存字符串数据的地方</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>说明:</strong></p>
+<ul>
+<li><strong>取字符串的长度的时间复杂度为O(1)</strong></li>
+<li>buf[]中依然采用了C语言的以\0结尾, 所以可以直接使用C语言的部分标准C字符串库函数</li>
+</ul>
+<p><strong>空间分配原则:</strong> </p>
+<p><font color="#f00"><strong>当len小于1MB（1024*1024）时增加字符串分配空间大小为原来的2倍，当len大于等于1M时每次分配 额外多分配1M的空间</strong></font></p>
+</blockquote>
+<p>由此可以得出以下特性：</p>
+<ul>
+<li>Redis为字符分配空间的次数是小于等于字符串的长度N，而原C语言中的分配原则必为N, 降低了分配次数提高了追加速度，代价就是多占用一些内存空间，且这些空间不会自动释放</li>
+<li><strong>二进制安全</strong></li>
+<li><strong>高效的计算字符串长度(时间复杂度为O(1))</strong></li>
+<li><strong>高效的追加字符串操作</strong></li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>补充: 二进制安全</strong></p>
+<p><font color="#f00"><strong>一个二进制安全函数，其本质上将操作输入作为原始的、无任何特殊格式意义的数据流。对于每个字符都公平对待，不特殊处理某一个字符</strong></font></p>
+<p>大多数的函数当其使用任何特别的或标记字符，如转义码，那些期望 null 结尾的字符串（如C语言中的字符串），不是二进制安全的。一个可能的例外是该函数的明确的目的是在某二进制字符串搜索某特定字符</p>
+<p>而在处理未知格式的数据（尽管此格式无需保存），例如随意的文件、加密数据及类似情况时，二进制安全功能是必须的。函数必须知道数据长度，以便函数操作整体数据</p>
+<p><strong>例如:</strong></p>
+<p>C语言中的字符串是根据特殊字符<code>\0</code>来判断该字符串是否结束，对于字符串str=”0123456789\0123456789”来说，在C语言里面str的长度就是10（strlen(str)=10），所以strlen()函数不是二进制安全的</p>
+<p>而在Redis中，strlen str的结果是21，是二进制安全的（Redis底层所使用的字符串表示是SDS），它只关心二进制化的字符串，不关心字符串的具体格式，里面有啥字符，只会严格的按照二进制的数据存取，不会以某种特殊格式解析字符串</p>
+</blockquote>
+<p><strong>② 列表(List)</strong></p>
+<p>一个列表结构可以有序地存储多个字符串，拥有例如：lpush lpop rpush rpop等等操作命令</p>
+<p>在3.2版本之前，列表是<strong>使用<code>ziplist</code>和<code>linkedlist</code>实现的</strong>，在这些老版本中，当列表对象同时满足以下两个条件时，列表对象使用ziplist编码：</p>
+<ul>
+<li>列表对象保存的所有字符串元素的长度都小于64字节</li>
+<li>列表对象保存的元素数量小于512个</li>
+</ul>
+<p>当有任一条件不满足时将会进行一次转码，使用linkedlist</p>
+<p>而在3.2版本之后，重新<strong>引入了一个<code>quicklist</code>的数据结构，列表的底层都是由quicklist实现的，它结合了ziplist和linkedlist的优点</strong></p>
+<p>按照原文的解释这种数据结构是<code>A doubly linked list of ziplists</code>, 即一个由ziplist组成的双向链表</p>
+<p><strong>ziplist的结构</strong></p>
+<p>由表头和N个entry节点和压缩列表尾部标识符zlend组成的一个连续的内存块, 然后通过一系列的编码规则，提高内存的利用率，主要用于存储整数和比较短的字符串</p>
+<p>可以看出在插入和删除元素的时候，都需要对内存进行一次扩展或缩减，还要进行部分数据的移动操作，这样会造成更新效率低下的情况</p>
+<p>这篇文章对ziplist的结构讲的还是比较详细的：</p>
+<p><a href="https://blog.csdn.net/yellowriver007/article/details/79021049" target="_blank" rel="noopener">https://blog.csdn.net/yellowriver007/article/details/79021049</a></p>
+<hr>
+<p><strong>linkedlist的结构</strong></p>
+<p>为一个双向链表，和普通的链表定义相同，每个entry包含向前向后的指针，当插入或删除元素的时候，只需要对此元素前后指针操作即可, 所以插入和删除效率很高, 但查询的效率却是O(n)[n为元素的个数]</p>
+<hr>
+<p>我们再来看看上面说的ziplist组成的双向链表是什么？</p>
+<p>实际上，它整体宏观上就是一个链表结构，只不过<strong>每个节点都是以压缩列表ziplist的结构保存着数据，而每个ziplist又可以包含多个entry</strong>, 也可以说一个quicklist节点保存的是一片数据，而不是一个数据</p>
+<p><strong>总结：</strong></p>
+<ul>
+<li>整体上quicklist就是一个双向链表结构，和普通的链表操作一样，插入删除效率很高，但查询的效率却是O(n), 不过，这样的链表访问两端的元素的时间复杂度却是O(1), 所以，对list的操作多数都是poll和push</li>
+<li>每个quicklist节点就是一个ziplist，具备压缩列表的特性</li>
+</ul>
+<p>在redis.conf配置文件中，有两个参数可以优化列表：</p>
+<ul>
+<li>list-max-ziplist-size: 表示每个quicklistNode的字节大小, 默认为-2 表示8KB</li>
+<li>list-compress-depth: 表示quicklistNode节点是否要压缩, 默认是0 表示不压缩</li>
+</ul>
+<p><strong>③ 哈希(hash)</strong></p>
+<p>Redis的散列可以存储多个k-v对之间的映射，散列存储的值既可以是字符串又可以是数字值，并且用户同样可以对散列存储的数字值执行自增操作或者自减操作</p>
+<p>散列可以看作是一个文档或关系数据库里的一行, Hash底层的数据结构实现有两种:</p>
+<ul>
+<li>一种是ziplist，上面已经提到过;</li>
+<li>另一种就是HashTable, 这种结构的时间复杂度为O(1)，但是会消耗比较多的内存空间;</li>
+</ul>
+<p>当存储的数据超过配置的阀值时转用HashTable的结构: 这种转换比较消耗性能，所以应该尽量避免这种转换操作。同时满足以下两个条件时才会使用这种结构:</p>
+<ul>
+<li><strong>当键的个数小于hash-max-ziplist-entries（默认512）</strong></li>
+<li><strong>当所有值都小于hash-max-ziplist-value（默认64）</strong></li>
+</ul>
+<hr>
+<p><strong>④ 集合(Set)</strong></p>
+<p>Redis的集合和列表都可以存储多个字符串，它们之间的不同在于: <strong>列表可以存储多个相同的字符串，而集合则通过使用散列表（HashTable）来保证自已存储的每个字符串都是各不相同的(这些散列表只有键，但没有与键相关联的值)，redis中的集合是无序的</strong></p>
+<p>还存在另一种集合，那就是IntSet，它是用于存储整数的有序集合，里面存放同一类型的整数, 共有三种整数:</p>
+<ul>
+<li>int16_t</li>
+<li>int32_t</li>
+<li>int64_t</li>
+</ul>
+<p>查找的时间复杂度为O(logN)，但是插入的时候，有可能会涉及到升级（比如：原来是int16_t的集合，当插入int32_t的整数的时候就会为每个元素升级为int32_t）<strong>这时候会对内存重新分配，所以此时的时间复杂度就是O(N)级别的了</strong></p>
+<p><strong>注意：intset只支持升级不支持降级操作</strong></p>
+<p>IntSet在redis.conf中也有一个配置参数:</p>
+<ul>
+<li>set-max-intset-entries: 默认值为512, 表示如果entry的个数小于此值，则可以编码成REDIS_ENCODING_INTSET类型存储，节约内存, 否则采用dict的形式存储</li>
+</ul>
+<hr>
+<p><strong>⑤ 有序集合(zset)</strong></p>
+<p>有序集合和散列一样，都用于存储键值对：<strong>有序集合的键被称为成员（member), 每个成员都是各不相同的</strong></p>
+<p>有序集合的值则被称为<strong>分值（score），分值必须为浮点数</strong></p>
+<p>有序集合是redis里面唯一一个<strong>既可以根据成员访问元素(这一点和散列一样),又可以根据分值以及分值的排列顺序访问元素的结构</strong></p>
+<p>它的存储方式也有两种:</p>
+<p><strong>ziplist结构</strong></p>
+<p>与上面的hash中的ziplist类似，member和score<strong>顺序存放并按score的顺序排列</strong></p>
+<p><strong>skiplist与dict的结合</strong></p>
+<p>skiplist是一种跳跃表结构，用于有序集合中快速查找，大多数情况下它的效率与平衡树差不多，但比平衡树实现简单</p>
+<p>redis对普通的跳跃表进行了修改，包括添加span\tail\backward指针、score的值可重复这些设计，从而实现排序功能和反向遍历的功能</p>
+<blockquote>
+<br>
+
+<p><strong>一般跳跃表</strong></p>
+<p><strong>① 实现</strong></p>
+<p>主要包含以下几个部分：</p>
+<ul>
+<li><strong>表头（head）：</strong>指向头节点</li>
+<li><strong>表尾（tail）：</strong>指向尾节点</li>
+<li><strong>节点（node）：</strong>实际保存的元素节点，每个节点可以有多层，层数是在创建此节点的时候随机生成的一个数值，而且每一层都是一个指向后面某个节点的指针</li>
+<li><strong>层（level）：</strong>目前表内节点的最大层数</li>
+<li><strong>长度（length）：</strong>节点的数量</li>
+</ul>
+<p><strong>② 遍历</strong></p>
+<p>跳跃表的遍历总是从高层开始，然后随着元素值范围的缩小，慢慢降低到低层</p>
+<br>
+
+<p>跳跃表的实现原理可以参考：<a href="https://blog.csdn.net/Acceptedxukai/article/details/17333673" target="_blank" rel="noopener">https://blog.csdn.net/Acceptedxukai/article/details/17333673</a></p>
+</blockquote>
+<p>前面也说了，有序列表是使用skiplist和dict结合实现的:</p>
+<ul>
+<li>skiplist用来保障有序性和访问查找性能</li>
+<li>dict就用来存储元素信息，并且dict的访问时间复杂度为O(1)</li>
+</ul>
+<br>
+
+<h3 id="Redis的3个高级数据结构"><a href="#Redis的3个高级数据结构" class="headerlink" title="Redis的3个高级数据结构"></a>Redis的3个高级数据结构</h3><p>除了String，Hash，List，Set，ZSet，Redis还有3个高级数据结构:</p>
+<ul>
+<li>Bitmaps</li>
+<li>Hyperloglogs</li>
+<li>GEO</li>
+</ul>
+<p><strong>① BitMaps</strong></p>
+<p><font color="#f00"><strong>bitmaps不是一个真实的数据结构, 而是String类型上的一组面向bit操作的集合</strong></font></p>
+<p>由于string是二进制安全的blob，并且它们的最大长度是512Mb，所以bitmaps能最大设置2^32个不同的bit</p>
+<p>bit操作被分为两组:</p>
+<ul>
+<li>恒定的单个bit操作，例如把某个bit设置为0或者1, 或者获取某bit的值</li>
+<li>对一组bit的操作。例如给定范围内bit统计（例如人口统计）</li>
+</ul>
+<p>Bitmaps的最大优点就是存储信息时可以节省大量的空间, 例如:</p>
+<p>在一个系统中，不同的用户被一个增长的用户ID表示, 40亿（2^32=4 * 1024 *1024 * 1024 ≈ 40亿）用户只需要512M内存就能记住某种信息，例如用户是否登录过</p>
+<p>Bits设置和获取通过SETBIT 和GETBIT 命令，用法如下:</p>
+<pre><code class="mysql">SETBIT key offset value
+GETBIT key offset</code></pre>
+<p>使用实例：</p>
+<pre><code class="mysql">127.0.0.1:6380&gt; setbit dupcheck 10 1
+(integer) 0
+127.0.0.1:6380&gt; getbit dupcheck 10 
+(integer) 1</code></pre>
+<ul>
+<li>SETBIT命令: 第一个参数是位编号，第二个参数是这个位的值，只能是0或者1, 如果bit地址超过当前string长度，会自动增大string</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>补充: Bitmaps示意图</strong></p>
+<p>初始化一个BitMaps, 长度为6</p>
+<table>
+<thead>
+<tr>
+<th><strong>bit</strong></th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>value</strong></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>对offset为2和4的位置设置为1</p>
+<table>
+<thead>
+<tr>
+<th><strong>bit</strong></th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>value</strong></td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>对offset为10的位置设为1<strong>(需要扩容[自动])</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>bit</strong></th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>value</strong></td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody></table>
+</blockquote>
+<ul>
+<li>GETBIT命令: 指示返回指定位置bit的值, <strong>超过范围（寻址地址在目标key的string长度以外的位）的GETBIT总是返回0</strong></li>
+</ul>
+<br>
+
+<p>三个操作bits组的命令如下:</p>
+<ul>
+<li><strong>BITOP:</strong> 执行两个不同string的位操作，包括AND，OR，XOR和NOT</li>
+<li><strong>BITCOUNT:</strong> 统计位的值为1的数量</li>
+<li><strong>BITPOS:</strong> 寻址第一个为0或者1的bit的位置<ul>
+<li>寻址第一个为1的bit的位置：bitpos dupcheck 1</li>
+<li>寻址第一个为0的bit的位置：bitpos dupcheck 0</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<p>bitmaps一般的使用场景：</p>
+<ul>
+<li>各种实时分析</li>
+<li>存储与对象ID关联的节省空间并且高性能的布尔信息</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>使用场景举例:</strong></p>
+<p>例如，想象一下你想知道访问你的网站的用户的最长连续时间</p>
+<p>你开始计算从0开始的天数，就是你的网站公开的那天，每次用户访问网站时通过SETBIT命令设置bit为1，可以简单的用当前时间减去初始时间并除以3600*24（结果就是你的网站公开的第几天）当做这个bit的位置</p>
+<p>这种方法对于每个用户，都有存储每天的访问信息的一个很小的string字符串, 通过BITCOUN就能轻易统计某个用户连续访问网站的天数</p>
+<p>另外通过调用BITPOS命令，或者客户端获取并分析这个bitmap，就能计算出最长停留时间</p>
+<p><strong>比如Github上面每次提交就出现一个contributions的统计小方块(不确定是否使用Redis实现, 但是可以使用)</strong></p>
+</blockquote>
+<hr>
+<p><strong>② HyperLogLogs</strong></p>
+<p>HyperLogLog是<strong>用于计算唯一事物的概率数据结构（被称为估计集合的基数）</strong></p>
+<p>如果统计唯一项，项目越多，需要的内存就越多, 因为需要记住过去已经看过的项，从而避免多次统计这些项; 然而，有一组算法可以交换内存以获得精确度：在redis的实现中，可以使用标准错误小于1％的估计度量结束</p>
+<p>这个算法的神奇在于: <strong>不再需要与需要统计的项相对应的内存，取而代之，使用的内存一直恒定不变</strong>, 最坏的情况下只需要12k，就可以计算接近2^64个不同元素的基数; 如果HyperLogLog（简称为HLL）已经看到的元素非常少，则需要的内存要要少得多</p>
+<p>在redis中HLL是一个不同的数据结构，它被<strong>编码成Redis字符串</strong>, 因此可以通过调用GET命令序列化一个HLL，也可以通过调用SET命令将其反序列化到redis服务器</p>
+<p>HLL的API类似使用SET数据结构做相同的任务，通过SADD命令把每一个观察的元素添加到一个SET集合，用SCARD命令检查SET集合中元素的数量，集合里的元素都是唯一的，已经存在的元素不会被重复添加</p>
+<p>而使用HLL时并不是真正添加项到HLL中（这一点和SET结构差异很大），因为HLL的数据结构只包含一个不包含实际元素的状态，API是一样的：</p>
+<ul>
+<li>PFADD: 用于添加一个新元素到统计中</li>
+<li>PFCOUNT: 用于获取到目前为止通过PFADD命令添加的<strong>唯一元素个数近似值</strong></li>
+<li>PFMERGE: 执行<strong>多个HLL之间的联合操作</strong></li>
+</ul>
+<pre><code class="mysql">127.0.0.1:6380&gt; PFADD hll a b c d d c
+(integer) 1
+127.0.0.1:6380&gt; PFCOUNT hll
+(integer) 4
+127.0.0.1:6380&gt; PFADD hll e
+(integer) 1
+127.0.0.1:6380&gt; PFCOUNT hll
+(integer) 5</code></pre>
+<blockquote>
+<br>
+
+<p><strong>补充: PFMERGE命令说明</strong></p>
+<p><code>PFMERGE destkey sourcekey [sourcekey ...]</code>: 将N个不同的HyperLogLogs合并为一个</p>
+<p>用法（把hll1和hll2合并到hlls中）：</p>
+<pre><code class="mysql">127.0.0.1:6380&gt; PFADD hll1 1 2 3
+(integer) 1
+127.0.0.1:6380&gt; PFADD hll2 3 4 5
+(integer) 1
+127.0.0.1:6380&gt; PFMERGE hlls hll1 hll2
+OK
+127.0.0.1:6380&gt; PFCOUNT hlls</code></pre>
+</blockquote>
+<p>HLL数据结构的一个使用场景就是:</p>
+<p>计算用户每天在搜索框中执行的唯一查询，即<strong>搜索页面UV统计</strong></p>
+<p><strong>而Bitmaps则用于判断某个用户是否访问过搜索页面, 这是它们用法的不同</strong></p>
+<hr>
+<p><strong>③ GEO</strong></p>
+<p>Redis的GEO特性在 Redis3.2版本中推出，这个功能可以将<strong>用户给定的地理位置（经度和纬度）信息储存起来，并对这些信息进行操作</strong></p>
+<p>GEO相关命令只有6个:</p>
+<ul>
+<li><p><strong>GEOADD：</strong>GEOADD key longitude latitude member [longitude latitude member …]</p>
+<p>将指定的地理空间位置（纬度、经度、名称）添加到指定的key中</p>
+<p>例如：GEOADD city 113.501389 22.405556 shenzhen；</p>
+<blockquote>
+<br>
+
+<p><strong>注意: 取值范围</strong></p>
+<p>经纬度具体的限制，由EPSG:900913/EPSG:3785/OSGEO:41001规定如下：</p>
+<ul>
+<li>有效的经度从-180度到180度</li>
+<li>有效的纬度从-85.05112878度到85.05112878度</li>
+</ul>
+<p>当坐标位置超出上述指定范围时，该命令将会返回一个错误</p>
+</blockquote>
+</li>
+<li><p><strong>GEOHASH：</strong>GEOHASH key member [member …]</p>
+<p>返回一个或多个位置元素的标准Geohash值，它可以在<a href="http://geohash.org/使用" target="_blank" rel="noopener">http://geohash.org/使用</a></p>
+<p>例子：<a href="http://geohash.org/sqdtr74hyu0" target="_blank" rel="noopener">http://geohash.org/sqdtr74hyu0</a></p>
+<p>可以通过谷歌了解Geohash原理，或者Geohash基本原理：<a href="https://www.cnblogs.com/tgzhu/p/6204173.html" target="_blank" rel="noopener">https://www.cnblogs.com/tgzhu/p/6204173.html</a></p>
+</li>
+<li><p><strong>GEOPOS：</strong>GEOPOS key member [member …]</p>
+<p>从key里返回所有给定位置元素的位置（经度和纬度）</p>
+</li>
+<li><p><strong>GEODIST：</strong>GEODIST key member1 member2 [unit]</p>
+<p>返回两个给定位置之间的距离</p>
+<p>GEODIST命令在计算距离时会<strong>假设地球为完美的球形</strong>。在极限情况下，这一假设最大会造成0.5%的误差</p>
+<p>指定单位的参数unit必须是以下单位的其中一个：</p>
+<ul>
+<li>m 表示单位为米（默认）</li>
+<li>km 表示单位为千米</li>
+<li>mi 表示单位为英里</li>
+<li>ft 表示单位为英尺</li>
+</ul>
+</li>
+<li><p><strong>GEORADIUS：</strong>GEORADIUS key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count]</p>
+<p>以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素</p>
+<p>这个命令可以查询某城市的周边城市群</p>
+</li>
+<li><p><strong>GEORADIUSBYMEMBER：</strong>GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count]</p>
+<p>这个命令和GEORADIUS命令一样，都可以找出位于指定范围内的元素，但是GEORADIUSBYMEMBER的中心点是由给定的位置元素决定的，而不是像 GEORADIUS那样，使用输入的经度和纬度来决定中心点</p>
+<p>指定成员的位置被用作查询的中心</p>
+</li>
+</ul>
+<br>
+
+<p>GEO的6个命令用法示例如下：</p>
+<pre><code class="mysql">redis&gt; GEOADD Sicily 13.361389 38.115556 &quot;Palermo&quot; 15.087269 37.502669 &quot;Catania&quot;
+(integer) 2
+
+redis&gt; GEOHASH Sicily Palermo Catania
+1) &quot;sqc8b49rny0&quot;
+2) &quot;sqdtr74hyu0&quot;
+
+redis&gt; GEOPOS Sicily Palermo Catania NonExisting
+1) 1) &quot;13.361389338970184&quot;
+   2) &quot;38.115556395496299&quot;
+2) 1) &quot;15.087267458438873&quot;
+   2) &quot;37.50266842333162&quot;
+3) (nil)
+
+redis&gt; GEODIST Sicily Palermo Catania
+&quot;166274.15156960039&quot;
+
+redis&gt; GEORADIUS Sicily 15 37 100 km
+1) &quot;Catania&quot;
+redis&gt; GEORADIUS Sicily 15 37 200 km
+1) &quot;Palermo&quot;
+2) &quot;Catania&quot;
+
+redis&gt; GEORADIUSBYMEMBER Sicily Agrigento 100 km
+1) &quot;Agrigento&quot;
+2) &quot;Palermo&quot;</code></pre>
+<br>
+
+<h3 id="Redis设计"><a href="#Redis设计" class="headerlink" title="Redis设计"></a>Redis设计</h3><p>见: <a href="https://jasonkayzk.github.io/2019/12/30/阿里云Redis开发规范/">阿里云Redis开发规范</a></p>
+<br>
+
+<h3 id="Redis的hotkey"><a href="#Redis的hotkey" class="headerlink" title="Redis的hotkey"></a>Redis的hotkey</h3><p>当使用redis集群来作为缓存的时候，如果在业务上碰到大促，或者正好有一个非常热的帖子的时候，对应的缓存会被频繁访问</p>
+<p>而这个缓存会落在redis集群的同一台集群上，导致数据频繁的访问同一台机器，造成集群性能的不均衡, 这个就是所谓的hot key的问题</p>
+<p><strong>解决方案</strong></p>
+<p>如果要频繁的访问同一个key，但是又不想让这个key一直落到同一台机器上，我们就需要在其他机器上复制这个key的备份，让请求进来的时候，会去随机的到各台机器上访问缓存, 所以剩下的问题就是如何做到让请求平均的分布到各台机器上; 简单的，假设有N台机器，当请求到来的时候，我们随机从1到N之间随机选择一台机器进行访问</p>
+<p>如何选择呢？因为redis集群中其实是根据key来做对应的，所以我们可以产生一个随机值作为key的后缀，由key变成key_suffix</p>
+<p>同时，为了防止有相同的后缀在做了映射之后仍旧会集中在某些机器上，一般需要把随机值的上限放大，比如取集群数量N的2倍</p>
+<p>因此有了最简单的版本：</p>
+<pre><code class="java">int M = N * 2 // N为随机数上限
+Random random = new Random(0, M) // 随机 0 ~ 2*N
+String bakHotKey = hotKey + “_” + random // 增加映射后缀为随机数
+// 缓存中获取(由于是随机访问, 不一定可以命中, 但是基本保证了集群中都能缓存数据)
+data = redis.GET(bakHotKey) 
+if (data == NULL) { // 缓存未命中, 数据库获取
+    data = GetFromDB()
+    redis.SET(bakHotKey, expireTime)
+}</code></pre>
+<p><strong>解决过期带来的滚雪球效应</strong></p>
+<p>既然是hot key，短时间内必然有大量的访问请求， 上边的代码设置了redis集群中的各台机器都有相同的过期时间,  <strong>如果redis集群中的缓存集中过期，必然都会把压力转移到DB上</strong></p>
+<p>为了防止这种雪崩效应，需要将各台机器的过期时间都尽量设置的不一样。所以可以在过期时间上再加上一个随机值，有了第二个版本</p>
+<pre><code class="java">int M = N * 2 // N为随机数上限
+Random random = new Random(0, M) // 随机 0 ~ 2*N
+String bakHotKey = hotKey + “_” + random // 增加映射后缀为随机数
+// 缓存中获取(由于是随机访问, 不一定可以命中, 但是基本保证了集群中都能缓存数据)
+data = redis.GET(bakHotKey) 
+if (data == NULL) { // 缓存未命中, 数据库获取
+    data = GetFromDB()
+    redis.SET(bakHotKey, expireTime + new Random().nextInt(0 ,5));
+}</code></pre>
+<p>为了进一步提升性能，既然集群中的机器都有这个key的备份，为什么每台机器上bakHotKey不存在的时候都要去访问DB呢， 完全可以<strong>在redis自己内部解决</strong></p>
+<p>因此仍旧可以保存一份原来的hotKey在缓存中，所有的bakHotKey失效的时候，<strong>都从hotKey去同步数据; 只有当hotKey也失效的时候，才去DB中访问数据</strong>, 这样即使先后有好几台机器里边的缓存失效了，只有一台机器真正的去DB访问了数据，其他的redis都从之后的hotKey的缓存中备份一份数据出来</p>
+<pre><code class="java">int M = N * 2 // N为随机数上限
+Random random = new Random(0, M) // 随机 0 ~ 2*N
+String bakHotKey = hotKey + “_” + random // 增加映射后缀为随机数
+// 拉取备份的bakHotKey
+var data = redis.GET(bakHotKey)
+if (data == NULL) {
+    // bakHotKey失效，尝试拉取hotKey
+    data = redis.GET(hotKey)
+    if (data == NULL) {
+        // hotKey也失效，从DB拉取
+        data = GetFromDB()
+        // 写入主数据
+        redis.SET(hotKey, data, expireTime + longerTime)
+        // 写入备份数据
+        redis.SET(bakHotKey, data, expireTime + new Random().nextInt(0 ,5))
+    } else {
+        // 否则只需要直接写入bakHotKey，无需访问DB
+         redis.SET(bakHotKey, data, expireTime + new Random().nextInt(0 ,5))
+    }
+}</code></pre>
+<hr>
+<p><strong>hotkey检测</strong></p>
+<p>Redis 4.0新增了一类内存逐出策略：<strong>LFU（Least Frequently Used）</strong></p>
+<p>LFU表示最不经常使用, 相比LRU，LRU对于不怎么使用的key，如果偶然用了一下，也是类似激活了一下这个key，不会短时间内删除；但是LFU是统计key的总体的使用频率，删除使用频率最小的key</p>
+<p>redis 4.0.3提供了redis-cli的热点key发现功能，执行redis-cli时加上–hotkeys选项即可，示例如下：</p>
+<pre><code class="bash">$./redis-cli --hotkeys
+
+# Scanning the entire keyspace to find hot keys as well as
+# average sizes per key type.  You can use -i 0.1 to sleep 0.1 sec
+# per 100 SCAN commands (not usually needed).
+
+[00.00%] Hot key &#39;counter:000000000002&#39; found so far with counter 87
+[00.00%] Hot key &#39;key:000000000001&#39; found so far with counter 254
+[00.00%] Hot key &#39;mylist&#39; found so far with counter 107
+[00.00%] Hot key &#39;key:000000000000&#39; found so far with counter 254
+[45.45%] Hot key &#39;counter:000000000001&#39; found so far with counter 87
+[45.45%] Hot key &#39;key:000000000002&#39; found so far with counter 254
+[45.45%] Hot key &#39;myset&#39; found so far with counter 64
+[45.45%] Hot key &#39;counter:000000000000&#39; found so far with counter 93
+
+-------- summary -------
+
+Sampled 22 keys in the keyspace!
+hot key found with counter: 254    keyname: key:000000000001
+hot key found with counter: 254    keyname: key:000000000000
+hot key found with counter: 254    keyname: key:000000000002
+hot key found with counter: 107    keyname: mylist
+hot key found with counter: 93    keyname: counter:000000000000
+hot key found with counter: 87    keyname: counter:000000000002
+hot key found with counter: 87    keyname: counter:000000000001
+hot key found with counter: 64    keyname: myset</code></pre>
+<br>
+
+<h3 id="Redis事务"><a href="#Redis事务" class="headerlink" title="Redis事务"></a>Redis事务</h3><p><font color="#f00"><strong>Redis 事务的本质是一组命令的集合</strong></font></p>
+<p>事务支持一次执行多个命令，一个事务中所有命令都会被序列化, 在事务执行过程，会按照顺序串行化执行队列中的命令，其他客户端提交的命令请求不会插入到事务执行命令序列中</p>
+<blockquote>
+<br>
+
+<p><strong>总结</strong></p>
+<p>Redis事务就是一次性、顺序性、排他性的执行一个队列中的一系列命令</p>
+<p><strong>主要作用：</strong>序列化操作，串联多个命令防止别的命令插队</p>
+<p><strong>Redis使用乐观锁：redis就是利用check-and-set机制实现事务</strong></p>
+</blockquote>
+<blockquote>
+<br>
+
+<p><strong>回顾: 乐观锁与悲观锁</strong></p>
+<ul>
+<li>悲观锁：每次拿到数据的时候都会上锁，或者等待别人处理完再去拿锁，传统的关系型数据库里边很多用到了这种锁机制，比如行锁、表锁、读锁、写锁</li>
+<li>乐观锁：每次拿数据的时候总认为别人不会修改数据，所以不会上锁。但是更新的时候回去判断别人有没有更改数据，使用版本号机制。乐观锁适用于多读的应用类型，可以提高吞吐量</li>
+</ul>
+</blockquote>
+<p>三大特性：</p>
+<ul>
+<li><strong>单独的隔离操作：事务中的所有命令都会序列化，按顺序执行。不会被其他客户端打断</strong></li>
+<li><strong>没有隔离级别概念：批量操作在发送 EXEC 命令前被放入队列缓存，并不会被实际执行，也就不存在事务内的查询要看到事务里的更新，事务外查询不能看到</strong></li>
+<li><strong>不能保证原子性：单条命令是原子性执行的，但事务不保证原子性，且没有回滚; 事务中任意命令执行失败，其余的命令仍会被执行</strong></li>
+</ul>
+<br>
+
+<p><strong>Redis事务的三个阶段：</strong></p>
+<ul>
+<li>开始事务</li>
+<li>命令入队</li>
+<li>执行事务</li>
+</ul>
+<p><strong>Redis事务相关命令：</strong></p>
+<ul>
+<li><code>watch key1 key2 ...</code>: 监视一或多个key, 如果在<strong>事务执行之前，被监视的key被其他命令改动，则事务被打断 （ 类似乐观锁 ）</strong></li>
+<li><code>multi</code>: 标记一个<strong>事务块的开始</strong>（ queued ）</li>
+<li><code>exec</code>: <strong>执行所有事务块的命令 （ 一旦执行exec后，之前加的监控锁都会被取消掉 ）</strong>　</li>
+<li><code>discard</code>: <strong>取消事务，放弃事务块中的所有命令</strong></li>
+<li><code>unwatch</code>: <strong>取消watch对所有key的监控</strong></li>
+</ul>
+<br>
+
+<p><strong>Redis事务使用案例</strong></p>
+<p><strong>① 正常执行</strong></p>
+<pre><code class="mysql">localhost:0&gt;MULTI # 开启事务
+&quot;OK&quot;
+localhost:0&gt;set k1 v1 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k2 v2 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;get k2 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k3 v3 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;exec # 执行事务
+# 输出结果
+ 1)  &quot;OK&quot; 
+ 2)  &quot;OK&quot;
+ 3)  &quot;v2&quot;
+ 4)  &quot;OK&quot;</code></pre>
+<p><strong>② 放弃事务</strong></p>
+<pre><code class="mysql">localhost:0&gt;multi # 开启事务
+&quot;OK&quot;
+localhost:0&gt;set k1 v1 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k2 v2 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k3 v3 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;discard # 取消事务
+&quot;OK&quot;
+localhost:0&gt;get k2 # 数据未被加入
+null</code></pre>
+<p><strong>③ 事务队列中存在命令性错误</strong></p>
+<p><font color="#f00"><strong>若在事务队列中存在命令性错误（类似于编译性错误），则执行EXEC命令时，所有命令都不会执行</strong></font></p>
+<pre><code class="mysql">localhost:0&gt;multi # 开启事务
+&quot;OK&quot;
+localhost:0&gt;set k1 v1 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k2 v2 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k3 v3 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;getset k3 # 错误命令
+&quot;ERR wrong number of arguments for &#39;getset&#39; command&quot;
+localhost:0&gt;set k4 v4 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k5 v5 # 命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;exec # 执行事务报错!
+&quot;EXECABORT Transaction discarded because of previous errors.&quot;
+localhost:0&gt;get k5 # 命令未执行
+null</code></pre>
+<p><strong>④ 事务队列中存在语法性错误</strong></p>
+<p><font color="#f00"><strong>若在事务队列中存在语法性错误（类似于运行时异常），则执行EXEC命令时，其他正确命令会被执行，错误命令抛出异常</strong></font></p>
+<pre><code class="mysql">localhost:0&gt;set k1 v1 # 事务前设置k1 - v1
+&quot;OK&quot;
+localhost:0&gt;multi # 开启事务
+&quot;OK&quot;
+localhost:0&gt;incr k1 # 错误命令, 对v1进行加一操作
+&quot;QUEUED&quot;
+localhost:0&gt;set k2 v2 # 正确命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;set k3 v3 # 正确命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;get k3 # 正确命令入队
+&quot;QUEUED&quot;
+localhost:0&gt;exec # 执行事务
+ 1)  &quot;ERR value is not an integer or out of range&quot; # 第一条命令报错
+ 2)  &quot;OK&quot; # 其他命令正常执行
+ 3)  &quot;OK&quot;
+ 4)  &quot;v3&quot;</code></pre>
+<p><strong>⑤ 使用watch</strong></p>
+<ul>
+<li><p>案例一：使用watch检测balance，事务期间balance数据未变动，事务执行成功</p>
+<pre><code class="mysql">localhost:0&gt;set balance 100 # balance初始值为100
+&quot;OK&quot;
+localhost:0&gt;watch balance # 检测可用余额数
+&quot;OK&quot;
+localhost:0&gt;multi # 开启事务
+&quot;OK&quot;
+localhost:0&gt;decrby balance 20 # 消费20后, 可用余额数-20
+&quot;QUEUED&quot;
+localhost:0&gt;incrby debt 20 # 应还余额 + 20
+&quot;QUEUED&quot;
+localhost:0&gt;exec
+ 1)  &quot;80&quot;
+ 2)  &quot;20&quot;</code></pre>
+</li>
+<li><p>案例二：使用watch检测balance，在开启事务后（标注1处），在新窗口执行标注2中的操作，更改balance的值，模拟其他客户端在事务执行期间更改watch监控的数据，然后再执行标注1后命令，执行EXEC后，事务未成功执行</p>
+<pre><code class="mysql"># 客户端-1
+localhost:0&gt;set balance 100 # balance初始值为100
+&quot;OK&quot;
+localhost:0&gt;watch balance # 检测可用余额数
+&quot;OK&quot;
+localhost:0&gt;multi # 客户端-1开启事务(标注1)
+&quot;OK&quot;
+
+# 客户端-2执行
+localhost:0&gt;get balance
+&quot;100&quot;
+localhost:0&gt;set balance 800 # 客户端-2修改balance, 此时客户端-1开启了事务
+&quot;OK&quot;
+
+# 客户端-1继续
+localhost:0&gt;decrby balance 20 # 消费20后, 可用余额数-20
+&quot;QUEUED&quot;
+localhost:0&gt;incrby debt 20 # 应还余额 + 20
+&quot;QUEUED&quot;
+localhost:0&gt;exec
+(nil) # 事务失败
+localhost:0&gt;get balance # balance值已经被修改
+&quot;800&quot;</code></pre>
+<p><strong>一但执行 EXEC 开启事务的执行后，无论事务使用执行成功， WARCH 对变量的监控都将被取消, 故当事务执行失败后，需重新执行WATCH命令对变量进行监控，并开启新的事务进行操作</strong></p>
+</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>watch总结:</strong></p>
+<p>watch指令类似于乐观锁，在事务提交时，<font color="#f00"><strong>如果watch监控的多个KEY中任何KEY的值已经被其他客户端更改，则使用EXEC执行事务时，事务队列将不会被执行，同时返回Null, multi-bulk应答以通知调用者事务执行失败</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="Redis订阅发布"><a href="#Redis订阅发布" class="headerlink" title="Redis订阅发布"></a>Redis订阅发布</h3><p>发布订阅是一种应用程序系统之间通讯，传递数据的技术手段, 特别是在异构（不<br> 同语言）系统之间作用非常明显, 发布订阅可以实现应用系统之间的解耦合</p>
+<p>除了传统的比如RabbitMQ, Kafka等消息队列可以实现发布/订阅(Pub/Sub)之外, Redis也可以实现Pub/Sub服务</p>
+<p>Redis通过<code>publish和subscribe</code>命令实现订阅和发布的功能, Redis将信息类型称为通道(channel); </p>
+<p>订阅者可以通过subscribe命令向redis-server订阅自己感兴趣的消息类型; 当发布者通过publish命令向redis-server发送特定类型的信息时，订阅该消息类型的全部订阅者都会收到此消息</p>
+<p><strong>Redis案例</strong></p>
+<p>客户端-1订阅cctv1:</p>
+<pre><code class="mysql">127.0.0.1:6379&gt; subscribe cctv1
+Reading messages... (press Ctrl-C to quit)
+1) &quot;subscribe&quot;
+2) &quot;CCTV1&quot;
+3) (integer) 1</code></pre>
+<p>客户端-2订阅cctv1和cctv2:</p>
+<pre><code class="mysql">127.0.0.1:6379&gt; subscribe cctv1 cctv2
+Reading messages... (press Ctrl-C to quit)
+1) &quot;subscribe&quot;
+2) &quot;CCTV1&quot;
+3) (integer) 1
+1) &quot;subscribe&quot;
+2) &quot;CCTV2&quot;
+3) (integer) 2</code></pre>
+<p>客户端-3订阅发布到模式(使用psubscribe来订阅一个模式):</p>
+<pre><code class="mysql">127.0.0.1:6379&gt; psubscribe cctv*
+Reading messages... (press Ctrl-C to quit)
+1) &quot;psubscribe&quot;
+2) &quot;CCTV*&quot;
+3) (integer) 1</code></pre>
+<p>现在客户端-4向服务器推送了关于cctv1频道的信息:</p>
+<pre><code class="mysql">127.0.0.1:6379&gt; publish CCTV1 &quot;cctv1 is good&quot;
+(integer) 2</code></pre>
+<p>则三个客户端都会获得:</p>
+<pre><code class="mysql"># 客户端-1
+1) &quot;message&quot;
+2) &quot;cctv1&quot;
+3) &quot;cctv1 is good&quot;
+
+# 客户端-2
+1) &quot;message&quot;
+2) &quot;cctv1&quot;
+3) &quot;cctv1 is good&quot;
+
+# 客户端-3
+1) &quot;pmessage&quot;
+2) &quot;cctv*&quot;
+3) &quot;cctv1&quot;
+4) &quot;cctv1 is good&quot;</code></pre>
+<p><strong>Pub/Sub在Java中的实现</strong></p>
+<p>导入Redis驱动</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+    &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+    &lt;version&gt;3.2.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Redis驱动包提供了一个抽象类: <code>JedisPubSub</code>, 继承这个类就完成了对客户端对订阅的监听</p>
+<p>示例代码:</p>
+<p>RedisMsgPubSubListener.java</p>
+<pre><code class="java">package top.jasonkayzk.redismq.listener;
+
+import redis.clients.jedis.JedisPubSub;
+
+/**
+ * Redis发布订阅消息监听器
+ *
+ * @author zk
+ */
+public class RedisMsgPubSubListener extends JedisPubSub {
+
+    @Override
+    public void unsubscribe() {
+        super.unsubscribe();
+    }
+
+    @Override
+    public void unsubscribe(String... channels) {
+        super.unsubscribe(channels);
+    }
+
+    @Override
+    public void subscribe(String... channels) {
+        super.subscribe(channels);
+    }
+
+    @Override
+    public void psubscribe(String... patterns) {
+        super.psubscribe(patterns);
+    }
+
+    @Override
+    public void punsubscribe() {
+        super.punsubscribe();
+    }
+
+    @Override
+    public void punsubscribe(String... patterns) {
+        super.punsubscribe(patterns);
+    }
+
+    /**
+     * 订阅频道时的回调
+     *
+     * @param channel            频道
+     * @param subscribedChannels 订阅成功的频道
+     */
+    @Override
+    public void onSubscribe(String channel, int subscribedChannels) {
+        System.out.println(String.format(&quot;subscribe redis channel success, channel %s, subscribedChannels %d&quot;,
+                channel, subscribedChannels));
+    }
+
+    /**
+     * 监听到订阅频道接受到消息时的回调
+     *
+     * @param channel 订阅频道
+     * @param message 频道推送
+     */
+    @Override
+    public void onMessage(String channel, String message) {
+        System.out.println(String.format(&quot;receive redis published message, channel %s, message %s&quot;, channel, message));
+    }
+
+    /**
+     * 取消订阅频道时的回调
+     *
+     * @param channel            频道
+     * @param subscribedChannels 订阅成功的频道
+     */
+    @Override
+    public void onUnsubscribe(String channel, int subscribedChannels) {
+        System.out.println(String.format(&quot;unsubscribe redis channel, channel %s, subscribedChannels %d&quot;,
+                channel, subscribedChannels));
+    }
+
+    /**
+     * 监听到订阅模式接受到消息时的回调
+     *
+     * @param pattern 订阅模式
+     * @param channel 订阅频道
+     * @param message 频道推送
+     */
+    @Override
+    public void onPMessage(String pattern, String channel, String message) {
+        System.out.println(String.format(&quot;onPMessage: pattern[%s], channel[%s], message[%s]&quot;, pattern, channel, message));
+    }
+
+    /**
+     * 取消订阅模式时的回调
+     *
+     * @param pattern            订阅模式
+     * @param subscribedChannels 订阅的频道
+     */
+    @Override
+    public void onPUnsubscribe(String pattern, int subscribedChannels) {
+        System.out.println(String.format(&quot;onPUnsubscribe: pattern[%s], subscribedChannels[%s]&quot;, pattern, subscribedChannels));
+    }
+
+    /**
+     * 订阅频道模式时的回调
+     *
+     * @param pattern            订阅模式
+     * @param subscribedChannels 订阅的频道
+     */
+    @Override
+    public void onPSubscribe(String pattern, int subscribedChannels) {
+        System.out.println(String.format(&quot;onPSubscribe: pattern[%s], subscribedChannels[%s]&quot;, pattern, subscribedChannels));
+    }
+
+}
+</code></pre>
+<blockquote>
+<br>
+
+<p><strong>方法说明:</strong></p>
+<ul>
+<li>监听到订阅模式接受到消息时的回调 (onPMessage)</li>
+<li>监听到订阅频道接受到消息时的回调 (onMessage )</li>
+<li>订阅频道时的回调( onSubscribe )</li>
+<li>取消订阅频道时的回调( onUnsubscribe )</li>
+<li>订阅频道模式时的回调 ( onPSubscribe )</li>
+<li>取消订阅模式时的回调( onPUnsubscribe )</li>
+</ul>
+</blockquote>
+<p>发布者: RedisPub</p>
+<pre><code class="java">package top.jasonkayzk.redismq.pub;
+
+import redis.clients.jedis.Jedis;
+
+/**
+ * 发布者
+ *
+ * @author zk
+ */
+public class RedisPub {
+
+    public static void main(String[] args) {
+        publish();
+    }
+
+    public static void publish() {
+        System.out.println(&quot;发布者&quot;);
+        Jedis client = null;
+        try {
+            // redis服务地址和端口号
+            client = new Jedis(&quot;127.0.0.1&quot;, 6379, 0);
+
+            // client客户端配置两个推送channel
+            client.publish( &quot;news.share&quot;, &quot;新闻分享&quot;);
+            client.publish( &quot;news.blog&quot;, &quot;新闻博客&quot;);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (client != null) {
+                client.disconnect();
+            }
+        }
+    }
+
+}</code></pre>
+<p>订阅者: RedisSub</p>
+<pre><code class="java">package top.jasonkayzk.redismq.sub;
+
+import redis.clients.jedis.Jedis;
+import top.jasonkayzk.redismq.listener.RedisMsgPubSubListener;
+
+/**
+ * 订阅者
+ *
+ * @author zk
+ */
+public class RedisSub {
+
+    public static void main(String[] args) {
+        subscribe();
+    }
+
+    public static void subscribe() {
+        System.out.println(&quot;订阅者&quot;);
+        Jedis client = null;
+        try {
+            // redis服务地址和端口号
+            client = new Jedis(&quot;127.0.0.1&quot;, 6379, 0);
+            // 创建一个Listener
+            RedisMsgPubSubListener listener = new RedisMsgPubSubListener();
+            // 客户端配置监听两个channel: news.share和news.blog
+            // 真正收到推送后在listener中处理回调逻辑
+            client.subscribe(listener, &quot;news.share&quot;, &quot;news.blog&quot;);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (client != null) {
+                client.disconnect();
+            }
+        }
+    }
+
+}</code></pre>
+<p>之后先运行订阅者进行订阅, 然后运行发布者即可收到消息:</p>
+<pre><code>订阅者
+subscribe redis channel success, channel news.share, subscribedChannels 1
+subscribe redis channel success, channel news.blog, subscribedChannels 2
+receive redis published message, channel news.share, message 新闻分享
+receive redis published message, channel news.blog, message 新闻博客</code></pre><blockquote>
+<br>
+
+<p><strong>运行机制说明:</strong></p>
+<p>RedisPub通过Jedis客户端注册并发布消息到指定的channel, 之后RedisSub通过Listener类中的subscribe()方法注册订阅;</p>
+<p><font color="#f00"><strong>Listener收到发布事件之后, 通过OnMessage等回调函数完成逻辑处理(即RedisSub仅仅完成订阅, 真正执行逻辑的是Listener)</strong></font></p>
+<p>源码见: <a href="https://github.com/JasonkayZK/Java_Samples/tree/redis-pub/sub" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Samples/tree/redis-pub/sub</a></p>
+</blockquote>
+<br>
+
+<h3 id="Redis实现分布式锁"><a href="#Redis实现分布式锁" class="headerlink" title="Redis实现分布式锁"></a>Redis实现分布式锁</h3><p>在Java并发编程中，我们通过锁，来避免由于竞争而造成的数据不一致问题。通常，我们以<code>synchronized 、Lock</code>来使用它</p>
+<p>但是Java中的锁，只能保证在同一个JVM进程内中执行。如果在分布式集群环境下呢？</p>
+<p>分布式锁，是一种思想，它的实现方式有很多。比如，我们将沙滩当做分布式锁的组件，那么它看起来应该是这样的：</p>
+<ul>
+<li><strong>加锁</strong></li>
+</ul>
+<p>在沙滩上踩一脚，留下自己的脚印，就对应了加锁操作。其他进程或者线程，看到沙滩上已经有脚印，证明锁已被别人持有，则等待</p>
+<ul>
+<li><strong>解锁</strong></li>
+</ul>
+<p>把脚印从沙滩上抹去，就是解锁的过程</p>
+<ul>
+<li><strong>锁超时</strong></li>
+</ul>
+<p>为了避免死锁，我们可以设置一阵风，在单位时间后刮起，将脚印自动抹去</p>
+<p>分布式锁的实现有很多，比如基于数据库、memcached、Redis、系统文件、zookeeper等。它们的核心的理念跟上面的过程大致相同</p>
+<p><strong>① 单节点Redis实现一个简单的分布式锁</strong></p>
+<ul>
+<li><strong>加锁</strong></li>
+</ul>
+<p><font color="#f00"><strong>加锁实际上就是在redis中，给Key键设置一个值，为避免死锁，并给定一个过期时间:</strong></font></p>
+<p><code>SET lock_key lock_value NX PX 5000</code></p>
+<p>值得注意的是：</p>
+<ul>
+<li><code>lock_value</code> 是客户端生成的唯一的字符串</li>
+<li><code>NX</code> 代表只在键不存在时，才对键进行设置操作</li>
+<li><code>PX 5000</code> 设置键的过期时间为5000毫秒</li>
+</ul>
+<p>这样，如果上面的命令执行成功，则证明客户端获取到了锁</p>
+<ul>
+<li><strong>解锁</strong></li>
+</ul>
+<p>解锁的过程就是将Key键删除, 但也不能乱删，不能说客户端1的请求将客户端2的锁给删除掉, 这时候<code>lock_value</code>的作用就体现出来</p>
+<p>为了保证解锁操作的原子性，可以用LUA脚本完成这一操作: 先判断当前锁的字符串是否与传入的值相等，是的话就删除Key，解锁成功</p>
+<pre><code class="lua">if redis.call(&#39;get&#39;,KEYS[1]) == ARGV[1] then 
+   return redis.call(&#39;del&#39;,KEYS[1]) 
+else
+   return 0 
+end</code></pre>
+<ul>
+<li><strong>实现</strong></li>
+</ul>
+<p>首先加入jedis依赖</p>
+<pre><code class="java">        &lt;dependency&gt;
+            &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+            &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+            &lt;version&gt;3.2.0&lt;/version&gt;
+        &lt;/dependency&gt;</code></pre>
+<p>分布式锁</p>
+<p>SinglePointRedisLock.java</p>
+<pre><code class="java">package top.jasonkayzk.redislock.singlepoint;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.SetParams;
+
+import java.util.Collections;
+
+/**
+ * 单点Redis分布式锁
+ * &lt;p&gt;
+ * 未实现: 可重入, 键值过期等问题
+ *
+ * @author zk
+ */
+public class SinglePointRedisLock {
+
+    /**
+     * 锁键
+     */
+    private final String LOCK_KEY = &quot;redis_lock&quot;;
+
+    /**
+     * 锁过期时间
+     */
+    protected final long internalLockLeaseTime = 30000;
+
+    /**
+     * 获取锁的超时时间
+     */
+    private final long TIMEOUT = 999999;
+
+    /**
+     * 加锁
+     *
+     * @param id 锁Id
+     * @return 是否加锁成功
+     */
+    public boolean lock(String id) {
+        try (Jedis jedis = new Jedis(&quot;127.0.0.1&quot;, 6379, 0)) {
+            long start = System.currentTimeMillis();
+
+            // SET命令的参数
+            SetParams params = SetParams.setParams().nx().px(internalLockLeaseTime);
+
+            for (; ; ) {
+                // SET命令返回OK ，则证明获取锁成功
+                String lock = jedis.set(LOCK_KEY, id, params);
+                if (&quot;OK&quot;.equals(lock)) {
+                    return true;
+                }
+
+                // 否则循环等待，在timeout时间内仍未获取到锁，则获取失败
+                long l = System.currentTimeMillis() - start;
+                if (l &gt;= TIMEOUT) {
+                    return false;
+                }
+
+                // 模拟自旋锁
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 解锁
+     *
+     * @param id 锁Id
+     * @return 是否成功解锁
+     */
+    public boolean unlock(String id) {
+        try (Jedis jedis = new Jedis(&quot;127.0.0.1&quot;, 6379, 0)) {
+            String script =
+                    &quot;if redis.call(&#39;get&#39;,KEYS[1]) == ARGV[1] then&quot; +
+                            &quot;   return redis.call(&#39;del&#39;,KEYS[1]) &quot; +
+                            &quot;else&quot; +
+                            &quot;   return 0 &quot; +
+                            &quot;end&quot;;
+
+            // 使用jedis.eval执行Lua脚本, 保证解锁的原子性
+            Object result = jedis.eval(script, Collections.singletonList(LOCK_KEY),
+                    Collections.singletonList(id));
+            return &quot;1&quot;.equals(result.toString());
+        }
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p><strong>① 加锁过程lock()</strong></p>
+<p><font color="#f00"><strong>加锁的过程很简单，就是通过SET指令来设置值，成功则返回；否则就循环等待，在timeout时间内仍未获取到锁，则获取失败</strong></font></p>
+<p><strong>② 解锁过程unlock()</strong></p>
+<p><font color="#f00"><strong>解锁通过<code>jedis.eval</code>来执行一段Lua脚本, 保证了解锁过程的原子性; 将锁的Key键和生成的字符串当做参数传进来</strong></font></p>
+</blockquote>
+<ul>
+<li><strong>测试</strong></li>
+</ul>
+<p>在多线程环境下进行测试: 开启1000个线程，对count进行累加</p>
+<p>调用的时候，关键是唯一字符串的生成, 这里者使用的是Java自带的UUID生成, 当然你也可以使用<code>Snowflake</code>算法</p>
+<blockquote>
+<br>
+
+<p><strong>具体UUID生成算法见:</strong> <a href="https://jasonkayzk.github.io/2020/02/09/UUID生成算法-UUID还是snowflake/">UUID生成算法-UUID还是snowflake</a></p>
+</blockquote>
+<p>SinglePointRedisLockTest.java</p>
+<pre><code class="java">package top.jasonkayzk.redislock.singlepoint;
+
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 单节点Redis分布式锁测试类
+ *
+ * @author zk
+ */
+public class SinglePointRedisLockTest {
+
+    SinglePointRedisLock redisLock = new SinglePointRedisLock();
+
+    private int count = 0;
+
+    public static void main(String[] args) throws InterruptedException {
+        new SinglePointRedisLockTest().test();
+    }
+
+    public void test() throws InterruptedException {
+        int clientCount = 1000;
+
+        CountDownLatch latch = new CountDownLatch(clientCount);
+
+        // 创建client大小的连接池
+        ExecutorService executorService = Executors.newFixedThreadPool(clientCount);
+
+        long start = System.currentTimeMillis();
+
+        for (var i = 0; i &lt; clientCount; ++i) {
+            executorService.execute(() -&gt; {
+                //通过Snowflake算法获取唯一的ID字符串
+                UUID id = UUID.randomUUID();
+                try {
+                    redisLock.lock(id.toString());
+                    count++;
+                } finally {
+                    redisLock.unlock(id.toString());
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        long end = System.currentTimeMillis();
+        System.out.println(String.format(&quot;执行线程数:{%s},总耗时:{%s},count数为:{%s}&quot;, clientCount, end - start, count));
+        executorService.shutdown();
+    }
+
+}
+
+/* Output */
+执行线程数:{1000},总耗时:{1759},count数为:{1000}</code></pre>
+<p>至此，单节点Redis的分布式锁的实现就已经完成了, 比较简单，但是问题也比较大, 比如:</p>
+<ul>
+<li>锁不具有可重入性</li>
+<li>锁超时问题</li>
+<li>……</li>
+</ul>
+<hr>
+<p><strong>② Redisson</strong></p>
+<blockquote>
+<br>
+
+<p><strong>Redisson介绍</strong></p>
+<p><a href="https://redisson.org/" target="_blank" rel="noopener">Redisson</a>是架设在<a href="http://redis.cn/" target="_blank" rel="noopener">Redis</a>基础上的一个Java驻内存数据网格（In-Memory Data Grid）。充分的利用了Redis键值数据库提供的一系列优势，基于Java实用工具包中常用接口，为使用者提供了一系列具有分布式特性的常用工具类。使得<strong>原本作为协调单机多线程并发程序的工具包获得了协调分布式多机多线程并发系统的能力</strong>，大大降低了设计和研发大规模分布式系统的难度。同时结合各富特色的分布式服务，更进一步简化了分布式环境中程序相互之间的协作</p>
+</blockquote>
+<p>相对于Jedis而言，Redisson更为强大, 当然了，随之而来的就是它的复杂性</p>
+<p>它里面也实现了分布式锁，而且包含多种类型的锁</p>
+<p>更多请参阅<a href="https://github.com/redisson/redisson/wiki/8.-分布式锁和同步器" target="_blank" rel="noopener">分布式锁和同步器</a></p>
+<ul>
+<li><strong>可重入锁</strong></li>
+</ul>
+<p>先来看看Redisson中如何调用可重入锁, 这里使用的是当前的最新版: 3.12.1</p>
+<pre><code class="java">package top.jasonkayzk.redislock.redisson;
+
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Redisson可重入锁测试
+ *
+ * @author zk
+ */
+public class RedissonReentrantLockTest {
+
+    private int count = 0;
+
+    private static final String LOCK_KEY = &quot;redis_lock&quot;;
+
+    /**
+     * 锁过期时间
+     */
+    protected static final long INTERNAL_LOCK_LEASE_TIME = 30000;
+
+    private static final RedissonClient client;
+
+    static {
+        Config config = new Config();
+        config.useSingleServer().setAddress(&quot;redis://127.0.0.1:6379&quot;);
+
+        client = Redisson.create(config);
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        new RedissonReentrantLockTest().test();
+    }
+
+    public void test() throws InterruptedException {
+        var clientCount = 1000;
+
+        var latch = new CountDownLatch(clientCount);
+
+        // 创建client大小的连接池
+        var executorService = Executors.newFixedThreadPool(clientCount);
+
+        var start = System.currentTimeMillis();
+
+        for (var i = 0; i &lt; clientCount; ++i) {
+            executorService.execute(() -&gt; {
+                RLock lock = null;
+                try {
+                    lock = client.getLock(LOCK_KEY);
+                    lock.lock(INTERNAL_LOCK_LEASE_TIME, TimeUnit.MILLISECONDS);
+                    count++;
+                } finally {
+                    if (lock != null) {
+                        lock.unlock();
+                    }
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        long end = System.currentTimeMillis();
+        System.out.println(String.format(&quot;执行线程数:{%s},总耗时:{%s},count数为:{%s}&quot;, clientCount, end - start, count));
+        executorService.shutdown();
+        client.shutdown();
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p>通过配置获取RedissonClient客户端的实例，然后<code>getLock</code>获取锁的实例，进行操作即可</p>
+<ul>
+<li><strong>获取锁实例</strong></li>
+</ul>
+<p>先来看<code>RLock lock = client.getLock(&quot;lock1&quot;);</code>  这句代码就是为了获取锁的实例，然后我们可以看到它返回的是一个<code>RedissonLock</code>对象:</p>
+<pre><code class="java">public RLock getLock(String name) {
+   return new RedissonLock(connectionManager.getCommandExecutor(), name);
+}</code></pre>
+<p>在<code>RedissonLock</code>构造方法中，主要初始化一些属性</p>
+<pre><code class="java">public RedissonLock(CommandAsyncExecutor commandExecutor, String name) {
+   super(commandExecutor, name);
+   //命令执行器
+   this.commandExecutor = commandExecutor;
+   //UUID字符串
+   this.id = commandExecutor.getConnectionManager().getId();
+   //内部锁过期时间
+   this.internalLockLeaseTime = commandExecutor.
+               getConnectionManager().getCfg().getLockWatchdogTimeout();
+   this.entryName = id + &quot;:&quot; + name;
+}</code></pre>
+<ul>
+<li><strong>加锁</strong></li>
+</ul>
+<p>当我们调用<code>lock</code>方法，定位到<code>lockInterruptibly</code>, 在这里，完成了加锁的逻辑</p>
+<pre><code class="java">public void lockInterruptibly(long leaseTime, TimeUnit unit) throws InterruptedException {
+
+   //当前线程ID
+   long threadId = Thread.currentThread().getId();
+   //尝试获取锁
+   Long ttl = tryAcquire(leaseTime, unit, threadId);
+   // 如果ttl为空，则证明获取锁成功
+   if (ttl == null) {
+       return;
+   }
+   //如果获取锁失败，则订阅到对应这个锁的channel
+   RFuture&lt;RedissonLockEntry&gt; future = subscribe(threadId);
+   commandExecutor.syncSubscription(future);
+
+   try {
+       while (true) {
+           //再次尝试获取锁
+           ttl = tryAcquire(leaseTime, unit, threadId);
+           //ttl为空，说明成功获取锁，返回
+           if (ttl == null) {
+               break;
+           }
+           //ttl大于0 则等待ttl时间后继续尝试获取
+           if (ttl &gt;= 0) {
+               getEntry(threadId).getLatch().tryAcquire(ttl, TimeUnit.MILLISECONDS);
+           } else {
+               getEntry(threadId).getLatch().acquire();
+           }
+       }
+   } finally {
+       //取消对channel的订阅
+       unsubscribe(future, threadId);
+   }
+   //get(lockAsync(leaseTime, unit));
+}</code></pre>
+<p>如上代码，就是加锁的全过程:</p>
+<ul>
+<li><font color="#f00"><strong>先调用<code>tryAcquire</code>来获取锁，如果返回值ttl为空，则证明加锁成功，返回；</strong></font></li>
+<li><font color="#f00"><strong>如果不为空，则证明加锁失败; 这时候，它会订阅这个锁的Channel，等待锁释放的消息，然后重新尝试获取锁</strong></font></li>
+</ul>
+<p>Redisson可重入锁流程图:</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/13230160-6c08ae68fe9a796f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/815" alt="Redisson可重入锁流程图.png"></p>
+<ul>
+<li><strong>获取锁</strong></li>
+</ul>
+<p>获取锁的过程就要看<code>tryAcquire</code>方法</p>
+<p>在这里，它有两种处理方式，一种是带有过期时间的锁，一种是不带过期时间的锁</p>
+<pre><code class="java">private &lt;T&gt; RFuture&lt;Long&gt; tryAcquireAsync(long leaseTime, TimeUnit unit, final long threadId) {
+
+   //如果带有过期时间，则按照普通方式获取锁
+   if (leaseTime != -1) {
+       return tryLockInnerAsync(leaseTime, unit, threadId, RedisCommands.EVAL_LONG);
+   }
+
+   //先按照30秒的过期时间来执行获取锁的方法
+   RFuture&lt;Long&gt; ttlRemainingFuture = tryLockInnerAsync(
+       commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout(),
+       TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_LONG);
+
+   //如果还持有这个锁，则开启定时任务不断刷新该锁的过期时间
+   ttlRemainingFuture.addListener(new FutureListener&lt;Long&gt;() {
+       @Override
+       public void operationComplete(Future&lt;Long&gt; future) throws Exception {
+           if (!future.isSuccess()) {
+               return;
+           }
+
+           Long ttlRemaining = future.getNow();
+           // lock acquired
+           if (ttlRemaining == null) {
+               scheduleExpirationRenewal(threadId);
+           }
+       }
+   });
+   return ttlRemainingFuture;
+}</code></pre>
+<p>接着往下看，<code>tryLockInnerAsync</code>方法是真正执行获取锁的逻辑，它是一段LUA脚本代码。在这里，它使用的是hash数据结构</p>
+<pre><code class="java">&lt;T&gt; RFuture&lt;T&gt; tryLockInnerAsync(long leaseTime, TimeUnit unit,     
+                           long threadId, RedisStrictCommand&lt;T&gt; command) {
+
+       //过期时间
+       internalLockLeaseTime = unit.toMillis(leaseTime);
+
+       return commandExecutor.evalWriteAsync(getName(), LongCodec.INSTANCE, command,
+                 //如果锁不存在，则通过hset设置它的值，并设置过期时间
+                 &quot;if (redis.call(&#39;exists&#39;, KEYS[1]) == 0) then &quot; +
+                     &quot;redis.call(&#39;hset&#39;, KEYS[1], ARGV[2], 1); &quot; +
+                     &quot;redis.call(&#39;pexpire&#39;, KEYS[1], ARGV[1]); &quot; +
+                     &quot;return nil; &quot; +
+                 &quot;end; &quot; +
+                 //如果锁已存在，并且锁的是当前线程，则通过hincrby给数值递增1
+                 &quot;if (redis.call(&#39;hexists&#39;, KEYS[1], ARGV[2]) == 1) then &quot; +
+                     &quot;redis.call(&#39;hincrby&#39;, KEYS[1], ARGV[2], 1); &quot; +
+                     &quot;redis.call(&#39;pexpire&#39;, KEYS[1], ARGV[1]); &quot; +
+                     &quot;return nil; &quot; +
+                 &quot;end; &quot; +
+                 //如果锁已存在，但并非本线程，则返回过期时间ttl
+                 &quot;return redis.call(&#39;pttl&#39;, KEYS[1]);&quot;,
+       Collections.&lt;Object&gt;singletonList(getName()), 
+               internalLockLeaseTime, getLockName(threadId));
+   }</code></pre>
+<p>这段LUA代码看起来并不复杂，有三个判断：</p>
+<ul>
+<li><strong>通过exists判断，如果锁不存在，则设置值和过期时间，加锁成功</strong></li>
+<li><strong>通过hexists判断，如果锁已存在，并且锁的是当前线程，则证明是重入锁，加锁成功</strong></li>
+<li><strong>如果锁已存在，但锁的不是当前线程，则证明有其他线程持有锁。返回当前锁的过期时间，加锁失败</strong></li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/13230160-2046b77640392660.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/913" alt="Redisson可重入锁流程图2.png"></p>
+<p>加锁成功后，在redis的内存数据中，就有一条hash结构的数据: </p>
+<ul>
+<li><strong>key为锁的名称；field为随机字符串+线程ID；值为1</strong></li>
+<li><strong>如果同一线程多次调用<code>lock</code>方法，值递增1</strong></li>
+</ul>
+<pre><code class="mysql">127.0.0.1:6379&gt; hgetall lock1
+1) &quot;b5ae0be4-5623-45a5-8faa-ab7eb167ce87:1&quot;
+2) &quot;1&quot;</code></pre>
+<ul>
+<li><strong>解锁</strong></li>
+</ul>
+<p>我们通过调用<code>unlock</code>方法来解锁</p>
+<pre><code class="java">public RFuture&lt;Void&gt; unlockAsync(final long threadId) {
+   final RPromise&lt;Void&gt; result = new RedissonPromise&lt;Void&gt;();
+
+   //解锁方法
+   RFuture&lt;Boolean&gt; future = unlockInnerAsync(threadId);
+
+   future.addListener(new FutureListener&lt;Boolean&gt;() {
+       @Override
+       public void operationComplete(Future&lt;Boolean&gt; future) throws Exception {
+           if (!future.isSuccess()) {
+               cancelExpirationRenewal(threadId);
+               result.tryFailure(future.cause());
+               return;
+           }
+           //获取返回值
+           Boolean opStatus = future.getNow();
+           //如果返回空，则证明解锁的线程和当前锁不是同一个线程，抛出异常
+           if (opStatus == null) {
+               IllegalMonitorStateException cause = 
+                   new IllegalMonitorStateException(&quot;
+                       attempt to unlock lock, not locked by current thread by node id: &quot;
+                       + id + &quot; thread-id: &quot; + threadId);
+               result.tryFailure(cause);
+               return;
+           }
+           //解锁成功，取消刷新过期时间的那个定时任务
+           if (opStatus) {
+               cancelExpirationRenewal(null);
+           }
+           result.trySuccess(null);
+       }
+   });
+
+   return result;
+}</code></pre>
+<p>然后我们再看<code>unlockInnerAsync</code>方法。这里也是一段LUA脚本代码</p>
+<pre><code class="java">protected RFuture&lt;Boolean&gt; unlockInnerAsync(long threadId) {
+   return commandExecutor.evalWriteAsync(getName(), LongCodec.INSTANCE, EVAL,
+
+           //如果锁已经不存在， 发布锁释放的消息
+           &quot;if (redis.call(&#39;exists&#39;, KEYS[1]) == 0) then &quot; +
+               &quot;redis.call(&#39;publish&#39;, KEYS[2], ARGV[1]); &quot; +
+               &quot;return 1; &quot; +
+           &quot;end;&quot; +
+           //如果释放锁的线程和已存在锁的线程不是同一个线程，返回null
+           &quot;if (redis.call(&#39;hexists&#39;, KEYS[1], ARGV[3]) == 0) then &quot; +
+               &quot;return nil;&quot; +
+           &quot;end; &quot; +
+           //通过hincrby递减1的方式，释放一次锁
+           //若剩余次数大于0 ，则刷新过期时间
+           &quot;local counter = redis.call(&#39;hincrby&#39;, KEYS[1], ARGV[3], -1); &quot; +
+           &quot;if (counter &gt; 0) then &quot; +
+               &quot;redis.call(&#39;pexpire&#39;, KEYS[1], ARGV[2]); &quot; +
+               &quot;return 0; &quot; +
+           //否则证明锁已经释放，删除key并发布锁释放的消息
+           &quot;else &quot; +
+               &quot;redis.call(&#39;del&#39;, KEYS[1]); &quot; +
+               &quot;redis.call(&#39;publish&#39;, KEYS[2], ARGV[1]); &quot; +
+               &quot;return 1; &quot;+
+           &quot;end; &quot; +
+           &quot;return nil;&quot;,
+   Arrays.&lt;Object&gt;asList(getName(), getChannelName()), 
+       LockPubSub.unlockMessage, internalLockLeaseTime, getLockName(threadId));
+
+}</code></pre>
+<p>如上代码，就是释放锁的逻辑。同样的，它也是有三个判断：</p>
+<ul>
+<li><strong>如果锁已经不存在，通过publish发布锁释放的消息，解锁成功</strong></li>
+<li><strong>如果解锁的线程和当前锁的线程不是同一个，解锁失败，抛出异常</strong></li>
+<li><strong>通过hincrby递减1，先释放一次锁。若剩余次数还大于0，则证明当前锁是重入锁，刷新过期时间；若剩余次数小于0，删除key并发布锁释放的消息，解锁成功</strong></li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/13230160-34c1a3f8ec81a652.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/876" alt="Redisson可重入锁流程图3.png"></p>
+</blockquote>
+<p>至此，Redisson中的可重入锁的逻辑，就分析完了</p>
+<p>但值得注意的是，上面的两种实现方式都是针对单机Redis实例而进行的, 如果我们有多个Redis实例，请参阅<strong>Redlock算法</strong></p>
+<p>该算法的具体内容，请参考<a href="http://redis.cn/topics/distlock.html" target="_blank" rel="noopener">http://redis.cn/topics/distlock.html</a></p>
+<blockquote>
+<br>
+
+<p><strong>文章转自:</strong> <a href="https://www.jianshu.com/p/47fd7f86c848" target="_blank" rel="noopener">分布式锁之Redis实现</a></p>
+</blockquote>
+<br>
+
+<h3 id="Redis实现分布式Session"><a href="#Redis实现分布式Session" class="headerlink" title="Redis实现分布式Session"></a>Redis实现分布式Session</h3><p>见: <a href="https://jasonkayzk.github.io/2020/02/10/Redis实现分布式Session/">Redis实现分布式Session</a></p>
+<br>
+
+<h3 id="Redis实现SSO"><a href="#Redis实现SSO" class="headerlink" title="Redis实现SSO"></a>Redis实现SSO</h3><p>见: <a href="https://jasonkayzk.github.io/2020/02/10/Redis实现SSO/">Redis实现SSO</a></p>
+<br>
+
+<h3 id="Redis持久化"><a href="#Redis持久化" class="headerlink" title="Redis持久化"></a>Redis持久化</h3><p>Redis提供两种持久化方式：RDB（redis database）和AOF（append of file）</p>
+<p><strong>① RDB</strong></p>
+<p>在指定时间间隔内，将<strong>内存中的数据作为一个快照文件（snapshot）写入到磁盘</strong>，读取的时候也是<strong>直接读取snapshot文件到内存中</strong></p>
+<p><img src="http://img1.tuicool.com/NjYjYvF.png!web?_=6182478" alt="RDB.png"></p>
+<ul>
+<li><strong>持久化过程：</strong>redis单独创建(通过操作系统的fork函数)一个进程来持久化，会先将数据写入临时文件中，待上次持久化结束后，会将该临时文件替换上次持久化文件，比aof高效，但是最后一次数据可能会丢失</li>
+<li><strong>Fork：</strong>在linux中，fork()会产生一个跟主进程一样的子进程，出于效率考虑，主进程和子进程会公用一段物理内存，当发生改变的时候，才会把主进程复制一份给子进程</li>
+<li><strong>Redis备份的文件：</strong>在redis.conf中设置，dbfilename默认为：dump.rdb</li>
+<li><strong>RDB保存策略：</strong><ul>
+<li>save 900 1: 在900秒(15分钟)之后，如果至少有1个key发生变化，则dump内存快照</li>
+<li>save 300 10: 在300秒(5分钟)之后，如果至少有10个key发生变化，则dump内存快照</li>
+<li>save 60 10000: 在60秒(1分钟)之后，如果至少有10000个key发生变化，则dump内存快照</li>
+</ul>
+</li>
+<li><strong>RDB的备份：</strong><ul>
+<li>config get dir 得到备份的文件夹</li>
+<li>复制备份文件</li>
+</ul>
+</li>
+<li><strong>RDB恢复：</strong><ul>
+<li>关闭redis</li>
+<li>将备份文件复制到工作目录下</li>
+<li>启动redis，自动加载</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>② AOF</strong></p>
+<p>以日志形式<strong>记录每个写操作</strong>，启动时通过日志恢复操作</p>
+<p><img src="http://img2.tuicool.com/YrqaY3f.png!web?_=6182478" alt="AOF.png"></p>
+<ul>
+<li>开启AOF：默认不开启，进入redis.conf找到<code>appendonly yes</code>打开</li>
+<li>修复AOF：redis-check-aof –fix appendonly.aof</li>
+<li>同步频率：每秒记录一次，如果宕机该秒记可能失效</li>
+<li>Rewrite：bgrewriteaof 因为日志是追加方式，文件会越来越大，当超过了设置的阈值时，日志文件会压缩，保留仅可以恢复的日志</li>
+</ul>
+<hr>
+<p><strong>③ RDB和AOF对比</strong></p>
+<ul>
+<li><p>RDB优点</p>
+<p>整个Redis数据库将只包含一个文件，你可能打算每个小时归档一次最近24小时的数据，同时还要每天归档一次最近30天的数据。通过这样的备份策略，一旦系统出现灾难性故障，我们可以非常容易的进行恢复</p>
+<ul>
+<li>节省磁盘空间</li>
+<li>恢复速度快</li>
+<li>RDB的启动效率更高</li>
+</ul>
+</li>
+<li><p>RDB缺点：</p>
+<ul>
+<li>一段时间保存一次快照，宕机时最后一次可能没有保存</li>
+<li>数据太大时，比较消耗性能: 由于RDB是通过fork子进程来协助完成数据持久化工作的，因此，如果当数据集较大时，可能会导致整个服务器停止服务几百毫秒，甚至是1秒钟</li>
+</ul>
+</li>
+<li><p>AOF优点:</p>
+<p>更高的数据安全性，即数据持久性。Redis中提供了三种同步策略，即每秒同步、每修改同步和不同步</p>
+<p>事实上，每秒同步也是异步完成的，其效率也是非常高的，所差的是一旦系统出现宕机现象，那么这一秒钟之内修改的数据将会丢失。而每修改同步，我们可以将其视为同步持久化，即每次发生的数据变化都会被立即记录到磁盘中, 这种方式在效率上是最低的</p>
+<ul>
+<li>备份机制更加稳健</li>
+<li>可读的日志文件，通过aof恢复更加稳健</li>
+<li>可以处理失误: 本次操作只是写入了一半数据就出现了系统崩溃问题，不用担心，在Redis下一次启动之前，我们可以通过redis-check-aof工具来帮助我们解决数据一致性的问题</li>
+<li>如果日志过大，Redis可以自动启用rewrite机制。即Redis以append模式不断的将修改数据写入到老的磁盘文件中，同时Redis还会创建一个新的文件用于记录此期间有哪些修改命令被执行。因此在进行rewrite切换时可以更好的保证数据安全性</li>
+</ul>
+</li>
+<li><p>AOF缺点：</p>
+<ul>
+<li>比RDB更占磁盘</li>
+<li>备份速度, 恢复速度都较慢</li>
+<li>每次都同步日志，有性能压力</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+  <br>
+
+<p>  <strong>使用场景:</strong></p>
+<p>  二者选择的标准，就是看:</p>
+<ul>
+<li><p>愿意牺牲一些性能，换取更高的缓存一致性（AOF）</p>
+</li>
+<li><p>愿意写操作频繁的时候，不启用备份来换取更高的性能，待手动运行save的时候，再做备份（RDB）</p>
+<p>生产环境其实更多都是二者结合使用的</p>
+</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="Redis架构模式"><a href="#Redis架构模式" class="headerlink" title="Redis架构模式"></a>Redis架构模式</h3><p>一主一从[Master-Slave], Redis集群[Redis-Cluster], 哨兵模式[Redis-Sentinel]</p>
+<br>
+
+<h3 id="Redis集群-如何保证同步…"><a href="#Redis集群-如何保证同步…" class="headerlink" title="Redis集群(如何保证同步…)"></a>Redis集群(如何保证同步…)</h3><br>
+
+<h3 id="缓存算法-LRU等"><a href="#缓存算法-LRU等" class="headerlink" title="缓存算法(LRU等)"></a>缓存算法(LRU等)</h3><br>
+
+<h3 id="一致性哈希算法？什么是哈希槽？"><a href="#一致性哈希算法？什么是哈希槽？" class="headerlink" title="一致性哈希算法？什么是哈希槽？"></a>一致性哈希算法？什么是哈希槽？</h3><br>
+
+<h3 id="什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免"><a href="#什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免" class="headerlink" title="什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免?"></a>什么是缓存穿透？如何避免？什么是缓存雪崩？何如避免?</h3><br>
+
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><p>文章参考:</p>
+<ul>
+<li><a href="https://blog.csdn.net/qq_24641227/article/details/94591693" target="_blank" rel="noopener">Redis的各种用途以及使用场景</a></li>
+<li><a href="https://blog.csdn.net/xpsallwell/article/details/84030285" target="_blank" rel="noopener">Redis的五种数据结构原理分析</a></li>
+<li><a href="https://blog.csdn.net/wufaliang003/article/details/82016385" target="_blank" rel="noopener">Redis的3个高级数据结构</a></li>
+<li><a href="https://blog.csdn.net/harleylau/article/details/86246806" target="_blank" rel="noopener">如何处理redis集群中的hot Key</a></li>
+<li><a href="https://www.jianshu.com/p/47fd7f86c848" target="_blank" rel="noopener">分布式锁之Redis实现</a></li>
+</ul>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/02/05/Redis面试相关问题/" title="https://jasonkayzk.github.io/2020/02/05/Redis面试相关问题/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/02/05/Redis面试相关问题/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725351901"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

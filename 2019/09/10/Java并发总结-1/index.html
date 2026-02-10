@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java并发总结-1 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近在看Java并发编程之美, 做的一些比较重要的总结.">
+<meta name="keywords" content="并发编程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java并发总结-1">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/09/10/Java并发总结-1/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近在看Java并发编程之美, 做的一些比较重要的总结.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://gss2.bdstatic.com/-fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=7a4ee20578cb0a46912f836b0a0a9d41/810a19d8bc3eb1354547b744a51ea8d3fc1f4448.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.738Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java并发总结-1">
+<meta name="twitter:description" content="最近在看Java并发编程之美, 做的一些比较重要的总结.">
+<meta name="twitter:image" content="https://gss2.bdstatic.com/-fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=7a4ee20578cb0a46912f836b0a0a9d41/810a19d8bc3eb1354547b744a51ea8d3fc1f4448.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725365800">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567750837551&di=fae22e8ce73ecbc87820964da733b106&imgtype=0&src=http%3A%2F%2Fimg3m1.ddimg.cn%2F31%2F20%2F1465705921-1_u_1.jpg">
+    
+    <h1>Java并发总结-1</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年09月10日</a>
+    <a><i class="nexmoefont icon-areachart"></i>7.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 36 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/并发编程/">并发编程</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/并发编程/">并发编程</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-并发编程线程基础"><span class="toc-text">一. 并发编程线程基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-什么是线程"><span class="toc-text">1. 什么是线程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-线程的创建与运行"><span class="toc-text">2. 线程的创建与运行</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-继承Thread类方式的实现-不推荐"><span class="toc-text">1): 继承Thread类方式的实现[不推荐]</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-使用Runnable接口的run方法-无返回值"><span class="toc-text">2): 使用Runnable接口的run方法[无返回值]</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-FutureTask方式-有返回值"><span class="toc-text">3): FutureTask方式[有返回值]</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-三种创建线程方法的总结"><span class="toc-text">4): 三种创建线程方法的总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-线程的通知与等待"><span class="toc-text">3. 线程的通知与等待</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-wait-函数"><span class="toc-text">1): wait()函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-wait-long-timeout-函数"><span class="toc-text">2): wait(long timeout)函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-wait-long-timeout-int-nanos-函数"><span class="toc-text">3): wait(long timeout, int nanos)函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-notify-函数"><span class="toc-text">4): notify()函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-notifyAll-函数"><span class="toc-text">5): notifyAll()函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-等待线程终止的join方法"><span class="toc-text">4. 等待线程终止的join方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-让线程睡眠的sleep方法"><span class="toc-text">5. 让线程睡眠的sleep方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-让出CPU执行权的yield方法"><span class="toc-text">6. 让出CPU执行权的yield方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-线程中断"><span class="toc-text">7. 线程中断</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-void-interrupt-方法"><span class="toc-text">1): void interrupt()方法:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-boolean-isInterrupted"><span class="toc-text">2): boolean isInterrupted():</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-boolean-interrupted"><span class="toc-text">3): boolean interrupted():</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-线程上下文切换"><span class="toc-text">8. 线程上下文切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-线程死锁"><span class="toc-text">9. 线程死锁</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-死锁产生的四个必备条件"><span class="toc-text">1): 死锁产生的四个必备条件!</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-死锁的例子"><span class="toc-text">2): 死锁的例子</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-避免死锁的方法"><span class="toc-text">3): 避免死锁的方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-守护线程与用户线程"><span class="toc-text">10. 守护线程与用户线程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-daemon与user线程的区别"><span class="toc-text">1): daemon与user线程的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-守护线程的创建"><span class="toc-text">2): 守护线程的创建</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-daemon与user线程的比较例子"><span class="toc-text">3): daemon与user线程的比较例子</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-daemon在Tomcat中"><span class="toc-text">4): daemon在Tomcat中</span></a></li></ol></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>Java并发编程之美阅读总结之-1 : 并发编程线程基础</p>
+<a id="more"></a>
+
+<h2 id="一-并发编程线程基础"><a href="#一-并发编程线程基础" class="headerlink" title="一. 并发编程线程基础"></a>一. 并发编程线程基础</h2><h3 id="1-什么是线程"><a href="#1-什么是线程" class="headerlink" title="1. 什么是线程"></a>1. 什么是线程</h3><ol>
+<li>线程是进程中的一个实体, 线程本身是不会独立存在的;</li>
+<li>进程是代码在数据集合上的一次运行活动, 是系统进行资源分配和调度的基本单位;</li>
+<li>线程是进程中的一个的执行路径, 一个进程中至少有一个线程, 进程中的多个线程共享进程的资源;</li>
+<li><font color="#0000FF">操作系统再分配资源时, 把资源分派给进程</font></li>
+<li><font color="#0000FF">但是CPU资源比较特殊, 直接分配给线程的!因为真正占用Cpu的还是线程</font></li>
+<li><font color="#FF0000">一个进程中的多个线程共享进程中的堆和方法区资源, 但是每个线程有自己的程序计数器和栈区域;</font></li>
+<li>程序计数器是一块内存区域, 用来记录线程当前要执行的指令地址;</li>
+<li>由于CPU一般是采用时间片轮询的方式让线程轮询占用的, 所以当前线程用完分配的时间片之后, 要让出CPU给其他线程, 而之前的线程通过程序计数器来恢复之前运行的状态, 这也是将程序计数器设计为私有的原因;</li>
+<li><font color="#FF0000">注意: 对于java而言, 如果执行的是native方法, 则pc计数器记录的是undefined地址, 只有执行Java代码时, pc计数器记录的才是下一条指令的地址!</font></li>
+<li>对于每个线程内部的局部变量: <font color="#FF0000">由于每个线程都有自己的栈资源, 所以局部变量线程私有, 其他线程无法访问.</font></li>
+<li>对于堆: <font color="#FF0000">进程为单位, 且是进程中最大的一块内存. 堆是被所有线程共享的(主要存放new出的对象/反射动态创建的实例等). 被所有线程共享!!!!</font></li>
+<li>方法区: <font color="#FF0000">又来存放JVM加载的类, 常量及静态变量等信息, 也是线程共享的;</font></li>
+</ol>
+<hr>
+<h3 id="2-线程的创建与运行"><a href="#2-线程的创建与运行" class="headerlink" title="2. 线程的创建与运行"></a>2. 线程的创建与运行</h3><p>Java中有<font color="#FF0000">三种创建线程的方法:</font></p>
+<p><font color="#0000FF">1. 继承Thread类, 并重写run()方法;</font></p>
+<p><font color="#0000FF">2. 实现Runnable接口的run()方法;</font></p>
+<p><font color="#0000FF">3. 使用FutureTask;</font></p>
+<h4 id="1-继承Thread类方式的实现-不推荐"><a href="#1-继承Thread类方式的实现-不推荐" class="headerlink" title="1): 继承Thread类方式的实现[不推荐]"></a>1): 继承Thread类方式的实现[不推荐]</h4><pre><code class="java">/**
+ *  创建线程方法之1: 继承Thread 并重写run()方法
+ *
+ *
+ * */
+public class ThreadTest {
+
+    // 继承Thread并重写run()
+    public static class MyThread extends Thread {
+        @Override
+        public void run() {
+            System.out.println(&quot;I am a child thread!&quot;);
+        }
+    }
+
+    public static void main(String[] args) {
+        MyThread thread = new MyThread();
+        thread.start();
+    }
+
+}</code></pre>
+<p>代码中的<code>MyThread</code>类继承自Thread类, 并重写了run()方法. 在main中创建了一个MyThread实例, 并调用该实例的start方法启动了线程.</p>
+<p><strong>注意:</strong>  </p>
+<ul>
+<li>当创建完thread对象之后, 线程并没有启动执行, 直到<font color="#FF0000">调用了<code>start()</code>方法之后, 才真正启动了线程.</font></li>
+<li>其实调用<code>start()</code>方法并没有马上执行, 而是使线程处于了就绪状态, 即<em>该线程已经获取了<font color="#ff0000">除CPU资源以外的其他资源, 等待获取CPU资源后才会真正处于运行状态!</font></em></li>
+</ul>
+<p>使用<em>继承方法</em>的好处:</p>
+<p>在<code>run()方法</code>内部直接获取当前线程直接使用<code>this</code>即可, 而无需使用<code>Thread.currentThread()</code>方法;</p>
+<p>使用<code>继承</code>不好:</p>
+<p>如果继承了Thread类, 则无法再继承其他类; 且任务与代码没有分离, 当多个线程执行相同的任务时, 需要多份任务代码!</p>
+<h4 id="2-使用Runnable接口的run方法-无返回值"><a href="#2-使用Runnable接口的run方法-无返回值" class="headerlink" title="2): 使用Runnable接口的run方法[无返回值]"></a>2): 使用Runnable接口的run方法[无返回值]</h4><pre><code class="java">public class ThreadTest2 {
+    public static class RunableTask implements Runnable {
+
+        @Override
+        public void run() {
+            System.out.println(&quot;I am a child thread&quot;);
+        }
+    }
+
+    public static void main(String[] args) {
+        RunableTask task = new RunableTask();
+        new Thread(task).start();
+        new Thread(task).start();
+    }
+}</code></pre>
+<p>上面的代码中, 两个线程共用同一个task代码逻辑, 如果需要, 也可以通过给<code>RunableTask</code>添加参数来进行任务区分.</p>
+<p>此外, <code>RunableTask</code>可以继承其他类. 但是上面介绍的两种方法有一个共同的缺点: <em>任务没有返回值!</em></p>
+<h4 id="3-FutureTask方式-有返回值"><a href="#3-FutureTask方式-有返回值" class="headerlink" title="3): FutureTask方式[有返回值]"></a>3): FutureTask方式[有返回值]</h4><pre><code class="java">import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+public class ThreadTest3 {
+    // 创建任务类, 类似于Runnable
+    public static class CallerTask implements Callable&lt;String&gt; {
+
+        @Override
+        public String call() throws Exception {
+            return &quot;hello&quot;;
+        }
+    }
+
+    public static void main(String[] args) {
+        // 创建异步任务
+        FutureTask&lt;String&gt; futureTask = new FutureTask&lt;&gt;(new CallerTask());
+        // 启动线程
+        new Thread(futureTask).start();
+        try {
+            // 等待任务执行完毕, 并返回结果
+            System.out.println(futureTask.get());
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+<p>上述代码中的<code>CallerTask</code>类实现了<code>Callable</code>接口的<code>call()</code>方法. 在main函数中首先<font color="#ff0000">创建了一个<code>FutureTask</code>对象(构造方法为<code>CallerTask</code>实例),</font> 然后使用创建的<code>FutureTask</code>对象作为任务创建了一个线程并启动, 最后<font color="#00ff00">通过<code>futureTask.get()</code>等待任务执行完毕并返回结果.</font></p>
+<h4 id="4-三种创建线程方法的总结"><a href="#4-三种创建线程方法的总结" class="headerlink" title="4): 三种创建线程方法的总结"></a>4): 三种创建线程方法的总结</h4><ul>
+<li>使用继承方法的好处是: </li>
+</ul>
+<p>方便传参, 可以在子类中添加成员变量, 并通过<code>setter</code>方法设置参数或通过构造函数进行传递, 而<em>使用Runnable方法, 则只能使用主线程里面被声明为final的变量(Java 8之前).</em></p>
+<ul>
+<li>使用Runnable接口方法</li>
+</ul>
+<p>Java不支持多继承, 如果继承了<code>Thread类</code>, 则子类无法再继承其他类, 而<code>Runnable方法</code>没有限制.</p>
+<ul>
+<li>使用<code>FutrueTask</code>方法</li>
+</ul>
+<p>可以拿到任务返回的结果!</p>
+<hr>
+<h3 id="3-线程的通知与等待"><a href="#3-线程的通知与等待" class="headerlink" title="3. 线程的通知与等待"></a>3. 线程的通知与等待</h3><p>Java中的<code>Object类</code>是所有类的父类, 而Java把所有类都需要的方法放到了Object类中, 其中就包括了一些线程方法!</p>
+<h4 id="1-wait-函数"><a href="#1-wait-函数" class="headerlink" title="1): wait()函数"></a>1): <em>wait()函数</em></h4><p><font color="#00ff00">当一个线程调用一个共享变量的<code>wait()方法</code>时, 调用线程会被阻塞挂起, 直到发生下面几个事情之一才返回:</font></p>
+<ul>
+<li>其他线程调用了该对象的<code>notify()</code>或者<code>notifyAll()</code>方法;</li>
+<li>其他线程调用了该线程的<code>interrupt()方法</code>, 该线程抛出<code>InterruptedException</code>异常返回.</li>
+</ul>
+<p>一个线程如何获取一个共享变量的<code>监视器锁</code>呢?</p>
+<ul>
+<li>执行<code>synchronized</code>同步代码块时, 使用该共享变量作为参数</li>
+</ul>
+<pre><code class="java">synchronized (共享变量) {
+    //doSomething
+}</code></pre>
+<ul>
+<li>调用该共享变量的方法, 并且该方法使用了<code>synchronized</code>修饰!</li>
+</ul>
+<pre><code class="java">synchronized void add(int a, int b) {
+    // doSomething
+}</code></pre>
+<p>此外需要注意的是:</p>
+<p><font color="#ff0000">一个线程可以从<code>挂起状态</code>变为<code>可运行状态(被唤醒)</code>, 即使该线程没有被其他线程调用<code>notify(), notifyAll()</code>方法进行通知, 或者被中断, 或者等待超时, 即所谓的: <em><code>虚假唤醒</code></em></font></p>
+<p>虽然虚假唤醒很少发生, 但是要防范于未然, <font color="#ff0000">可通过在一个循环中调用<code>wait()</code>方法进行防范!</font></p>
+<pre><code class="java">synchronized (obj) {
+    while (条件不满足) {
+        obj.wait();
+    }
+}</code></pre>
+<p><strong>上述代码是经典的调用共享变量的<code>wait()</code>方法的实例</strong>: <font color="#ff0000">首先通过同步块获取obj的监视器锁, 然后在while循环中调用obj的<code>wait()</code>方法.</font></p>
+<ul>
+<li>例: 生产者与消费者</li>
+</ul>
+<pre><code class="java">import java.util.LinkedList;
+import java.util.Queue;
+
+public class QueueDemo {
+
+    private static final int MAX_SIZE = 10;
+    private static Queue&lt;Integer&gt; queue = new LinkedList&lt;&gt;();
+
+
+    // 生产者模型
+    public static class Producer implements Runnable {
+
+        private int ele;
+
+        public Producer(int ele) {
+            this.ele = ele;
+        }
+
+        @Override
+        public void run() {
+            synchronized (queue) {
+                // 消费者队列满, 等待队列空闲
+                while (queue.size() == MAX_SIZE) {
+                    System.out.println(&quot;消费者队列已满, 等待中!&quot;);
+                    try {
+                        // 挂起当前线程, 并且释放同步块获取的queue上的锁,
+                        // 让消费者可以获取该锁, 然后消费队列元素
+                        queue.wait();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // 空闲时则生成元素, 并通知消费者!
+                queue.add(ele);
+                queue.notifyAll();
+            }
+        }
+    }
+
+    // 消费者模型
+    public static class Consumer implements Runnable {
+
+        @Override
+        public void run() {
+            synchronized (queue) {
+
+                // 消费者队列为空
+                while (queue.size() == 0) {
+                    System.out.println(&quot;消费者队列为空, 等待中&quot;);
+                    // 挂起当前线程, 并释放同步锁获取的queue上的监视器锁,
+                    // 让生产者可以获取该锁, 将生产元素放入队列
+                    try {
+                        queue.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                // 消费元素, 并通知唤醒生产者线程
+                System.out.println(queue.poll());
+                queue.notifyAll();
+            }
+        }
+    }
+
+
+    public static void main(String[] args) {
+        // 20个生产者
+        for (int i = 0; i &lt; 20; ++i) {
+            new Thread(new Producer(i)).start();
+        }
+        // 20个消费者
+        for (int i = 0; i &lt; 20; ++i) {
+            new Thread(new Consumer()).start();
+        }
+
+    }
+}
+</code></pre>
+<p>上述代码中, 其中<code>queue</code>为共享变量, 生产者线程在调用<code>queue</code>的<code>wait()</code>方法之前, 使用了<code>synchronized</code>关键字拿到了该共享变量<code>queue</code>的监视器锁, 所以才不会在调用<code>wait()方法</code>时不会抛出<code>IllegalMonitorStateException</code>异常!</p>
+<p>部分输出结果:</p>
+<pre><code>4
+消费者队列已满, 等待中!
+5
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+6
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+7
+消费者队列已满, 等待中!
+消费者队列已满, 等待中!
+8
+消费者队列已满, 等待中!
+9
+17
+18
+14
+19</code></pre><p>如果当前队列无空闲容量则会调用<code>queue</code>的<code>wait()</code>方法挂起线程, 而使用<code>while</code>就是防止<em>虚假唤醒</em>问题! <strong>若当前线程被虚假唤醒, 但是队列无空余容量时, 当前线程仍然会调用wait方法把自己挂起</strong></p>
+<p><strong>注</strong>:</p>
+<ul>
+<li>上述生产者线程A发现当前线程已满, 会调用方法<code>queue.wait()</code>阻塞自己, 并<font color="#ff0000">释放获取的queue的锁!</font></li>
+</ul>
+<p>如果不释放该锁, 由于其他生产者和消费者线程都已被阻塞, 则线程A也被挂起, 最终形成死锁!</p>
+<ul>
+<li><font color="#ff0000">当前线程调用共享变量的<code>wait()</code>方法后, 只会释放当前共享变量上的锁, 如果当前变量还持有其他共享变量的锁, 则这些变量不会被释放!</font>例: </li>
+</ul>
+<pre><code class="java">public class TwoLockWait {
+
+    // 创建资源
+    private static volatile Object resourceA = new Object();
+    private static volatile Object resourceB = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 获取A的监视器锁
+                    synchronized (resourceA) {
+                        System.out.println(&quot;ThreadA get resourceA lock&quot;);
+                        // 获取B的监视器锁
+                        synchronized (resourceB) {
+                            System.out.println(&quot;ThreadA get resourceB lock&quot;);
+                            // 线程A阻塞, 并释放A的锁
+                            System.out.println(&quot;ThreadA release resourceA lock&quot;);
+                            resourceA.wait();
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Thread threadB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 休眠一秒, 确保ThreadA获取锁
+                    Thread.sleep(1000);
+
+                    // 获取A
+                    synchronized (resourceA) {
+                        System.out.println(&quot;ThreadB get resourceA lock&quot;);
+
+                        System.out.println(&quot;ThreadB try get resourceB lock...&quot;);
+                        // 获取B的锁
+                        synchronized (resourceB) {
+                            System.out.println(&quot;ThreadB get resourceB lock&quot;);
+
+                            // 线程B阻塞, 并释放A的锁
+                            System.out.println(&quot;ThreadB release resourceA lock&quot;);
+                            resourceA.wait();
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // 启动线程
+        threadA.start();
+        threadB.start();
+
+        // 等待两个线程结束
+        threadA.join();
+        threadB.join();
+
+        System.out.println(&quot;main over&quot;);
+    }
+}</code></pre>
+<p>输出结果如下:</p>
+<pre><code>ThreadA get resourceA lock
+ThreadA get resourceB lock
+ThreadA release resourceA lock
+ThreadB get resourceA lock
+ThreadB try get resourceB lock...
+
+// 程序尚未结束!</code></pre><p>上述代码中, 在main函数启动了线程A, 线程B. 为了让A先获得锁, 让线程B先休眠了1s. 线程A先后获取<code>资源A</code>和<code>资源B</code>的锁, 然后调用了<code>resourceA的wait()</code>方法, 阻塞自己并释放<code>资源A</code>的锁.</p>
+<p>线程B休眠结束后, 首先尝试获取<code>资源A</code>的锁, 成功. 然后尝试获取<code>资源B</code>的锁. <font color="#ff0000">由于线程A调用的是<code>资源A</code>的<code>wait()</code>方法, 所以线程A挂起后, 并没有释放<code>资源B</code>的锁!所以线程B尝试获取<code>资源B</code>的锁会被阻塞. 最终形成死锁!</font></p>
+<p>也证明了: <font color="#ff0000">当线程调用共享对象的<code>wait()</code>方法时, 当前线程只会释放当前共享对象的锁, 而当前线程持有的其他共享对象的监视器锁并不会释放!</font></p>
+<ul>
+<li><font color="#ff0000">当一个线程调用共享对象的<code>wait()</code>方法被阻塞挂起后, 如果其他线程中断了该线程, 则该线程会抛出<code>Interrupted Exception</code>异常并返回!</font>例:</li>
+</ul>
+<pre><code class="java">public class WaitAndInterrupted {
+
+    private static Object obj = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+
+        // 创建线程
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.println(&quot;--begin--&quot;);
+                    // 阻塞当前线程
+                    synchronized (obj) {
+                        obj.wait();
+                    }
+                    System.out.println(&quot;--end--&quot;);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        threadA.start();
+
+        Thread.sleep(1000);
+
+        System.out.println(&quot;--begin interrupt threadA&quot;);
+        threadA.interrupt();
+        System.out.println(&quot;--end interrupt threadA&quot;);
+    }
+}
+</code></pre>
+<p>上述代码中, <code>threadA</code>调用共享对象obj的<code>wait()</code>方法之后阻塞了自己. 而主线程在休眠1s之后, 中断了<code>threadA</code>线程, 中断后在<code>obj.wait()</code>处抛出<code>java.lang.InterruptedException</code>并终止返回.</p>
+<h4 id="2-wait-long-timeout-函数"><a href="#2-wait-long-timeout-函数" class="headerlink" title="2): wait(long timeout)函数"></a>2): wait(long timeout)函数</h4><p>相比<code>wait()</code>方法多了一个超时参数. 不同之处在于: <font color="#00ff00">如果一个线程调用共享对象的该方法挂起后, 没有被指定的<code>timeout ms</code>时间段内被其他线程调用该变量的<code>notify()或notifyAll()</code>方法唤醒, 则该函数还是会因为超时而退出! </font></p>
+<ul>
+<li><p><font color="#ff0000">如果将<code>timeout 设置为0</code>则和<code>wait()</code>方法一致!</font></p>
+</li>
+<li><p><font color="#ff0000">如果传递了一个<code>负的timeout</code>抛出异常!</font></p>
+</li>
+</ul>
+<h4 id="3-wait-long-timeout-int-nanos-函数"><a href="#3-wait-long-timeout-int-nanos-函数" class="headerlink" title="3): wait(long timeout, int nanos)函数"></a>3): wait(long timeout, int nanos)函数</h4><p>在内部调用的是<code>wait(long timeout)</code>方法, 有在<code>nanos &gt; 0</code>时, 才使参数<code>timeout递增1</code></p>
+<h4 id="4-notify-函数"><a href="#4-notify-函数" class="headerlink" title="4): notify()函数"></a>4): notify()函数</h4><p>一个线程调用共享对象的<code>notify()</code>方法后, 会唤醒<strong>一个</strong>在该变量上调用<code>wait</code>方法后被挂起的线程. <font color="#ff0000">一个共享变量上可能有多个线程在等待, 具体唤醒那个等待的线程是随机的!</font></p>
+<p>此外: <font color="#ff0000">被唤醒的线程不能马上从<code>wait</code>方法返回! 必须在获得了共享对象的监视器锁后才可以返回! </font></p>
+<p>即: <font color="#00ff00">唤醒他的线程释放了共享变量上的锁后, 被唤醒的线程也不一定会获取到共享对象的监视器锁, 因为还需要和其他线程一起竞争该锁!</font></p>
+<p><font color="#ff0000">类似于<code>wait</code>方法, 只有当前线程获取了共享变量的监视器锁后, 才可以调用共享变量的<code>notify()</code>方法, 否则抛出<code>IllegalMonitorStateException</code></font></p>
+<h4 id="5-notifyAll-函数"><a href="#5-notifyAll-函数" class="headerlink" title="5): notifyAll()函数"></a>5): notifyAll()函数</h4><p>不同于<code>notify()</code>唤醒单个线程, <code>notifyAll()</code>唤醒在该共享变量上由于<code>wait</code>方法而被挂起的<strong>所有线程</strong>!</p>
+<p>例:</p>
+<pre><code class="java">public class NotifyAndNotifyAllDemo {
+
+    // 创建资源
+    private static volatile Object resourceA = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+
+        // 创建线程
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (resourceA) {
+                    System.out.println(&quot;threadA get A lock&quot;);
+
+                    try {
+                        System.out.println(&quot;threadA begin wait&quot;);
+                        resourceA.wait();
+                        System.out.println(&quot;threadA end wait&quot;);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        Thread threadB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (resourceA) {
+                    System.out.println(&quot;threadB get A lock&quot;);
+                    try {
+                        System.out.println(&quot;threadB begin wait&quot;);
+                        resourceA.wait();
+                        System.out.println(&quot;threadB end wait&quot;);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        Thread threadC = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (resourceA) {
+                    System.out.println(&quot;threadC begin notify&quot;);
+                    resourceA.notify();
+//                    resourceA.notifyAll();
+                }
+            }
+        });
+
+        threadA.start();
+        threadB.start();
+
+        Thread.sleep(1000);
+        threadC.start();
+
+        threadA.join();
+        threadB.join();
+        threadC.join();
+
+        System.out.println(&quot;main over&quot;);
+    }
+}</code></pre>
+<p>上述代码开启了三个线程, 其中线程A和线程B分别调用了<code>resourceA</code>的<code>wait()</code>方法, 线程C则调用了<code>notify()</code>方法. 这个例子试图在<em>线程A和线程B都因为调用<code>wait()</code>方法而被阻塞后, 通过线程C调用<code>resourceA.notify()</code>方法, 从而唤醒线程A和线程B.</em> 但结果: <font color="#ff0000">只有线程A被唤醒, 线程B没有被唤醒!</font></p>
+<p>结果如下:</p>
+<pre><code>threadA get A lock
+threadA begin wait
+threadB get A lock
+threadB begin wait
+threadC begin notify
+threadA END wait</code></pre><ul>
+<li>将<code>notify</code>改为<code>notifyAll</code></li>
+</ul>
+<p>则结果为:</p>
+<pre><code>threadA get A lock
+threadA begin wait
+threadB get A lock
+threadB begin wait
+threadC begin notify
+threadB end wait
+threadA end wait
+main over</code></pre><p>从结果可以看出, 当使用<code>notifyAll()</code>唤醒时: <font color="#00ff00">线程A和线程B都会被唤醒, 只是线程B先获得了<code>resourceA</code>上的锁, 从<code>wait()</code>方法返回. 线程B执行完毕后, 线程A又获取了<code>resourceA</code>上面的锁, 并返回.</font></p>
+<p><strong>注:</strong></p>
+<p><font color="ff0000">在共享变量上调用<code>notifyAll()</code>方法只会唤醒这个<em>方法前调用了<code>wait</code>方法而被放入共享变量等待集合里面的线程</em>. 如果调用<code>notifyAll()</code>后一个线程调用了这个共享变量的<code>wait()</code>方法, 则不会被唤醒</font></p>
+<hr>
+<h3 id="4-等待线程终止的join方法"><a href="#4-等待线程终止的join方法" class="headerlink" title="4. 等待线程终止的join方法"></a>4. 等待线程终止的join方法</h3><p>项目中经常碰到: <em>需要等待某几件事完成之后, 才能继续向下执行</em>, 如: 多个线程加载资源, 需要等待多个资源全部加载完毕再汇总处理. 在<code>Thread类</code>中有一个<code>join</code>方法可以做这个.</p>
+<p>例:</p>
+<pre><code class="java">public class JoinDemo {
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println(&quot;child thread-one over!&quot;);
+            }
+        });
+
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println(&quot;child thread-two over!&quot;);
+            }
+        });
+
+        threadOne.start();
+        threadTwo.start();
+
+        System.out.println(&quot;wait all child thread over!&quot;);
+
+        threadOne.join();
+        threadTwo.join();
+
+        System.out.println(&quot;all child thread over!&quot;);
+    }
+}
+</code></pre>
+<p>如上代码, 在主线程中创建并启动了两个子线程, 然后分别调用了他们的<code>join()</code>方法, 则:<font color="00ff00">主线程首先会在调用<code>threadOne.join()</code>后被阻塞, 等待<code>threadOne</code>执行完毕后返回! <code>threadOne</code>执行完毕后, 主线程继续调用<code>threadTwo.join()</code>方法再次被阻塞, 等待<code>threadTwo</code>执行完毕后返回!</font></p>
+<p>此外, 当线程A调用了线程B的<code>join</code>方法后会被阻塞. 当其他线程调用了线程A的<code>interrupt()</code>方法中断了线程A之后, 线程A会抛出<code>InterruptedException</code>异常而返回!</p>
+<p>例:</p>
+<pre><code class="java">public class JoinInterrupted {
+
+    public static void main(String[] args) {
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(&quot;thread-one begin run!&quot;);
+                for(; ;) {
+
+                }
+            }
+        });
+
+        // 获取主线程
+        final Thread mainThread = Thread.currentThread();
+
+        Thread threadTwo = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                mainThread.interrupt();
+            }
+        });
+
+        // 启动子线程
+        threadOne.start();
+
+        // 延迟一秒启动中断线程
+        threadTwo.start();
+
+        // 等待线程one结束
+        try {
+            threadOne.join();
+        } catch (InterruptedException e) {
+            System.out.println(&quot;main thread: &quot; + e);
+        }
+    }
+}
+</code></pre>
+<p>上代码在<code>threadOne</code>线程中执行死循环, 主线程调用<code>threadOne的join()方法</code><strong>阻塞自己</strong>, 等待线程<code>threadOne</code>执行完毕. 当<code>threadTwo</code>休眠1秒后会主动调用主线程的<code>interrupt()</code>方法设置主线程的中断标志. 此时主线程在<code>threadOne.join()</code>处抛出异常. 注: <font color="ff0000">在<code>threadTwo</code>线程中调用的是主线程的<code>interrupt()</code>方法, 而不是线程<code>threadOne</code>的! 所以程序并不会结束(线程<code>threadOne</code>仍在运行)</font></p>
+<h3 id="5-让线程睡眠的sleep方法"><a href="#5-让线程睡眠的sleep方法" class="headerlink" title="5. 让线程睡眠的sleep方法"></a>5. 让线程睡眠的sleep方法</h3><p><code>Thread类</code>中有一个静态的<code>sleep方法</code>, 当一个执行中的线程调用了<code>Thread的sleep方法</code>后, 调用线程会暂时让出指定时间的执行权, 即: </p>
+<ul>
+<li><font color="00ff00">此期间不参与CPU调度</font></li>
+<li><font color="ff0000">但是该线程所拥有的监视器资源, 比如锁是持有而不让出的!</font></li>
+<li><font color="ff0000">指定的睡眠时间到了之后, 该函数会正常返回. 此时线程处于就绪状态, 然后参与CPU的调度;</font></li>
+<li><font color="ff0000">如果在睡眠期间其他线程调用了该线程的<code>interrupt()</code>方法中断了该线程, 则该线程会在调用<code>sleep</code>方法的地方抛出<code>InterruptedException</code>异常而返回</font></li>
+</ul>
+<p><strong>例1:</strong></p>
+<pre><code class="java">import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class SleepTest {
+
+    // 创建一个独占锁
+    private static final Lock lock = new ReentrantLock();
+
+    public static void main(String[] args) {
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 获取独占锁
+                lock.lock();
+
+                try {
+                    System.out.println(&quot;child threadA is in sleep&quot;);
+
+                    Thread.sleep(5000);
+                    System.out.println(&quot;child threadA is awake&quot;);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        });
+
+        Thread threadB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                lock.lock();
+                try {
+                    System.out.println(&quot;child threadB is in sleep&quot;);
+                    Thread.sleep(5000);
+                    System.out.println(&quot;child threadB is awake&quot;);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        });
+
+        threadA.start();
+        threadB.start();
+
+    }
+
+}
+</code></pre>
+<p>上例子说明了: <font color="ff0000">线程在睡眠时, 拥有的监视器资源不会被释放!</font></p>
+<p>首先创建了一个独占锁. 然后创建了两个线程, 每个线程在内部先获取锁, 然后睡眠. 睡眠之后会释放锁. </p>
+<p><strong>例2:</strong></p>
+<pre><code class="java">package club.jasonkayzk666.chapter1.lesson5.sleep;
+
+public class SleepInterrupt {
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.println(&quot;child thread is in sleep&quot;);
+                    Thread.sleep(10000);
+                    System.out.println(&quot;child thread is in awake&quot;);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+        Thread.sleep(2000);
+
+        thread.interrupt();
+
+    }
+}
+</code></pre>
+<p>子线程在睡眠的时候, 主线程中断了它. 所以子线程在调用sleep方法处抛出了<code>InterruptedException</code>异常.</p>
+<p>此外: <em>如果在调用<code>Thread.sleep(long millis)</code>时, 为参数传递了一个负数, 将会抛出异常.</em></p>
+<hr>
+<h3 id="6-让出CPU执行权的yield方法"><a href="#6-让出CPU执行权的yield方法" class="headerlink" title="6. 让出CPU执行权的yield方法"></a>6. 让出CPU执行权的yield方法</h3><p><code>Thread类</code>中存在一个静态的<code>yield</code>方法, 当线程调用<code>yield</code>方法时, 实际上就是在暗示线程调度器当前线程请求让出自己的CPU使用.<font color="#ff0000">但是线程调度器可以无条件忽略这个暗示!</font></p>
+<p><font color="#00ff00">当一个线程调用了<code>yield</code>方法时, 当前线程会让出CPU使用权, 然后处于就绪状态, 线程调度器会从线程就绪队列中获取一个线程优先级最高的线程.当然也有可能会调度到刚刚让出CPU的那个线程来获取CPU执行权.</font></p>
+<p>例:</p>
+<pre><code class="java">package club.jasonkayzk666.chapter1.lesson6.yield;
+
+public class YieldTest implements Runnable {
+
+    YieldTest() {
+        // 创建并启动线程
+        new Thread(this).start();
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i &lt; 5; i++) {
+            // 当i = 0时, 让出CPU执行权, 放弃时间片, 进行下一论调度
+            if (i % 5 ==0) {
+                System.out.println(Thread.currentThread() + &quot;yidld cpu...&quot;);
+
+                // 当前线程让出CPU执行权, 放弃时间片, 进行下一论调度
+                // Thread.yield();
+            }
+        }
+
+        System.out.println(Thread.currentThread() + &quot; is over&quot;);
+    }
+
+    public static void main(String[] args) {
+        new YieldTest();
+        new YieldTest();
+        new YieldTest();
+    }
+}
+</code></pre>
+<p>上面的代码开启了三个线程, 每个线程都一样, 在<code>for循环</code>中执行5次打印. 运行多次后, 下面结果出现次数最多:</p>
+<pre><code>Thread[Thread-0,5,main]yidld cpu...
+Thread[Thread-0,5,main] is over
+Thread[Thread-1,5,main]yidld cpu...
+Thread[Thread-1,5,main] is over
+Thread[Thread-2,5,main]yidld cpu...
+Thread[Thread-2,5,main] is over</code></pre><p>解开<code>Thread.yield()</code>的注释在执行, 结果如下:</p>
+<pre><code>Thread[Thread-1,5,main]yidld cpu...
+Thread[Thread-2,5,main]yidld cpu...
+Thread[Thread-0,5,main]yidld cpu...
+Thread[Thread-1,5,main] is over
+Thread[Thread-0,5,main] is over
+Thread[Thread-2,5,main] is over</code></pre><p>从结果可知: <font color="#00ff00"> <code>Thread.yield()方法</code>生效了. 三个线程线程分别在<code>i = 0</code>时调用了<code>Thread.yield()</code>方法, 所以三个线程自己的两行没有输出在一起, 因为输出了第一行之后, 当前线程让出了CPU使用权.</font></p>
+<p><strong>总结:</strong></p>
+<p><font color="#ff0000"><code>sleep</code>与<code>yield</code>方法的区别在于, 当线程调用<code>sleep</code>方法时, 调用线程会被阻塞指定时间, 在此期间线程不会被调度; 而使用<code>yield</code>方法, 线程只是让出自己剩余的时间片, 并没有被阻塞挂起, 而是处于就绪状态, 调度器<em>下一次就有可能调度到当前线程执行</em></font></p>
+<hr>
+<h3 id="7-线程中断"><a href="#7-线程中断" class="headerlink" title="7. 线程中断"></a>7. 线程中断</h3><p>Java中的线程中断是一种<em>线程间的协作模式</em>.</p>
+<p><font color="#ff0000">通过设置线程的中断标志并不能直接终止该线程的执行! 而是被中断的线程根据中断状态自行处理!</font></p>
+<h4 id="1-void-interrupt-方法"><a href="#1-void-interrupt-方法" class="headerlink" title="1): void interrupt()方法:"></a>1): <code>void interrupt()方法</code>:</h4><p>中断线程.</p>
+<p>例如: 当线程A运行时, 线程B可以调用线程A的<code>interrupt()方法</code>来<strong>设置线程A的中断标志为true并立即返回.</strong></p>
+<p><font color="#ff0000">设置标志仅仅是设置标志, 线程A实际并没有被中断, 而是会继续向下执行! 如果线程A因为调用了<code>wait, join, sleep</code>方法而被阻塞挂起, 此时线程A会抛出<code>InterruptedException</code>异常.</font></p>
+<h4 id="2-boolean-isInterrupted"><a href="#2-boolean-isInterrupted" class="headerlink" title="2): boolean isInterrupted():"></a>2): <code>boolean isInterrupted()</code>:</h4><p>检测当前线程是否被中断;</p>
+<p><strong>注:</strong> <font color="#ff0000">只检测, 而不清除中断标志</font></p>
+<h4 id="3-boolean-interrupted"><a href="#3-boolean-interrupted" class="headerlink" title="3): boolean interrupted():"></a>3): <code>boolean interrupted()</code>:</h4><p>检测当前线程是否被中断. </p>
+<p><font color="#ff0000">若发现当前线程被中断, 则会清除中断标志, 并且该方法为<em><code>静态方法</code></em>, 可以通过<code>Thread类</code>直接调用. (<em>获取当前调用线程的中断标志, 而不是调用<code>interrupted()</code>方法的实例对象!!!!!</em>)</font></p>
+<pre><code class="java">public static boolean interrupted() {
+    // 清除中断标志
+    return currentThread().isInterrupted(true);
+}</code></pre>
+<p>*<em>例: *</em>利用<code>Interrupted</code>优雅退出</p>
+<pre><code class="java">public void run() {
+    try {
+        ....... 
+        // 线程退出条件
+        while (!Thread.currentThread().isInterrupted() &amp;&amp; more work to do) {
+            // do more work
+        } catch (InterruptedException e) {
+            // thread was interrupted during sleep or wait
+        } finally {
+            // cleanup, if required
+        }
+    }
+}</code></pre>
+<p>*<em>例2: *</em>根据中断标志判断线程是否终止的例子</p>
+<pre><code class="java">package club.jasonkayzk666.chapter1.lesson7.interrupt;
+
+public class InterruptTest {
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!Thread.currentThread().isInterrupted()) {
+                    System.out.println(Thread.currentThread() + &quot; hello&quot;);
+                }
+            }
+        });
+
+
+        thread.start();
+
+        Thread.sleep(1000);
+
+        System.out.println(&quot;main thread interrupt thread&quot;);
+        thread.interrupt();
+
+        thread.join();
+        System.out.println(&quot;main is over&quot;);
+    }
+}
+</code></pre>
+<p>输出结果如下:</p>
+<pre><code>.....................
+Thread[Thread-0,5,main] hello
+Thread[Thread-0,5,main] hello
+main thread interrupt thread
+Thread[Thread-0,5,main] hello
+main is over</code></pre><p>上述代码中, 子线程<code>thread</code>通过检查当前线程中断标志来控制是否退出循环, 主线程休眠1秒后调用<code>thread的interrupt()方法</code>设置了中断标志, 所以线程<code>thread</code>退出了循环.</p>
+<p>还有一些情况比如: 当线程为了等待一些特定条件的到来时, 一般会调用<code>sleep</code>方法, <code>wait</code>或者<code>join()</code>来阻塞当前进程. 如: 一个线程调用了<code>Thread.sleep(3000)</code>. 则在调用时会一直阻塞, 直到3s后才变为激活状态! 但是有可能在3s内条件已经满足, 如果等待3s后再返回有点浪费时间, 此时可以使用<code>interrupt()</code>方法, 强制让<code>sleep</code>抛出异常而返回, 线程转为激活态.</p>
+<p><strong>例:</strong></p>
+<pre><code class="java">package club.jasonkayzk666.chapter1.lesson7.interrupt;
+
+public class InterruptSleep {
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    System.out.println(&quot;thread-one begin sleep for 2000 seconds&quot;);
+                    Thread.sleep(2000000);
+                    System.out.println(&quot;thread-one awaking&quot;);
+                } catch (InterruptedException e) {
+                    System.out.println(&quot;thread-one is interrupted while sleeping&quot;);
+                    return;
+                }
+
+                System.out.println(&quot;thread-one leaving normally&quot;);
+            }
+        });
+
+        threadOne.start();
+
+        Thread.sleep(1000);
+
+        threadOne.interrupt();
+
+        threadOne.join();
+
+        System.out.println(&quot;main thread is over&quot;);
+    }
+}
+</code></pre>
+<p>线程one休眠了2000秒, 在正常情况下线程需要2000s才可以被唤醒. 但是通过<code>threadOne.interrupt()</code>方法, 打断了线程的休眠, 并捕获抛出的异常.</p>
+<p><strong>例2:</strong> <code>interrupted()</code>与<code>isInterrupted()</code>区别</p>
+<pre><code class="java">package club.jasonkayzk666.chapter1.lesson7.interrupt;
+
+public class InterruptedAndIsinterrupted {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        Thread threadOne = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (; ;) {
+
+                }
+            }
+        });
+
+        // 启动线程
+        threadOne.start();
+
+        // 设置线程中断标志
+        threadOne.interrupt();
+
+        // 获取线程中断标志
+        System.out.println(&quot;isInterrupted: &quot; + threadOne.isInterrupted());
+
+        // 获取线程中断标志并重置
+        System.out.println(&quot;isInterrupted: &quot; + threadOne.interrupted());
+
+        // 获取中断标志并重置
+        System.out.println(&quot;isInterrupted: &quot; + Thread.interrupted());
+
+        // 获取中断标志
+        System.out.println(&quot;isInterrupted: &quot; + threadOne.isInterrupted());
+
+        threadOne.join();
+
+        System.out.println(&quot;main is over&quot;);
+
+    }
+}
+</code></pre>
+<p>输出为:</p>
+<pre><code>isInterrupted: true
+isInterrupted: false
+isInterrupted: false
+isInterrupted: true</code></pre><p>为什么后三个输出为<code>false, false, true</code>而不是<code>true, false, false</code>!</p>
+<p><strong>注:</strong></p>
+<p><font color="#ff0000"><em>这里虽然调用了<code>threadOne.interrupted()</code>方法, 但是获取的实际是主线程的中断标志!!!! 因为主线程是当前线程! 而<code>threadOne.interrupted() 和 Thread.interrupted()</code>方法的作用是一样的, 都是获取<code>当前进程的</code>中断标志!</em></font></p>
+<hr>
+<h3 id="8-线程上下文切换"><a href="#8-线程上下文切换" class="headerlink" title="8. 线程上下文切换"></a>8. 线程上下文切换</h3><p>多线程编程中, 线程个数一般都大于CPU个数, 而每个CPU同一时刻都只能被一个线程使用! 当前线程使用过时间片后, 就会处于就绪状态, 并让出CPU让其他线程占用, 即: <strong>上下文切换</strong>.</p>
+<p>而上下文的切换过程中需要保存当前线程的执行现场, 当再次执行是根据保存的执行现场信息回复!</p>
+<hr>
+<h3 id="9-线程死锁"><a href="#9-线程死锁" class="headerlink" title="9. 线程死锁"></a>9. 线程死锁</h3><p>死锁即: <font color="#ff0000">两个或者两个以上的线程在执行过程中, 因抢占资源而造成的相互等待的现象; 且在无外力作用的情况下, 线程会一直等待而无法继续运行下去!</font></p>
+<p><img src="https://gss2.bdstatic.com/-fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=7a4ee20578cb0a46912f836b0a0a9d41/810a19d8bc3eb1354547b744a51ea8d3fc1f4448.jpg" alt="死锁"></p>
+<p>如图: </p>
+<p>​        T1已经持有资源2, 同时还想申请资源1；而T2已经持有资源1, 同时还想申请资源2, 即T1与T2将会相互等待, 而进入了死锁状态!</p>
+<h4 id="1-死锁产生的四个必备条件"><a href="#1-死锁产生的四个必备条件" class="headerlink" title="1): 死锁产生的四个必备条件!"></a>1): <em>死锁产生的四个必备条件!</em></h4><ul>
+<li><p><font color="#ff0000"><em>互斥条件</em></font></p>
+<p>线程对已经获得的资源进行<strong>排他性使用</strong>, 即该资源同时只能有一个线程占用!</p>
+<p>如果此时还有其他线程请求资源, 则请求者只能等待, 直到占有资源的线程释放该资源!</p>
+</li>
+<li><p><font color="#ff0000">请求并持有条件</font></p>
+<p>一个线程已经持有了至少一个资源, 但又提出了新的资源要求, 而新的资源已经被其他线程占用, 所以: <em>当前线程会在不释放自己已经获取的资源的前提下被阻塞!</em></p>
+</li>
+<li><p><font color="#ff0000">不可剥夺条件</font></p>
+<p>线程获取的资源在自己使用之前不能被其他线程抢占, 只有自己使用完毕之后才能够由自己释放!</p>
+</li>
+<li><p><font color="#ff0000">环路等待条件</font></p>
+<p>发生死锁的时候, 必定包含<strong>线程-资源的环形链</strong>, 即线程集合中{T0, T1, T2, …., Tn}中的T0在等待T1的资源占用, T1等待T2的资源占用….., Tn正在等待T0的资源占用!</p>
+</li>
+</ul>
+<h4 id="2-死锁的例子"><a href="#2-死锁的例子" class="headerlink" title="2): 死锁的例子"></a>2): 死锁的例子</h4><pre><code class="java">package club.jasonkayzk666.chapter1.lesson9.deadlock;
+
+public class DeadLockDemo {
+
+    // 创建资源
+    private static Object sourceA = new Object();
+    private static Object sourceB = new Object();
+
+    public static void main(String[] args) {
+
+        Thread threadA = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (sourceA) {
+                    System.out.println(Thread.currentThread() + &quot; get resourceA&quot;);
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(Thread.currentThread() + &quot; waiting get B&quot;);
+                    synchronized (sourceB) {
+                        System.out.println(Thread.currentThread() + &quot; get B&quot;);
+                    }
+                }
+            }
+        });
+
+        Thread threadB = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (sourceB) {
+                    System.out.println(Thread.currentThread() + &quot; get resourceB&quot;);
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(Thread.currentThread() + &quot; waiting get A&quot;);
+                    synchronized (sourceA) {
+                        System.out.println(Thread.currentThread() + &quot; get A&quot;);
+                    }
+                }
+            }
+        });
+
+        threadA.start();
+        threadB.start();
+
+    }
+
+}
+</code></pre>
+<p>输出的结果如下:</p>
+<pre><code>Thread[Thread-0,5,main] get resourceA
+Thread[Thread-1,5,main] get resourceB
+Thread[Thread-0,5,main] waiting get B
+Thread[Thread-1,5,main] waiting get A</code></pre><p><em>由于线程A获得了资源B, 线程B获得了资源A, 且满足死锁的四个必要条件, 所以发生了死锁!</em></p>
+<h4 id="3-避免死锁的方法"><a href="#3-避免死锁的方法" class="headerlink" title="3): 避免死锁的方法"></a>3): 避免死锁的方法</h4><p>想要避免死锁, 只需要<strong>破坏至少一个构成死锁的必要条件即可!</strong> <font color="#ff0000">但是, 由操作系统可知, 只有<code>请求并持有</code>和<code>环路等待</code>条件是可以被破坏的!</font></p>
+<ul>
+<li><strong>保证资源申请的有序性</strong></li>
+</ul>
+<p>造成死锁的原因其实和<font color="#00ff00">申请资源的顺序</font>有很大关系. 使用资源申请的有序性即可!</p>
+<p><strong>例如</strong>: 将线程B的代码修改为</p>
+<pre><code class="java">Thread threadB = new Thread(new Runnable() {
+    @Override
+    public void run() {
+        synchronized (sourceA) {
+            System.out.println(Thread.currentThread() + &quot; get resourceB&quot;);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println(Thread.currentThread() + &quot; waiting get A&quot;);
+            synchronized (sourceB) {
+                System.out.println(Thread.currentThread() + &quot; get A&quot;);
+            }
+        }
+    }
+});</code></pre>
+<p>即: <em>改变线程B获取资源的顺序与线程A一致!</em></p>
+<p><strong>原因</strong>: <font color="#ff0000">资源的有序性破坏了资源请求并持有条件和环路等待条件!</font></p>
+<hr>
+<h3 id="10-守护线程与用户线程"><a href="#10-守护线程与用户线程" class="headerlink" title="10. 守护线程与用户线程"></a>10. 守护线程与用户线程</h3><p>Java中的线程分为两类: <code>daemon线程(守护线程)</code>和<code>user线程(用户线程)</code>. 在JVM启动时会调用main函数, main函数所在的线程就是一个用户线程. 而在JVM内部其实还启动了好多守护线程, 如: 垃圾回收等. </p>
+<h4 id="1-daemon与user线程的区别"><a href="#1-daemon与user线程的区别" class="headerlink" title="1): daemon与user线程的区别"></a>1): daemon与user线程的区别</h4><p><font color="#00ff00">当最后一个<code>非守护线程</code>退出时, JVM将会退出, 所有的守护线程也会退出!</font></p>
+<h4 id="2-守护线程的创建"><a href="#2-守护线程的创建" class="headerlink" title="2): 守护线程的创建"></a>2): 守护线程的创建</h4><p>在Java中创建守护线程只需: <font color="#00ff00">设置线程的daemon参数为<code>true</code>即可!</font></p>
+<pre><code class="java">daemonThread.setDaemon(true);</code></pre>
+<h4 id="3-daemon与user线程的比较例子"><a href="#3-daemon与user线程的比较例子" class="headerlink" title="3): daemon与user线程的比较例子"></a>3): daemon与user线程的比较例子</h4><pre><code class="java">package club.jasonkayzk666.chapter1.lesson10.daemonAndUesrThread;
+
+public class DaemonAndUserThread {
+
+    public static void main(String[] args) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (; ; ) {
+
+                }
+            }
+        });
+
+        thread.setDaemon(true);
+        thread.start();
+
+        System.out.println(&quot;main thread is over!&quot;);
+    }
+}
+</code></pre>
+<p><code>在启动线程前</code>将线程设置为守护线程, 执行后JVM已终止!</p>
+<p>当main线程结束后, JVM会启动叫做<code>DestroyJavaVM</code>的线程, 会等待所有用户线程结束之后终止JVM!</p>
+<h4 id="4-daemon在Tomcat中"><a href="#4-daemon在Tomcat中" class="headerlink" title="4): daemon在Tomcat中"></a>4): daemon在Tomcat中</h4><p>在Tomcat的NIO实现<code>NioEndpoint</code>中会开启一组<code>接受线程</code>来<em>接受用户的连接请求</em>, 以及一组<code>处理线程</code>负责具体用户请求. </p>
+<p>通过源码可以看出: <font color="#ff0000">在默认情况下, <em>接受线程和处理线程都是守护线程!</em></font></p>
+<p>这也意味着: <font color="#ff0000">当tomcat收到shutdown命令后, 并且没有其他用户线程存在时, Tomcat进程将会马上消亡, *不会等待处理线程处理完当前请求!</font></p>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/09/10/Java并发总结-1/" title="https://jasonkayzk.github.io/2019/09/10/Java并发总结-1/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/09/10/Java并发总结-1/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725365942"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

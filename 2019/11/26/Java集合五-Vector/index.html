@@ -1,0 +1,2822 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java集合五-Vector - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本篇总结了Java中的Vector">
+<meta name="keywords" content="Java基础,面试总结,集合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java集合五-Vector">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本篇总结了Java中的Vector">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Vector%E4%B8%8ECollection%E5%85%B3%E7%B3%BB.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.740Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java集合五-Vector">
+<meta name="twitter:description" content="本篇总结了Java中的Vector">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Vector%E4%B8%8ECollection%E5%85%B3%E7%B3%BB.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725358669">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?2">
+    
+    <h1>Java集合五-Vector</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年11月26日</a>
+    <a><i class="nexmoefont icon-areachart"></i>7.4k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 38 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Java源码/">Java源码</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java基础/">Java基础</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/集合/">集合</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/面试总结/">面试总结</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Vector介绍"><span class="toc-text">一. Vector介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector介绍"><span class="toc-text">Vector介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector的构造函数"><span class="toc-text">Vector的构造函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector的API"><span class="toc-text">Vector的API</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Vector数据结构"><span class="toc-text">二. Vector数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector的继承关系"><span class="toc-text">Vector的继承关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vector与Collection关系如下图："><span class="toc-text">Vector与Collection关系如下图：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-Vector源码解析-基于JDK11-0-4"><span class="toc-text">三. Vector源码解析(基于JDK11.0.4)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-Vector遍历方式"><span class="toc-text">四. Vector遍历方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#整表遍历"><span class="toc-text">整表遍历</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五-Vector示例"><span class="toc-text">五. Vector示例</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>学完<a href="https://jasonkayzk.github.io/2019/11/24/Java%E9%9B%86%E5%90%88%E4%BA%8C-ArrayList/">ArrayList</a>和<a href="https://jasonkayzk.github.io/2019/11/26/Java%E9%9B%86%E5%90%88%E5%9B%9B-LinkedList/">LinkedList</a>之后，我们接着学习Vector. 学习方式还是和之前一样，先对Vector有个整体认识，然后再学习它的源码；最后再通过实例来学会使用它:</p>
+<ul>
+<li>Vector介绍</li>
+<li>Vector数据结构</li>
+<li>Vector源码解析(基于JDK11.0.4)</li>
+<li>Vector遍历方式</li>
+<li>Vector示例</li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一-Vector介绍"><a href="#一-Vector介绍" class="headerlink" title="一. Vector介绍"></a>一. Vector介绍</h2><h3 id="Vector介绍"><a href="#Vector介绍" class="headerlink" title="Vector介绍"></a><strong>Vector介绍</strong></h3><p>Vector <strong>是矢量队列</strong>，它是JDK1.0版本就添加的类(而实际上在JDK 1.2之后就被淘汰了)</p>
+<p>Vector <strong>继承于AbstractList，实现了List接口</strong>. 所以，<strong>它是一个队列，支持相关的添加、删除、修改、遍历等功能</strong></p>
+<p>Vector <strong>实现了RandmoAccess接口</strong>，可以通过元素的序号快速获取元素对象, 即<strong>提供了随机访问功能</strong>(RandmoAccess是java中用来被List实现，为List提供快速访问功能的)</p>
+<p>Vector <strong>实现了Cloneable接口</strong>，即实现clone()函数。它能被克隆</p>
+<p><strong>和ArrayList不同，Vector中的操作是线程安全的</strong></p>
+<br>
+
+<h3 id="Vector的构造函数"><a href="#Vector的构造函数" class="headerlink" title="Vector的构造函数"></a><strong>Vector的构造函数</strong></h3><p>Vector共有4个构造函数</p>
+<pre><code class="java"> // 默认构造函数, 可知默认大小与ArrayList相同, 都为10
+public Vector() {
+    this(10);
+}
+
+// initialCapacity指定Vector初始化容量, 当由于增加数据导致容量增加时，默认每次容量会增加一倍
+public Vector(int initialCapacity) {
+        this(initialCapacity, 0);
+}
+
+// initialCapacity指定Vector初始化容量, capacityIncrement是每次Vector容量增加时的增量值
+public Vector(int initialCapacity, int capacityIncrement) {
+    super();
+    if (initialCapacity &lt; 0)
+        throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+
+                                           initialCapacity);
+    this.elementData = new Object[initialCapacity]; // Vector内部由数组实现
+    this.capacityIncrement = capacityIncrement;
+}
+
+// 创建一个包含collection的Vector, 此时默认每次容量会增加一倍
+public Vector(Collection&lt;? extends E&gt; c) {
+    elementData = c.toArray();
+    elementCount = elementData.length;
+    if (elementData.getClass() != Object[].class)
+        elementData = Arrays.copyOf(elementData, elementCount, Object[].class);
+}</code></pre>
+<br>
+
+<h3 id="Vector的API"><a href="#Vector的API" class="headerlink" title="Vector的API"></a><strong>Vector的API</strong></h3><pre><code class="java">// 来自于List接口
+synchronized int             size()
+synchronized boolean         isEmpty()
+             boolean         contains(Object object)
+             int             indexOf(Object object)
+synchronized int             lastIndexOf(Object object)
+synchronized Object[]        toArray()
+synchronized &lt;T&gt; T[]         toArray(T[] contents)
+synchronized E               get(int index)
+synchronized E               set(int location, E object)
+synchronized boolean         add(E object)
+             boolean         remove(Object object)
+             void            add(int location, E object)
+synchronized E               remove(int location)
+             void            clear()
+synchronized boolean         containsAll(Collection&lt;?&gt; collection)
+             boolean         addAll(Collection&lt;? extends E&gt; collection)
+             boolean         removeAll(Collection&lt;?&gt; collection)
+             boolean         retainAll(Collection&lt;?&gt; collection)
+synchronized boolean         addAll(int location, Collection&lt;? extends E&gt; collection)
+synchronized boolean         equals(Object object)
+synchronized int             hashCode()
+synchronized List&lt;E&gt;         subList(int start, int end)
+synchronized ListIterator&lt;E&gt; listIterator(int index)
+synchronized ListIterator&lt;E&gt; listIterator()
+synchronized Iterator&lt;E&gt;     iterator()
+
+
+// 重写Object的clone()
+synchronized Object          clone()
+
+
+// 来自于Collection接口(JDK 8后加入)
+             boolean         removeIf(Predicate&lt;? super E&gt; filter)
+             Spliterator&lt;E&gt;  spliterator()
+
+
+// 重写AbstractCollection的toString()
+synchronized String          toString()
+
+// 重写Iterable的forEach()
+synchronized void            forEach(Consumer&lt;? super E&gt; action)
+
+// 来自于List接口
+synchronized void            replaceAll(UnaryOperator&lt;E&gt; operator)
+synchronized void            sort(Comparator&lt;? super E&gt; c)
+
+// Vector中定义的方法
+synchronized void            copyInto(Object[] elements)=
+synchronized void            trimToSize()
+synchronized void            ensureCapacity(int minimumCapacity)
+synchronized void            setSize(int length)
+synchronized int             capacity()
+             Enumeration&lt;E&gt;  elements()
+synchronized int             indexOf(Object object, int location)
+synchronized int             lastIndexOf(Object object, int location)
+synchronized E               elementAt(int location)
+synchronized E               firstElement()
+synchronized E               lastElement()
+synchronized void            setElementAt(E object, int location)
+synchronized void            removeElementAt(int location)
+synchronized void            insertElementAt(E object, int location)
+synchronized void            addElement(E object)
+synchronized boolean         removeElement(Object object)
+synchronized void            removeAllElements()</code></pre>
+<blockquote>
+<br>
+
+<p><strong>总结:</strong></p>
+<p><strong>在Vector中所有方法都被synchronized关键字同步了(即使某些方法没有在方法签名上标注, 但是其内部也都是调用的同步方法, 或者使用的是synchronized代码块)</strong></p>
+<p>这是一个在并发情况下效率相当低的行为, 因为synchronized是一个效率相当低的悲观锁, 所以才会在JDK 1.2就被淘汰了!</p>
+</blockquote>
+ <br>
+
+<h2 id="二-Vector数据结构"><a href="#二-Vector数据结构" class="headerlink" title="二. Vector数据结构"></a>二. Vector数据结构</h2><h3 id="Vector的继承关系"><a href="#Vector的继承关系" class="headerlink" title="Vector的继承关系"></a><strong>Vector的继承关系</strong></h3><pre><code class="java">java.lang.Object
+   ↳     java.util.AbstractCollection&lt;E&gt;
+         ↳     java.util.AbstractList&lt;E&gt;
+               ↳     java.util.Vector&lt;E&gt;
+
+public class Vector&lt;E&gt;
+    extends AbstractList&lt;E&gt;
+    implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable {}</code></pre>
+<br>
+
+<h3 id="Vector与Collection关系如下图："><a href="#Vector与Collection关系如下图：" class="headerlink" title="Vector与Collection关系如下图："></a><strong>Vector与Collection关系如下图</strong>：</h3><p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Vector%E4%B8%8ECollection%E5%85%B3%E7%B3%BB.jpg" alt="Vector与Collection关系.jpg"></p>
+<p>Vector的数据结构和<a href="https://jasonkayzk.github.io/2019/11/24/Java%E9%9B%86%E5%90%88%E4%BA%8C-ArrayList/">ArrayList</a>差不多，它<strong>包含了3个成员变量</strong>：elementData , elementCount， capacityIncrement</p>
+<p><strong>① elementData 是”Object[]类型的数组”，它保存了添加到Vector中的元素</strong>。elementData是个动态数组，如果初始化Vector时，没指定动态数组的大小，则使用<strong>默认大小10</strong></p>
+<p><strong>② elementCount 是动态数组的实际大小</strong>(实际存储元素个数)</p>
+<p><strong>③ capacityIncrement 是动态数组的增长系数</strong>。如果在创建Vector时，指定了capacityIncrement的大小；则每次当Vector中动态数组容量增加时，增加的大小都是capacityIncrement(默认为增大一倍)</p>
+<blockquote>
+  <br>
+
+<p>  <strong>小贴士: 具体的增长方式，参考源码分析中的newCapacity()方法</strong></p>
+</blockquote>
+<br>
+
+<h2 id="三-Vector源码解析-基于JDK11-0-4"><a href="#三-Vector源码解析-基于JDK11-0-4" class="headerlink" title="三. Vector源码解析(基于JDK11.0.4)"></a>三. <strong>Vector源码解析(基于JDK11.0.4)</strong></h2><p>为了更了解Vector的原理，下面<strong>对Vector源码代码作出分析</strong></p>
+<pre><code class="java">public class Vector&lt;E&gt;  extends AbstractList&lt;E&gt; implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable {
+
+    // 保存Vector中数据的数组
+    protected Object[] elementData;
+
+    // 实际数据的数量
+    protected int elementCount;
+
+    // 容量增长系数
+    protected int capacityIncrement;
+
+    // Vector的序列版本号
+    private static final long serialVersionUID = -2767605614048989439L;
+
+    // 指定Vector&quot;容量大小&quot;和&quot;增长系数&quot;的构造函数
+    public Vector(int initialCapacity, int capacityIncrement) {
+        super();
+        if (initialCapacity &lt; 0)
+            throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+
+                                               initialCapacity);
+        this.elementData = new Object[initialCapacity];
+        this.capacityIncrement = capacityIncrement;
+    }
+
+    // 指定Vector容量大小的构造函数
+    public Vector(int initialCapacity) {
+        this(initialCapacity, 0);
+    }
+
+    // Vector构造函数。默认容量是10
+    public Vector() {
+        this(10);
+    }
+
+    // 指定集合的Vector构造函数
+    public Vector(Collection&lt;? extends E&gt; c) {
+        // 获取集合c的数组，并将其赋值给elementData
+        elementData = c.toArray();
+        // 设置数组长度
+        elementCount = elementData.length;
+        // defend against c.toArray (incorrectly) not returning Object[]
+        if (elementData.getClass() != Object[].class)
+            elementData = Arrays.copyOf(elementData, elementCount, Object[].class);
+    }
+
+    // 将数组Vector的全部元素都拷贝到数组anArray中
+    public synchronized void copyInto(Object[] anArray) {
+        System.arraycopy(elementData, 0, anArray, 0, elementCount);
+    }
+
+    // 将当前容量值设为 =实际元素个数
+    public synchronized void trimToSize() {
+        modCount++;
+        int oldCapacity = elementData.length;
+        if (elementCount &lt; oldCapacity) {
+            elementData = Arrays.copyOf(elementData, elementCount);
+        }
+    }
+
+    // 检查并确保Vector的容量足够
+    public synchronized void ensureCapacity(int minCapacity) {
+        if (minCapacity &gt; 0) {
+            modCount++;
+            // 当Vector的容量不足以容纳当前的全部元素，增加容量大小
+            if (minCapacity &gt; elementData.length)
+                grow(minCapacity);
+        }
+    }
+
+    // 可分配的最大空间(The maximum size of array to allocate)
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+    // 根据minCapacity给存储数组扩容
+    private Object[] grow(int minCapacity) {
+        return elementData = Arrays.copyOf(elementData,
+                                           newCapacity(minCapacity));
+    }
+
+    // 给存储数组扩容一个单位
+    private Object[] grow() {
+        return grow(elementCount + 1);
+    }
+
+    // 根据minCapacity计算扩容后数组大小
+    private int newCapacity(int minCapacity) {
+        // 容易计算溢出的代码区(overflow-conscious code)
+        int oldCapacity = elementData.length;
+
+        // 若容量增量系数&gt;0(即capacityIncrement&gt;0)，则将容量增大当capacityIncrement
+        // 否则，将容量增大一倍
+        int newCapacity = oldCapacity + ((capacityIncrement &gt; 0) ?
+                                         capacityIncrement : oldCapacity);
+        if (newCapacity - minCapacity &lt;= 0) {
+            if (minCapacity &lt; 0) // 发生了计算溢出(overflow)
+                throw new OutOfMemoryError();
+            return minCapacity;
+        }
+        // 新的容量小于等于 Integer.MAX_VALUE - 8 则直接返回，否则基于预期容量返回 Integer.MAX_VALUE - 8 或 Integer.MAX_VALUE
+        return (newCapacity - MAX_ARRAY_SIZE &lt;= 0)
+            ? newCapacity
+            : hugeCapacity(minCapacity);
+    }
+
+     // 基于预期容量返回 Integer.MAX_VALUE - 8 或 Integer.MAX_VALUE
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity &lt; 0) // overflow
+            throw new OutOfMemoryError();
+        return (minCapacity &gt; MAX_ARRAY_SIZE) ?
+            Integer.MAX_VALUE :
+            MAX_ARRAY_SIZE;
+    }
+
+    // 设置容量值为 newSize
+    public synchronized void setSize(int newSize) {
+        modCount++;
+        // 若 &quot;newSize 大于 Vector容量&quot;，则调整Vector的大小
+        if (newSize &gt; elementData.length)
+            grow(newSize);
+        final Object[] es = elementData;
+        // 若 &quot;newSize 小于/等于 Vector容量&quot;，则将newSize位置开始的元素都设置为null
+        for (int to = elementCount, i = newSize; i &lt; to; i++)
+            es[i] = null;
+        elementCount = newSize;
+    }
+
+    // 返回Vector的总的容量
+    public synchronized int capacity() {
+        return elementData.length;
+    }
+
+    // 返回Vector的实际大小，即Vector中元素个数
+    public synchronized int size() {
+        return elementCount;
+    }
+
+    // 判断Vector是否为空
+    public synchronized boolean isEmpty() {
+        return elementCount == 0;
+    }
+
+    // 返回Vector中与全部元素对应的Enumeration
+    public Enumeration&lt;E&gt; elements() {
+        // 通过匿名类实现Enumeration
+        return new Enumeration&lt;E&gt;() {
+            int count = 0;
+
+            // 是否存在下一个元素
+            public boolean hasMoreElements() {
+                return count &lt; elementCount;
+            }
+
+            // 获取下一个元素
+            public E nextElement() {
+                synchronized (Vector.this) {
+                    if (count &lt; elementCount) {
+                        return elementData(count++);
+                    }
+                }
+                throw new NoSuchElementException(&quot;Vector Enumeration&quot;);
+            }
+        };
+    }
+
+    // 返回Vector中是否包含对象o(使用equals()方法判断)
+    public boolean contains(Object o) {
+        return indexOf(o, 0) &gt;= 0;
+    }
+
+    // 从开始位置开始向后查找对象o(使用equals()方法判断)
+    // 若找到，则返回元素的索引值；否则，返回-1
+    public int indexOf(Object o) {
+        return indexOf(o, 0);
+    }
+
+    // 从index位置开始向后查找对象o(使用equals()方法判断)
+    // 若找到，则返回元素的索引值；否则，返回-1
+    public synchronized int indexOf(Object o, int index) {
+        // 若查找元素为null，则正向找出null元素，并返回它对应的序号
+        if (o == null) {
+            for (int i = index ; i &lt; elementCount ; i++)
+                if (elementData[i]==null)
+                    return i;
+        } else {
+            // 若查找元素不为null，则正向找出该元素，并返回它对应的序号
+            for (int i = index ; i &lt; elementCount ; i++)
+                if (o.equals(elementData[i]))
+                    return i;
+        }
+        return -1;
+    }
+
+    // 从后向前查找元素o, 并返回元素的索引
+    public synchronized int lastIndexOf(Object o) {
+        return lastIndexOf(o, elementCount-1);
+    }
+
+    // 从后向前查找元素o, 开始位置是&quot;从前向后的第index个数&quot;
+    // 若找到，则返回元素的“索引值”；否则，返回-1
+    public synchronized int lastIndexOf(Object o, int index) {
+        if (index &gt;= elementCount)
+            throw new IndexOutOfBoundsException(index + &quot; &gt;= &quot;+ elementCount);
+
+        if (o == null) {
+            // 若查找元素为null，则反向找出null元素，并返回它对应的序号
+            for (int i = index; i &gt;= 0; i--)
+                if (elementData[i]==null)
+                    return i;
+        } else {
+            // 若查找元素不为null，则反向找出该元素，并返回它对应的序号
+            for (int i = index; i &gt;= 0; i--)
+                if (o.equals(elementData[i]))
+                    return i;
+        }
+        return -1;
+    }
+
+    // 返回Vector中index位置的元素, 若index越界，则抛出异常
+    public synchronized E elementAt(int index) {
+        if (index &gt;= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + &quot; &gt;= &quot; + elementCount);
+        }
+
+        return elementData(index);
+    }
+
+    // 获取Vector中的第一个元素
+    // 若失败，则抛出异常
+    public synchronized E firstElement() {
+        if (elementCount == 0) {
+            throw new NoSuchElementException();
+        }
+        return elementData(0);
+    }
+
+    // 获取Vector中的最后一个元素
+    // 若失败，则抛出异常
+    public synchronized E lastElement() {
+        if (elementCount == 0) {
+            throw new NoSuchElementException();
+        }
+        return elementData(elementCount - 1);
+    }
+
+    // 设置index位置的元素值为obj
+    public synchronized void setElementAt(E obj, int index) {
+        if (index &gt;= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + &quot; &gt;= &quot; +
+                                                     elementCount);
+        }
+        elementData[index] = obj;
+    }
+
+    // 删除index位置的元素
+    public synchronized void removeElementAt(int index) {
+        if (index &gt;= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + &quot; &gt;= &quot; +
+                                                     elementCount);
+        }
+        else if (index &lt; 0) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
+        int j = elementCount - index - 1;
+        if (j &gt; 0) {
+            System.arraycopy(elementData, index + 1, elementData, index, j);
+        }
+        modCount++;
+        elementCount--;
+        elementData[elementCount] = null; // GC优化(to let gc do its work)
+    }
+
+    // 在index位置处插入元素(obj)
+    public synchronized void insertElementAt(E obj, int index) {
+        if (index &gt; elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index
+                                                     + &quot; &gt; &quot; + elementCount);
+        }
+        modCount++;
+        final int s = elementCount;
+        Object[] elementData = this.elementData;
+        if (s == elementData.length)
+            elementData = grow();
+        System.arraycopy(elementData, index,
+                         elementData, index + 1,
+                         s - index);
+        elementData[index] = obj;
+        elementCount = s + 1;
+    }
+
+    // 将“元素obj”添加到Vector末尾
+    public synchronized void addElement(E obj) {
+        modCount++;
+        add(obj, elementData, elementCount);
+    }
+
+    // 在Vector中查找并删除元素obj
+    // 成功，返回true；否则，返回false
+    public synchronized boolean removeElement(Object obj) {
+        modCount++;
+        int i = indexOf(obj);
+        if (i &gt;= 0) {
+            removeElementAt(i);
+            return true;
+        }
+        return false;
+    }
+
+    // 删除Vector中的全部元素
+    public synchronized void removeAllElements() {
+        final Object[] es = elementData;
+        // 将Vector中的全部元素设为null
+        for (int to = elementCount, i = elementCount = 0; i &lt; to; i++)
+            es[i] = null;
+        modCount++;
+    }
+
+    // 克隆函数
+    public synchronized Object clone() {
+        try {
+            @SuppressWarnings(&quot;unchecked&quot;)
+            Vector&lt;E&gt; v = (Vector&lt;E&gt;) super.clone();
+            v.elementData = Arrays.copyOf(elementData, elementCount);
+            v.modCount = 0;
+            return v;
+        } catch (CloneNotSupportedException e) {
+            // this shouldn&#39;t happen, since we are Cloneable
+            throw new InternalError(e);
+        }
+    }
+
+    // 返回Object数组
+    public synchronized Object[] toArray() {
+        return Arrays.copyOf(elementData, elementCount);
+    }
+
+    // 返回Vector的模板数组。所谓模板数组，即可以将T设为任意的数据类型
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public synchronized &lt;T&gt; T[] toArray(T[] a) {
+        // 若数组a的大小 &lt; Vector的元素个数；
+        // 则新建一个T[]数组，数组大小是“Vector的元素个数”，并将“Vector”全部拷贝到新数组中
+        if (a.length &lt; elementCount)
+            return (T[]) Arrays.copyOf(elementData, elementCount, a.getClass());
+
+        // 若数组a的大小 &gt;= Vector的元素个数；
+        // 则将Vector的全部元素都拷贝到数组a中
+        System.arraycopy(elementData, 0, a, 0, elementCount);
+
+        // 数组a中多余元素置null
+        if (a.length &gt; elementCount)
+            a[elementCount] = null;
+
+        return a;
+    }
+
+    // 位置获取操作
+
+    // 获取elementData数组中第index个元素
+    @SuppressWarnings(&quot;unchecked&quot;)
+    E elementData(int index) {
+        return (E) elementData[index];
+    }
+
+    // 静态方法: 获取数组es中第index个元素
+    @SuppressWarnings(&quot;unchecked&quot;)
+    static &lt;E&gt; E elementAt(Object[] es, int index) {
+        return (E) es[index];
+    }
+
+    // 获取index位置的元素
+    public synchronized E get(int index) {
+        if (index &gt;= elementCount)
+            throw new ArrayIndexOutOfBoundsException(index);
+
+        return elementData(index);
+    }
+
+    // 设置index位置的值为element。并返回index位置的原始值
+    public synchronized E set(int index, E element) {
+        if (index &gt;= elementCount)
+            throw new ArrayIndexOutOfBoundsException(index);
+
+        E oldValue = elementData(index);
+        elementData[index] = element;
+        return oldValue;
+    }
+
+    // 本工具方法是从add(E)方法中拆分出来的,旨在保持方法的字节码小于35字节
+    // (-XX:MaxInlineSize默认值), 此举有助于帮助C1编译器循环调用add(E)方法时做热点代码的内联优化
+    // This helper method split out from add(E) to keep method
+    // bytecode size under 35 (the -XX:MaxInlineSize default value),
+    //  which helps when add(E) is called in a C1-compiled loop.
+    private void add(E e, Object[] elementData, int s) {
+        if (s == elementData.length)
+            elementData = grow();
+        elementData[s] = e;
+        elementCount = s + 1;
+    }
+
+    // 将“元素e”添加到Vector最后
+    public synchronized boolean add(E e) {
+        modCount++;
+        add(e, elementData, elementCount);
+        return true;
+    }
+
+    // 删除Vector中的元素o
+    public boolean remove(Object o) {
+        return removeElement(o);
+    }
+
+    // 在index位置添加元素element
+    public void add(int index, E element) {
+        insertElementAt(element, index);
+    }
+
+    // 删除index位置的元素，并返回index位置的原始值
+    public synchronized E remove(int index) {
+        modCount++;
+        if (index &gt;= elementCount)
+            throw new ArrayIndexOutOfBoundsException(index);
+        E oldValue = elementData(index);
+
+        int numMoved = elementCount - index - 1;
+        if (numMoved &gt; 0)
+            System.arraycopy(elementData, index+1, elementData, index,
+                             numMoved);
+        elementData[--elementCount] = null; // 优化GC(Let gc do its work)
+
+        return oldValue;
+    }
+
+    // 清空Vector
+    public void clear() {
+        removeAllElements();
+    }
+
+    // 块操作(Bulk Operations)
+
+    // 返回Vector是否包含集合c
+    public synchronized boolean containsAll(Collection&lt;?&gt; c) {
+        return super.containsAll(c);
+    }
+
+    // 将集合c添加到Vector中
+    public boolean addAll(Collection&lt;? extends E&gt; c) {
+        Object[] a = c.toArray();
+        modCount++;
+        int numNew = a.length;
+        if (numNew == 0)
+            return false;
+        // Vector对此方法做了优化, JDK 8之前的方法整个被标注为synchronized
+        synchronized (this) {
+            Object[] elementData = this.elementData;
+            final int s = elementCount;
+            if (numNew &gt; elementData.length - s)
+                elementData = grow(s + numNew);
+            // 将集合c的全部元素拷贝到数组elementData中
+            System.arraycopy(a, 0, elementData, s, numNew);
+            elementCount = s + numNew;
+            return true;
+        }
+    }
+
+    // 删除集合c的全部元素
+    public boolean removeAll(Collection&lt;?&gt; c) {
+        Objects.requireNonNull(c);
+        return bulkRemove(e -&gt; c.contains(e));
+    }
+
+    // 删除非集合c中的元素
+    public boolean retainAll(Collection&lt;?&gt; c) {
+        Objects.requireNonNull(c);
+        return bulkRemove(e -&gt; !c.contains(e));
+    }
+
+    // JDK 8中添加的方法, 根据Predicate(Lambda表达式)给出的boolean条件, 删除满足条件的元素
+    // 多用在Stream操作中
+    @Override
+    public boolean removeIf(Predicate&lt;? super E&gt; filter) {
+        Objects.requireNonNull(filter);
+        return bulkRemove(filter);
+    }
+
+    /* 一些位操作实现(A tiny bit set implementation) */
+
+    // 用在了removeIf()方法中, 作用是初始化一个数组, 数组长度是按照 (n - 1) &gt;&gt; 6 + 1 的逻辑来得到的
+    // &gt;&gt; 是算术位移，简单的来说就是将数字除以 2 的 n 次方，&gt;&gt; 6 就是除以 2 的 6 次方，即除以 64, 因此 nBits 方法会以 64 为单位来收缩，并返回收缩后长度的数组
+    private static long[] nBits(int n) {
+        return new long[((n - 1) &gt;&gt; 6) + 1];
+    }
+
+     // 同样用在removeIf()方法中, 作用就是将 i 转换为 2 的 i 次方数字后，进行合并，而合并的结果其实是将第 i 位置为 1, 其余位为零(位图索引)
+    // 在removeIf()方法中: deathRow 是一个「位图」(Bitmap) 的数据结构
+    private static void setBit(long[] bits, int i) {
+        bits[i &gt;&gt; 6] |= 1L &lt;&lt; i;
+    }
+
+    // 同样用在removeIf()方法中: isClear 会按照输入去看数组中元素的第 i 位是否被置为 1，如果 没有 被置为 1 ，则返回 true(判断位图索引)
+    private static boolean isClear(long[] bits, int i) {
+        return (bits[i &gt;&gt; 6] &amp; (1L &lt;&lt; i)) == 0;
+    }
+
+    // JDK 8后新加入, 用于传入给定的Predicate(正则表达式), 来删除满足条件的元素
+    private synchronized boolean bulkRemove(Predicate&lt;? super E&gt; filter) {
+        int expectedModCount = modCount;
+        final Object[] es = elementData;
+        final int end = elementCount;
+        int i;
+        // 从头开始略过不满足断言的元素，找到第一个需要移除的元素索引(Optimize for initial run of survivors)
+        for (i = 0; i &lt; end &amp;&amp; !filter.test(elementAt(es, i)); i++)
+            ;
+        // 遍历的同时, 仍然允许以可重入方式访问集合for、read（但写入程序仍然获得CME）; 
+        // 第一次遍历查找要删除的元素，第二次遍历以物理方式删除[整个过程记录使用deathRow位图的形式存放匹配成功的元素的偏移量]
+        // 原文: Tolerate predicates that reentrantly access the collection for, read (but writers still get CME), so traverse once to find elements to delete, a second pass to physically expunge
+        if (i &lt; end) {
+            final int beg = i;
+            final long[] deathRow = nBits(end - beg);
+            deathRow[0] = 1L;   // 初始化位图
+            for (i = beg + 1; i &lt; end; i++) // 第一次遍历查找要删除的元素
+                if (filter.test(elementAt(es, i)))
+                    setBit(deathRow, i - beg);
+            if (modCount != expectedModCount) // 判断多线程是否修改
+                throw new ConcurrentModificationException();
+            modCount++;
+            int w = beg;
+            for (i = beg; i &lt; end; i++) // 第二次遍历以物理方式删除
+                if (isClear(deathRow, i - beg))
+                    es[w++] = es[i];
+            for (i = elementCount = w; i &lt; end; i++)
+                es[i] = null;
+            return true;
+        } else {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            return false;
+        }
+    }
+
+    // 从index位置开始，将集合c添加到Vector中
+    public synchronized boolean addAll(int index, Collection&lt;? extends E&gt; c) {
+        if (index &lt; 0 || index &gt; elementCount)
+            throw new ArrayIndexOutOfBoundsException(index);
+
+        Object[] a = c.toArray();
+        modCount++;
+        int numNew = a.length;
+        if (numNew == 0)
+            return false;
+        Object[] elementData = this.elementData;
+        final int s = elementCount;
+        if (numNew &gt; elementData.length - s)
+            elementData = grow(s + numNew);
+
+        int numMoved = s - index;
+        if (numMoved &gt; 0)
+            System.arraycopy(elementData, index,
+                             elementData, index + numNew,
+                             numMoved);
+        System.arraycopy(a, 0, elementData, index, numNew);
+        elementCount = s + numNew;
+        return true;
+    }
+
+    // 返回两个Vector对象是否相等(直接比较的是内存地址!)
+    public synchronized boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    // 计算Vector的哈希值
+    public synchronized int hashCode() {
+        return super.hashCode();
+    }
+
+    // 调用父类的toString()
+    public synchronized String toString() {
+        return super.toString();
+    }
+
+    // 获取Vector中fromIndex(包括)到toIndex(不包括)的子集
+    public synchronized List&lt;E&gt; subList(int fromIndex, int toIndex) {
+        return Collections.synchronizedList(super.subList(fromIndex, toIndex),
+                                            this);
+    }
+
+    // 删除Vector中fromIndex到toIndex(不包括)的元素
+    protected synchronized void removeRange(int fromIndex, int toIndex) {
+        modCount++;
+        shiftTailOverGap(elementData, fromIndex, toIndex);
+    }
+
+    //  将lo -&gt; hi移到末尾并置为null, 后面的元素前移并填补上(Erases the gap from lo to hi, by sliding down following elements)
+    // 主要用在removeRange(), batchRemove()等大范围删除方法中
+    private void shiftTailOverGap(Object[] es, int lo, int hi) {
+        System.arraycopy(es, hi, es, lo, elementCount - hi);Vector
+        for (int to = elementCount, i = (elementCount -= hi - lo); i &lt; to; i++)
+            es[i] = null;
+    }
+
+    // 反序列化
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        ObjectInputStream.GetField gfields = in.readFields();
+        int count = gfields.get(&quot;elementCount&quot;, 0);
+        Object[] data = (Object[])gfields.get(&quot;elementData&quot;, null);
+        if (count &lt; 0 || data == null || count &gt; data.length) {
+            throw new StreamCorruptedException(&quot;Inconsistent vector internals&quot;);
+        }
+        elementCount = count;
+        elementData = data.clone();
+    }
+
+    // 序列化当前对象
+    private void writeObject(java.io.ObjectOutputStream s)
+            throws java.io.IOException {
+        final java.io.ObjectOutputStream.PutField fields = s.putFields();
+        final Object[] data;
+        synchronized (this) {
+            fields.put(&quot;capacityIncrement&quot;, capacityIncrement);
+            fields.put(&quot;elementCount&quot;, elementCount);
+            data = elementData.clone();
+        }
+        fields.put(&quot;elementData&quot;, data);
+        s.writeFields();
+    }
+
+    // 返回 Vector 指定索引及其之后元素的列表迭代器, 使用了ListItr(实现了ListIterator接口)
+    public synchronized ListIterator&lt;E&gt; listIterator(int index) {
+        if (index &lt; 0 || index &gt; elementCount)
+            throw new IndexOutOfBoundsException(&quot;Index: &quot;+index);
+        return new ListItr(index);
+    }
+
+    // 返回 Vector 的列表迭代器
+    public synchronized ListIterator&lt;E&gt; listIterator() {
+        return new ListItr(0);
+    }
+
+    // 返回 Vector 的迭代器
+    public synchronized Iterator&lt;E&gt; iterator() {
+        return new Itr();
+    }
+
+    // 内部类Itr: 优化的AbstractList.Itr, 只能往后遍历，支持移除元素(An optimized version of AbstractList.Itr)
+    private class Itr implements Iterator&lt;E&gt; {
+        int cursor;       // 下一个返回元素的索引
+        int lastRet = -1; // 最后一次返回元素的索引
+        int expectedModCount = modCount;
+
+        public boolean hasNext() {
+            // 此方法虽然没有被同步, 但是对他的修改都是在同步内或者同步后的, 所以还是可以使用
+            // (活泼，但在规范内，因为修改是在同步内或同步后检查的)Racy but within spec, since modifications are checked, within or after synchronization in next/previous
+            return cursor != elementCount;
+        }
+
+        public E next() {
+            synchronized (Vector.this) {
+                checkForComodification();
+                int i = cursor;
+                if (i &gt;= elementCount)
+                    throw new NoSuchElementException();
+                cursor = i + 1;
+                return elementData(lastRet = i);
+            }
+        }
+
+        public void remove() {
+            if (lastRet == -1)
+                throw new IllegalStateException();
+            synchronized (Vector.this) {
+                checkForComodification();
+                Vector.this.remove(lastRet);
+                expectedModCount = modCount;
+            }
+            cursor = lastRet;
+            lastRet = -1;
+        }
+
+        // 只能向后一次的forEach, 下一次遍历则为空!
+        @Override
+        public void forEachRemaining(Consumer&lt;? super E&gt; action) {
+            Objects.requireNonNull(action);
+            synchronized (Vector.this) {
+                final int size = elementCount;
+                int i = cursor;
+                if (i &gt;= size) {
+                    return;
+                }
+                final Object[] es = elementData;
+                if (i &gt;= es.length)
+                    throw new ConcurrentModificationException();
+                while (i &lt; size &amp;&amp; modCount == expectedModCount)
+                    action.accept(elementAt(es, i++));
+                // update once at end of iteration to reduce heap write traffic
+                cursor = i;
+                lastRet = i - 1;
+                checkForComodification();
+            }
+        }
+
+        // 判断是否存在多线程并发修改 Vector 实例
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    // 内部类ListItr: 支持向前或向后遍历，支持在迭代过程中增加、移除、修改元素
+    // An optimized version of AbstractList.ListItr
+    final class ListItr extends Itr implements ListIterator&lt;E&gt; {
+        ListItr(int index) {
+            super();
+            cursor = index;
+        }
+
+        public boolean hasPrevious() {
+            return cursor != 0;
+        }
+
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        public E previous() {
+            synchronized (Vector.this) {
+                checkForComodification();
+                int i = cursor - 1;
+                if (i &lt; 0)
+                    throw new NoSuchElementException();
+                cursor = i;
+                return elementData(lastRet = i);
+            }
+        }
+
+        public void set(E e) {
+            if (lastRet == -1)
+                throw new IllegalStateException();
+            synchronized (Vector.this) {
+                checkForComodification();
+                Vector.this.set(lastRet, e);
+            }
+        }
+
+        public void add(E e) {
+            int i = cursor;
+            synchronized (Vector.this) {
+                checkForComodification();
+                Vector.this.add(i, e);
+                expectedModCount = modCount;
+            }
+            cursor = i + 1;
+            lastRet = -1;
+        }
+    }
+
+    // 消费 Vector 中的每个元素
+    @Override
+    public synchronized void forEach(Consumer&lt;? super E&gt; action) {
+        Objects.requireNonNull(action);
+        final int expectedModCount = modCount;
+        final Object[] es = elementData;
+        final int size = elementCount;
+        for (int i = 0; modCount == expectedModCount &amp;&amp; i &lt; size; i++)
+            action.accept(elementAt(es, i));
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+    }
+
+    // 在i -&gt; end中: 通过函数式接口变换目标元素的值，并替换它
+    @Override
+    public synchronized void replaceAll(UnaryOperator&lt;E&gt; operator) {
+        Objects.requireNonNull(operator);
+        final int expectedModCount = modCount;
+        final Object[] es = elementData;
+        final int size = elementCount;
+        for (int i = 0; modCount == expectedModCount &amp;&amp; i &lt; size; i++)
+            es[i] = operator.apply(elementAt(es, i));
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+        modCount++;
+    }
+
+    //  Vector 进行排序, 还是使用的Arrays.sort()方法
+    @SuppressWarnings(&quot;unchecked&quot;)
+    @Override
+    public synchronized void sort(Comparator&lt;? super E&gt; c) {
+        final int expectedModCount = modCount;
+        Arrays.sort((E[]) elementData, 0, elementCount, c);
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+        modCount++;
+    }
+
+    // 返回一个JDK 8后加入的Spliterator类, 用于并行遍历元素而设计的一个迭代器
+    @Override
+    public Spliterator&lt;E&gt; spliterator() {
+        return new VectorSpliterator(null, 0, -1, 0);
+    }
+
+    // 内部类VectorSpliterator: Spliterator接口的实现类, 一个可以并行遍历数组的基于索引的二分裂的懒加载的迭代器(与ArrayList类似)
+    final class VectorSpliterator implements Spliterator&lt;E&gt; {
+        private Object[] array; // 与ArrayList不同在于加入了一个array引用
+        private int index; // 当前位置（包含），advance/spilt操作时会被修改(current index, modified on advance/split)
+        private int fence; // 结束位置（不包含），-1表示到最后一个元素(-1 until used; then one past last index)
+        private int expectedModCount; // 用于存放list的modCount(initialized when fence set)
+
+        // 从origin -&gt; fence范围创建一个Spliterator(Creates new spliterator covering the given range)
+        VectorSpliterator(Object[] array, int origin, int fence,
+                          int expectedModCount) {
+            this.array = array;
+            this.index = origin;
+            this.fence = fence;
+            this.expectedModCount = expectedModCount;
+        }
+
+        // 第一次使用时实例化结束位置(initialize on first use)
+        private int getFence() {
+            int hi;
+            // 第一次初始化时，fence才会小于0
+            if ((hi = fence) &lt; 0) {
+                synchronized (Vector.this) {
+                    array = elementData;
+                    expectedModCount = modCount;
+                    hi = fence = elementCount;
+                }
+            }
+            return hi;
+        }
+
+        // 分割list,返回一个返回一个新分割出的spilterator实例(相当于二分法，这个方法会递归)
+        // 1. VectorSpliterator本质还是对原list进行操作，只是通过index和fence来控制每次处理的范围
+        public Spliterator&lt;E&gt; trySplit() {
+            // hi结束位置（不包括） lo:开始位置 mid中间位置
+            int hi = getFence(), lo = index, mid = (lo + hi) &gt;&gt;&gt; 1;
+            // 当lo &gt;= mid， 表示不能再分割
+            // 当lo &lt; mid时，表示可以分割，切割(lo, mid)出去，同时更新index = mid
+            return (lo &gt;= mid) ? null :
+                new VectorSpliterator(array, lo, index = mid, expectedModCount);
+        }
+
+        // 返回true时，表示可能还有元素未处理, 返回falsa时，没有剩余元素处理了
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public boolean tryAdvance(Consumer&lt;? super E&gt; action) {
+            Objects.requireNonNull(action);
+            int i;
+            if (getFence() &gt; (i = index)) {
+                index = i + 1;
+                action.accept((E)array[i]);
+                if (modCount != expectedModCount)
+                    throw new ConcurrentModificationException();
+                return true;
+            }
+            return false;
+        }
+
+        // 顺序遍历处理所有剩下的元素
+        @SuppressWarnings(&quot;unchecked&quot;)
+        public void forEachRemaining(Consumer&lt;? super E&gt; action) {
+            Objects.requireNonNull(action);
+            final int hi = getFence();
+            final Object[] a = array;
+            int i;
+            for (i = index, index = hi; i &lt; hi; i++)
+                action.accept((E) a[i]);
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+
+        // 估算大小
+        public long estimateSize() {
+            return getFence() - index;
+        }
+
+        // 返回特征值
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
+        }
+    }
+}
+</code></pre>
+<blockquote>
+<br>
+
+<p><strong>总结:</strong></p>
+<p><strong>①</strong> Vector实际上是通过一个<strong>数组</strong>去保存数据的。当我们构造Vecotr时；若使用默认构造函数，则Vector的<strong>默认容量大小是10</strong></p>
+<p><strong>②</strong> 当Vector容量不足以容纳全部元素时，Vector的容量会增加。<strong>若容量增加系数 &gt;0，则将容量的值增加“容量增加系数”；否则，将容量大小增加一倍</strong></p>
+<p><strong>③</strong> Vector的克隆函数，即是将全部元素克隆到一个数组中**</p>
+<p>其实Vector基本上就是将全部方法都synchronized的ArrayList, 所以效率相当的低</p>
+</blockquote>
+<br>
+
+<h2 id="四-Vector遍历方式"><a href="#四-Vector遍历方式" class="headerlink" title="四. Vector遍历方式"></a>四. Vector遍历方式</h2><h3 id="整表遍历"><a href="#整表遍历" class="headerlink" title="整表遍历"></a><strong>整表遍历</strong></h3><p>Vector支持<strong>4种整表遍历方式</strong></p>
+<p>① <strong>通过迭代器遍历</strong>, 即通过Iterator去遍历</p>
+<pre><code class="java">Integer value = null;
+Iterator&lt;Integer&gt; iterator = vector.iterator();
+while (iterator.hasNext()) {
+    value = iterator.next();
+}</code></pre>
+<br>
+
+<p>② <strong>随机访问</strong>，通过索引值去遍历</p>
+<pre><code class="java">Integer value = null;
+for (int i=0, size = vec.size(); i&lt;size; i++) {
+    value = (Integer)vec.get(i);        
+}</code></pre>
+<br>
+
+<p>③ <strong>forEach语法遍历</strong></p>
+<pre><code class="java">Integer value = null;
+for (Integer integ:vec) {
+    value = integ;
+}</code></pre>
+<br>
+
+<p>④ <strong>Enumeration遍历</strong></p>
+<pre><code class="java">Integer value = null;
+Enumeration&lt;Integer&gt; enumeration = vector.elements();
+while (enumeration.hasMoreElements()) {
+    value = enumeration.nextElement();
+}</code></pre>
+<br>
+
+<p><strong>测试这些遍历方式效率的代码如下</strong>：</p>
+<pre><code class="java">/**
+ * @author zk
+ */
+public class VectorRandomAccessTest {
+
+    public static void main(String[] args) {
+        Vector vec = new Vector();
+        for (int i = 0; i &lt; 100000; i++) {
+            vec.add(i);
+        }
+        iteratorThroughRandomAccess(vec);
+        iteratorThroughIterator(vec);
+        iteratorThroughFor2(vec);
+        iteratorThroughEnumeration(vec);
+
+    }
+
+    private static void isRandomAccessSupported(List list) {
+        if (list instanceof RandomAccess) {
+            System.out.println(&quot;RandomAccess implemented!&quot;);
+        } else {
+            System.out.println(&quot;RandomAccess not implemented!&quot;);
+        }
+
+    }
+
+    public static void iteratorThroughRandomAccess(List list) {
+
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        for (int i = 0; i &lt; list.size(); i++) {
+            list.get(i);
+        }
+        endTime = System.currentTimeMillis();
+        long interval = endTime - startTime;
+        System.out.println(&quot;iteratorThroughRandomAccess：&quot; + interval + &quot; ms&quot;);
+    }
+
+    public static void iteratorThroughIterator(List list) {
+
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        for (Iterator iter = list.iterator(); iter.hasNext(); ) {
+            iter.next();
+        }
+        endTime = System.currentTimeMillis();
+        long interval = endTime - startTime;
+        System.out.println(&quot;iteratorThroughIterator：&quot; + interval + &quot; ms&quot;);
+    }
+
+
+    public static void iteratorThroughFor2(List list) {
+
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        for (Object obj : list)
+            ;
+        endTime = System.currentTimeMillis();
+        long interval = endTime - startTime;
+        System.out.println(&quot;iteratorThroughFor2：&quot; + interval + &quot; ms&quot;);
+    }
+
+    public static void iteratorThroughEnumeration(Vector vec) {
+
+        long startTime;
+        long endTime;
+        startTime = System.currentTimeMillis();
+        for (Enumeration enu = vec.elements(); enu.hasMoreElements(); ) {
+            enu.nextElement();
+        }
+        endTime = System.currentTimeMillis();
+        long interval = endTime - startTime;
+        System.out.println(&quot;iteratorThroughEnumeration：&quot; + interval + &quot; ms&quot;);
+    }
+}
+
+------- Output --------
+iteratorThroughRandomAccess：6 ms
+iteratorThroughIterator：7 ms
+iteratorThroughFor2：6 ms
+iteratorThroughEnumeration：6 ms</code></pre>
+<blockquote>
+<br>
+
+<p><strong>总结: 遍历Vector，使用索引的随机访问方式最快，使用迭代器最慢</strong></p>
+<p><strong>建议使用随机访问去遍历Vector</strong></p>
+</blockquote>
+<br>
+
+<p><strong>遍历SubList</strong></p>
+<p>与ArrayList相似, Vector中也存在一个subList()方法, 用于返回Vector的一个子视图, 示例如下:</p>
+<pre><code class="java">        List&lt;Integer&gt; vector = new Vector&lt;&gt;(20);
+        for (int i = 0; i &lt; 20; i++) {
+            vector.add(i);
+        }
+
+        List&lt;Integer&gt; subList = vector.subList(10, 15);
+        System.out.println(subList.getClass().getName() + &quot;: &quot; + subList); // java.util.Collections$SynchronizedRandomAccessList: [10, 11, 12, 13, 14]
+
+        subList.add(100);
+        System.out.println(subList); // [10, 11, 12, 13, 14, 100]
+        System.out.println(vector); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 100, 15, 16, 17, 18, 19]
+</code></pre>
+<blockquote>
+<br>
+
+<p><strong>注意:</strong></p>
+<p><strong>① subList()方法返回的也是一个List类型(ArrayList中的叫做SubList的内部类), 所以他拥有所有List接口中的方法;</strong></p>
+<p><strong>② 对subList的操作最终也会影响到原数组, 这一点要注意;</strong></p>
+</blockquote>
+<br>
+
+<p><strong>使用Spliterator并发遍历</strong></p>
+<p>在JDK 8之后添加了Spliterator接口, 用于并发操作List以提高性能</p>
+<p><strong>Vector中也有一个实现了Spliterator接口的内部类: <code>VectorSpliterator</code></strong></p>
+<p>与ArrayList相同, 下面这个例子展示了Spliterator的实际使用: <strong>创建一个长度为100的list，如果下标能被10整除，则该位置数值跟下标相同，否则值为aaaa。然后多线程遍历list，取出list中的数值(字符串aaaa不要)进行累加求和</strong></p>
+<pre><code class="java">public class Test {
+
+    static List&lt;String&gt; list;
+
+    static AtomicInteger count;
+
+    public static void main(String[] args) throws InterruptedException {
+        // 初始化List, 并获得spliterator
+        list = new Vector&lt;&gt;();
+        for (int i = 1; i &lt;= 100; i++) {
+            if (i % 10 == 0) {
+                list.add(Integer.toString(i));
+            } else {
+                list.add(&quot;aaaa&quot;);
+            }
+        }
+        Spliterator&lt;String&gt; spliterator = list.spliterator();
+
+        // 求和结果
+        count = new AtomicInteger(0);
+
+        Spliterator&lt;String&gt; s1 = spliterator.trySplit();
+        Spliterator&lt;String&gt; s2 = spliterator.trySplit();
+
+        Thread main = new Thread(new Task(spliterator));
+        Thread t1 = new Thread(new Task(s1));
+        Thread t2 = new Thread(new Task(s2));
+
+        main.start();
+        t1.start();
+        t2.start();
+
+        t1.join();
+        t2.join();
+        main.join();
+
+        System.out.println(count);
+    }
+
+    // 判断字符串是数字
+    public static boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile(&quot;^[-+]?[\\d]*$&quot;);
+        return pattern.matcher(str).matches();
+    }
+
+    static class Task implements Runnable {
+
+        private Spliterator&lt;String&gt; spliterator;
+
+        public Task(Spliterator&lt;String&gt; spliterator) {
+            this.spliterator = spliterator;
+        }
+
+        @Override
+        public void run() {
+            String threadName = Thread.currentThread().getName();
+            System.out.println(&quot;线程&quot; + threadName + &quot;开始运行-----&quot;);
+            spliterator.forEachRemaining(x -&gt; {
+                if (isInteger(x)) {
+                    count.addAndGet(Integer.parseInt(x));
+                    System.out.println(&quot;数值：&quot; + x + &quot;------&quot; + threadName);
+                }
+            });
+            System.out.println(&quot;线程&quot; + threadName + &quot;运行结束-----&quot;);
+        }
+    }
+
+}
+
+------- Output -------
+线程Thread-2开始运行-----
+线程Thread-0开始运行-----
+线程Thread-1开始运行-----
+数值：80------Thread-0
+数值：90------Thread-0
+数值：100------Thread-0
+线程Thread-0运行结束-----
+数值：10------Thread-1
+数值：20------Thread-1
+数值：60------Thread-2
+数值：70------Thread-2
+线程Thread-2运行结束-----
+数值：30------Thread-1
+数值：40------Thread-1
+数值：50------Thread-1
+线程Thread-1运行结束-----
+550</code></pre>
+<blockquote>
+<br>
+
+<p><strong>代码说明:</strong></p>
+<p><strong>与ArrayList相似, 只是将<code>new ArrayList&lt;&gt;()</code>换为了<code>new Vector&lt;&gt;()</code>而已</strong></p>
+</blockquote>
+<br>
+
+<h3 id="五-Vector示例"><a href="#五-Vector示例" class="headerlink" title="五. Vector示例"></a>五. Vector示例</h3><p>下面通过示例学习如何使用Vector</p>
+<pre><code class="java">/**
+ * @desc Vector测试函数：遍历Vector和常用API
+ *
+ * @author zk
+ */
+public class VectorTest {
+
+    public static void main(String[] args) {
+        // 新建Vector
+        Vector vec = new Vector();
+
+        // 添加元素
+        vec.add(&quot;1&quot;);
+        vec.add(&quot;2&quot;);
+        vec.add(&quot;3&quot;);
+        vec.add(&quot;4&quot;);
+        vec.add(&quot;5&quot;);
+
+        // 设置第一个元素为100
+        vec.set(0, &quot;100&quot;);
+        // 将“500”插入到第3个位置
+        vec.add(2, &quot;300&quot;);
+        System.out.println(&quot;vec:&quot;+vec);
+
+        // (顺序查找)获取100的索引
+        System.out.println(&quot;vec.indexOf(100):&quot;+vec.indexOf(&quot;100&quot;));
+        // (倒序查找)获取100的索引
+        System.out.println(&quot;vec.lastIndexOf(100):&quot;+vec.lastIndexOf(&quot;100&quot;));
+        // 获取第一个元素
+        System.out.println(&quot;vec.firstElement():&quot;+vec.firstElement());
+        // 获取第3个元素
+        System.out.println(&quot;vec.elementAt(2):&quot;+vec.elementAt(2));
+        // 获取最后一个元素
+        System.out.println(&quot;vec.lastElement():&quot;+vec.lastElement());
+
+        // 获取Vector的大小
+        System.out.println(&quot;size:&quot;+vec.size());
+        // 获取Vector的总的容量
+        System.out.println(&quot;capacity:&quot;+vec.capacity());
+
+        // 获取vector的“第2”到“第4”个元素
+        System.out.println(&quot;vec 2 to 4:&quot;+vec.subList(1, 4));
+
+        // 通过Enumeration遍历Vector
+        Enumeration enu = vec.elements();
+        while(enu.hasMoreElements()) {
+            System.out.println(&quot;nextElement():&quot;+enu.nextElement());
+        }
+
+        Vector retainVec = new Vector();
+        retainVec.add(&quot;100&quot;);
+        retainVec.add(&quot;300&quot;);
+        // 获取“vec”中包含在“retainVec中的元素”的集合
+        System.out.println(&quot;vec.retain():&quot;+vec.retainAll(retainVec));
+        System.out.println(&quot;vec:&quot;+vec);
+
+        // 获取vec对应的String数组
+        String[] arr = (String[]) vec.toArray(new String[0]);
+        for (String str:arr) {
+            System.out.println(&quot;str:&quot;+str);
+        }
+
+        // 清空Vector。clear()和removeAllElements()一样！
+        vec.clear();
+//        vec.removeAllElements();
+
+        // 判断Vector是否为空
+        System.out.println(&quot;vec.isEmpty():&quot;+vec.isEmpty());
+    }
+}
+
+------- Output --------
+vec:[100, 2, 300, 3, 4, 5]
+vec.indexOf(100):0
+vec.lastIndexOf(100):0
+vec.firstElement():100
+vec.elementAt(2):300
+vec.lastElement():5
+size:6
+capacity:10
+vec 2 to 4:[2, 300, 3]
+nextElement():100
+nextElement():2
+nextElement():300
+nextElement():3
+nextElement():4
+nextElement():5
+vec.retain():true
+vec:[100, 300]
+str:100
+str:300
+vec.isEmpty():true</code></pre>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/" title="https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/11/26/Java集合五-Vector/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725358811"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

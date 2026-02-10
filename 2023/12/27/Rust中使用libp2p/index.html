@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Rust中使用libp2p - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在个人数据日益被侵犯的现在，P2P技术变得越来越重要；本文通过编写一个实例，讲解了P2P中的一些概念，以及如何使用libp2p来进行点对点应用的开发！">
+<meta name="keywords" content="Rust,P2P,libp2p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust中使用libp2p">
+<meta property="og:url" content="https://jasonkayzk.github.io/2023/12/27/Rust中使用libp2p/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在个人数据日益被侵犯的现在，P2P技术变得越来越重要；本文通过编写一个实例，讲解了P2P中的一些概念，以及如何使用libp2p来进行点对点应用的开发！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.746Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Rust中使用libp2p">
+<meta name="twitter:description" content="在个人数据日益被侵犯的现在，P2P技术变得越来越重要；本文通过编写一个实例，讲解了P2P中的一些概念，以及如何使用libp2p来进行点对点应用的开发！">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725307067">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?99">
+    
+    <h1>Rust中使用libp2p</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2023年12月27日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 41 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/P2P/">P2P</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/libp2p/">libp2p</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Rust中使用libp2p"><span class="toc-text">Rust中使用libp2p</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#P2P-概述"><span class="toc-text">P2P 概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#P2P-简介"><span class="toc-text">P2P 简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#P2P-的特点"><span class="toc-text">P2P 的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#P2P-的复杂性"><span class="toc-text">P2P 的复杂性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#P2P-的要求"><span class="toc-text">P2P 的要求</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#传输"><span class="toc-text">传输</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Peer-身份"><span class="toc-text">Peer 身份</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#安全"><span class="toc-text">安全</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Peer-路由"><span class="toc-text">Peer 路由</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#消息"><span class="toc-text">消息</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#流多路复用"><span class="toc-text">流多路复用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Libp2p概述"><span class="toc-text">Libp2p概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Libp2p-主要模块"><span class="toc-text">Libp2p 主要模块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#P2P-节点的身份"><span class="toc-text">P2P 节点的身份</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#公钥和私钥"><span class="toc-text">公钥和私钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多地址（Multiaddresses）"><span class="toc-text">多地址（Multiaddresses）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Swarm概述"><span class="toc-text">Swarm概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Swarm-的结构和上下文环境"><span class="toc-text">Swarm 的结构和上下文环境</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发现-peer"><span class="toc-text">发现 peer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#rust-libp2p实践"><span class="toc-text">rust-libp2p实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建项目"><span class="toc-text">创建项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#全局变量"><span class="toc-text">全局变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模型定义"><span class="toc-text">模型定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建并启动一个-Swarm"><span class="toc-text">创建并启动一个 Swarm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#定义网络行为-NetworkBehaviour"><span class="toc-text">定义网络行为 NetworkBehaviour</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#处理输入请求"><span class="toc-text">处理输入请求</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#列出全部对等点"><span class="toc-text">列出全部对等点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建Recipe"><span class="toc-text">创建Recipe</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#发布Recipe"><span class="toc-text">发布Recipe</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查询菜谱（发送消息）"><span class="toc-text">查询菜谱（发送消息）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#响应消息"><span class="toc-text">响应消息</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#处理FloodSubEvent"><span class="toc-text">处理FloodSubEvent</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#处理mDNSEvent"><span class="toc-text">处理mDNSEvent</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#应用测试"><span class="toc-text">应用测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在个人数据日益被侵犯的现在，P2P技术变得越来越重要；</p>
+<p>本文通过编写一个实例，讲解了P2P中的一些概念，以及如何使用libp2p来进行点对点应用的开发！</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/proj/p2p-demo" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/proj/p2p-demo</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="Rust中使用libp2p"><a href="#Rust中使用libp2p" class="headerlink" title="Rust中使用libp2p"></a><strong>Rust中使用libp2p</strong></h1><h2 id="P2P-概述"><a href="#P2P-概述" class="headerlink" title="P2P 概述"></a><strong>P2P 概述</strong></h2><h3 id="P2P-简介"><a href="#P2P-简介" class="headerlink" title="P2P 简介"></a><strong>P2P 简介</strong></h3><ul>
+<li>P2P：peer-to-peer</li>
+<li>P2P 是一种网络技术，可以在不同的计算机之间共享各种计算资源，如 CPU、网络带宽和存储。</li>
+<li>P2P 是当今用户在线共享文件（如音乐、图像和其他数字媒体）的一种非常常用的方法。<ul>
+<li>Bittorrent 和 Gnutella 是流行的文件共享 p2p 应用程序的例子。以及比特币和以太坊等区块链网络。</li>
+<li>它们不依赖中央服务器或中介来连接多个客户端。</li>
+<li>最重要的是，它们利用用户的计算机作为客户端和服务器，从而将计算从中央服务器上卸载下来。</li>
+</ul>
+</li>
+<li>传统的分布式系统使用 Client-Server 范式来部署</li>
+<li>P2P 是另一种分布式系统<ul>
+<li>在 P2P 中，一组节点（或对等点，Peer）彼此直接交互以共同提供公共服务，而无需中央协调器或管理员</li>
+<li>P2P 系统中的每个节点（或 Peer）都可以充当客户端（从其他节点请求信息）和服务器（存储/检索数据并响应客户端请求执行必要的计算）。</li>
+<li>P2P 网络中的所有节点不必完全相同，一个关键特征将 Client-Server 网络与 P2P 网络区分开来：缺乏具有唯一权限的专用服务器。在开放、无许可的 P2P 网络中，任何节点都可以决定提供与 P2P 节点相关的全部或部分服务集。</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="P2P-的特点"><a href="#P2P-的特点" class="headerlink" title="P2P 的特点"></a>P2P 的特点</h3><ul>
+<li>与 Client-Server 网络相比，P2P 网络能够在其上构建不同类别的应用程序，这些应用程序是无许可、容错和抗审查的。<ul>
+<li>无许可：因为数据和状态是跨多个节点复制的，所以没有服务器可以切断客户机对信息的访问。</li>
+<li>容错性：因为没有单点故障，例如中央服务器。</li>
+<li>抗审查：如区块链等网络。</li>
+<li>P2P 计算还可以更好地利用资源。</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="P2P-的复杂性"><a href="#P2P-的复杂性" class="headerlink" title="P2P 的复杂性"></a>P2P 的复杂性</h3><ul>
+<li>构建 P2P 系统要比传统 Client-Server 的系统复杂<ul>
+<li>传输：P2P 网络中的每个 Peer 都可以使用不同的协议，例如HTTP(s)、TCP、UDP等。</li>
+<li>身份：每个 Peer 都需要知道其想要连接并发送消息的 Peer 的身份。</li>
+<li>安全性：每个 Peer 都应该能够以安全的方式与其他 Peer 通信，而不存在第三方拦截或修改消息的风险等。</li>
+<li>路由：每个 Peer 可以通过各种路由（例如数据包在 IP 协议中的分布方式）从其他 Peer 接收消息，这意味着如果消息不是针对自身的，则每个 Peer 都应该能够将消息路由到其他 Peer。</li>
+<li>消息传递：P2P 网络应该能够发送点对点消息或组消息（以发布/订阅模式）。</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="P2P-的要求"><a href="#P2P-的要求" class="headerlink" title="P2P 的要求"></a>P2P 的要求</h3><h4 id="传输"><a href="#传输" class="headerlink" title="传输"></a><strong>传输</strong></h4><ul>
+<li>TCP/IP 和 UDP 协议无处不在，在编写网络应用程序时非常流行。但还有其他更高级别的协议，如 HTTP（TCP上分层）和 QUIC（UDP上分层）。</li>
+<li>P2P 网络中的每个 Peer 都应该能够启动到另一个节点的连接，并且由于网络中 peer 的多样性，能够通过多个协议监听传入的连接。</li>
+</ul>
+<h4 id="Peer-身份"><a href="#Peer-身份" class="headerlink" title="Peer 身份"></a><strong>Peer 身份</strong></h4><ul>
+<li>与 web 开发领域不同，在 web 开发领域中，服务器由唯一的域名标识（例如 <a href="http://www.rust-lang.org，然后使用域名服务将其解析为服务器的IP地址）" target="_blank" rel="noopener">www.rust-lang.org，然后使用域名服务将其解析为服务器的IP地址）</a></li>
+<li>P2P 网络中的节点需要唯一身份，以便其他节点可以访问它们。</li>
+<li>P2P 网络中的节点使用公钥和私钥对（非对称公钥加密）与其他节点建立通信。<ul>
+<li>P2P 网络中的节点的身份称为 PeerId，是节点公钥的加密散列。</li>
+</ul>
+</li>
+</ul>
+<h4 id="安全"><a href="#安全" class="headerlink" title="安全"></a><strong>安全</strong></h4><ul>
+<li>加密密钥对和 PeerId 使节点能够与它的 peers 建立安全、经过身份验证的通信通道。但这只是安全的一个方面。</li>
+<li>节点还需要实现授权框架，该框架为哪个节点可以执行何种操作建立规则。</li>
+<li>还有需要解决的网络级安全威胁，如 sybil 攻击（其中一个节点运营商利用不同身份启动大量节点，以获得网络中的优势地位）或 eclipse 攻击（其中一组恶意节点共谋以特定节点为目标，使后者无法到达任何合法节点）。</li>
+</ul>
+<h4 id="Peer-路由"><a href="#Peer-路由" class="headerlink" title="Peer 路由"></a><strong>Peer 路由</strong></h4><ul>
+<li>P2P 网络中的节点首先需要找到其他 peer 才能进行通信。这是通过维护 peer 路由表来实现的，该表包含对网络中其他 peer 的引用。</li>
+<li>但是，在具有数千个或更多动态变化的节点（即节点加入和离开网络）的 P2P 网络中，任何单个节点都难以为网络中的所有节点维护完整而准确的路由表。Peer 路由使节点能够将不是给自己准备的消息路由到目标节点。</li>
+</ul>
+<h4 id="消息"><a href="#消息" class="headerlink" title="消息"></a><strong>消息</strong></h4><ul>
+<li>P2P 网络中的节点可以向特定节点发送消息，但也可以参与广播消息协议。<ul>
+<li>例如，发布/订阅，其中节点注册对特定主题的兴趣（订阅），发送该主题消息的任何节点（发布）都由订阅该主题的所有节点接收。这种技术通常用于将消息的内容传输到整个网络。</li>
+</ul>
+</li>
+</ul>
+<h4 id="流多路复用"><a href="#流多路复用" class="headerlink" title="流多路复用"></a><strong>流多路复用</strong></h4><ul>
+<li>流多路复用（Stream multiplexing）是通过公共通信链路发送多个信息流的一种方法。</li>
+<li>在 P2P 的情况下，它允许多个独立的“逻辑”流共享一个公共 P2P 传输层。<ul>
+<li>当考虑到一个节点与不同 peers 具有多个通信流的可能性，或者两个远程节点之间也可能存在多个并发连接的可能性时，这一点变得很重要。</li>
+<li>流多路复用有助于优化 peer 之间建立连接的开销。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：多路复用在后端服务开发中很常见，其中客户端可以与服务器建立底层网络连接，然后通过底层网络连接多路复用不同的流（每个流具有唯一的端口号）</strong></font></p>
+</blockquote>
+<br>
+
+<h2 id="Libp2p概述"><a href="#Libp2p概述" class="headerlink" title="Libp2p概述"></a><strong>Libp2p概述</strong></h2><p>libp2p 是一个由协议、规范和库组成的模块化系统，它支持 P2P 应用程序的开发；</p>
+<p>它目前支持三种语言：JS、Go、Rust、JVM（Kotlin编写），未来将支持 Haskell、Python等；</p>
+<p>它被许多流行的项目使用，例如：IPFS、Filecoin 和 Polkadot 等；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>由于目前 rust-libp2p 每次更新版本时， API 的变化都比较大！</strong></font></p>
+<p>  <font color="#f00"><strong>所以在使用时需要参考 CHANGELOG 来进行代码迁移！</strong></font></p>
+<p>  <strong>例如，Swarm 参考：</strong></p>
+<ul>
+<li><a href="https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md" target="_blank" rel="noopener">https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="Libp2p-主要模块"><a href="#Libp2p-主要模块" class="headerlink" title="Libp2p 主要模块"></a><strong>Libp2p 主要模块</strong></h3><ul>
+<li>传输（Transport）：负责从一个 peer 到另一个 peer 的数据的实际传输和接收</li>
+<li>身份（Identity）：libp2p 使用公钥密钥（PKI）作为 peer 节点身份的基础。使用加密算法为每个节点生成唯一的 peer id。</li>
+<li>安全（Security）：节点使用其私钥对消息进行签名。节点之间的传输连接可以升级为安全的加密通道，以便远程 peer 可以相互信任，并且没有第三方可以拦截它们之间的通信。</li>
+<li>Peer 发现（Peer Discovery）：允许 peer 在 libp2p 网络中查找并相互通信。</li>
+<li>Peer 路由（Peer Routing）：使用其他 peer 的知识信息来实现与 peer 节点的通信。</li>
+<li>内容发现（Content Discovery）：在不知道哪个 peer 节点拥有该内容的情况下，允许 peer 节点从其他 peer 节点获取部分内容。</li>
+<li>消息（Messaging）：其中发布/订阅：允许向对某个主题感兴趣的一组 peer 发送消息。</li>
+</ul>
+<br>
+
+<h3 id="P2P-节点的身份"><a href="#P2P-节点的身份" class="headerlink" title="P2P 节点的身份"></a>P2P 节点的身份</h3><p>P2P Node</p>
+<p>PeerId: 12d3k…..</p>
+<br>
+
+<h3 id="公钥和私钥"><a href="#公钥和私钥" class="headerlink" title="公钥和私钥"></a>公钥和私钥</h3><ul>
+<li>加密身份使用公钥基础设施（PKI），广泛用于为用户、设备和应用程序提供唯一身份，并保护端到端通信的安全。</li>
+<li>它的工作原理是创建两个不同的加密密钥，也称为由私钥和公钥组成的密钥对，它们之间具有数学关系。</li>
+<li>密钥对有着广泛的应用，但在 P2P 网络中<ul>
+<li>节点使用密钥对彼此进行身份识别和身份验证。</li>
+<li>公钥可以在网络中与其他人共享，但决不能泄漏节点的私钥。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>  <strong>公钥和私钥的例子 - 访问传统的服务器</strong></p>
+<ul>
+<li>如果想连接到数据中心的远程服务器（使用SSH），用户可以生成密钥对并在远程服务器上配置公钥，从而授予用户访问权限。</li>
+<li>但远程服务器如何知道哪个用户是该公钥的所有者？<ul>
+<li>为了实现这一点，当连接（通过SSH）到远程服务器时，用户必须指定私钥（与存储在服务器上的公钥关联的）。</li>
+<li>私钥从不发送到远程服务器，但SSH客户端（在本地服务器上运行）使用用户的私钥向远程SSH服务器进行身份验证。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="多地址（Multiaddresses）"><a href="#多地址（Multiaddresses）" class="headerlink" title="多地址（Multiaddresses）"></a><strong>多地址（Multiaddresses）</strong></h3><ul>
+<li><p>在 libp2p 中，peer 的身份在其整个生命周期内都是稳定且可验证的。</p>
+</li>
+<li><p>但 libp2p 区分了 peer 的身份和位置。</p>
+<ul>
+<li>peer 的身份是 peer id。</li>
+</ul>
+</li>
+<li><p>peer 的位置是可以到达对方的网络地址。</p>
+<ul>
+<li>例如，可以通过 TCP、websockets、QUIC 或任何其他协议访问 peer。</li>
+<li>libp2p 将这些网络地址编码成一个自描述格式，它叫做 multiaddress（multiaddr）。</li>
+<li>因此，在 libp2p中，multiaddress 表示 peer 的位置。</li>
+</ul>
+</li>
+<li><p>当 p2p 网络上的节点共享其联系信息时，它们会发送一个保护网络地址和 peer id 的多地址（multiaddress）。</p>
+</li>
+<li><p>节点多地址的 peer id 表示如下：</p>
+<ul>
+<li><strong>/p2p/12D3KooWBu3fmjZgSmLkQ2p…</strong></li>
+</ul>
+</li>
+<li><p>多地址的网络地址表示如下：</p>
+<ul>
+<li><strong>/ip4/192.158.1.23/tcp/1234</strong></li>
+</ul>
+</li>
+<li><p>节点的完整地址就是 peer id 和网络地址的组合：</p>
+<ul>
+<li><strong>/ip4/192.158.1.23/tcp/1234/p2p/12D3KooWBu3fmjZgSmLkQ2p…</strong></li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="Swarm概述"><a href="#Swarm概述" class="headerlink" title="Swarm概述"></a><strong>Swarm概述</strong></h3><p>Swarm 是 libp2p 中给定 P2P 节点内的网络管理器模块；</p>
+<p>它维护从给定节点到远程节点的所有活动和挂起连接，并管理已打开的所有子流的状态；</p>
+<h4 id="Swarm-的结构和上下文环境"><a href="#Swarm-的结构和上下文环境" class="headerlink" title="Swarm 的结构和上下文环境"></a><strong>Swarm 的结构和上下文环境</strong></h4><p>Swarm 代表了一个低级接口，并提供了对 libp2p 网络的细粒度控制。Swarm 是使用传输、网络行为和节点 peer id 的组合构建的。</p>
+<p>传输（Transport）会指明如何在网络上发送字节，而网络行为（Behaviour）会指明发送什么字节，发送给谁。</p>
+<p>多个网络行为可以与单个运行节点相关联。</p>
+<blockquote>
+<p>  <strong>需要注意的是：同一套客户端和服务端代码在 libp2p 网络的所有节点上运行，即每个Node即是客户端又是服务端；</strong></p>
+<p>  <strong>这与客户端和服务器具有不同代码库的 Client-Server 模型不同；</strong></p>
+</blockquote>
+<br>
+
+<h3 id="发现-peer"><a href="#发现-peer" class="headerlink" title="发现 peer"></a>发现 peer</h3><p>mDNS 是由 RFC 6762（datatracker.ietf.org/doc/html/rfc6762）定义的协议，它将主机名解析为 IP 地址。</p>
+<p>在 libp2p 中，mDNS 用于发现网络上的其他节点。</p>
+<p>在 libp2p 中实现的网络行为 mDNS 将自动发现本地网络上的其他 libp2p 节点。</p>
+<blockquote>
+<p>  详见：</p>
+<ul>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6762" target="_blank" rel="noopener">https://datatracker.ietf.org/doc/html/rfc6762</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="rust-libp2p实践"><a href="#rust-libp2p实践" class="headerlink" title="rust-libp2p实践"></a><strong>rust-libp2p实践</strong></h2><p>上面介绍了关于 P2P 和 libp2p 中的一些概念；</p>
+<p><strong>最主要的是：Peer、非对称加密、Transport、Behaviour 以及 Swarm 的概念；</strong></p>
+<p>下面我们将使用 <a href="https://github.com/libp2p/rust-libp2p/" target="_blank" rel="noopener">rust-libp2p</a> 来创建一个点对点的应用；</p>
+<blockquote>
+<p>  <strong>注意：</strong></p>
+<p>  <font color="#f00"><strong>由于 <a href="https://github.com/libp2p/rust-libp2p/" target="_blank" rel="noopener">rust-libp2p</a> 的 API 变化较大，这里我们采用的是目前最新的版本：<code>0.52</code>；</strong></font></p>
+<p>  <font color="#f00"><strong>该版本要求最低的 Rust 版本为 <code>1.71.0</code>，可能需要使用 <code>rustup update stable</code> 更新</strong>！</font></p>
+</blockquote>
+<p>接下来我们会创建一个简单的关于菜谱的应用：</p>
+<p>用户可以：</p>
+<ul>
+<li>列出当前和本机连接的所有对等点：<code>ls p</code></li>
+<li>创建菜谱（默认情况下不分享）：<code>create r recipe_name|recipe_ingredients|recipe_instruction</code></li>
+<li>发布菜谱来对他人分享：<code>publish r recipe_id</code></li>
+<li>列出本地菜谱：<code>ls r</code></li>
+<li>列出其他所有对等点分享的菜谱：<code>ls r all</code></li>
+<li>列出某个对等点分享的菜谱：<code>ls r 12D...(PeerId)</code></li>
+</ul>
+<br>
+
+<h3 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a><strong>创建项目</strong></h3><p>使用 cargo 创建一个项目，增加依赖：</p>
+<pre><code class="toml">[dependencies]
+libp2p = { version = &quot;0.52&quot;, features = [&quot;tokio&quot;, &quot;floodsub&quot;, &quot;noise&quot;, &quot;tcp&quot;, &quot;yamux&quot;, &quot;mdns&quot;, &quot;macros&quot;, &quot;identify&quot;] }
+tokio = { version = &quot;1&quot;, features = [&quot;io-util&quot;, &quot;io-std&quot;, &quot;macros&quot;, &quot;rt&quot;, &quot;rt-multi-thread&quot;, &quot;fs&quot;, &quot;time&quot;, &quot;sync&quot;] }
+serde = { version = &quot;1&quot;, features = [&quot;derive&quot;] }
+serde_json = &quot;1&quot;
+once_cell = &quot;1.5&quot;
+log = &quot;0.4&quot;
+pretty_env_logger = &quot;0.4&quot;
+anyhow = &quot;1.0.77&quot;</code></pre>
+<ul>
+<li>libp2p 和 tokio 分别提供了 p2p 和 async 支持；</li>
+<li>serde、serde_json 完成了 json 序列化；</li>
+<li>once_cell 用来初始化全局变量；</li>
+<li>log、pretty_env_logger 打印日志；</li>
+<li>anyhow 提供错误处理；</li>
+</ul>
+<br>
+
+<h3 id="全局变量"><a href="#全局变量" class="headerlink" title="全局变量"></a><strong>全局变量</strong></h3><p>前面提到，p2p 中使用非对称加密来确定一个 PeerId，这里我们使用全局变量来定义一个全局唯一的 PeerId：</p>
+<p>src/consts.rs</p>
+<pre><code class="rust">pub const STORAGE_FILE_PATH: &amp;str = &quot;./recipes.json&quot;;
+
+/// Key pair enables us to communicate securely with the rest of the network, making sure no one can impersonate
+pub static KEYS: Lazy&lt;identity::Keypair&gt; = Lazy::new(identity::Keypair::generate_ed25519);
+
+/// A unique identifier for a specific peer within the whole peer to peer network
+///
+/// Derive from a key pair to ensure its uniqueness
+pub static PEER_ID: Lazy&lt;PeerId&gt; = Lazy::new(|| PeerId::from(KEYS.public()));
+
+/// A Topic is a concept from Floodsub, which is an implementation of libp2p’s pub/sub interface
+pub static TOPIC: Lazy&lt;Topic&gt; = Lazy::new(|| Topic::new(&quot;recipes&quot;));</code></pre>
+<p>说明：</p>
+<ul>
+<li><code>STORAGE_FILE_PATH</code>：本地菜谱存储路径；</li>
+<li><code>KEYS</code>：非对称加密密钥对；</li>
+<li><code>PEER_ID</code>：通过密钥对生成的 PeerId；</li>
+<li><code>TOPIC</code>：在 Floodsub 模式中，对等节点可以订阅的 Topic，类似于 PubSub 模式；</li>
+</ul>
+<br>
+
+<h3 id="模型定义"><a href="#模型定义" class="headerlink" title="模型定义"></a><strong>模型定义</strong></h3><p>接下来定义几个结构体类型；</p>
+<p>存储菜谱信息 Recipe：</p>
+<p>src/models.rs</p>
+<pre><code class="rust">/// The recipe data for cook
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Recipe {
+    pub id: usize,
+    pub name: String,
+    pub ingredients: String,
+    pub instructions: String,
+    pub shared: bool,
+}</code></pre>
+<p>列出菜谱的模式（全部、根据 PeerId）：</p>
+<p>src/models.rs</p>
+<pre><code class="rust">/// Fetch data mode
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ListMode {
+    /// Fetch from all peers
+    All,
+
+    /// Fetch from one specific peer
+    One(String),
+}</code></pre>
+<p>列出菜谱的请求、响应：</p>
+<p>src/models.rs</p>
+<pre><code class="rust">#[derive(Debug, Serialize, Deserialize)]
+pub struct ListRequest {
+    pub mode: ListMode,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ListResponse {
+    pub mode: ListMode,
+    pub data: Vec&lt;Recipe&gt;,
+    pub receiver: String,
+}</code></pre>
+<p>Tokio select 事件枚举（后面会用到）：</p>
+<p>src/models.rs</p>
+<pre><code class="rust">pub enum EventType {
+    Response(ListResponse),
+    Input(String),
+}</code></pre>
+<br>
+
+<h3 id="创建并启动一个-Swarm"><a href="#创建并启动一个-Swarm" class="headerlink" title="创建并启动一个 Swarm"></a><strong>创建并启动一个 Swarm</strong></h3><p>前面介绍了 Swarm 的概念，Swarm 是一个管理器，管理所有节点的活动、挂起、连接等等；</p>
+<p>在创建一个 Swarm 时大概要配置以下几个内容：</p>
+<ul>
+<li><strong>身份验证（Identity）</strong>：身份验证的密钥对（KeyPair）；</li>
+<li><strong>运行时环境（Runtime）</strong>：例如 tokio、async_std 等；</li>
+<li><strong>连接类型（Transport）</strong>：TCP、UDP，以及连接对应的配置：超时时间、连接验证、多路复用等；</li>
+<li><strong>网络行为（NetworkBehaviour）</strong>：网络连接的类型，非常重要的概念，用于定义对等点之间网络行为，例如：FloodSub、mDNS 以及自定义 NetworkBehaviour；</li>
+<li><strong>Swarm 自身配置</strong>：Executor 线程池创建、管理等；</li>
+</ul>
+<p>下面就创建了一个 Swarm：</p>
+<p>src/main.rs</p>
+<pre><code class="rust">let mut swarm = libp2p::SwarmBuilder::with_existing_identity(KEYS.clone())
+  .with_tokio()
+  .with_tcp(
+    tcp::Config::default(),
+    noise::Config::new,
+    yamux::Config::default,
+  )?
+  .with_behaviour(|_key| RecipeBehaviour {
+    flood_sub: Floodsub::new(*PEER_ID),
+    mdns: mdns::tokio::Behaviour::new(mdns::Config::default(), KEYS.public().to_peer_id())
+    .expect(&quot;can create mdns&quot;),
+  })?
+  .with_swarm_config(|cfg| cfg.with_idle_connection_timeout(Duration::from_secs(5)))
+  .build();</code></pre>
+<p>创建 Swarm 的部分：</p>
+<ul>
+<li><code>with_existing_identity</code>：指定了密钥对；</li>
+<li><code>with_tokio</code>：指定了异步运行时为 tokio；</li>
+<li><code>with_tcp</code>：使用 TCP 为 Transport；<ul>
+<li><code>tcp_config: libp2p_tcp::Config</code>：TCP 配置，例如连接超时时间等；</li>
+<li><code>security_upgrade: SecUpgrade</code>：TCP 安全连接配置，这里使用 noise 握手，即使用密钥对的方式；</li>
+<li><code>multiplexer_upgrade: MuxUpgrade</code>：连接多路复用配置，这里使用 yamux；</li>
+</ul>
+</li>
+<li><code>with_behaviour</code>：该 Swarm 网络行为定义，这里为自定义的 RecipeBehaviour，后文会介绍；</li>
+<li><code>with_swarm_config：Swarm</code> 自身配置，这里作为实验，配置了闲置超时时间为 5s；</li>
+</ul>
+<p>通过 <code>listen_on</code> 即可启动监听：</p>
+<p>src/main.rs</p>
+<pre><code class="rust">Swarm::listen_on(
+        &amp;mut swarm,
+        &quot;/ip4/0.0.0.0/tcp/0&quot;
+            .parse()
+            .expect(&quot;can get a local socket&quot;),
+    )
+    .expect(&quot;swarm can be started&quot;);</code></pre>
+<p><strong>监听 IPV4 下任意 IP 来源（<code>0.0.0.0</code>）的连接，并且监听端口由系统分配（端口号为0）；</strong></p>
+<p>此外，这里我们还启动了 Swarm 中定义的 FloodSub 对我们 Topic 的监听：</p>
+<p>src/main.rs</p>
+<pre><code class="rust">swarm.behaviour_mut().flood_sub.subscribe(TOPIC.clone());</code></pre>
+<br>
+
+<h3 id="定义网络行为-NetworkBehaviour"><a href="#定义网络行为-NetworkBehaviour" class="headerlink" title="定义网络行为 NetworkBehaviour"></a><strong>定义网络行为 NetworkBehaviour</strong></h3><p>在上一小节创建 Swarm 时，我们使用了 RecipeBehaviour 我们自定义的行为；</p>
+<p>下面我们来看是如何定义的：</p>
+<p>src/behaviour.rs</p>
+<pre><code class="rust">#[derive(NetworkBehaviour)]
+#[behaviour(to_swarm = &quot;RecipeBehaviourEvent&quot;)]
+pub struct RecipeBehaviour {
+    pub(crate) flood_sub: Floodsub,
+    pub(crate) mdns: mdns::tokio::Behaviour,
+}
+
+#[derive(Debug)]
+pub enum RecipeBehaviourEvent {
+    Floodsub(FloodsubEvent),
+    Mdns(mdns::Event),
+}
+
+impl From&lt;FloodsubEvent&gt; for RecipeBehaviourEvent {
+    fn from(event: FloodsubEvent) -&gt; RecipeBehaviourEvent {
+        RecipeBehaviourEvent::Floodsub(event)
+    }
+}
+
+impl From&lt;mdns::Event&gt; for RecipeBehaviourEvent {
+    fn from(event: mdns::Event) -&gt; RecipeBehaviourEvent {
+        RecipeBehaviourEvent::Mdns(event)
+    }
+}</code></pre>
+<p>首先是 RecipeBehaviour 结构体，其中包括了 FloodSub 和 mDNS 两个 Behaviour；</p>
+<p>分别处理了：消息广播和节点自动发现；</p>
+<p><font color="#f00"><strong>需要注意的是：RecipeBehaviour 结构体使用 <code>#[derive(NetworkBehaviour)]</code> 标识；</strong></font></p>
+<p><font color="#f00"><strong>此宏会自动实现部分逻辑，同时要求被标注的结构体只能含有实现了 NetworkBehaviour 的属性！</strong></font></p>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：之前可以在 NetworkBehaviour 结构体中使用 <code>#[behaviour(ignore)]</code> 的方式被废弃！</strong></font></p>
+<p>  <strong>见：</strong></p>
+<ul>
+<li><a href="https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md#0380" target="_blank" rel="noopener">https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md#0380</a></li>
+</ul>
+</blockquote>
+<p><font color="#f00"><strong>同时，BehaviourEvent 的定义被抽取到了枚举中，通过 <code>#[behaviour(to_swarm = &quot;RecipeBehaviourEvent&quot;)]</code> 来声明；</strong></font></p>
+<p><font color="#f00"><strong>后面可以看到，我们通过将 RecipeBehaviour 中定义的行为产生的事件统一使用 From Trait 转换为RecipeBehaviourEvent 来统一处理；</strong></font></p>
+<p><font color="#f00"><strong>这也是最新 rust-libp2p 官方推荐的方式！</strong></font></p>
+<br>
+
+<h3 id="处理输入请求"><a href="#处理输入请求" class="headerlink" title="处理输入请求"></a><strong>处理输入请求</strong></h3><p>在前面我们定义了我们应用允许用户操作的一些行为，用户可以：</p>
+<ul>
+<li>列出当前和本机连接的所有对等点：<code>ls p</code></li>
+<li>创建菜谱（默认情况下不分享）：<code>create r recipe_name|recipe_ingredients|recipe_instruction</code></li>
+<li>发布菜谱来对他人分享：<code>publish r recipe_id</code></li>
+<li>列出本地菜谱：<code>ls r</code></li>
+<li>列出其他所有对等点分享的菜谱：<code>ls r all</code></li>
+<li>列出某个对等点分享的菜谱：<code>ls r 12D...(PeerId)</code></li>
+</ul>
+<p>下面我们来简单实现：</p>
+<p>src/main.rs</p>
+<pre><code class="rust">let (response_sender, mut response_rcv) = mpsc::unbounded_channel();
+let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
+loop {
+  let evt = {
+    tokio::select! {
+      line = stdin.next_line() =&gt; Some(EventType::Input(line.expect(&quot;can get line&quot;).expect(&quot;can read line from stdin&quot;))),
+      response = response_rcv.recv() =&gt; Some(EventType::Response(response.expect(&quot;response exists&quot;))),
+      _ = handle_swarm_event(response_sender.clone(), &amp;mut swarm) =&gt; None,
+    }
+  };
+
+  if let Some(event) = evt {
+    match event {
+      EventType::Response(resp) =&gt; {
+        let json = serde_json::to_string(&amp;resp).expect(&quot;can jsonify response&quot;);
+        swarm
+        .behaviour_mut()
+        .flood_sub
+        .publish(TOPIC.clone(), json.as_bytes());
+      }
+      EventType::Input(line) =&gt; match line.as_str() {
+        &quot;ls p&quot; =&gt; handle_list_peers(&amp;mut swarm).await,
+        cmd if cmd.starts_with(&quot;create r&quot;) =&gt; handle_create_recipe(cmd).await,
+        cmd if cmd.starts_with(&quot;publish r&quot;) =&gt; handle_publish_recipe(cmd).await,
+        cmd if cmd.starts_with(&quot;ls r&quot;) =&gt; handle_list_recipes(cmd, &amp;mut swarm).await,
+        _ =&gt; error!(&quot;unknown command: {:?}&quot;, line),
+      },
+    }
+  }
+}</code></pre>
+<p>为了简单实现，我们使用 StdIn 作为输入；</p>
+<p>在 loop 无限循环中，我们使用 <code>tokio::select!</code> 来等待准备完成的事件：</p>
+<ul>
+<li><code>line</code>：用户完成了一行数据；</li>
+<li><code>response</code>：列表数据请求的响应；</li>
+<li>处理到来的 Swarm 事件： handle_swarm_event；</li>
+</ul>
+<p>上面的 select 最终会返回我们之前定义的 EventType 类型：</p>
+<pre><code class="rust">pub enum EventType {
+  Input(String),
+  Response(ListResponse),
+}</code></pre>
+<p>对于 Input 的处理比较简单，直接对应我们之前对于用户的定义处理即可：</p>
+<pre><code class="rust">EventType::Input(line) =&gt; match line.as_str() {
+  &quot;ls p&quot; =&gt; handle_list_peers(&amp;mut swarm).await,
+  cmd if cmd.starts_with(&quot;create r&quot;) =&gt; handle_create_recipe(cmd).await,
+  cmd if cmd.starts_with(&quot;publish r&quot;) =&gt; handle_publish_recipe(cmd).await,
+  cmd if cmd.starts_with(&quot;ls r&quot;) =&gt; handle_list_recipes(cmd, &amp;mut swarm).await,
+  _ =&gt; error!(&quot;unknown command: {:?}&quot;, line),
+},</code></pre>
+<p>对于 Response 则是将结果广播给其他所有 Node：</p>
+<pre><code class="rust">EventType::Response(resp) =&gt; {
+  let json = serde_json::to_string(&amp;resp).expect(&quot;can jsonify response&quot;);
+  swarm
+  .behaviour_mut()
+  .flood_sub
+  .publish(TOPIC.clone(), json.as_bytes());
+}</code></pre>
+<p>下面来看处理用户输入的逻辑；</p>
+<br>
+
+<h4 id="列出全部对等点"><a href="#列出全部对等点" class="headerlink" title="列出全部对等点"></a><strong>列出全部对等点</strong></h4><p>使用 <code>ls p</code> 列出所有目前已连接的对等点：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">pub async fn handle_list_peers(swarm: &amp;mut Swarm&lt;RecipeBehaviour&gt;) {
+    info!(&quot;Discovered Peers:&quot;);
+    let nodes = swarm.behaviour().mdns.discovered_nodes();
+
+    let mut unique_peers = HashSet::new();
+    for peer in nodes {
+        unique_peers.insert(peer);
+    }
+    unique_peers.iter().for_each(|p| info!(&quot;{}&quot;, p));
+}</code></pre>
+<p>通过 swarm 可以获取到 mdns 中自动发现的节点；</p>
+<p>逻辑非常简单，这里不再赘述；</p>
+<br>
+
+<h4 id="创建Recipe"><a href="#创建Recipe" class="headerlink" title="创建Recipe"></a><strong>创建Recipe</strong></h4><p>使用 <code>create r recipe_name|recipe_ingredients|recipe_instruction</code> 创建一个新的 Recipe；</p>
+<p>创建Recipe 只涉及到本地数据，不涉及 p2p 部分，逻辑比较简单：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">pub async fn handle_create_recipe(cmd: &amp;str) {
+  if let Some(rest) = cmd.strip_prefix(&quot;create r&quot;) {
+    let elements: Vec&lt;&amp;str&gt; = rest.split(&#39;|&#39;).collect();
+    if elements.len() &lt; 3 {
+      info!(&quot;too few arguments - Format: name|ingredients|instructions&quot;);
+    } else {
+      let name = elements.first().expect(&quot;name is there&quot;);
+      let ingredients = elements.get(1).expect(&quot;ingredients is there&quot;);
+      let instructions = elements.get(2).expect(&quot;instructions is there&quot;);
+      if let Err(e) = create_new_recipe(name, ingredients, instructions).await {
+        error!(&quot;error creating recipe: {}&quot;, e);
+      };
+    }
+  }
+}
+
+async fn create_new_recipe(name: &amp;str, ingredients: &amp;str, instructions: &amp;str) -&gt; Result&lt;()&gt; {
+  let mut local_recipes = read_local_recipes().await?;
+  let new_id = match local_recipes.iter().max_by_key(|r| r.id) {
+    Some(v) =&gt; v.id + 1,
+    None =&gt; 0,
+  };
+  local_recipes.push(Recipe {
+    id: new_id,
+    name: name.to_owned(),
+    ingredients: ingredients.to_owned(),
+    instructions: instructions.to_owned(),
+    shared: false,
+  });
+  write_local_recipes(&amp;local_recipes).await?;
+
+  info!(&quot;Created recipe:&quot;);
+  info!(&quot;Name: {}&quot;, name);
+  info!(&quot;Ingredients: {}&quot;, ingredients);
+  info!(&quot;Instructions:: {}&quot;, instructions);
+
+  Ok(())
+}
+
+async fn write_local_recipes(recipes: &amp;Vec&lt;Recipe&gt;) -&gt; Result&lt;()&gt; {
+  let json = serde_json::to_string(&amp;recipes)?;
+  fs::write(STORAGE_FILE_PATH, &amp;json).await?;
+  Ok(())
+}
+
+async fn read_local_recipes() -&gt; Result&lt;Vec&lt;Recipe&gt;&gt; {
+  let content = fs::read(STORAGE_FILE_PATH).await?;
+  let result = serde_json::from_slice(&amp;content)?;
+  Ok(result)
+}</code></pre>
+<p>逻辑比较简单，就是解析命令行传入的参数，创建结构体，先加载数据文件的数据，然后添加一条再写回文件；</p>
+<blockquote>
+<p>  <strong>频繁读写文件的效率非常的低，这里只是作为例子演示简单实现！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="发布Recipe"><a href="#发布Recipe" class="headerlink" title="发布Recipe"></a><strong>发布Recipe</strong></h4><p>发布菜谱来对他人分享：<code>publish r recipe_id</code></p>
+<p>发布 Recipe 的逻辑也非常简单：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">pub async fn handle_publish_recipe(cmd: &amp;str) {
+  if let Some(rest) = cmd.strip_prefix(&quot;publish r&quot;) {
+    match rest.trim().parse::&lt;usize&gt;() {
+      Ok(id) =&gt; {
+        if let Err(e) = publish_recipe(id).await {
+          info!(&quot;error publishing recipe with id {}, {}&quot;, id, e)
+        } else {
+          info!(&quot;Published Recipe with id: {}&quot;, id);
+        }
+      }
+      Err(e) =&gt; error!(&quot;invalid id: {}, {}&quot;, rest.trim(), e),
+    };
+  }
+}
+
+async fn publish_recipe(id: usize) -&gt; Result&lt;()&gt; {
+  let mut local_recipes = read_local_recipes().await?;
+  local_recipes
+  .iter_mut()
+  .filter(|r| r.id == id)
+  .for_each(|r| r.shared = true);
+  write_local_recipes(&amp;local_recipes).await?;
+  Ok(())
+}</code></pre>
+<p>首先解析命令行传入的Recipe Id，然后修改文件中对应 Id 的 shared 字段，改为 true；</p>
+<blockquote>
+<p>  <strong>和创建Recipe类似，这里也会频繁读写文件，效率较低，仅作为展示例子；</strong></p>
+</blockquote>
+<br>
+
+<h3 id="查询菜谱（发送消息）"><a href="#查询菜谱（发送消息）" class="headerlink" title="查询菜谱（发送消息）"></a><strong>查询菜谱（发送消息）</strong></h3><p>查询菜谱比较复杂，可以通过下面三种形式：</p>
+<ul>
+<li>列出本地菜谱：<code>ls r</code></li>
+<li>列出其他所有对等点分享的菜谱：<code>ls r all</code></li>
+<li>列出某个对等点分享的菜谱：<code>ls r 12D...(PeerId)</code></li>
+</ul>
+<p>下面来看实现：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">pub async fn handle_list_recipes(cmd: &amp;str, swarm: &amp;mut Swarm&lt;RecipeBehaviour&gt;) {
+  let rest = cmd.strip_prefix(&quot;ls r &quot;);
+  match rest {
+    Some(&quot;all&quot;) =&gt; {
+      let req = ListRequest {
+        mode: ListMode::All,
+      };
+      let json = serde_json::to_string(&amp;req).expect(&quot;can jsonify request&quot;);
+      swarm
+      .behaviour_mut()
+      .flood_sub
+      .publish(TOPIC.clone(), json.as_bytes());
+    }
+    Some(recipes_peer_id) =&gt; {
+      let req = ListRequest {
+        mode: ListMode::One(recipes_peer_id.to_owned()),
+      };
+      let json = serde_json::to_string(&amp;req).expect(&quot;can jsonify request&quot;);
+      swarm
+      .behaviour_mut()
+      .flood_sub
+      .publish(TOPIC.clone(), json.as_bytes());
+    }
+    None =&gt; {
+      match read_local_recipes().await {
+        Ok(v) =&gt; {
+          info!(&quot;Local Recipes ({})&quot;, v.len());
+          v.iter().for_each(|r| info!(&quot;{:?}&quot;, r));
+        }
+        Err(e) =&gt; error!(&quot;error fetching local recipes: {}&quot;, e),
+      };
+    }
+  };
+}</code></pre>
+<p>首先，解析命令行参数：</p>
+<ul>
+<li><strong>如果为 all</strong>：则使用 FloodSub 向网络中所有其他 Node 广播 <code>ListMode::All</code> 请求；</li>
+<li><strong>如果为 <code>recipes_peer_id</code></strong>：则广播 <code>ListMode::One(recipes_peer_id.to_owned())</code> 请求；</li>
+<li>否则，为查询本地 Recipe 列表，直接读取文件返回即可！</li>
+</ul>
+<br>
+
+<h3 id="响应消息"><a href="#响应消息" class="headerlink" title="响应消息"></a><strong>响应消息</strong></h3><p>前面我们通过 FloodSub 向对等网中的其他节点发送了请求，那么如何响应消息呢？</p>
+<p>这就是 Swarm 自定义逻辑中的核心部分了！</p>
+<p>注意到，在前面的 处理输入请求 一小节，我们在 <code>tokio::select!</code> 中定义了：</p>
+<pre><code class="rust">tokio::select! {
+  ...
+  _ = handle_swarm_event(response_sender.clone(), &amp;mut swarm) =&gt; None,
+}</code></pre>
+<p>我们正是在这个函数中处理的 BehaviourEvent 逻辑，下面来看：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">pub async fn handle_swarm_event(
+  response_sender: mpsc::UnboundedSender&lt;ListResponse&gt;,
+  swarm: &amp;mut Swarm&lt;RecipeBehaviour&gt;,
+) {
+  let event = swarm.select_next_some().await;
+  info!(&quot;Income swarm Event: {:?}&quot;, event);
+
+  match event {
+    SwarmEvent::Behaviour(recipe_behaviours) =&gt; match recipe_behaviours {
+      RecipeBehaviourEvent::Floodsub(flood_sub_event) =&gt; match flood_sub_event {
+        FloodsubEvent::Message(msg) =&gt; {
+          if let Ok(resp) = serde_json::from_slice::&lt;ListResponse&gt;(&amp;msg.data) {
+            if resp.receiver == PEER_ID.to_string() {
+              info!(&quot;Response from {}:&quot;, msg.source);
+              resp.data.iter().for_each(|r| info!(&quot;{:?}&quot;, r));
+            }
+          } else if let Ok(req) = serde_json::from_slice::&lt;ListRequest&gt;(&amp;msg.data) {
+            match req.mode {
+              ListMode::All =&gt; {
+                info!(&quot;Received ALL req: {:?} from {:?}&quot;, req, msg.source);
+                respond_with_public_recipes(
+                  response_sender.clone(),
+                  msg.source.to_string(),
+                );
+              }
+              ListMode::One(ref peer_id) =&gt; {
+                if peer_id == &amp;PEER_ID.to_string() {
+                  info!(&quot;Received req: {:?} from {:?}&quot;, req, msg.source);
+                  respond_with_public_recipes(
+                    response_sender.clone(),
+                    msg.source.to_string(),
+                  );
+                }
+              }
+            }
+          }
+        }
+        FloodsubEvent::Subscribed { .. } =&gt; {}
+        FloodsubEvent::Unsubscribed { .. } =&gt; {}
+      },
+      RecipeBehaviourEvent::Mdns(mdns_event) =&gt; match mdns_event {
+        Event::Discovered(discovered_list) =&gt; {
+          let behavior_mut = swarm.behaviour_mut();
+          for (peer, _addr) in discovered_list {
+            behavior_mut.flood_sub.add_node_to_partial_view(peer);
+          }
+        }
+        Event::Expired(expired_list) =&gt; {
+          let behavior_mut = swarm.behaviour_mut();
+          for (peer, _addr) in expired_list {
+            if !behavior_mut.mdns.has_node(&amp;peer) {
+              behavior_mut.flood_sub.remove_node_from_partial_view(&amp;peer);
+            }
+          }
+        }
+      },
+    },
+    SwarmEvent::ConnectionEstablished {
+      peer_id,
+      connection_id,
+      endpoint,
+      num_established,
+      ..
+    } =&gt; {
+      debug!(&quot;[Connection established] peer_id: {}, connection_id: {}, endpoint: {:?}, num_established: {:?}&quot;, peer_id, connection_id, endpoint, num_established);
+    }
+    SwarmEvent::ConnectionClosed {
+      peer_id,
+      connection_id,
+      endpoint,
+      num_established,
+      ..
+    } =&gt; {
+      debug!(&quot;[Connection closed] peer_id: {}, connection_id: {}, endpoint: {:?}, num_established: {:?}&quot;, peer_id, connection_id, endpoint, num_established);
+    }
+    SwarmEvent::IncomingConnection { .. } =&gt; {}
+    SwarmEvent::IncomingConnectionError { .. } =&gt; {}
+    SwarmEvent::OutgoingConnectionError { .. } =&gt; {}
+    SwarmEvent::NewListenAddr { .. } =&gt; {}
+    SwarmEvent::ExpiredListenAddr { .. } =&gt; {}
+    SwarmEvent::ListenerClosed { .. } =&gt; {}
+    SwarmEvent::ListenerError { .. } =&gt; {}
+    SwarmEvent::Dialing { .. } =&gt; {}
+  };
+}</code></pre>
+<p>可以看到，我们正是通过 <code>let event = swarm.select_next_some().await</code> 来获取的 Swarm 中所有的 Event 事件！</p>
+<p><strong>随后我们即可枚举全部的 Event 事件：</strong></p>
+<ul>
+<li><code>SwarmEvent::Behaviour</code>：用户自定义的事件，也就是上面我们通过 <code>to_swarm</code> 宏指定的 Enum 类型！</li>
+<li><code>SwarmEvent::ConnectionEstablished</code>：连接建立事件；</li>
+<li><code>SwarmEvent::ConnectionClosed</code>：连接断开事件；</li>
+<li>……</li>
+</ul>
+<blockquote>
+<p>  <strong>可以看到，得益于 Rust 强大的枚举类型，我们可以非常清晰的处理各种事件！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="处理FloodSubEvent"><a href="#处理FloodSubEvent" class="headerlink" title="处理FloodSubEvent"></a><strong>处理FloodSubEvent</strong></h4><p>处理 FloodSubEvent 的逻辑如下：</p>
+<pre><code class="rust">RecipeBehaviourEvent::Floodsub(flood_sub_event) =&gt; match flood_sub_event {
+  FloodsubEvent::Message(msg) =&gt; {
+    if let Ok(resp) = serde_json::from_slice::&lt;ListResponse&gt;(&amp;msg.data) {
+      if resp.receiver == PEER_ID.to_string() {
+        info!(&quot;Response from {}:&quot;, msg.source);
+        resp.data.iter().for_each(|r| info!(&quot;{:?}&quot;, r));
+      }
+    } else if let Ok(req) = serde_json::from_slice::&lt;ListRequest&gt;(&amp;msg.data) {
+      match req.mode {
+        ListMode::All =&gt; {
+          info!(&quot;Received ALL req: {:?} from {:?}&quot;, req, msg.source);
+          respond_with_public_recipes(
+            response_sender.clone(),
+            msg.source.to_string(),
+          );
+        }
+        ListMode::One(ref peer_id) =&gt; {
+          if peer_id == &amp;PEER_ID.to_string() {
+            info!(&quot;Received req: {:?} from {:?}&quot;, req, msg.source);
+            respond_with_public_recipes(
+              response_sender.clone(),
+              msg.source.to_string(),
+            );
+          }
+        }
+      }
+    }
+  }
+  FloodsubEvent::Subscribed { .. } =&gt; {}
+  FloodsubEvent::Unsubscribed { .. } =&gt; {}
+},</code></pre>
+<p>首先我们判断：</p>
+<ul>
+<li>如果接收到的是其他节点广播的 ListResponse，并且 receiver 为本机 PeerId 则直接输出；</li>
+<li>如果接收到的是 ListRequest，则判断：<ul>
+<li>如果为 <code>ListMode::All</code> 查询模式，则读取本机数据，并返回；</li>
+<li>如果为 <code>ListMode::One(ref peer_id)</code>，则判断 PeerId 为本机才返回；</li>
+</ul>
+</li>
+</ul>
+<p><code>respond_with_public_recipes</code> 的逻辑如下：</p>
+<pre><code class="rust">fn respond_with_public_recipes(sender: mpsc::UnboundedSender&lt;ListResponse&gt;, receiver: String) {
+  tokio::spawn(async move {
+    match read_local_recipes().await {
+      Ok(recipes) =&gt; {
+        let resp = ListResponse {
+          mode: ListMode::All,
+          receiver,
+          data: recipes.into_iter().filter(|r| r.shared).collect(),
+        };
+        if let Err(e) = sender.send(resp) {
+          error!(&quot;error sending response via channel, {}&quot;, e);
+        }
+      }
+      Err(e) =&gt; error!(&quot;error fetching local recipes to answer ALL request, {}&quot;, e),
+    }
+  });
+}</code></pre>
+<p>读取本地 Recipe 数据，并通过 sender 发送即可！</p>
+<p>在 <code>tokio::select!</code> 中会接收响应，并广播出去：</p>
+<pre><code class="rust">tokio::select! {
+  response = response_rcv.recv() =&gt; Some(EventType::Response(response.expect(&quot;response exists&quot;))),
+}
+
+EventType::Response(resp) =&gt; {
+  let json = serde_json::to_string(&amp;resp).expect(&quot;can jsonify response&quot;);
+  swarm
+  .behaviour_mut()
+  .flood_sub
+  .publish(TOPIC.clone(), json.as_bytes());
+}</code></pre>
+<br>
+
+<h4 id="处理mDNSEvent"><a href="#处理mDNSEvent" class="headerlink" title="处理mDNSEvent"></a><strong>处理mDNSEvent</strong></h4><p>mDNS 包括了两个事件：</p>
+<pre><code class="rust">#[derive(Debug, Clone)]
+pub enum Event {
+  /// Discovered nodes through mDNS.
+  Discovered(Vec&lt;(PeerId, Multiaddr)&gt;),
+
+  /// The given combinations of `PeerId` and `Multiaddr` have expired.
+  ///
+  /// Each discovered record has a time-to-live. When this TTL expires and the address hasn&#39;t
+  /// been refreshed, we remove it from the list and emit it as an `Expired` event.
+  Expired(Vec&lt;(PeerId, Multiaddr)&gt;),
+}
+</code></pre>
+<p>分别为：</p>
+<ul>
+<li><code>Discovered(Vec&lt;(PeerId, Multiaddr)&gt;)</code>：已发现的节点；</li>
+<li><code>Expired(Vec&lt;(PeerId, Multiaddr)&gt;)</code>：新节点过期；</li>
+</ul>
+<p>处理逻辑如下：</p>
+<p>src/handlers.rs</p>
+<pre><code class="rust">RecipeBehaviourEvent::Mdns(mdns_event) =&gt; match mdns_event {
+  Event::Discovered(discovered_list) =&gt; {
+    let behavior_mut = swarm.behaviour_mut();
+    for (peer, _addr) in discovered_list {
+      behavior_mut.flood_sub.add_node_to_partial_view(peer);
+    }
+  }
+  Event::Expired(expired_list) =&gt; {
+    let behavior_mut = swarm.behaviour_mut();
+    for (peer, _addr) in expired_list {
+      if !behavior_mut.mdns.has_node(&amp;peer) {
+        behavior_mut.flood_sub.remove_node_from_partial_view(&amp;peer);
+      }
+    }
+  }
+},</code></pre>
+<p>即：</p>
+<ul>
+<li>当发现了节点，这将其加入到 FloodSub 广播的节点中；</li>
+<li>如果节点过期，则将该节点从 FloodSub 广播列表中去除；</li>
+</ul>
+<p>逻辑非常简单；</p>
+<p>至此，我们的应用开发完毕！</p>
+<br>
+
+<h3 id="应用测试"><a href="#应用测试" class="headerlink" title="应用测试"></a><strong>应用测试</strong></h3><p>我们可以通过 <code>cargo run</code> 在本机创建多个节点；</p>
+<pre><code class="shell">cargo run
+
+INFO  rust_learn &gt; Peer Id: 12D3KooWA7xhiEmFxikn9aiWcffkhDACDhz1rRPXxkC4yxgnzJCT
+INFO  libp2p_mdns::behaviour::iface &gt; creating instance on iface 192.168.31.22
+INFO  rust_learn::handlers          &gt; Income swarm Event: NewListenAddr { listener_id: ListenerId(1), address: &quot;/ip4/127.0.0.1/tcp/65248&quot; }
+INFO  rust_learn::handlers          &gt; Income swarm Event: NewListenAddr { listener_id: ListenerId(1), address: &quot;/ip4/192.168.31.22/tcp/65248&quot; }
+INFO  libp2p_mdns::behaviour        &gt; discovered: 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7 /ip4/192.168.31.22/tcp/65247
+INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Mdns(Discovered([(PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), &quot;/ip4/192.168.31.22/tcp/65247&quot;)])))
+INFO  rust_learn::handlers          &gt; Income swarm Event: Dialing { peer_id: Some(PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;)), connection_id: ConnectionId(1) }
+INFO  rust_learn::handlers          &gt; Income swarm Event: ConnectionEstablished { peer_id: PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), connection_id: ConnectionId(1), endpoint: Dialer { address: &quot;/ip4/192.168.31.22/tcp/65247/p2p/12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;, role_override: Dialer }, num_established: 1, concurrent_dial_errors: Some([]), established_in: 7.355625ms }
+INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Subscribed { peer_id: PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), topic: Topic(&quot;recipes&quot;) }))
+INFO  libp2p_mdns::behaviour        &gt; discovered: 12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz /ip4/192.168.31.22/tcp/65250
+INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Mdns(Discovered([(PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;), &quot;/ip4/192.168.31.22/tcp/65250&quot;)])))
+INFO  rust_learn::handlers          &gt; Income swarm Event: Dialing { peer_id: Some(PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;)), connection_id: ConnectionId(2) }
+INFO  rust_learn::handlers          &gt; Income swarm Event: IncomingConnection { connection_id: ConnectionId(3), local_addr: &quot;/ip4/192.168.31.22/tcp/65248&quot;, send_back_addr: &quot;/ip4/192.168.31.22/tcp/65253&quot; }
+INFO  rust_learn::handlers          &gt; Income swarm Event: ConnectionEstablished { peer_id: PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;), connection_id: ConnectionId(2), endpoint: Dialer { address: &quot;/ip4/192.168.31.22/tcp/65250/p2p/12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;, role_override: Dialer }, num_established: 1, concurrent_dial_errors: Some([]), established_in: 5.762334ms }
+INFO  rust_learn::handlers          &gt; Income swarm Event: ConnectionEstablished { peer_id: PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;), connection_id: ConnectionId(3), endpoint: Listener { local_addr: &quot;/ip4/192.168.31.22/tcp/65248&quot;, send_back_addr: &quot;/ip4/192.168.31.22/tcp/65253&quot; }, num_established: 2, concurrent_dial_errors: None, established_in: 5.212125ms }
+INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Subscribed { peer_id: PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;), topic: Topic(&quot;recipes&quot;) }))</code></pre>
+<p>查看所有对等节点：</p>
+<pre><code class="shell">ls p
+
+ INFO  rust_learn::handlers          &gt; Discovered Peers:
+ INFO  rust_learn::handlers          &gt; 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7
+ INFO  rust_learn::handlers          &gt; 12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz</code></pre>
+<p>创建 Recipe：</p>
+<pre><code class="shell">create r name|recipe_ingredients|recipe_instruction
+
+ INFO  rust_learn::handlers          &gt; Created recipe:
+ INFO  rust_learn::handlers          &gt; Name:  name
+ INFO  rust_learn::handlers          &gt; Ingredients: recipe_ingredients
+ INFO  rust_learn::handlers          &gt; Instructions:: recipe_instruction</code></pre>
+<p>列出本地 Recipe：</p>
+<pre><code class="shell">ls r
+
+ INFO  rust_learn::handlers          &gt; Local Recipes (6)
+ INFO  rust_learn::handlers          &gt; Recipe { id: 0, name: &quot; Coffee&quot;, ingredients: &quot;Coffee&quot;, instructions: &quot;Make Coffee&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 1, name: &quot; Tea&quot;, ingredients: &quot;Tea, Water&quot;, instructions: &quot;Boil Water, add tea&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 2, name: &quot; Carrot Cake&quot;, ingredients: &quot;Carrots, Cake&quot;, instructions: &quot;Make Carrot Cake&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 3, name: &quot; Name&quot;, ingredients: &quot;Ingredients&quot;, instructions: &quot;Instructions&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 4, name: &quot; name&quot;, ingredients: &quot;recipeIngredients&quot;, instructions: &quot;instruction&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 5, name: &quot; name&quot;, ingredients: &quot;recipe_ingredients&quot;, instructions: &quot;recipe_instruction&quot;, shared: false }</code></pre>
+<p>列出所有对等点 Recipe：</p>
+<pre><code class="shell">ls r all
+
+ INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Message(FloodsubMessage { source: PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), data: [123, 34, 109, 111,...
+ INFO  rust_learn::handlers          &gt; Response from 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7:
+ INFO  rust_learn::handlers          &gt; Recipe { id: 0, name: &quot; Coffee&quot;, ingredients: &quot;Coffee&quot;, instructions: &quot;Make Coffee&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 1, name: &quot; Tea&quot;, ingredients: &quot;Tea, Water&quot;, instructions: &quot;Boil Water, add tea&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 2, name: &quot; Carrot Cake&quot;, ingredients: &quot;Carrots, Cake&quot;, instructions: &quot;Make Carrot Cake&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 3, name: &quot; Name&quot;, ingredients: &quot;Ingredients&quot;, instructions: &quot;Instructions&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 4, name: &quot; name&quot;, ingredients: &quot;recipeIngredients&quot;, instructions: &quot;instruction&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Message(FloodsubMessage { source: PeerId(&quot;12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz&quot;), data: [123, 34, 109....
+ INFO  rust_learn::handlers          &gt; Response from 12D3KooWCWesVZsAoDaFs7UZYXV6gTNd56UPMoiWfxWFgvLCJZhz:
+ INFO  rust_learn::handlers          &gt; Recipe { id: 0, name: &quot; Coffee&quot;, ingredients: &quot;Coffee&quot;, instructions: &quot;Make Coffee&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 1, name: &quot; Tea&quot;, ingredients: &quot;Tea, Water&quot;, instructions: &quot;Boil Water, add tea&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 2, name: &quot; Carrot Cake&quot;, ingredients: &quot;Carrots, Cake&quot;, instructions: &quot;Make Carrot Cake&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 3, name: &quot; Name&quot;, ingredients: &quot;Ingredients&quot;, instructions: &quot;Instructions&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 4, name: &quot; name&quot;, ingredients: &quot;recipeIngredients&quot;, instructions: &quot;instruction&quot;, shared: true }</code></pre>
+<p>列出某个对等点 Recipe：</p>
+<pre><code class="shell">ls r 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7
+
+ INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Message(FloodsubMessage { source: PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), data: [123, 34, 109, 111, 100, 101, 34, ...
+ INFO  rust_learn::handlers          &gt; Response from 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7:
+ INFO  rust_learn::handlers          &gt; Recipe { id: 0, name: &quot; Coffee&quot;, ingredients: &quot;Coffee&quot;, instructions: &quot;Make Coffee&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 1, name: &quot; Tea&quot;, ingredients: &quot;Tea, Water&quot;, instructions: &quot;Boil Water, add tea&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 2, name: &quot; Carrot Cake&quot;, ingredients: &quot;Carrots, Cake&quot;, instructions: &quot;Make Carrot Cake&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 3, name: &quot; Name&quot;, ingredients: &quot;Ingredients&quot;, instructions: &quot;Instructions&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 4, name: &quot; name&quot;, ingredients: &quot;recipeIngredients&quot;, instructions: &quot;instruction&quot;, shared: true }</code></pre>
+<p>发布 Recipe：</p>
+<pre><code class="shell">publish r 5
+
+ INFO  rust_learn::handlers          &gt; Published Recipe with id: 5</code></pre>
+<p>再次列出远程节点中的 Recipe：</p>
+<pre><code class="shell">ls r 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7
+
+ INFO  rust_learn::handlers          &gt; Income swarm Event: Behaviour(Floodsub(Message(FloodsubMessage { source: PeerId(&quot;12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7&quot;), data: [123, 34, 109, ...
+ INFO  rust_learn::handlers          &gt; Response from 12D3KooWGEGJQhFaR4ZzJ15CUvMVVu1wcaGd3i7yzvHHYFexbfT7:
+ INFO  rust_learn::handlers          &gt; Recipe { id: 0, name: &quot; Coffee&quot;, ingredients: &quot;Coffee&quot;, instructions: &quot;Make Coffee&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 1, name: &quot; Tea&quot;, ingredients: &quot;Tea, Water&quot;, instructions: &quot;Boil Water, add tea&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 2, name: &quot; Carrot Cake&quot;, ingredients: &quot;Carrots, Cake&quot;, instructions: &quot;Make Carrot Cake&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 3, name: &quot; Name&quot;, ingredients: &quot;Ingredients&quot;, instructions: &quot;Instructions&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 4, name: &quot; name&quot;, ingredients: &quot;recipeIngredients&quot;, instructions: &quot;instruction&quot;, shared: true }
+ INFO  rust_learn::handlers          &gt; Recipe { id: 5, name: &quot; name&quot;, ingredients: &quot;recipe_ingredients&quot;, instructions: &quot;recipe_instruction&quot;, shared: true }</code></pre>
+<p>由于多个节点共享的是同一份数据文件，刚刚我们发布了一个新的 Recipe，所以刚刚发布的 Recipe 也在这里显示了！</p>
+<br>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><p>相信通过上面的讲解，你已经了解了 libp2p 的基本使用；</p>
+<p>P2P 技术目前广泛应用在区块链等领域，相信 libp2p 也一定会被越来越多的人使用！</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/rust-learn/tree/proj/p2p-demo" target="_blank" rel="noopener">https://github.com/JasonkayZK/rust-learn/tree/proj/p2p-demo</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md" target="_blank" rel="noopener">https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/swarm/CHANGELOG.md</a></li>
+<li><a href="https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/examples/chat/src/main.rs" target="_blank" rel="noopener">https://github.com/libp2p/rust-libp2p/blob/4fc911e6b39f8b2f097583fb60178948ae368528/examples/chat/src/main.rs</a></li>
+<li><a href="https://github.com/zupzup/rust-peer-to-peer-example/" target="_blank" rel="noopener">https://github.com/zupzup/rust-peer-to-peer-example/</a></li>
+<li><a href="https://docs.rs/libp2p/0.53.2/libp2p/tutorials/ping/index.html" target="_blank" rel="noopener">https://docs.rs/libp2p/0.53.2/libp2p/tutorials/ping/index.html</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6762" target="_blank" rel="noopener">https://datatracker.ietf.org/doc/html/rfc6762</a></li>
+<li><a href="https://blog.logrocket.com/libp2p-tutorial-build-a-peer-to-peer-app-in-rust/" target="_blank" rel="noopener">https://blog.logrocket.com/libp2p-tutorial-build-a-peer-to-peer-app-in-rust/</a></li>
+<li><a href="https://www.cnblogs.com/QiaoPengjun/p/17418735.html" target="_blank" rel="noopener">https://www.cnblogs.com/QiaoPengjun/p/17418735.html</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2023/12/27/Rust中使用libp2p/" title="https://jasonkayzk.github.io/2023/12/27/Rust中使用libp2p/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2023/12/27/Rust中使用libp2p/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725307204"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

@@ -1,0 +1,3493 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java集合九-HashMap - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="这一章，我们对HashMap进行学习 我们先对HashMap有个整体认识，然后再学习它的源码，最后再通过实例来学会使用HashMap。内容包括：  HashMap介绍 HashMap数据结构 HashMap源码深度解析(基于JDK11.0.4)">
+<meta name="keywords" content="Java基础,面试总结,集合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java集合九-HashMap">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="这一章，我们对HashMap进行学习 我们先对HashMap有个整体认识，然后再学习它的源码，最后再通过实例来学会使用HashMap。内容包括：  HashMap介绍 HashMap数据结构 HashMap源码深度解析(基于JDK11.0.4)">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/HashMap%E4%B8%8EMap%E5%85%B3%E7%B3%BB.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.740Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java集合九-HashMap">
+<meta name="twitter:description" content="这一章，我们对HashMap进行学习 我们先对HashMap有个整体认识，然后再学习它的源码，最后再通过实例来学会使用HashMap。内容包括：  HashMap介绍 HashMap数据结构 HashMap源码深度解析(基于JDK11.0.4)">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/HashMap%E4%B8%8EMap%E5%85%B3%E7%B3%BB.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725358102">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?8">
+    
+    <h1>Java集合九-HashMap</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年11月27日</a>
+    <a><i class="nexmoefont icon-areachart"></i>15.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 79 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Java源码/">Java源码</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java基础/">Java基础</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/集合/">集合</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/面试总结/">面试总结</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-HashMap介绍"><span class="toc-text">一. HashMap介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HashMap数据结构"><span class="toc-text">HashMap数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-HashMap源码解析-基于JDK11-0-4"><span class="toc-text">三. HashMap源码解析(基于JDK11.0.4)</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>这一章，我们对HashMap进行学习</p>
+<p>我们先对HashMap有个整体认识，然后再学习它的源码，最后再通过实例来学会使用HashMap。内容包括：</p>
+<ul>
+<li>HashMap介绍</li>
+<li>HashMap数据结构</li>
+<li>HashMap源码深度解析(基于JDK11.0.4)</li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一-HashMap介绍"><a href="#一-HashMap介绍" class="headerlink" title="一. HashMap介绍"></a>一. HashMap介绍</h2><p><strong>HashMap简介</strong> </p>
+<p>HashMap 是一个<strong>散列表</strong>，它<strong>存储的内容是键值对(key-value)映射</strong></p>
+<p>HashMap <strong>继承于AbstractMap，实现了Map、Cloneable、Serializable接口</strong></p>
+<p><font color="#ff0000"><strong>HashMap 的实现不是同步的，这意味着它不是线程安全的。它的key、value都可以为null。此外，HashMap中的映射不是有序的</strong></font></p>
+<p>HashMap 的实例有两个参数影响其性能：<strong>初始容量</strong> 和 <strong>加载因子</strong>:</p>
+<ul>
+<li><strong>容量:</strong> 是哈希表中桶的数量，初始容量是哈希表在创建时的容量</li>
+<li><strong>加载因子:</strong> 是哈希表在<strong>其容量自动增加之前可以达到多满的一种尺度</strong>. <font color="#ff0000"><strong>当哈希表中的条目数超出了加载因子与当前容量的乘积时，则要对该哈希表进行 rehash  操作（即重建内部数据结构），从而哈希表将具有大约两倍的桶数</strong></font></li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>备注: 加载因子</strong></p>
+<p>通常，<strong>默认加载因子是 0.75</strong>, 这是在时间和空间成本上寻求一种折衷</p>
+<p><strong>加载因子过高虽然减少了空间开销，但同时也增加了查询成本</strong>（在大多数 HashMap 类的操作中，包括 get 和 put 操作，都反映了这一点）</p>
+<p><strong>在设置初始容量时应该考虑到映射中所需的条目数及其加载因子，以便最大限度地减少 rehash  操作次数, 如果初始容量大于最大条目数除以加载因子，则不会发生 rehash 操作</strong></p>
+</blockquote>
+<br>
+
+<p><strong>HashMap的构造函数</strong></p>
+<p>HashMap共有<strong>4个构造函数</strong>,如下：</p>
+<pre><code class="java">// 默认构造函数, 创建一个空的HashMap, 具有16的初始容量和0.75的加载因子
+// Constructs an empty {@code HashMap} with the default initial capacity(16) and the default load factor (0.75)
+public HashMap() {
+    this.loadFactor = DEFAULT_LOAD_FACTOR; // (0.75f)
+}
+
+// 指定容量大小的构造函数, 创建一个空的HashMap, 具有initialCapacity的初始容量和0.75的加载因子
+// Constructs an empty {@code HashMap} with the specified initial capacity and the default load factor (0.75).
+public HashMap(int initialCapacity) {
+    this(initialCapacity, DEFAULT_LOAD_FACTOR);
+}
+
+// 指定容量大小和加载因子的构造函数
+// Constructs an empty {@code HashMap} with the specified initial capacity and load factor
+public HashMap(int initialCapacity, float loadFactor) {
+    // 初始化容量小于0, 报错IllegalArgumentException
+    if (initialCapacity &lt; 0)
+        throw new IllegalArgumentException(&quot;Illegal initial capacity: &quot; +
+                                           initialCapacity);
+    // 初始化容量大于最大容量(MAXIMUM_CAPACITY = 1 &lt;&lt; 30 = 2^30 = 1073741824), 则设置为最大容量
+    if (initialCapacity &gt; MAXIMUM_CAPACITY)
+        initialCapacity = MAXIMUM_CAPACITY;
+    // 加载因子小于0或不是数字报错IllegalArgumentException
+    if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+        throw new IllegalArgumentException(&quot;Illegal load factor: &quot; +
+                                           loadFactor);
+    this.loadFactor = loadFactor;
+    this.threshold = tableSizeFor(initialCapacity);
+}
+
+// 包含子Map的构造函数, 有着相同的映射, 且初始化容量为满足映射关系的容量, 加载因子是0.75
+// Constructs a new {@code HashMap} with the same mappings as the specified {@code Map}
+// The {@code HashMap} is created with default load factor (0.75) and an initial capacity sufficient to hold the mappings in the specified {@code Map}
+public HashMap(Map&lt;? extends K, ? extends V&gt; m) {
+    this.loadFactor = DEFAULT_LOAD_FACTOR;
+    putMapEntries(m, false);
+}</code></pre>
+<br>
+
+<p><strong>HashMap的API</strong></p>
+<pre><code class="java">/* 来自于Map接口 */
+int               size()
+boolean           isEmpty()
+V                 get(Object key)
+boolean           containsKey(Object key)
+V                 put(K key, V value)
+void              putAll(Map&lt;? extends K, ? extends V&gt; map)
+V                 remove(Object key)
+void              clear()
+boolean           containsValue(Object value)
+Set&lt;K&gt;            keySet()
+Collection&lt;V&gt;     values()
+Set&lt;Entry&lt;K, V&gt;&gt;  entrySet()
+
+
+/* 重写JDK 8后Map接口中的方法(Overrides of JDK8 Map extension methods) */
+V                 getOrDefault(Object key, V defaultValue)
+V                 putIfAbsent(K key, V value)
+boolean           remove(Object key, Object value)
+boolean           replace(K key, V oldValue, V newValue)
+V                 replace(K key, V value)
+V                 computeIfAbsent(K key, Function&lt;? super K, ? extends V&gt; mappingFunction)
+V                 computeIfPresent(K key, BiFunction&lt;? super K, ? super V, ? extends V&gt; remappingFunction)
+V                 compute(K key, BiFunction&lt;? super K, ? super V, ? extends V&gt; remappingFunction)
+V                 merge(K key, V value, BiFunction&lt;? super V, ? super V, ? extends V&gt; remappingFunction)
+void              forEach(BiConsumer&lt;? super K, ? super V&gt; action)
+void              replaceAll(BiFunction&lt;? super K, ? super V, ? extends V&gt; function)
+
+
+/* 重写AbstractMap抽象类中的clone() */
+Object            clone()
+</code></pre>
+<br>
+
+<h2 id="HashMap数据结构"><a href="#HashMap数据结构" class="headerlink" title="HashMap数据结构"></a>HashMap数据结构</h2><p><strong>HashMap的继承关系</strong></p>
+<pre><code class="java">java.lang.Object
+   ↳     java.util.AbstractMap&lt;K, V&gt;
+         ↳     java.util.HashMap&lt;K, V&gt;
+
+public class HashMap&lt;K,V&gt;
+    extends AbstractMap&lt;K,V&gt;
+    implements Map&lt;K,V&gt;, Cloneable, Serializable { }</code></pre>
+<br>
+
+<p><strong>HashMap与Map关系如下图:</strong></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/HashMap%E4%B8%8EMap%E5%85%B3%E7%B3%BB.jpg" alt="HashMap与Map关系.jpg"></p>
+<p>从图中可以看出:</p>
+<p><strong>① HashMap继承于AbstractMap类，实现了Map接口:</strong> Map是”key-value键值对”接口，AbstractMap实现了”键值对”的通用方法接口</p>
+<p><strong>② HashMap是通过”拉链法”实现的哈希表: 它包括几个重要的成员变量：table, size, threshold, loadFactor, modCount</strong></p>
+<ul>
+<li><strong>table是一个Entry[]数组类型</strong>，而<strong>Entry实际上就是一个单向链表</strong>。哈希表的<strong>“k-v对”都是存储在Entry数组中的</strong></li>
+</ul>
+<ul>
+<li><strong>size是HashMap的大小，它是HashMap保存的键值对的数量</strong></li>
+</ul>
+<ul>
+<li><strong>threshold是HashMap的阈值</strong>，用于<strong>判断是否需要调整HashMap的容量:</strong> <code>threshold=容量 x 加载因子</code>，当HashMap中<strong>存储数据的数量达到threshold时，就需要将HashMap的容量加倍</strong></li>
+</ul>
+<ul>
+<li><strong>loadFactor就是加载因子</strong></li>
+</ul>
+<ul>
+<li><strong>modCount用来实现fail-fast机制</strong></li>
+</ul>
+<br>
+
+<h2 id="三-HashMap源码解析-基于JDK11-0-4"><a href="#三-HashMap源码解析-基于JDK11-0-4" class="headerlink" title="三. HashMap源码解析(基于JDK11.0.4)"></a>三. HashMap源码解析(基于JDK11.0.4)</h2><p>为了更了解HashMap的原理，下面对HashMap源码代码作出分析</p>
+<p>在阅读源码前, 先读一下源码中的一段注释这样更容易理解HashMap的一些行为:</p>
+<blockquote>
+<br>
+
+<pre><code>/*
+* Implementation notes.
+* 使用说明
+*
+* This map usually acts as a binned (bucketed) hash table, but
+* when bins get too large, they are transformed into bins of
+* TreeNodes, each structured similarly to those in  java.util.TreeMap. 
+* Most methods try to use normal bins, but
+* relay to TreeNode methods when applicable (simply by checking
+* instanceof a node).  
+* Bins of TreeNodes may be traversed and
+* used like any others, but additionally support faster lookup
+* when overpopulated. However, since the vast majority of bins in
+* normal use are not overpopulated, checking for existence of
+* tree bins may be delayed in the course of table methods.
+*
+* HashMap常表现为带bins(基于桶)的Hash表。但是bins(桶)变大的时候将装换成红黑树，此时结构像java.util.TreeMap
+* 绝大多数方法使用普通的扁平的bins(基于桶的)。但节点的数到达一定的阀值之后，变成红黑树的方法。
+* 红黑树的bins跟普通的扁平的bins没有差别，只是在数据量多的时候能够快速查找。
+* 大多数情况下，bins的数量不会很多。所以在内部实现上对于bins数量的检查也会滞后
+*
+* Tree bins (i.e., bins whose elements are all TreeNodes) are
+* ordered primarily by hashCode, but in the case of ties, if two
+* elements are of the same &quot;class C implements Comparable&lt;C&gt;&quot;,
+* type then their compareTo method is used for ordering.
+* (We conservatively check generic types via reflection to validate
+* this -- see method comparableClassFor).  
+* The added complexity  of tree bins is worthwhile in providing worst-case O(log n)
+* operations when keys either have distinct hashes or are
+* orderable, Thus, performance degrades gracefully under
+* accidental or malicious usages in which hashCode() methods
+* return values that are  y1, y2 值, 赋给 y3, 最后打印的是 y3。poorly distributed, as well as those in
+* which many keys share a hashCode, so long as they are also
+* Comparable. (If neither of these apply, we may waste about a
+* factor of two in time and space compared to taking no
+* precautions. But the only known cases stem from poor user
+* programming practices that are already so slow that this makes
+* little difference)
+*
+* 红黑树的bins主要是根据该bin的hashCode排序，但是当两个元素是同一个实现了Comparable接口的对象，那么排序方式是通过该对象的compareTo方法决定排序。
+* （我们广泛使用了反射来确保对每一个对象的一般的类型进行映射检查(以满足排序) -- 见方法comparableClassFor）
+* 将操作（元素有不同的hashCode或者排序的）转化成红黑树的复杂运算是值得的, 因为当所有key拥有不同的hash值或者都是可排序的(orderable), 他将会把最坏的操作时间也降为O(log n).
+* 因此, 即使在意外或恶意使用hashCode()方法返回分布不均匀的值或者许多键共享一个hashCode的值时，只要它们都具有可比性(Comparable)，性能也只会&quot;优雅地下降&quot;(degrades gracefully)
+* (如果这两种情况都不适用[hashcode不同或实现了Comparable]，我们可能在时间和空间上浪费大约两倍于不采取措施。但是，唯一已知的情况是源于糟糕的用户编程实践(代码过于垃圾)
+* 而这些烂代码已经跑的非常缓慢了，以至于HashMap有(如果这两种情况都不适用[hashcode不同或实现了Comparable]，我们可能在时间和空间上浪费大约两倍于不采取措施。但是，唯一已知的情况是源于糟糕的用户编程实践(代码过于垃圾)没有优化没有什么区别)
+*
+* Because TreeNodes are about twice the size of regular nodes, we
+* use them only when bins contain enough nodes to warrant use
+* (see TREEIFY_THRESHOLD). And when they become too small (due to
+* removal or resizing) they are converted back to plain bins.  In
+* usages with well-distributed user hashCodes, tree bins are
+* rarely used.  Ideally, under random hashCodes, the frequency of
+* nodes in bins follows a Poisson distribution
+* (http://en.wikipedia.org/wiki/Poisson_distribution) with a
+* parameter of about 0.5 on average for the default resizing
+* threshold of 0.75, although with a large variance because of
+* resizing granularity. Ignoring variance, the expected
+* occurrences of list size k are (exp(-0.5) * pow(0.5, k) /
+* factorial(k)). The first values are:
+*
+* 由于TreeNodes的大小大约是常规节点的两倍，因此我们仅在容器包含足够的节点以保证使用时效率更高时才使用它们（请参见TREEIFY_THRESHOLD）
+* 并且当HashMap变得很小时(由于remove或resizing) 他们会重新被转化为普通的基于桶的拉链表
+* 对于hashcode分布良好(well-distributed)的情况下, 红黑色很少被使用
+* 在理想情况下, 在随机的hashCode()方法作用下, 在默认的大小调整阈值为0.75时，存储桶中节点的频率遵循泊松分布，上述公式中 λ 约等于 0.5, 即便是容量大小调整而有很大的差异的情况下
+* 忽略(容量)变化幅度，列表大小k的预期出现次数是（exp（-0.5）*pow（0.5，k）/ factorial（k））
+* 箱子中元素个数和概率的关系如下:
+*
+* 0:    0.60653066
+* 1:    0.30326533
+* 2:    0.07581633
+* 3:    0.01263606
+* 4:    0.00157952
+* 5:    0.00015795
+* 6:    0.00001316
+* 7:    0.00000094
+* 8:    0.00000006
+* more: less than 1 in ten million
+* 
+* 这就是为什么箱子中链表长度超过 8 以后要变成红黑树
+* 因为在正常情况下出现这种现象的几率小到忽略不计
+* 一旦出现，几乎可以认为是哈希函数设计有问题导致的
+*
+*
+* The root of a tree bin is normally its first node.  However,
+* sometimes (currently only upon Iterator.remove), the root might
+* be elsewhere, but can be recovered following parent links
+* (method TreeNode.root()).
+*
+* 红黑数的根通常是它的第一个节点. 
+* 然而,  有时(当前仅在Iterator.remove中)，根可能在其他地方，但可以在父链接(method TreeNode.root())中恢复
+*
+* All applicable internal methods accept a hash code as an
+* argument (as normally supplied from a public method), allowing
+* them to call each other without recomputing user hashCodes.
+* Most internal methods also accept a &quot;tab&quot; argument, that is
+* normally the current table, but may be a new or old one when
+* resizing or converting.
+* 
+* 内部方法中都接受一个hash code的参数(通常由公共方法提供)，允许它们在不重新计算用户哈希代码的情况下相互调用, 避免每次重复计算
+* 大多数内部方法也接受一个&quot;tab&quot;参数，通常这个参数指的是当前表，但在调整大小或转换时可能是新的或旧的 
+*
+*
+* When bin lists are treeified, split, or untreeified, we keep
+* them in the same relative access/traversal order (i.e., field
+* Node.next) to better preserve locality, and to slightly
+* simplify handling of splits and traversals that invoke
+* iterator.remove. When using comparators on insertion, to keep a
+* total ordering (or as close as is required here) across
+* rebalancings, we compare classes and identityHashCodes as
+* tie-breakers.
+*
+* 当HashMap被红黑树化, 被拆分, 或被去红黑树化, 我们将它们保持在相同的相对访问/遍历顺序(即field Node.next)中，以更好地保持局部性
+* 并稍微简化调用iterator.remove的拆分和遍历时的处理
+* 当在插入时使用比较器时，为了在重新平衡红黑树中保持总的顺序（或者尽可能接近这里所要求的顺序），我们比较类和标识哈希码作为连接断路器(短路运算符)
+*
+*
+* The use and transitions among plain vs tree modes is
+* complicated by the existence of subclass LinkedHashMap. See
+* below for hook methods defined to be invoked upon insertion,
+* removal and access that allow LinkedHashMap internals to
+* otherwise remain independent of these mechanics. (This also
+* requires that a map instance be passed to some utility methods
+* that may create new nodes.)
+* 
+* 由于子类LinkedHashMap的存在，普通vs树模式之间的使用和转换是非常复杂的
+* 有关定义为在插入、移除和访问时调用的钩子方法，请参见下文，这些钩子方法允许LinkedHashMap内部保持独立于这些机制
+* [通过LinkedHashMap实现树化和普通化的转换，在插入、删除、访问都会回调LinkedHashMap的实现方法]
+* (这还要求将map实例传递给一些实用程序方法, 同时可能会创建新的节点)
+*
+*
+* The concurrent-programming-like SSA-based coding style helps
+* avoid aliasing errors amid all of the twisty pointer operations.
+* 
+* 基于SSA(static single assignment)的并发编程风格有助于避免在Map定义的&quot;反人类的&quot;指针操作中出现错误
+*/</code></pre></blockquote>
+<br>
+
+<p>下面看一下源码:</p>
+<pre><code class="java">public class HashMap&lt;K,V&gt; extends AbstractMap&lt;K,V&gt; implements Map&lt;K,V&gt;, Cloneable, Serializable {
+
+    // HashMap序列化ID
+    private static final long serialVersionUID = 362498820763181265L;
+
+    /*  Implementation notes ...... */
+
+    // 默认的初始容量是16，必须是2的幂
+    static final int DEFAULT_INITIAL_CAPACITY = 1 &lt;&lt; 4; // 16
+
+    // 最大容量（必须是2的幂且小于2的30次方，传入容量过大将被这个值替换）
+    static final int MAXIMUM_CAPACITY = 1 &lt;&lt; 30;
+
+    // 默认加载因子
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+    // 如果哈希函数不合理，即使扩容也无法减少箱子中链表的长度
+    // Java 的处理方案是当链表太长时，转换成红黑树
+    // 这个值表示当某个桶中，链表长度大于 8(TREEIFY_THRESHOLD) 时，有可能会转化成树
+    static final int TREEIFY_THRESHOLD = 8;
+
+    // 在哈希表扩容时，如果发现链表长度小于 6，则会由树重新退化为链表
+    static final int UNTREEIFY_THRESHOLD = 6;
+
+    // 在转变成树之前，还会有一次判断，只有键值对数量大于 64(MIN_TREEIFY_CAPACITY) 才会发生转换
+    // 这是为了避免在哈希表建立初期，多个键值对恰好被放入了同一个链表中而导致不必要的转化
+    static final int MIN_TREEIFY_CAPACITY = 64;
+
+    // Node是单向链表(JDK 8之前叫做Entry)
+    // 它是“HashMap链式存储法”对应的链表(见内部类TreeNode和LinkedHashMap)
+    // 它实现了Map.Entry 接口，即实现getKey(), getValue(), setValue(V value), equals(Object o), hashCode()等方法
+    // Basic hash bin node, used for most entries.  (See below for TreeNode subclass, and in LinkedHashMap for its Entry subclass)
+    static class Node&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+        final int hash;
+        final K key;
+        V value;
+        // 指向下一个节点
+        Node&lt;K,V&gt; next;
+
+        // 构造函数。
+        // 输入参数包括&quot;哈希值(h)&quot;, &quot;键(k)&quot;, &quot;值(v)&quot;, &quot;下一节点(n)&quot;
+        Node(int hash, K key, V value, Node&lt;K,V&gt; next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+
+        public final K getKey()        { return key; }
+        public final V getValue()      { return value; }
+        public final String toString() { return key + &quot;=&quot; + value; }
+
+        // 实现hashCode(), 使用key和value的hashcode的异或
+        public final int hashCode() {
+            return Objects.hashCode(key) ^ Objects.hashCode(value);
+        }
+
+        public final V setValue(V newValue) {
+            V oldValue = value;
+            value = newValue;
+            return oldValue;
+        }
+
+        // 判断两个Node是否相等
+        // 若两个Node的“key”和“value”都相等，则返回true。
+        // 否则，返回false
+        public final boolean equals(Object o) {
+            if (o == this)
+                return true;
+            if (o instanceof Map.Entry) {
+                Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;)o;
+                if (Objects.equals(key, e.getKey()) &amp;&amp;
+                    Objects.equals(value, e.getValue()))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    /* ---------------- 静态工具类(Static utilities) -------------- */
+
+    /**
+     * Computes key.hashCode() and spreads (XORs) higher bits of hash
+     * to lower.  Because the table uses power-of-two masking, sets of
+     * hashes that vary only in bits above the current mask will
+     * always collide. (Among known examples are sets of Float keys
+     * holding consecutive whole numbers in small tables.)  
+     * So we apply a transform that spreads the impact of higher bits
+     * downward. There is a tradeoff between speed, utility, and
+     * quality of bit-spreading. Because many common sets of hashes
+     * are already reasonably distributed (so don&#39;t benefit from
+     * spreading), and because we use trees to handle large sets of
+     * collisions in bins, we just XOR some shifted bits in the
+     * cheapest possible way to reduce systematic lossage, as well as
+     * to incorporate impact of the highest bits that would otherwise
+     * never be used in index calculations because of table bounds.
+     */
+    // hash再散列方法
+    // 计算key.hashCode()[计算得出hashCode 不属于这个hash函数管]把高位二进制序列(比如 0110 0111 中的 0110) , 的特征性传播到低位中，通过异或运算实现
+    // 因为HashMap存储对象的数组容量经常是2的次方，这个二的次方(比如上面是16 = 2 ^ 4) 减1后作为掩码
+    // 在掩码是2^n - 1 的情况下，只用低位的话经常发生hash冲突
+    // (经典的例子是: 一组在小表中保存连续的浮点数key)
+    // 所以我们应用一个转换，将高位的影响向下传播
+    // 但是这种特性的传播会带来一定的性能损失(速度、实用性和位传播质量之间权衡)
+    // 因为有的hashCode他们的低位已经足够避免多数hash冲突了(已经被合理的均匀分布了, 他们在位传播的过程中不会受益)
+    // [比如我们的hashCode是八位的并且我们的数组大小是((2 ^ 8) - 1) (0111 1111) ]
+    // [那么只有两种冲突情况而已，0mmm mmmm 和 1mmm mmmm 会冲突，每次进行插入元素或者查找元素都要调用hash函数再一次散列hashCode，显然不划算]
+    // 因为我们使用树来处理容器中的大量冲突，所以我们只是以最节省的方式对一些移位的位进行异或运算，以减少系统损失
+    // 并合并最高位的影响，否则由于表边界的原因，最高位永远不会用于索引计算
+    static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);
+    }
+
+    // 用于对象x实现了Comparable接口的ClassFor()方法, 使用反射返回x的运行时类型
+    // 当x的类型为X，且X直接实现了Comparable接口（比较类型必须为X类本身）时，返回x的运行时类型；否则返回null
+    // Returns x&#39;s Class if it is of the form &quot;class C implements Comparable&lt;C&gt;&quot;, else null.
+    static Class&lt;?&gt; comparableClassFor(Object x) {
+        if (x instanceof Comparable) {
+            Class&lt;?&gt; c; Type[] ts, as; ParameterizedType p;
+            if ((c = x.getClass()) == String.class) // 如果x是个字符串对象
+                return c; // 返回String.
+            // 为什么如果x是个字符串就直接返回c了呢? 
+            // 因为String  实现了 Comparable 接口
+
+            // 如果 c 不是字符串类，获取c直接实现的接口（如果是泛型接口则附带泛型信息）    
+                for (Type t : ts) { // 遍历接口数组
+                    // 如果当前接口t是个泛型接口 
+                    // 如果该泛型接口t的原始类型p 是 Comparable 接口
+                    // 如果该Comparable接口p只定义了一个泛型参数
+                    // 如果这一个泛型参数的类型就是c，那么返回c
+                    if ((t instanceof ParameterizedType) &amp;&amp;
+                        ((p = (ParameterizedType) t).getRawType() ==
+                         Comparable.class) &amp;&amp;
+                        (as = p.getActualTypeArguments()) != null &amp;&amp;
+                        as.length == 1 &amp;&amp; as[0] == c) // type arg is c
+                        return c;
+                }
+            // 上面for循环的目的就是为了看看x的class是否 implements  Comparable&lt;x的class&gt;
+            }
+        }
+        return null; // 如果c并没有实现 Comparable&lt;c&gt; 那么返回空
+    }
+
+    // 如果x所属的类是kc，返回k.compareTo(x)的比较结果, 如果x为空，或者其所属的类不是kc，返回0
+    // Returns k.compareTo(x) if x matches kc (k&#39;s screened comparable class), else 0.
+    @SuppressWarnings({&quot;rawtypes&quot;,&quot;unchecked&quot;}) // for cast to Comparable
+    static int compareComparables(Class&lt;?&gt; kc, Object k, Object x) {
+        return (x == null || x.getClass() != kc ? 0 :
+                ((Comparable)k).compareTo(x));
+    }
+
+    // 返回大于输入参数且最近的2的整数次幂的数, 比如: cap=10，则返回16
+    // Returns a power of two size for the given target capacity
+    static final int tableSizeFor(int cap) {
+        int n = -1 &gt;&gt;&gt; Integer.numberOfLeadingZeros(cap - 1);
+        return (n &lt; 0) ? 1 : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+
+    /* ---------------- 属性(Fields) -------------- */
+
+    // 存储数据的Node数组，长度是2的幂
+    // HashMap是采用拉链法实现的，每一个Node本质上是一个单向链表
+    transient Node&lt;K,V&gt;[] table;
+
+    // 保存缓存的EntrySet()
+    // Holds cached entrySet(). Note that AbstractMap fields are used for keySet() and values()
+    transient Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet;
+
+    // HashMap的大小，它是HashMap保存的键值对的数量
+    transient int size;
+
+    // HashMap被改变的次数, 实现fail-fast机制
+    transient int modCount;
+
+    // HashMap的阈值，用于判断是否需要调整HashMap的容量（threshold = 容量*加载因子）
+    int threshold;
+
+    // 加载因子实际大小
+    final float loadFactor;
+
+    /* ---------------- 公共操作方法(Public operations) -------------- */
+
+    // 指定“容量大小”和“加载因子”的构造函数
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity &lt; 0)
+            throw new IllegalArgumentException(&quot;Illegal initial capacity: &quot; +
+                                               initialCapacity);
+        // HashMap的最大容量只能是MAXIMUM_CAPACITY(2^30)
+        if (initialCapacity &gt; MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException(&quot;Illegal load factor: &quot; +
+                                               loadFactor);
+        this.loadFactor = loadFactor;
+        // 找出“大于initialCapacity”的最小的2的幂
+        // 设置HashMap阈值, 当HashMap中存储数据的数量达到threshold时，就需要将HashMap的容量加倍
+        this.threshold = tableSizeFor(initialCapacity);
+    }
+
+    // 指定“容量大小”的构造函数, 加载因子为默认的0.75
+    // Constructs an empty {@code HashMap} with the specified initial capacity and the default load factor (0.75).
+    public HashMap(int initialCapacity) {
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+    // 默认构造函数, 默认容量大小为16, 加载因子为默认的0.75
+    public HashMap() {
+        this.loadFactor = DEFAULT_LOAD_FACTOR; // 0.75f
+    }
+
+    // 包含“子Map”的构造函数, 加载因子为默认的0.75
+    public HashMap(Map&lt;? extends K, ? extends V&gt; m) {
+        this.loadFactor = DEFAULT_LOAD_FACTOR;
+        // 将m中的全部元素逐个添加到HashMap中
+        putMapEntries(m, false);
+    }
+
+    // 实现Map.putAll()方法和Map构造函数
+    // Implements Map.putAll and Map constructor
+    final void putMapEntries(Map&lt;? extends K, ? extends V&gt; m, boolean evict) {
+        int s = m.size();
+        if (s &gt; 0) {
+            // 初始table为null
+            if (table == null) { // pre-size
+                // 用负载参数进行计算
+                float ft = ((float)s / loadFactor) + 1.0F;
+                // 与最大容量作比较 返回对应的int类型值
+                int t = ((ft &lt; (float)MAXIMUM_CAPACITY) ?
+                         (int)ft : MAXIMUM_CAPACITY);
+                // The next size value at which to resize (capacity * load factor)
+                if (t &gt; threshold)
+                    threshold = tableSizeFor(t);
+            }
+            // 扩容
+            else if (s &gt; threshold)
+                resize();
+            // 插入处理
+            for (Map.Entry&lt;? extends K, ? extends V&gt; e : m.entrySet()) {
+                K key = e.getKey();
+                V value = e.getValue();
+                putVal(hash(key), key, value, false, evict);
+            }
+        }
+    }
+
+    // 返回map中的k-v对数量(即map中存储的k-v元素个数)
+    public int size() {
+        return size;
+    }
+
+    // map是否为空
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    // 获取key对应的value
+    public V get(Object key) {
+        Node&lt;K,V&gt; e;
+        return (e = getNode(hash(key), key)) == null ? null : e.value;
+    }
+
+    // Map.get()和其他相关方法的真正实现方法
+    // Implements Map.get and related methods
+    final Node&lt;K,V&gt; getNode(int hash, Object key) {
+        // 声明节点数组对象、链表的第一个节点对象、循环遍历时的当前节点对象、数组长度、节点的键对象
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; first, e; int n; K k;
+            // 节点数组赋值、数组长度赋值、通过位运算得到求模结果确定链表的首节点
+        if ((tab = table) != null &amp;&amp; (n = tab.length) &gt; 0 &amp;&amp;
+            (first = tab[(n - 1) &amp; hash]) != null) {
+            // 首先比对首节点，如果首节点的hash值和key的hash值相同 并且 首节点的键对象和key相同（地址相同或equals相等），则返回该节点
+            if (first.hash == hash &amp;&amp; 
+                ((k = first.key) == key || (key != null &amp;&amp; key.equals(k))))
+                return first; // 返回首节点
+            // 如果首节点比对不相同、那么看看是否存在下一个节点，如果存在的话，可以继续比对，如果不存在就意味着key没有匹配的键值对
+            if ((e = first.next) != null) {
+                // 如果存在下一个节点 e，那么先看看这个首节点是否是个树节点
+                if (first instanceof TreeNode)
+                    // 如果是首节点是树节点，那么遍历树来查找
+                    return ((TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);
+                do {
+                    // 如果首节点不是树节点，就说明还是个普通的链表，那么逐个遍历比对即可
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+                        return e; // 如果当前节点e的键对象和key相同，那么返回e
+                } while ((e = e.next) != null); // 看看是否还有下一个节点，如果有，继续下一轮比对，否则跳出循环
+            }
+        }
+        // 在比对完了应该比对的树节点 或者全部的链表节点 都没能匹配到key，那么就返回null
+        return null;
+    }
+
+    // HashMap是否包含key
+    // 判断方法为: 通过key寻找value, 当value不为null时返回true
+    public boolean containsKey(Object key) {
+        return getNode(hash(key), key) != null;
+    }
+
+    // 将“key-newValue”添加到HashMap中
+    // 如果之前存在key对应的oldValue, 则返回oldValue
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+
+    /**
+     * Map.put()等相关方法的实际实现
+     * Implements Map.put and related methods
+     *
+     * @param hash key的hash值
+     * @param key
+     * @param value 新的value值
+     * @param onlyIfAbsent 如果为true, 则不修改存在的oldValue
+     * @param evict 如果为false，则表处于创建模式
+     * @return oldValue或者返回空
+     */
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, i;
+        // 如果存储元素的table为空，则进行必要字段的初始化
+        if ((tab = table) == null || (n = tab.length) == 0)
+            n = (tab = resize()).length; // 获取长度（16）
+         // 如果根据hash值获取的结点为空，则新建一个结点
+        if ((p = tab[i = (n - 1) &amp; hash]) == null)
+            tab[i] = newNode(hash, key, value, null);
+        else {
+            Node&lt;K,V&gt; e; K k;
+            // 如果新插入的结点和table中p结点的hash值，key值相同的话
+            if (p.hash == hash &amp;&amp;
+                ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+                e = p;
+            // 如果是红黑树结点的话，进行红黑树插入
+            else if (p instanceof TreeNode)
+                e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);
+            else {
+                for (int binCount = 0; ; ++binCount) {
+                    // 代表这个单链表只有一个头部结点，则直接新建一个结点即可
+                    if ((e = p.next) == null) {
+                        p.next = newNode(hash, key, value, null);
+                        // 链表长度大于8时，将链表转红黑树
+                        if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+                        break;
+                    // 及时更新p
+                    p = e;
+                }
+            }
+            // 如果存在这个映射就覆盖
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                // 判断是否允许覆盖，并且value是否为空
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value;
+                afterNodeAccess(e); // 回调以允许LinkedHashMap后置操作
+                return oldValue;
+            }
+        }
+        ++modCount; // 更改操作次数, 实现fail-fast机制
+        if (++size &gt; threshold) // 大于临界值
+            // 将数组大小设置为原来的2倍，并将原先的数组中的元素放到新数组中
+            // 因为有链表，红黑树之类，因此还要调整他们
+            resize();
+        // 回调以允许LinkedHashMap后置操作
+        afterNodeInsertion(evict); 
+        return null;
+    }
+
+    /**
+    * 初始化或者扩容之后元素调整
+    * 如果为空，则根据字段阈值中保留的初始容量目标进行分配(16)
+    * 否则，因为我们使用的是两次幂扩展
+    * 所以每个bin中的元素必须保持在同一指数(2的次方)中, 或在新表中以两的次方的偏移进行移动
+    *
+     * Initializes or doubles table size.  If null, allocates in
+     * accord with initial capacity target held in field threshold.
+     * Otherwise, because we are using power-of-two expansion, the
+     * elements from each bin must either stay at same index, or move
+     * with a power of two offset in the new table.
+     *
+     * @return the table
+     */
+    final Node&lt;K,V&gt;[] resize() {
+        // 获取旧元素数组的各种信息
+        Node&lt;K,V&gt;[] oldTab = table;
+        // 旧表容量
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        // 旧表扩容的临界值
+        int oldThr = threshold;
+        // 定义新数组的长度及扩容的临界值
+        int newCap, newThr = 0;
+        if (oldCap &gt; 0) {  // 如果原table不为空
+            if (oldCap &gt;= MAXIMUM_CAPACITY) { 
+                // 如果数组长度达到最大值，则修改临界值为Integer.MAX_VALUE
+                threshold = Integer.MAX_VALUE;   
+                return oldTab;
+            }
+            // 下面就是扩容操作（2倍）
+            else if ((newCap = oldCap &lt;&lt; 1) &lt; MAXIMUM_CAPACITY &amp;&amp;
+                     oldCap &gt;= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr &lt;&lt; 1; // threshold也变为二倍
+        }
+        else if (oldThr &gt; 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // threshold为0，则使用默认值
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) { // 如果临界值也为0，则设置临界值
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        threshold = newThr; // 更新填充因子
+        @SuppressWarnings({&quot;rawtypes&quot;,&quot;unchecked&quot;})
+        Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])new Node[newCap];
+        table = newTab;
+        if (oldTab != null) { // 调整数组大小之后，需要调整红黑树或者链表的指向
+            for (int j = 0; j &lt; oldCap; ++j) {
+                Node&lt;K,V&gt; e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash &amp; (newCap - 1)] = e;
+                    else if (e instanceof TreeNode) // 红黑树调整
+                        ((TreeNode&lt;K,V&gt;)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        // 链表调整
+                        Node&lt;K,V&gt; loHead = null, loTail = null;
+                        Node&lt;K,V&gt; hiHead = null, hiTail = null;
+                        Node&lt;K,V&gt; next;
+                        do {
+                            next = e.next;
+                            if ((e.hash &amp; oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+
+    /**
+    * 把容器里的元素变成树结构
+    * 替换给定哈希的索引处bin中的所有链接节点
+    * 但如果表太小，在这种情况下将改为调整大小
+    *
+     * Replaces all linked nodes in bin at index for given hash unless
+     * table is too small, in which case resizes instead.
+     */
+    final void treeifyBin(Node&lt;K,V&gt;[] tab, int hash) {
+        int n, index; Node&lt;K,V&gt; e;
+        /*
+     * 如果元素数组为空 或者 数组长度小于 树结构化的最小限制
+     * MIN_TREEIFY_CAPACITY 默认值64，对于这个值可以理解为：如果元素数组长度小于这个值，没有必要去进行结构转换
+     * 当一个数组位置上集中了多个键值对，那是因为这些key的hash值和数组长度取模之后结果相同。（并不是因为这些key的hash值相同）
+     * 因为hash值相同的概率不高，所以可以通过扩容的方式，来使得最终这些key的hash值在和新的数组长度取模之后，拆分到多个数组位置上
+     */
+        if (tab == null || (n = tab.length) &lt; MIN_TREEIFY_CAPACITY)
+            resize(); // 扩容
+
+        // 如果元素数组长度已经大于等于了 MIN_TREEIFY_CAPACITY，那么就有必要进行结构转换了
+        // 根据hash值和数组长度进行取模运算后，得到链表的首节点
+        else if ((e = tab[index = (n - 1) &amp; hash]) != null) {
+            TreeNode&lt;K,V&gt; hd = null, tl = null; // 定义红黑树的首、尾节点
+            do {
+                // 将该节点转换为 树节点
+                TreeNode&lt;K,V&gt; p = replacementTreeNode(e, null);
+                if (tl == null) // 如果尾节点为空，说明还没有根节点
+                    hd = p; // 首节点（根节点）指向 当前节点
+                else  // 尾节点不为空，以下两行是一个双向链表结构
+                    p.prev = tl; // 当前树节点的 前一个节点指向 尾节点
+                    tl.next = p; // 尾节点的 后一个节点指向 当前节点
+                }
+                tl = p; // 把当前节点设为尾节点
+            } while ((e = e.next) != null);
+
+            // 到目前为止 也只是把Node对象转换成了TreeNode对象，把单向链表转换成了双向链表
+
+            // 把转换后的双向链表，替换原来位置上的单向链表
+            if ((tab[index] = hd) != null)
+                // 此处才是真正的转为红黑树
+                hd.treeify(tab);
+        }
+    }
+
+    // 将“m”中的全部元素都添加到HashMap中
+    public void putAll(Map&lt;? extends K, ? extends V&gt; m) {
+        putMapEntries(m, true);
+    }
+
+    // 删除“键为key”元素
+    public V remove(Object key) {
+        Node&lt;K,V&gt; e;
+        return (e = removeNode(hash(key), key, null, false, true)) == null ?
+            null : e.value;
+    }
+
+    /**
+     * 从Map中删除节点(Map.remove和其他相关方法)的真正实现方法
+     * Implements Map.remove and related methods
+     *
+     * @param hash key的hash值
+     * @param key
+     * @param value 当matchValue为true时, 当且仅当value也相同时才移除
+     * @param matchValue 当matchValue为true时, 当且仅当value也相同时才移除
+     * @param movable 当为false, 在删除节点时不移动其他节点
+     * @return the node, or null if none
+     */
+    final Node&lt;K,V&gt; removeNode(int hash, Object key, Object value,
+                               boolean matchValue, boolean movable) {
+        // 定义节点数组tab用于指向table、节点p、数组长度n、hash所映射的数组下标
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, index;
+        // 节点数组在hash位置处的节点不为空,若为空则直接返回null(不存在可删除元素)
+        if ((tab = table) != null &amp;&amp; (n = tab.length) &gt; 0 &amp;&amp;
+            (p = tab[index = (n - 1) &amp; hash]) != null) {
+            // 定义局部节点变量node存储需要删除的元素、循环变量e、key、value
+            Node&lt;K,V&gt; node = null, e; K k; V v;
+            if (p.hash == hash &amp;&amp;
+                ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+                // 头结点即为需要删除的节点
+                node = p;
+            // 链表还存在其他元素,并将e指向头结点的后继元
+            else if ((e = p.next) != null) {
+                if (p instanceof TreeNode) // 该链表是一个红黑树结构
+                    node = ((TreeNode&lt;K,V&gt;)p).getTreeNode(hash, key); // 在红黑树中查询指定hash、key的节点并返回
+                else { // 链表是一个单向链表
+                    do {
+                        if (e.hash == hash &amp;&amp;
+                            ((k = e.key) == key ||
+                             (key != null &amp;&amp; key.equals(k)))) {
+                            node = e; // 节点e是需要移除的节点,结束循环
+                            break;
+                        }
+                        p = e; // 循环结束时,节点p为目标节点的前驱元
+                    } while ((e = e.next) != null);
+                }
+            }
+            // 存在需要移除的节点且值匹配删除为false或者不为false且值匹配
+            if (node != null &amp;&amp; (!matchValue || (v = node.value) == value ||
+                                 (value != null &amp;&amp; value.equals(v)))) { 
+                if (node instanceof TreeNode) // node为树形节点,使用treeNode的移除方法
+                    ((TreeNode&lt;K,V&gt;)node).removeTreeNode(this, tab, movable);
+                else if (node == p) // 若node为头结点,直接将node 的后继元作为新的头结点
+                    tab[index] = node.next;
+                else // 是链表结构且不为头结点,此时将目标节点的前驱元的后继元指向目标节点的后继元
+                    p.next = node.next;
+                ++modCount;
+                --size;
+                afterNodeRemoval(node);
+                return node;
+            }
+        }
+        return null;
+    }
+
+    // 清空HashMap，将所有的元素设为null
+    public void clear() {
+        Node&lt;K,V&gt;[] tab;
+        modCount++;
+        if ((tab = table) != null &amp;&amp; size &gt; 0) {
+            size = 0;
+            for (int i = 0; i &lt; tab.length; ++i)
+                tab[i] = null;
+        }
+    }
+
+    // 是否包含“值为value”的元素
+    public boolean containsValue(Object value) {
+        Node&lt;K,V&gt;[] tab; V v;
+        if ((tab = table) != null &amp;&amp; size &gt; 0) { // table不为空
+            for (Node&lt;K,V&gt; e : tab) {
+                for (; e != null; e = e.next) {
+                    // 此处若传参value为null, 而map中对应value为null也会返回true(null == null为true)
+                    if ((v = e.value) == value || 
+                        (value != null &amp;&amp; value.equals(v)))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+    * 返回此映射中包含的键的{@link Set}&quot;视图&quot;, 返回值是内部类KeySet类型(AbstractSet的实现类)
+    * 集合由映射支持，因此对映射的更改将反映在集合中，反之亦然!(因为返回的是指向同一个内部对象的引用!)
+    * 如果在对keySet()集合进行迭代时(其他线程)修改了映射（通过迭代器自己的{@code remove}操作除外），则迭代的结果是不确定的
+    * 集合支持通过{@code Iterator.remove}、{@code set.remove}、{@code removeAll}、{@code retainal}和{@code clear}操作从映射中移除相应映射的元素(k-v对)
+    * 但是它不支持{@code add}或{@code addAll}操作
+    *
+     * Returns a {@link Set} view of the keys contained in this map.
+     * The set is backed by the map, so changes to the map are
+     * reflected in the set, and vice-versa.  If the map is modified
+     * while an iteration over the set is in progress (except through
+     * the iterator&#39;s own {@code remove} operation), the results of
+     * the iteration are undefined.  The set supports element removal,
+     * which removes the corresponding mapping from the map, via the
+     * {@code Iterator.remove}, {@code Set.remove},
+     * {@code removeAll}, {@code retainAll}, and {@code clear}
+     * operations.  It does not support the {@code add} or {@code addAll}
+     * operations.
+     *
+     * @return a set view of the keys contained in this map
+     */
+    public Set&lt;K&gt; keySet() {
+        Set&lt;K&gt; ks = keySet; 
+        if (ks == null) { // 如果map尚未初始化(此时为null), 则帮助初始化
+            ks = new KeySet();
+            keySet = ks;
+        }
+        return ks;
+    }
+
+    // Key对应的集合
+    // KeySet继承于AbstractSet，说明该集合中没有重复的Key
+    final class KeySet extends AbstractSet&lt;K&gt; {
+        public final int size()                 { return size; }
+        // 注意会删除原map中的所有元素!
+        public final void clear()               { HashMap.this.clear(); } 
+        // 返回一个迭代器, 具体实现是内部类KeyIterator[继承了内部抽象类HashIterator, 并实现了Iterator接口]
+        public final Iterator&lt;K&gt; iterator()     { return new KeyIterator(); }
+        public final boolean contains(Object o) { return containsKey(o); }
+        public final boolean remove(Object key) {
+            return removeNode(hash(key), key, null, false, true) != null;
+        }
+        // 返回一个Spliterator, 具体实现是内部类KeySpliterator[继承了内部类HashMapSpliterator, 并实现了Spliterator接口]
+        public final Spliterator&lt;K&gt; spliterator() {
+            return new KeySpliterator&lt;&gt;(HashMap.this, 0, -1, 0, 0);
+        }
+        // JDK 8后加入的遍历方法, 传入一个Lambda表达式(函数), 遍历将所有对象作用这个函数
+        public final void forEach(Consumer&lt;? super K&gt; action) {
+            Node&lt;K,V&gt;[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+                int mc = modCount;
+                for (Node&lt;K,V&gt; e : tab) {
+                    for (; e != null; e = e.next)
+                        action.accept(e.key);
+                }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    /**
+    * 返回此映射中包含的值的{@link Collection}&quot;视图&quot;
+    * 集合由映射支持，因此对映射的更改将反映在集合中，反之亦然!(因为返回的是指向同一个内部对象的引用!)
+    * 如果在对values()集合进行迭代时(其他线程)修改了映射（通过迭代器自己的{@code remove}操作除外），则迭代的结果是不确定的
+    * 集合支持通过{@code Iterator.remove}、{@code set.remove}、{@code removeAll}、{@code retainal}和{@code clear}操作从映射中移除相应映射的元素(k-v对)
+    * 但是它不支持{@code add}或{@code addAll}操作
+    *
+     * Returns a {@link Collection} view of the values contained in this map.
+     * The collection is backed by the map, so changes to the map are
+     * reflected in the collection, and vice-versa.  If the map is
+     * modified while an iteration over the collection is in progress
+     * (except through the iterator&#39;s own {@code remove} operation),
+     * the results of the iteration are undefined.  The collection
+     * supports element removal, which removes the corresponding
+     * mapping from the map, via the {@code Iterator.remove},
+     * {@code Collection.remove}, {@code removeAll},
+     * {@code retainAll} and {@code clear} operations.  It does not
+     * support the {@code add} or {@code addAll} operations.
+     *
+     * @return a view of the values contained in this map
+     */
+    public Collection&lt;V&gt; values() {
+        Collection&lt;V&gt; vs = values;
+        if (vs == null) { // 如果map尚未初始化(此时为null), 则帮助初始化
+            vs = new Values();
+            values = vs;
+        }
+        return vs;
+    } 
+
+    // value集合
+    // Values继承于AbstractCollection，不同于“KeySet继承于AbstractSet”，
+    // Values中的元素能够重复, 因为不同的key可以指向相同的value
+    final class Values extends AbstractCollection&lt;V&gt; {
+        public final int size()                 { return size; }
+        // 注意会删除原map中的所有元素!
+        public final void clear()               { HashMap.this.clear(); }
+        // 返回一个迭代器, 具体内部实现是内部类ValueIterator[继承自HashIterator, 并实现了Iterator接口]
+        public final Iterator&lt;V&gt; iterator()     { return new ValueIterator(); }
+        public final boolean contains(Object o) { return containsValue(o); }
+        // 返回一个Spliterator, 具体实现是内部类ValueSpliterator[继承了内部类HashMapSpliterator, 并实现了Spliterator接口]
+        public final Spliterator&lt;V&gt; spliterator() {
+            return new ValueSpliterator&lt;&gt;(HashMap.this, 0, -1, 0, 0);
+        }
+        public final void forEach(Consumer&lt;? super V&gt; action) {
+            Node&lt;K,V&gt;[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+                int mc = modCount;
+                for (Node&lt;K,V&gt; e : tab) {
+                    for (; e != null; e = e.next)
+                        action.accept(e.value);
+                }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    /**
+    * 返回此映射中包含的映射的{@link Set}&quot;视图&quot;
+    * 集合由映射支持，因此对映射的更改将反映在集合中，反之亦然!(因为返回的是指向同一个内部对象的引用!)
+    * 如果在对values()集合进行迭代时(其他线程)修改了映射（通过迭代器自己的{@code remove}操作除外），则迭代的结果是不确定的
+    * 集合支持通过{@code Iterator.remove}、{@code set.remove}、{@code removeAll}、{@code retainal}和{@code clear}操作从映射中移除相应映射的元素(k-v对)
+    * 但是它不支持{@code add}或{@code addAll}操作
+     */
+    public Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet() {
+        Set&lt;Map.Entry&lt;K,V&gt;&gt; es;
+        return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
+    }
+
+    // EntrySet对应的集合
+    // EntrySet继承于AbstractSet，说明该集合中没有重复的EntrySet
+    final class EntrySet extends AbstractSet&lt;Map.Entry&lt;K,V&gt;&gt; {
+        public final int size()                 { return size; }
+        // 注意会删除原map中的所有元素!
+        public final void clear()               { HashMap.this.clear(); }
+        // 返回一个迭代器, 具体实现是内部类EntryIterator[继承了内部抽象类HashIterator, 并实现了Iterator接口]
+        public final Iterator&lt;Map.Entry&lt;K,V&gt;&gt; iterator() { return new EntryIterator(); }
+
+        // 这个EntrySet中是否存在某个Entry(对象o)
+        public final boolean contains(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;) o;
+            Object key = e.getKey();
+            Node&lt;K,V&gt; candidate = getNode(hash(key), key);
+            return candidate != null &amp;&amp; candidate.equals(e);
+        }
+
+        // 同时在EntrySet和map对象中移除Entryo
+        public final boolean remove(Object o) {
+            if (o instanceof Map.Entry) {
+                Map.Entry&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;) o;
+                Object key = e.getKey();
+                Object value = e.getValue();
+                // 其实还是根据key寻找k-v, 然后删除
+                return removeNode(hash(key), key, value, true, true) != null;
+            }
+            return false;
+        }
+
+        // 返回一个Spliterator, 具体实现是内部类EntrySpliterator[继承了内部类HashMapSpliterator, 并实现了Spliterator接口]
+        public final Spliterator&lt;Map.Entry&lt;K,V&gt;&gt; spliterator() {
+            return new EntrySpliterator&lt;&gt;(HashMap.this, 0, -1, 0, 0);
+        }
+        public final void forEach(Consumer&lt;? super Map.Entry&lt;K,V&gt;&gt; action) {
+            Node&lt;K,V&gt;[] tab;
+            if (action == null)
+                throw new NullPointerException();
+            if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+                int mc = modCount;
+                for (Node&lt;K,V&gt; e : tab) {
+                    for (; e != null; e = e.next)
+                        action.accept(e);
+                }
+                if (modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+    }
+
+    /* 重写了JDK8中 Map接口中添加的方法(Overrides of JDK8 Map extension methods) */
+
+    // 在Map中寻找key, 如果存在key且key对应的value不为null则返回value, 否则返回defaultValue
+    // 使用内部的getNode()方法进行优化
+    @Override
+    public V getOrDefault(Object key, V defaultValue) {
+        Node&lt;K,V&gt; e;
+        return (e = getNode(hash(key), key)) == null ? defaultValue : e.value;
+    }
+
+    // 当不存在key或者key中存放的是null值时, 加入(k, v)对
+    // 使用内部的putVal()方法进行优化
+    @Override
+    public V putIfAbsent(K key, V value) {
+        return putVal(hash(key), key, value, true, true);
+    }
+
+    // 若存在与传参相同的(k, v)对则移除
+    // 使用内部的removeNode()方法优化
+    @Override
+    public boolean remove(Object key, Object value) {
+        return removeNode(hash(key), key, value, true, true) != null;
+    }
+
+    // 若存在与传参相同的(k, v)对则替换newValue
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        Node&lt;K,V&gt; e; V v;
+        if ((e = getNode(hash(key), key)) != null &amp;&amp;
+            ((v = e.value) == oldValue || (v != null &amp;&amp; v.equals(oldValue)))) {
+            e.value = newValue;
+            afterNodeAccess(e);
+            return true;
+        }
+        return false;
+    }
+
+    // 如果存在key则替换, 否则添加(k, v)对, 并返回添加的value
+    @Override
+    public V replace(K key, V value) {
+        Node&lt;K,V&gt; e;
+        if ((e = getNode(hash(key), key)) != null) {
+            V oldValue = e.value;
+            e.value = value;
+            afterNodeAccess(e);
+            return oldValue;
+        }
+        return null;
+    }
+
+    /**
+     * 如果传给该方法的key参数在Map中对应的value为null，则使用mappingFunction&quot;根据key计算&quot;一个新的结果
+     * 如果计算结果不为null，则用计算结果覆盖原有value(如果原Map原来不包含该key，那么该方法会添加一组key-value对)
+     * 在计算时如果其他线程并发修改了map中的内容, 将会触发fail-fast机制, 抛出ConcurrentModificationException
+     *
+     * &lt;p&gt;This method will, on a best-effort basis, throw a
+     * {@link ConcurrentModificationException} if it is detected that the
+     * mapping function modifies this map during computation.
+     */
+    @Override
+    public V computeIfAbsent(K key,
+                             Function&lt;? super K, ? extends V&gt; mappingFunction) {
+        if (mappingFunction == null)
+            throw new NullPointerException();
+        int hash = hash(key);
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; first; int n, i;
+        int binCount = 0;
+        TreeNode&lt;K,V&gt; t = null;
+        Node&lt;K,V&gt; old = null;
+        if (size &gt; threshold || (tab = table) == null ||
+            (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((first = tab[i = (n - 1) &amp; hash]) != null) {
+            if (first instanceof TreeNode)
+                old = (t = (TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);
+            else {
+                Node&lt;K,V&gt; e = first; K k;
+                do {
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) {
+                        old = e;
+                        break;
+                    }
+                    ++binCount;
+                } while ((e = e.next) != null);
+            }
+            V oldValue;
+            if (old != null &amp;&amp; (oldValue = old.value) != null) {
+                afterNodeAccess(old);
+                return oldValue;
+            }
+        }
+        int mc = modCount;
+        V v = mappingFunction.apply(key);
+        if (mc != modCount) { throw new ConcurrentModificationException(); }
+        if (v == null) {
+            return null;
+        } else if (old != null) {
+            old.value = v;
+            afterNodeAccess(old);
+            return v;
+        }
+        else if (t != null)
+            t.putTreeVal(this, tab, hash, key, v);
+        else {
+            tab[i] = newNode(hash, key, v, first);
+            if (binCount &gt;= TREEIFY_THRESHOLD - 1)
+                treeifyBin(tab, hash);
+        }
+        modCount = mc + 1;
+        ++size;
+        afterNodeInsertion(true); // 回调以允许LinkedHashMap后置操作
+        return v;
+    }
+
+    // 该方法使用remappingFunction&quot;根据原key-value对计算&quot;一个新的value
+    // 只要新value不为null，就使用新value覆盖原value；
+    // 如果原value不为null,但新value为null，则删除原key-value对;
+    // 如果原value、新value同时为null，那么该方法不改变任何key-value对，直接返回null
+    // 在计算时如果其他线程并发修改了map中的内容, 将会触发fail-fast
+    @Override
+    public V computeIfPresent(K key,
+                              BiFunction&lt;? super K, ? super V, ? extends V&gt; remappingFunction) {
+        if (remappingFunction == null)
+            throw new NullPointerException();
+        Node&lt;K,V&gt; e; V oldValue;
+        int hash = hash(key);
+        if ((e = getNode(hash, key)) != null &amp;&amp;
+            (oldValue = e.value) != null) {
+            int mc = modCount;
+            V v = remappingFunction.apply(key, oldValue);
+            if (mc != modCount) { throw new ConcurrentModificationException(); }
+            if (v != null) {
+                e.value = v;
+                afterNodeAccess(e);
+                return v;
+            }
+            else
+                removeNode(hash, key, null, false, true);
+        }
+        return null;
+    }
+
+    // 使用remappingFunction根据原key-value对计算一个新的value
+    // 只要新value不为null，就使用新value覆盖原value；
+    // 如果原value不为null, 但新value为null，则删除原key-value对;
+    // 如果原value、新value同时为null，那么该方法不改变任何key-value对，直接返回null
+    // 在计算时如果其他线程并发修改了map中的内容, 将会触发fail-fast
+    @Override
+    public V compute(K key,
+                     BiFunction&lt;? super K, ? super V, ? extends V&gt; remappingFunction) {
+        if (remappingFunction == null)
+            throw new NullPointerException();
+        int hash = hash(key);
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; first; int n, i;
+        int binCount = 0;
+        TreeNode&lt;K,V&gt; t = null;
+        Node&lt;K,V&gt; old = null;
+        if (size &gt; threshold || (tab = table) == null ||
+            (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((first = tab[i = (n - 1) &amp; hash]) != null) {
+            if (first instanceof TreeNode)
+                old = (t = (TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);
+            else {
+                Node&lt;K,V&gt; e = first; K k;
+                do {
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) {
+                        old = e;
+                        break;
+                    }
+                    ++binCount;
+                } while ((e = e.next) != null);
+            }
+        }
+        V oldValue = (old == null) ? null : old.value;
+        int mc = modCount;
+        V v = remappingFunction.apply(key, oldValue);
+        if (mc != modCount) { throw new ConcurrentModificationException(); }
+        if (old != null) {
+            if (v != null) {
+                old.value = v;
+                afterNodeAccess(old);
+            }
+            else
+                removeNode(hash, key, null, false, true);
+        }
+        else if (v != null) {
+            if (t != null)
+                t.putTreeVal(this, tab, hash, key, v);
+            else {
+                tab[i] = newNode(hash, key, v, first);
+                if (binCount &gt;= TREEIFY_THRESHOLD - 1)
+                    treeifyBin(tab, hash);
+            }
+            modCount = mc + 1;
+            ++size;
+            afterNodeInsertion(true); // 回调以允许LinkedHashMap后置操作
+        }
+        return v;
+    }
+
+    // 先根据Key参数获取该Map中对应的value:
+    // 如果获得value为null，则直接用传入的value覆盖原有的value(在这中情况下，添加一组key-value对)；
+    // 如果获取的value不为null, 则使用remappingFunction 函数根据原value、新value计算一新的结果，并用得到的结果去覆盖原有的value
+    // 在计算时如果其他线程并发修改了map中的内容, 将会触发fail-fast
+    @Override
+    public V merge(K key, V value,
+                   BiFunction&lt;? super V, ? super V, ? extends V&gt; remappingFunction) {
+        if (value == null)
+            throw new NullPointerException();
+        if (remappingFunction == null)
+            throw new NullPointerException();
+        int hash = hash(key);
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; first; int n, i;
+        int binCount = 0;
+        TreeNode&lt;K,V&gt; t = null;
+        Node&lt;K,V&gt; old = null;
+        if (size &gt; threshold || (tab = table) == null ||
+            (n = tab.length) == 0)
+            n = (tab = resize()).length;
+        if ((first = tab[i = (n - 1) &amp; hash]) != null) {
+            if (first instanceof TreeNode)
+                old = (t = (TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);
+            else {
+                Node&lt;K,V&gt; e = first; K k;
+                do {
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) {
+                        old = e;
+                        break;
+                    }
+                    ++binCount;
+                } while ((e = e.next) != null);
+            }
+        }
+        if (old != null) {
+            V v;
+            if (old.value != null) {
+                int mc = modCount;
+                v = remappingFunction.apply(old.value, value);
+                if (mc != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+            } else {
+                v = value;
+            }
+            if (v != null) {
+                old.value = v;
+                afterNodeAccess(old);
+            }
+            else
+                removeNode(hash, key, null, false, true);
+            return v;
+        }
+        if (value != null) {
+            if (t != null)
+                t.putTreeVal(this, tab, hash, key, value);
+            else {
+                tab[i] = newNode(hash, key, value, first);
+                if (binCount &gt;= TREEIFY_THRESHOLD - 1)
+                    treeifyBin(tab, hash);
+            }
+            ++modCount;
+            ++size;
+            afterNodeInsertion(true); // 回调以允许LinkedHashMap后置操作
+        }
+        return value;
+    }
+
+    // 通过传入BiConsumer(Lambda表达式)遍历对Map进行操作
+    @Override
+    public void forEach(BiConsumer&lt;? super K, ? super V&gt; action) {
+        Node&lt;K,V&gt;[] tab;
+        if (action == null)
+            throw new NullPointerException();
+        if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+            int mc = modCount;
+            for (Node&lt;K,V&gt; e : tab) {
+                for (; e != null; e = e.next)
+                    action.accept(e.key, e.value);
+            }
+            if (modCount != mc)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    // 根据重写方法逻辑进行重新赋值
+    @Override
+    public void replaceAll(BiFunction&lt;? super K, ? super V, ? extends V&gt; function) {
+        Node&lt;K,V&gt;[] tab;
+        if (function == null)
+            throw new NullPointerException();
+        if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+            int mc = modCount;
+            for (Node&lt;K,V&gt; e : tab) {
+                for (; e != null; e = e.next) {
+                    e.value = function.apply(e.key, e.value);
+                }
+            }
+            if (modCount != mc)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* 克隆和序列化操作(Cloning and serialization) */
+
+    /**
+     * 返回一个当前HashMap对象的浅复制，并返回&quot;Object对象&quot;: 
+     * 内部的key和value都没有被克隆!(即直接传入的是引用)
+     *
+     * Returns a shallow copy of this {@code HashMap} instance: the keys and
+     * values themselves are not cloned.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    @Override
+    public Object clone() {
+        HashMap&lt;K,V&gt; result;
+        try {
+            result = (HashMap&lt;K,V&gt;)super.clone();
+        } catch (CloneNotSupportedException e) {
+            // this shouldn&#39;t happen, since we are Cloneable
+            throw new InternalError(e);
+        }
+        // 将全部属性初始化为0或者null
+        result.reinitialize();
+        // 将所有元素放入新的(克隆的)map中[同构造方法, 放入的是引用]
+        result.putMapEntries(this, false);
+        return result;
+    }
+
+    // 返回加载因数
+    // 序列化HashSet时也使用了这个方法(These methods are also used when serializing HashSets)
+    final float loadFactor() { return loadFactor; }
+
+    // 返回当前map的总容量(不是元素个数)
+    // 序列化HashSet时也使用了这个方法
+    final int capacity() {
+        return (table != null) ? table.length :
+            (threshold &gt; 0) ? threshold :
+            DEFAULT_INITIAL_CAPACITY;
+    }
+
+    // 序列化方法
+    // 将HashMap的“总的容量，实际容量，所有的Entry”都写入到输出流中
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws IOException {
+        int buckets = capacity();
+        // Write out the threshold, loadfactor, and any hidden stuff
+        s.defaultWriteObject();
+
+        // Write out number of buckets
+        s.writeInt(buckets);
+
+        // Write out size (number of Mappings)
+        s.writeInt(size);
+
+        // Write out keys and values (alternating)
+        internalWriteEntries(s);
+    }
+
+    // 反序列化方法
+    // 将HashMap的“总的容量，实际容量，所有的Entry”依次读出
+    private void readObject(java.io.ObjectInputStream s)
+        throws IOException, ClassNotFoundException {
+        // Read in the threshold (ignored), loadfactor, and any hidden stuff
+        s.defaultReadObject();
+
+        // 初始化对象
+        reinitialize();
+        if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+            throw new InvalidObjectException(&quot;Illegal load factor: &quot; +
+                                             loadFactor);
+
+        // Read and ignore number of buckets
+        s.readInt();           
+        // Read number of mappings (size)
+        int mappings = s.readInt(); 
+        if (mappings &lt; 0)
+            throw new InvalidObjectException(&quot;Illegal mappings count: &quot; +
+                                             mappings);
+        else if (mappings &gt; 0) { // (if zero, use defaults)
+
+            // 设置loadFactor
+            // Size the table using given load factor only if within
+            // range of 0.25...4.0
+            float lf = Math.min(Math.max(0.25f, loadFactor), 4.0f);
+            float fc = (float)mappings / lf + 1.0f;
+
+            // 设置容量
+            int cap = ((fc &lt; DEFAULT_INITIAL_CAPACITY) ?
+                       DEFAULT_INITIAL_CAPACITY :
+                       (fc &gt;= MAXIMUM_CAPACITY) ?
+                       MAXIMUM_CAPACITY :
+                       tableSizeFor((int)fc));
+
+            // 设置容量阈值
+            float ft = (float)cap * lf;
+            threshold = ((cap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; MAXIMUM_CAPACITY) ?
+                         (int)ft : Integer.MAX_VALUE);
+
+            // 检查对象是否是Map.Entry[]类型
+            // Check Map.Entry[].class since it&#39;s the nearest public type to what we&#39;re actually creating
+            SharedSecrets.getJavaObjectInputStreamAccess().checkArray(s, Map.Entry[].class, cap);
+            @SuppressWarnings({&quot;rawtypes&quot;,&quot;unchecked&quot;})
+            Node&lt;K,V&gt;[] tab = (Node&lt;K,V&gt;[])new Node[cap];
+            table = tab;
+
+            // 读入key和value并放入map中
+            // Read the keys and values, and put the mappings in the HashMap
+            for (int i = 0; i &lt; mappings; i++) {
+                @SuppressWarnings(&quot;unchecked&quot;)
+                    K key = (K) s.readObject();
+                @SuppressWarnings(&quot;unchecked&quot;)
+                    V value = (V) s.readObject();
+                putVal(hash(key), key, value, false, false);
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* 迭代器(iterators) */
+
+    // HashMap中的一个内部抽象类(虽然内部没有抽象方法)
+    // KeyIterator, ValueIterator和EntryIterator都继承此类
+    // 用于简化其他内部迭代器类的实现
+    abstract class HashIterator {
+        Node&lt;K,V&gt; next;        // next entry to return
+        Node&lt;K,V&gt; current;     // current entry
+        int expectedModCount;  // for fast-fail
+        int index;             // current slot
+
+        // 抽象类的构造器, 供子类继承
+        HashIterator() {
+            expectedModCount = modCount;
+            Node&lt;K,V&gt;[] t = table;
+            current = next = null;
+            index = 0;
+            // 在构造器中会找到数组中第一个不是指向null的那个元素
+            // 将这个元素存入next中，同时index指向这个数组元素的下一个下标
+            if (t != null &amp;&amp; size &gt; 0) { // advance to first entry
+                do {} while (index &lt; t.length &amp;&amp; (next = t[index++]) == null);
+            }
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Node&lt;K,V&gt; nextNode() {
+            Node&lt;K,V&gt;[] t;
+            Node&lt;K,V&gt; e = next;
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            if (e == null)
+                throw new NoSuchElementException();
+            // 首先查看当前“链表”是否已到结尾，若还没到，则next直接指向它的下一个”结点“；
+            if ((next = (current = e).next) == null &amp;&amp; (t = table) != null) {
+                // 若已到”链表“结尾，则需要找到table数组中下一个不是指向空”链表“的那个元素
+                // 使next更新为”链表“首结点，同时更新index
+                do {} while (index &lt; t.length &amp;&amp; (next = t[index++]) == null);
+            }
+            return e;
+        }
+
+        public final void remove() {
+            Node&lt;K,V&gt; p = current;
+            if (p == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            current = null;
+            removeNode(p.hash, p.key, null, false, false);
+            expectedModCount = modCount;
+        }
+    }
+
+    // 内部类: KeyIterator, 用于Key的迭代器的实现
+    final class KeyIterator extends HashIterator
+        implements Iterator&lt;K&gt; {
+        public final K next() { return nextNode().key; }
+    }
+
+    // 内部类: ValueIterator, 用于Value的迭代器的实现
+    final class ValueIterator extends HashIterator
+        implements Iterator&lt;V&gt; {
+        public final V next() { return nextNode().value; }
+    }
+
+    // 内部类: EntryIterator, 用于Entry的迭代器的实现
+    final class EntryIterator extends HashIterator
+        implements Iterator&lt;Map.Entry&lt;K,V&gt;&gt; {
+        public final Map.Entry&lt;K,V&gt; next() { return nextNode(); }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* 切分器(spliterators) */
+
+    // HashMap中的一个内部抽象类(虽然内部没有抽象方法)
+    // KeySpliterator, ValueSpliterator和EntrySpliterator都继承此类
+    // 用于简化其他内部Spliterator类的实现
+    static class HashMapSpliterator&lt;K,V&gt; {
+        final HashMap&lt;K,V&gt; map;
+        Node&lt;K,V&gt; current;          // 当前节点(current node)
+        int index;                  // 当前位置（包含），advance/spilt操作时会被修改(current index, modified on advance/split)
+        int fence;                  // 结束位置（不包含）
+        int est;                    // 预估元素个数
+        int expectedModCount;       // 用于存放list的modCount, 实现fail-fast(for comodification checks)
+
+        // 从origin -&gt; fence范围创建一个Spliterator(Creates new spliterator covering the given range)
+        HashMapSpliterator(HashMap&lt;K,V&gt; m, int origin,
+                           int fence, int est,
+                           int expectedModCount) {
+            this.map = m;
+            this.index = origin;
+            this.fence = fence;
+            this.est = est;
+            this.expectedModCount = expectedModCount;
+        }
+
+        // 第一次使用时实例化结束位置
+        final int getFence() { // initialize fence and size on first use
+            int hi;
+             // 第一次初始化时，fence才会小于0
+            if ((hi = fence) &lt; 0) {
+                HashMap&lt;K,V&gt; m = map;
+                est = m.size;
+                expectedModCount = m.modCount;
+                Node&lt;K,V&gt;[] tab = m.table;
+                hi = fence = (tab == null) ? 0 : tab.length;
+            }
+            return hi;
+        }
+
+        // 估算大小
+        public final long estimateSize() {
+            getFence(); // force init
+            return (long) est;
+        }
+    }
+
+    // 内部类KeySpliterator: 用于Key的Spliterator实现类
+    static final class KeySpliterator&lt;K,V&gt;
+        extends HashMapSpliterator&lt;K,V&gt;
+        implements Spliterator&lt;K&gt; {
+        KeySpliterator(HashMap&lt;K,V&gt; m, int origin, int fence, int est,
+                       int expectedModCount) {
+            super(m, origin, fence, est, expectedModCount);
+        }
+
+        public KeySpliterator&lt;K,V&gt; trySplit() {
+            int hi = getFence(), lo = index, mid = (lo + hi) &gt;&gt;&gt; 1;
+            return (lo &gt;= mid || current != null) ? null :
+                new KeySpliterator&lt;&gt;(map, lo, index = mid, est &gt;&gt;&gt;= 1,
+                                        expectedModCount);
+        }
+
+        // 顺序遍历处理所有剩下的元素
+        public void forEachRemaining(Consumer&lt;? super K&gt; action) {
+            int i, hi, mc;
+            // Lambda表达式为空抛出异常
+            if (action == null)
+                throw new NullPointerException();
+            HashMap&lt;K,V&gt; m = map;
+            Node&lt;K,V&gt;[] tab = m.table;
+            if ((hi = fence) &lt; 0) {
+                mc = expectedModCount = m.modCount;
+                hi = fence = (tab == null) ? 0 : tab.length;
+            }
+            else
+                mc = expectedModCount;
+            if (tab != null &amp;&amp; tab.length &gt;= hi &amp;&amp;
+                (i = index) &gt;= 0 &amp;&amp; (i &lt; (index = hi) || current != null)) {
+                Node&lt;K,V&gt; p = current;
+                current = null;
+                do {
+                    if (p == null)
+                        p = tab[i++];
+                    else {
+                        action.accept(p.key);
+                        p = p.next;
+                    }
+                } while (p != null || i &lt; hi);
+                if (m.modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+
+        // 返回true时，表示可能还有元素未处理, 返回falsa时，没有剩余元素处理了
+        public boolean tryAdvance(Consumer&lt;? super K&gt; action) {
+            int hi;
+            if (action == null)
+                throw new NullPointerException();
+            Node&lt;K,V&gt;[] tab = map.table;
+            if (tab != null &amp;&amp; tab.length &gt;= (hi = getFence()) &amp;&amp; index &gt;= 0) {
+                while (current != null || index &lt; hi) {
+                    if (current == null)
+                        current = tab[index++];
+                    else {
+                        K k = current.key;
+                        current = current.next;
+                        action.accept(k);
+                        if (map.modCount != expectedModCount)
+                            throw new ConcurrentModificationException();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 返回特征值
+        public int characteristics() {
+            return (fence &lt; 0 || est == map.size ? Spliterator.SIZED : 0) |
+                Spliterator.DISTINCT;
+        }
+    }
+
+    // 内部类ValueSpliterator: 用于Value的Spliterator实现类
+    static final class ValueSpliterator&lt;K,V&gt;
+        extends HashMapSpliterator&lt;K,V&gt;
+        implements Spliterator&lt;V&gt; {
+        ValueSpliterator(HashMap&lt;K,V&gt; m, int origin, int fence, int est,
+                         int expectedModCount) {
+            super(m, origin, fence, est, expectedModCount);
+        }
+
+        public ValueSpliterator&lt;K,V&gt; trySplit() {
+            int hi = getFence(), lo = index, mid = (lo + hi) &gt;&gt;&gt; 1;
+            return (lo &gt;= mid || current != null) ? null :
+                new ValueSpliterator&lt;&gt;(map, lo, index = mid, est &gt;&gt;&gt;= 1,
+                                          expectedModCount);
+        }
+
+        public void forEachRemaining(Consumer&lt;? super V&gt; action) {
+            int i, hi, mc;
+            if (action == null)
+                throw new NullPointerException();
+            HashMap&lt;K,V&gt; m = map;
+            Node&lt;K,V&gt;[] tab = m.table;
+            if ((hi = fence) &lt; 0) {
+                mc = expectedModCount = m.modCount;
+                hi = fence = (tab == null) ? 0 : tab.length;
+            }
+            else
+                mc = expectedModCount;
+            if (tab != null &amp;&amp; tab.length &gt;= hi &amp;&amp;
+                (i = index) &gt;= 0 &amp;&amp; (i &lt; (index = hi) || current != null)) {
+                Node&lt;K,V&gt; p = current;
+                current = null;
+                do {
+                    if (p == null)
+                        p = tab[i++];
+                    else {
+                        action.accept(p.value);
+                        p = p.next;
+                    }
+                } while (p != null || i &lt; hi);
+                if (m.modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+
+        public boolean tryAdvance(Consumer&lt;? super V&gt; action) {
+            int hi;
+            if (action == null)
+                throw new NullPointerException();
+            Node&lt;K,V&gt;[] tab = map.table;
+            if (tab != null &amp;&amp; tab.length &gt;= (hi = getFence()) &amp;&amp; index &gt;= 0) {
+                while (current != null || index &lt; hi) {
+                    if (current == null)
+                        current = tab[index++];
+                    else {
+                        V v = current.value;
+                        current = current.next;
+                        action.accept(v);
+                        if (map.modCount != expectedModCount)
+                            throw new ConcurrentModificationException();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return (fence &lt; 0 || est == map.size ? Spliterator.SIZED : 0);
+        }
+    }
+
+    // 内部类EntrySpliterator: 用于Entry的Spliterator实现类
+    static final class EntrySpliterator&lt;K,V&gt;
+        extends HashMapSpliterator&lt;K,V&gt;
+        implements Spliterator&lt;Map.Entry&lt;K,V&gt;&gt; {
+        EntrySpliterator(HashMap&lt;K,V&gt; m, int origin, int fence, int est,
+                         int expectedModCount) {
+            super(m, origin, fence, est, expectedModCount);
+        }
+
+        public EntrySpliterator&lt;K,V&gt; trySplit() {
+            int hi = getFence(), lo = index, mid = (lo + hi) &gt;&gt;&gt; 1;
+            return (lo &gt;= mid || current != null) ? null :
+                new EntrySpliterator&lt;&gt;(map, lo, index = mid, est &gt;&gt;&gt;= 1,
+                                          expectedModCount);
+        }
+
+        public void forEachRemaining(Consumer&lt;? super Map.Entry&lt;K,V&gt;&gt; action) {
+            int i, hi, mc;
+            if (action == null)
+                throw new NullPointerException();
+            HashMap&lt;K,V&gt; m = map;
+            Node&lt;K,V&gt;[] tab = m.table;
+            if ((hi = fence) &lt; 0) {
+                mc = expectedModCount = m.modCount;
+                hi = fence = (tab == null) ? 0 : tab.length;
+            }
+            else
+                mc = expectedModCount;
+            if (tab != null &amp;&amp; tab.length &gt;= hi &amp;&amp;
+                (i = index) &gt;= 0 &amp;&amp; (i &lt; (index = hi) || current != null)) {
+                Node&lt;K,V&gt; p = current;
+                current = null;
+                do {
+                    if (p == null)
+                        p = tab[i++];
+                    else {
+                        action.accept(p);
+                        p = p.next;
+                    }
+                } while (p != null || i &lt; hi);
+                if (m.modCount != mc)
+                    throw new ConcurrentModificationException();
+            }
+        }
+
+        public boolean tryAdvance(Consumer&lt;? super Map.Entry&lt;K,V&gt;&gt; action) {
+            int hi;
+            if (action == null)
+                throw new NullPointerException();
+            Node&lt;K,V&gt;[] tab = map.table;
+            if (tab != null &amp;&amp; tab.length &gt;= (hi = getFence()) &amp;&amp; index &gt;= 0) {
+                while (current != null || index &lt; hi) {
+                    if (current == null)
+                        current = tab[index++];
+                    else {
+                        Node&lt;K,V&gt; e = current;
+                        current = current.next;
+                        action.accept(e);
+                        if (map.modCount != expectedModCount)
+                            throw new ConcurrentModificationException();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public int characteristics() {
+            return (fence &lt; 0 || est == map.size ? Spliterator.SIZED : 0) |
+                Spliterator.DISTINCT;
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* LinkedHashMap 支持方法(support) */
+
+    /*
+     * 以下包可见的方法(无修饰符)被设计LinkedHashMap重写，但不被任何其他子类重写
+     * 几乎所有其他内部方法都也都声明为包可见，但声明为final(方法被继承但是不可被重写)
+     * 因此可以由LinkedHashMap、视图类和HashSet使用
+     *
+     *
+     * The following package-protected methods are designed to be
+     * overridden by LinkedHashMap, but not by any other subclass.
+     * Nearly all other internal methods are also package-protected
+     * but are declared final, so can be used by LinkedHashMap, view
+     * classes, and HashSet.
+     */
+
+    // 创建一个Node(非红黑树中的Node, 用在LinkedHashMap中)
+    // Create a regular (non-tree) node
+    Node&lt;K,V&gt; newNode(int hash, K key, V value, Node&lt;K,V&gt; next) {
+        return new Node&lt;&gt;(hash, key, value, next);
+    }
+
+    // 用于将红黑树节点转为普通结点
+    // For conversion from TreeNodes to plain nodes
+    Node&lt;K,V&gt; replacementNode(Node&lt;K,V&gt; p, Node&lt;K,V&gt; next) {
+        return new Node&lt;&gt;(p.hash, p.key, p.value, next);
+    }
+
+    // 创建一个红黑树节点
+    // Create a tree bin node
+    TreeNode&lt;K,V&gt; newTreeNode(int hash, K key, V value, Node&lt;K,V&gt; next) {
+        return new TreeNode&lt;&gt;(hash, key, value, next);
+    }
+
+    // 将节点p转化为红黑树节点
+    // For treeifyBin
+    TreeNode&lt;K,V&gt; replacementTreeNode(Node&lt;K,V&gt; p, Node&lt;K,V&gt; next) {
+        return new TreeNode&lt;&gt;(p.hash, p.key, p.value, next);
+    }
+
+    /**
+     * 将map对象重置为初始化状态, 被clone()和readObject()方法调用
+     *
+     * Reset to initial default state.  Called by clone and readObject.
+     */
+    void reinitialize() {
+        table = null;
+        entrySet = null;
+        keySet = null;
+        values = null;
+        modCount = 0;
+        threshold = 0;
+        size = 0;
+    }
+
+    // LinkedHashMap的回调方法
+    // Callbacks to allow LinkedHashMap post-actions
+    void afterNodeAccess(Node&lt;K,V&gt; p) { }
+    void afterNodeInsertion(boolean evict) { }
+    void afterNodeRemoval(Node&lt;K,V&gt; p) { }
+
+
+    // 仅在writeObject中调用，以确保序列化顺序兼容 (一致)
+    // Called only from writeObject, to ensure compatible ordering.
+    void internalWriteEntries(java.io.ObjectOutputStream s) throws IOException {
+        Node&lt;K,V&gt;[] tab;
+        if (size &gt; 0 &amp;&amp; (tab = table) != null) {
+            for (Node&lt;K,V&gt; e : tab) {
+                for (; e != null; e = e.next) {
+                    s.writeObject(e.key);
+                    s.writeObject(e.value);
+                }
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* 内部类: 红黑树(Tree bins) */
+
+    /**
+     * 红黑树内部的结点, 继承了LinkedHashMap.Entry(而它又继承了HashMap中的Node类)
+     * 所以他可以(在HashMap中)被当做常规节点或树节点的扩展
+     *
+     * Entry for Tree bins. Extends LinkedHashMap.Entry (which in turn
+     * extends Node) so can be used as extension of either regular or
+     * linked node
+     */
+    // 具体代码分析见TreeNode(红黑树分析)
+    static final class TreeNode&lt;K,V&gt; extends LinkedHashMap.Entry&lt;K,V&gt; {...}
+
+}
+</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注: TreeNode的源码分析见文章:</strong> <a href="https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/">Java集合十-TreeNode与HashMap</a></p>
+</blockquote>
+<blockquote>
+<br>
+
+<p><strong>说明</strong>:</p>
+<p>在详细介绍HashMap的代码之后总结如下：</p>
+<ul>
+<li><strong>① HashMap就是一个散列表，它是通过“拉链法”解决哈希冲突的</strong></li>
+</ul>
+<ul>
+<li><p><strong>② 影响HashMap性能的有两个参数：初始容量(initialCapacity) 和加载因子(loadFactor)</strong></p>
+<ul>
+<li>容量是哈希表中桶的数量，初始容量只是哈希表在创建时的容量</li>
+<li>加载因子是哈希表在其容量自动增加之前可以达到多满的一种尺度, 当<strong>哈希表中的条目数超出了加载因子与当前容量的乘积时，则要对该哈希表进行 rehash  操作（</strong>即重建内部数据结构），从而<strong>哈希表将具有大约两倍的桶数</strong></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p><strong>③ 在HashMap中定义了两个内部类</strong>: </p>
+<ul>
+<li><strong>Node(JDK 8之前叫做HashMap.Entry): 普通单向链表数据类型</strong></li>
+<li><strong>TreeNode: 红黑树数据类型</strong></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p><strong>④ HashMap会在必要的情况下在普通链表 &lt;-&gt; 红黑树之间转换(treeifyBin()):</strong> </p>
+<ul>
+<li><p><font color="#ff0000"><strong>转换条件: 链表长度到8(选择8是泊松分布决定的)且数组长度到64:</strong></font> </p>
+<pre><code class="java">final V otherAddMethod (...) {
+   // 其他添加方法在添加元素之后会做如下判断:
+   // 当链表长度到达8(hashcode冲突元素有8个), 才会调用下面的treeifyBin()方法
+   ...
+   if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st
+       treeifyBin(tab, hash);
+   ...
+
+}
+
+final void treeifyBin(Node&lt;K,V&gt;[] tab, int hash) {
+   int n, index; Node&lt;K,V&gt; e;
+   if (tab == null || (n = tab.length) &lt; MIN_TREEIFY_CAPACITY)
+       // 数组长度小于MIN_TREEIFY_CAPACITY(64)时, 仅仅扩容
+       resize();
+   // 否则才会转化, 即数组长度大于等于64
+   else if ((e = tab[index = (n - 1) &amp; hash]) != null) {
+       TreeNode&lt;K,V&gt; hd = null, tl = null;
+       do {
+           TreeNode&lt;K,V&gt; p = replacementTreeNode(e, null);
+           if (tl == null)
+               hd = p;
+           else {
+               p.prev = tl;
+               tl.next = p;
+           }
+           tl = p;
+       } while ((e = e.next) != null);
+       if ((tab[index] = hd) != null)
+           hd.treeify(tab);
+   }
+}
+</code></pre>
+<p><strong>可知:</strong></p>
+<p><strong>① 当hashcode冲突元素到达8个(链表长度到8)之后才会调用treeifyBin()方法, 进行扩容或者转换;</strong></p>
+<br>
+
+<p><strong>② 进入treeifyBin()方法并不是直接转换, 而是判断(数组长度小于MIN_TREEIFY_CAPACITY(64)时, 仅仅扩容):</strong></p>
+<p><font color="#ff0000"><strong>这是为了在初始化时, 因为数组容量较小(所以很容易发生hash冲突), 而此时并不应该转换, 所做的优化</strong></font></p>
+</li>
+<li><p><strong>转换过程</strong>: 上述treeifyBin()方法</p>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p><strong>⑤ HashMap中涉及了大量的转换</strong>, 总结如下:</p>
+<ul>
+<li><p><strong>① 数组扩容: table属性(Node&lt;K,V&gt;[] table)的扩容</strong></p>
+<p><font color="#f00"><strong>发生在当插入下一个元素(如put()等方法[或treeifyBin()方法])使得元素个数大于threshold时调用resize()方法扩容;</strong></font></p>
+<p><font color="#ff0000"><strong>注意: 数组扩容都为两倍扩容, 并且要求了初始化时的容量必须为2的次方(即使你构造方法传参不是2的幂, 也会使用tableSizeFor()方法帮你转化)</strong></font></p>
+<p><font color="#ff0000"><strong>所以数组容量永远为二次幂</strong></font></p>
+</li>
+<li><p><strong>② Rehash: 当数组扩容时, 会进行rehash</strong></p>
+</li>
+<li><p><strong>③ 普通链表转为红黑树: 链表长度到8(选择8是泊松分布决定的)且数组长度到64</strong></p>
+</li>
+<li><p><strong>④ 红黑树转为普通链表: 若桶中元素小于等于6时，树结构还原成链表形式</strong></p>
+</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>选择6和8的原因是:</strong></p>
+<p>中间有个差值7可以防止链表和树之间频繁的转换</p>
+<p>假设一下，如果设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li><p><strong>⑥ HashMap中定义了三个内部类, 用于不同需求的遍历:</strong></p>
+<ul>
+<li><strong>KeySet: 继承自AbstractSet, 所以key值不可重复</strong></li>
+<li><strong>Values: 继承自AbstractCollection, 所以value值可以重复</strong></li>
+<li><strong>EntrySet: 继承自AbstractSet, 所以Entry也不可重复</strong></li>
+</ul>
+</li>
+</ul>
+<p>   各自的<strong>Iterator实现</strong>: KeyIterator, ValueIterator和EntryIterator<strong>(统一继承了抽象内部类HashIterator, 并实现了Iterator接口)</strong></p>
+<p>   各自的<strong>Spliterator实现</strong>: KeySpliterator, ValueSpliterator和EntrySpliterator<strong>(统一继承了抽象内部类HashMapSpliterator, 并实现了Spliterator接口)</strong></p>
+</blockquote>
+<blockquote>
+<br>
+
+<p>更多与HashMap相关内容查看: <a href="https://jasonkayzk.github.io/2019/12/03/Java集合十-TreeNode与HashMap/">Java集合十-TreeNode与HashMap</a></p>
+</blockquote>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/" title="https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/11/27/Java集合九-HashMap/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725358243"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

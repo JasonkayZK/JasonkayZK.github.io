@@ -1,0 +1,2806 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java线程池ThreadPoolExecutor分析与实战续 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在上一篇线程池的文章中, 手写了一个简单的线程池. 这篇紧接着上一篇, 通过分析JUC线程池源码, 来看看JDK中是如何设计线程池的">
+<meta name="keywords" content="Java源码,并发编程,线程池">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java线程池ThreadPoolExecutor分析与实战续">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在上一篇线程池的文章中, 手写了一个简单的线程池. 这篇紧接着上一篇, 通过分析JUC线程池源码, 来看看JDK中是如何设计线程池的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814213209369?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814215814755?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814220037405?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814214752746?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814222111804?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814222325597?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814222550617?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:image" content="https://img-blog.csdn.net/20180814222732879?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.739Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java线程池ThreadPoolExecutor分析与实战续">
+<meta name="twitter:description" content="在上一篇线程池的文章中, 手写了一个简单的线程池. 这篇紧接着上一篇, 通过分析JUC线程池源码, 来看看JDK中是如何设计线程池的">
+<meta name="twitter:image" content="https://img-blog.csdn.net/20180814213209369?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725349048">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?8">
+    
+    <h1>Java线程池ThreadPoolExecutor分析与实战续</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年03月04日</a>
+    <a><i class="nexmoefont icon-areachart"></i>10.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 51 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/并发编程/">并发编程</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java源码/">Java源码</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/并发编程/">并发编程</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/线程池/">线程池</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java线程池ThreadPoolExecutor分析与实战续"><span class="toc-text">Java线程池ThreadPoolExecutor分析与实战续</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Executor接口"><span class="toc-text">一.Executor接口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Executor两级调度模型"><span class="toc-text">Executor两级调度模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Executor结构"><span class="toc-text">Executor结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-ExecutorService接口"><span class="toc-text">二.ExecutorService接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-AbstractExecutorService抽象类"><span class="toc-text">三.AbstractExecutorService抽象类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-四种类型的线程池"><span class="toc-text">四.四种类型的线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ThreadPoolExecutor提供的构造函数"><span class="toc-text">1.ThreadPoolExecutor提供的构造函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-线程池的处理流程"><span class="toc-text">2.线程池的处理流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-四种线程池"><span class="toc-text">3.四种线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-FixedThreadPool-定长线程池"><span class="toc-text">1. FixedThreadPool 定长线程池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-CachedThreadPool-可缓存线程池"><span class="toc-text">2.CachedThreadPool 可缓存线程池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-SingleThreadExecutor-单一线程池"><span class="toc-text">3.SingleThreadExecutor 单一线程池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-ScheduledThreadPool-可调度的线程池"><span class="toc-text">4.ScheduledThreadPool 可调度的线程池</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-如何选择合适的线程池"><span class="toc-text">4.如何选择合适的线程池</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在上一篇<a href="https://jasonkayzk.github.io/2020/02/06/Java线程池ThreadPoolExecutor分析与实战/">Java线程池ThreadPoolExecutor分析与实战</a>的文章中, 手写了一个简单的线程池. 这篇紧接着上一篇, 通过分析JUC线程池源码, 来看看JDK中是如何设计线程池的</p>
+<p>本文内容包括:</p>
+<ul>
+<li>Executor接口<ul>
+<li>Executor接口源码分析</li>
+<li>Executor两级调度模型</li>
+<li>Executor结构</li>
+</ul>
+</li>
+<li>ExecutorService接口源码分析</li>
+<li>AbstractExecutorService抽象类源码分析</li>
+<li>四种类型的线程池<ul>
+<li>ThreadPoolExecutor提供的构造函数</li>
+<li>线程池的处理流程</li>
+<li>四种线程池(Fixed, Cached, Single, Scheduled</li>
+<li>如何选择合适的线程池</li>
+</ul>
+</li>
+</ul>
+<p>文章部分节选自: <a href="https://blog.csdn.net/z_s_z2016/article/details/81674893" target="_blank" rel="noopener">Java线程池-ThreadPoolExecutor原理分析与实战</a></p>
+<p>源代码分析基于JDK11.0.5</p>
+<p>如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯</p>
+<p>内容和博客同步更新~</p>
+<br>
+
+<a id="more"></a>
+
+<p>系列文章入口:</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2020/02/06/Java线程池ThreadPoolExecutor分析与实战/">Java线程池ThreadPoolExecutor分析与实战</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/">Java线程池ThreadPoolExecutor分析与实战续</a></li>
+<li><a href="https://jasonkayzk.github.io/2020/03/05/Java线程池ThreadPoolExecutor分析与实战终/">Java线程池ThreadPoolExecutor分析与实战终</a></li>
+</ul>
+<br>
+
+<h2 id="Java线程池ThreadPoolExecutor分析与实战续"><a href="#Java线程池ThreadPoolExecutor分析与实战续" class="headerlink" title="Java线程池ThreadPoolExecutor分析与实战续"></a>Java线程池ThreadPoolExecutor分析与实战续</h2><p>在上一篇<a href="https://jasonkayzk.github.io/2020/02/06/Java线程池ThreadPoolExecutor分析与实战/">Java线程池ThreadPoolExecutor分析与实战</a>的文章中, 手写了一个简单的线程池. 展示了线程池实现的基本原理;</p>
+<p>在讲述线程池源码之前, (不厌其烦的)先来看看, 我们为什么需要使用线程池:</p>
+<ul>
+<li><strong>减少资源的开销:</strong> 减少了每次创建线程、销毁线程的开销</li>
+<li><strong>提高响应速度:</strong> 每次请求到来时，由于线程的创建已经完成，故可以直接执行任务，因此提高了响应速度</li>
+<li><strong>提高线程的可管理性:</strong> 线程是一种稀缺资源，若不加以限制，不仅会占用大量资源，而且会影响系统的稳定性; 线程池可以对线程的创建与停止、线程数量等等因素加以控制，使得线程在一种可控的范围内运行，不仅能保证系统稳定运行，而且方便性能调优</li>
+</ul>
+<p>下图为ThreadPoolExecutor的继承关系:</p>
+<p><img src="https://img-blog.csdn.net/20180814213209369?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="Executor.png"></p>
+<ul>
+<li>最底层为Executor接口</li>
+<li>ExecutorService接口继承了Executor, 进一步抽象了一个(执行服务)线程池应该具有的方法, 如: 提交任务, 关闭等;</li>
+<li>AbstractExecutorService实现了ExecutorService的所有方法, 但是被声明为abstract(作为抽象)被ThreadPoolExecutor和ForkJoinPool继承</li>
+<li>ThreadPoolExecutor继承了AbstractExecutorService, 是线程池的底层实现类</li>
+</ul>
+<blockquote>
+<br>
+
+<p>有关ForkJoin的介绍参考我的另一篇文章: <a href="https://jasonkayzk.github.io/2020/02/25/并发排序从ForkJoin到Stream/">并发排序从ForkJoin到Stream</a></p>
+<p><strong>ForkJoin在JDK 7加入的, 是实现Java Stream流并发操作底层实现的核心!</strong></p>
+</blockquote>
+<p>下面让我们自底向上看一看线程池的实现原理</p>
+<br>
+
+<h2 id="一-Executor接口"><a href="#一-Executor接口" class="headerlink" title="一.Executor接口"></a>一.Executor接口</h2><p>首先来看一下Executor接口:</p>
+<pre><code class="java">package java.util.concurrent;
+
+/**
+ * 执行提交{@link Runnable}任务的对象
+ * 此接口提供了一种将任务提交与每个任务的运行机制分离的方法: 包括线程使用、调度等的详细信息
+ * (使用时)通常使用{@code Executor}，而不是显式创建线程
+ *
+ * 例如，与其为一组任务调用:
+ * new Thread(new RunnableTask().start()
+ * new Thread(new RunnableTask().start()
+ * new Thread(new RunnableTask().start()
+ * 不如使用：
+ * Executor executor = anExecutor();
+ * executor.execute(new RunnableTask1());
+ * executor.execute(new RunnableTask2());
+ *
+ * An object that executes submitted {@link Runnable} tasks. This
+ * interface provides a way of decoupling task submission from the
+ * mechanics of how each task will be run, including details of thread
+ * use, scheduling, etc.  An {@code Executor} is normally used
+ * instead of explicitly creating threads. For example, rather than
+ * invoking {@code new Thread(new RunnableTask()).start()} for each
+ * of a set of tasks, you might use:
+ *
+ * &lt;pre&gt; {@code
+ * Executor executor = anExecutor();
+ * executor.execute(new RunnableTask1());
+ * executor.execute(new RunnableTask2());
+ * ...}&lt;/pre&gt;
+ *
+ * 但是{@code Executor}接口并不严格要求执行是异步的
+ * 在最简单的情况下，执行器可以在调用线程中立即运行提交的任务：
+ * 
+ * class DirectExecutor implements Executor {
+ *   public void execute(Runnable r) {
+ *     r.run();
+ *   }
+ *
+ * However, the {@code Executor} interface does not strictly require
+ * that execution be asynchronous. In the simplest case, an executor
+ * can run the submitted task immediately in the caller&#39;s thread:
+ *
+ * &lt;pre&gt; {@code
+ * class DirectExecutor implements Executor {
+ *   public void execute(Runnable r) {
+ *     r.run();
+ *   }
+ * }}&lt;/pre&gt;
+ *
+ * 更经典的使用是: 任务是在调用线程以外的某个线程中执行的
+ * 下面的执行器为每个任务生成一个新线程:
+ * 
+ * class ThreadPerTaskExecutor implements Executor {
+ *   public void execute(Runnable r) {
+ *     new Thread(r).start();
+ * }
+ *
+ * More typically, tasks are executed in some thread other than the
+ * caller&#39;s thread.  The executor below spawns a new thread for each
+ * task.
+ *
+ * &lt;pre&gt; {@code
+ * class ThreadPerTaskExecutor implements Executor {
+ *   public void execute(Runnable r) {
+ *     new Thread(r).start();
+ *   }
+ * }}&lt;/pre&gt;
+ *
+ * 许多{@code Executor}实现对任务的调度方式和时间施加某种限制
+ * 下面的执行器将任务的提交序列化到第二个执行器，以展示复合执行器的使用:
+ *
+ * class SerialExecutor implements Executor {
+ *   final Queue&lt;Runnable&gt; tasks = new ArrayDeque&lt;&gt;();
+ *   final Executor executor;
+ *   Runnable active;
+ *
+ *   SerialExecutor(Executor executor) {
+ *     this.executor = executor;
+ *   }
+ *
+ *   public synchronized void execute(Runnable r) {
+ *     tasks.add(() -&gt; {
+ *       try {
+ *         r.run();
+ *       } finally {
+ *         scheduleNext();
+ *       }
+ *     });
+ *     if (active == null) {
+ *       scheduleNext();
+ *     }
+ *   }
+ *
+ *   protected synchronized void scheduleNext() {
+ *     if ((active = tasks.poll()) != null) {
+ *       executor.execute(active);
+ *     }
+ *   }
+ * }
+ *
+ * Many {@code Executor} implementations impose some sort of
+ * limitation on how and when tasks are scheduled.  The executor below
+ * serializes the submission of tasks to a second executor,
+ * illustrating a composite executor.
+ *
+ * &lt;pre&gt; {@code
+ * class SerialExecutor implements Executor {
+ *   final Queue&lt;Runnable&gt; tasks = new ArrayDeque&lt;&gt;();
+ *   final Executor executor;
+ *   Runnable active;
+ *
+ *   SerialExecutor(Executor executor) {
+ *     this.executor = executor;
+ *   }
+ *
+ *   public synchronized void execute(Runnable r) {
+ *     tasks.add(() -&gt; {
+ *       try {
+ *         r.run();
+ *       } finally {
+ *         scheduleNext();
+ *       }
+ *     });
+ *     if (active == null) {
+ *       scheduleNext();
+ *     }
+ *   }
+ *
+ *   protected synchronized void scheduleNext() {
+ *     if ((active = tasks.poll()) != null) {
+ *       executor.execute(active);
+ *     }
+ *   }
+ * }}&lt;/pre&gt;
+ *
+ * 此包中提供的{@code Executor}实现了{@link ExecutorService}，这是一个更广泛的接口
+ * 而{@link ThreadPoolExecutor}类提供了一个可扩展的线程池实现
+ * {@link Executors}类为这些执行器提供了方便的工厂方法
+ *
+ * The {@code Executor} implementations provided in this package
+ * implement {@link ExecutorService}, which is a more extensive
+ * interface.  The {@link ThreadPoolExecutor} class provides an
+ * extensible thread pool implementation. The {@link Executors} class
+ * provides convenient factory methods for these Executors.
+ *
+ * 内存一致性影响: 
+ * 先前提交给Executor中的对象，线程中操作的执行可能是在另一个线程中
+ * (此处想说的可能是不要忽略了内存一致性问题, 即一个对象可能在两个线程中同时访问?)
+ *
+ * &lt;p&gt;Memory consistency effects: Actions in a thread prior to
+ * submitting a {@code Runnable} object to an {@code Executor}
+ * &lt;a href=&quot;package-summary.html#MemoryVisibility&quot;&gt;&lt;i&gt;happen-before&lt;/i&gt;&lt;/a&gt;
+ * its execution begins, perhaps in another thread.
+ *
+ * @since 1.5
+ * @author Doug Lea
+ */
+public interface Executor {
+
+    /**
+     * 在将来的某个时间执行给定的任务
+     * 该任务可以在新线程、线程池或调用线程中执行，具体由{@code Executor}实现决定
+     *
+     * Executes the given command at some time in the future.  The command
+     * may execute in a new thread, in a pooled thread, or in the calling
+     * thread, at the discretion of the {@code Executor} implementation.
+     *
+     * @param command 可运行的任务(继承自Runnable接口)
+     * @throws 如果无法接受执行此任务抛出: RejectedExecutionException
+     * @throws 如果command为空抛出: NullPointerException 
+     *
+     * @param command the runnable task
+     * @throws RejectedExecutionException if this task cannot be
+     * accepted for execution
+     * @throws NullPointerException if command is null
+     */
+    void execute(Runnable command);
+}</code></pre>
+<p>上面为Executor的源码, 其中仅仅定义了一个方法: <code>void execute(Runnable command);</code></p>
+<blockquote>
+<br>
+
+<p><strong>小贴士:</strong></p>
+<p><strong>上面代码含有大量的英文注释. 实际上在阅读源码时, 应当仔细阅读这些注释.</strong></p>
+<p>此外, 保留了JDK 1.5: 说明是JDK 1.5加入的</p>
+<p>另外保留了<strong>代码的作者<a href="https://baike.baidu.com/item/Doug%20Lea/6319404?fr=aladdin" target="_blank" rel="noopener">Doug Lea</a>, 整个JUC包几乎全部出自此人之手, JCP(<a href="https://baike.baidu.com/item/Java/85979" target="_blank" rel="noopener">Java</a>社区项目)中的一员</strong></p>
+</blockquote>
+<p>上面注释所说的, 简单来说其实就2个事情:</p>
+<ul>
+<li><strong>为什么定义这个接口？</strong></li>
+</ul>
+<p><strong>让任务的执行和如何执行这个任务(包括线程，调度等)这两个方面解耦</strong></p>
+<ul>
+<li><strong>这个接口的主要用法:</strong></li>
+</ul>
+<pre><code class="java">Executor executor = anExecutor;
+executor.execute(new RunnableTask1());
+executor.execute(new RunnableTask2());
+
+其中，不同的实现类中的execute执行方式都不尽相同
+可以在execute方法中再新建一个线程执行，也可以在execute方法中按某一调度策略执行任务</code></pre>
+<hr>
+<h3 id="Executor两级调度模型"><a href="#Executor两级调度模型" class="headerlink" title="Executor两级调度模型"></a>Executor两级调度模型</h3><p><img src="https://img-blog.csdn.net/20180814215814755?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="Executor两级调度模型.png"></p>
+<p><font color="#f00">在HotSpot虚拟机中: <strong>Java中的线程将会被一一映射为操作系统的线程(所以创建和销毁线程的需要从用户态切换到内核态, 开销很大!)</strong></font></p>
+<p>Java虚拟机层面，用户将多个任务提交给Executor框架, Executor负责分配线程执行它们;</p>
+<p>转入操作系统层面，操作系统再将这些线程分配给处理器执行;</p>
+<hr>
+<h3 id="Executor结构"><a href="#Executor结构" class="headerlink" title="Executor结构"></a>Executor结构</h3><p><img src="https://img-blog.csdn.net/20180814220037405?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="Executor结构.png"></p>
+<p>Executor框架中的所有类可以分成三类:</p>
+<p><strong>① 任务</strong></p>
+<p>任务有两种类型: </p>
+<p><font color="#f00"><strong>Runnable接口和Callable接口, 分别代表无返回值和有返回值的并发调用</strong></font></p>
+<p><strong>② 任务执行器</strong></p>
+<p>Executor框架<strong>最核心的接口是Executor，它表示任务的执行器</strong></p>
+<p>Executor的<strong>子接口为ExecutorService</strong></p>
+<p>而ExecutorService有两大实现类：ThreadPoolExecutor和ScheduledThreadPoolExecutor</p>
+<p><font color="#f00"><strong>在调用时, execute代表无返回调用, 而submit方法为有返回值调用</strong></font></p>
+<p><strong>③ 执行结果</strong></p>
+<p><strong>Future接口表示异步的执行结果，它的实现类为FutureTask</strong></p>
+<br>
+
+<h2 id="二-ExecutorService接口"><a href="#二-ExecutorService接口" class="headerlink" title="二.ExecutorService接口"></a>二.ExecutorService接口</h2><p>前面讲到, ExecutorService继承了Executor, 进一步抽象了一个执行类服务的方法</p>
+<p>下面来看他的源码:</p>
+<pre><code class="java">package java.util.concurrent;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * (本接口是一个)提供终止的方法的Executor
+ * 以及可以生成Future以跟踪一个或多个异步任务的进度的方法的Executor
+ *
+ * An {@link Executor} that provides methods to manage termination and
+ * methods that can produce a {@link Future} for tracking progress of
+ * one or more asynchronous tasks.
+ *
+ * 实现了ExecutorService接口的类可以关闭，这将导致它拒绝新任务
+ * 它提供了两种不同的方法来关闭:
+ * shutdown方法将允许在终止之前执行以前提交的任务;
+ * 而shutdownNow方法将阻止等待的任务启动并尝试停止当前执行的任务
+ * 在终止时，(应当保证)执行者没有正在执行的任务，没有等待执行的任务，并且不能提交新任务
+ * 应该关闭未使用的ExecutorService，以允许回收其资源
+ *
+ * &lt;p&gt;An {@code ExecutorService} can be shut down, which will cause
+ * it to reject new tasks.  Two different methods are provided for
+ * shutting down an {@code ExecutorService}. The {@link #shutdown}
+ * method will allow previously submitted tasks to execute before
+ * terminating, while the {@link #shutdownNow} method prevents waiting
+ * tasks from starting and attempts to stop currently executing tasks.
+ * Upon termination, an executor has no tasks actively executing, no
+ * tasks awaiting execution, and no new tasks can be submitted.  An
+ * unused {@code ExecutorService} should be shut down to allow
+ * reclamation of its resources.
+ *
+ * 方法submit扩展了父接口Executor通过创建并返回Future来执行Runnable
+ * 该Future用于取消执行或等待完成
+ * 方法invokeAny和invokeAll使用最常用的批量执行形式，执行任务集合
+ * 然后等待至少一个或所有任务完成
+ * 类ExecutorCompletionService可用于编写这些方法的自定义变体
+ *
+ * &lt;p&gt;Method {@code submit} extends base method {@link
+ * Executor#execute(Runnable)} by creating and returning a {@link Future}
+ * that can be used to cancel execution and/or wait for completion.
+ * Methods {@code invokeAny} and {@code invokeAll} perform the most
+ * commonly useful forms of bulk execution, executing a collection of
+ * tasks and then waiting for at least one, or all, to
+ * complete. (Class {@link ExecutorCompletionService} can be used to
+ * write customized variants of these methods.)
+ *
+ * Executors类为此包中提供的执行器服务提供工厂方法
+ *
+ * &lt;p&gt;The {@link Executors} class provides factory methods for the
+ * executor services provided in this package.
+ *
+ *  使用例子
+ *
+ * &lt;h3&gt;Usage Examples&lt;/h3&gt;
+ *
+ * 下面是一个网络服务的草图，其中线程池中的线程服务接收请求
+ * 它使用预配置的Executors.newFixedThreadPool工厂方法：
+ *
+ * Here is a sketch of a network service in which threads in a thread
+ * pool service incoming requests. It uses the preconfigured {@link
+ * Executors#newFixedThreadPool} factory method:
+ *
+ * &lt;pre&gt; {@code
+ * // 网络业务Server类
+ * class NetworkService implements Runnable {
+ *   private final ServerSocket serverSocket;
+ *   private final ExecutorService pool;
+ *
+ *   // 初始化Server
+ *   public NetworkService(int port, int poolSize)
+ *       throws IOException {
+ *     serverSocket = new ServerSocket(port);
+ *     pool = Executors.newFixedThreadPool(poolSize);
+ *   }
+ *
+ *   public void run() { // run the service
+ *     try {
+ *       for (;;) {
+ *        // 每接收到一个请求, 就从线程池中取出一个线程进行操作
+ *         pool.execute(new Handler(serverSocket.accept()));
+ *       }
+ *     } catch (IOException ex) {
+ *       pool.shutdown();
+ *     }
+ *   }
+ * }
+ *
+ * // 业务方法, 处理客户端请求
+ * class Handler implements Runnable {
+ *   private final Socket socket;
+ *   Handler(Socket socket) { this.socket = socket; }
+ *   public void run() {
+ *     // read and service request on socket
+ *   }
+ * }}&lt;/pre&gt;
+ *
+ * 以下方法分两个阶段关闭ExecutorService:
+ * 首先通过调用shutdown拒绝传入任务，然后在必要时调用shutdownNow取消任何延迟的任务
+ *
+ * &lt;pre&gt; {@code
+ * void shutdownAndAwaitTermination(ExecutorService pool) {
+ *   pool.shutdown(); // 停止新任务的加入
+ *   try {
+ *     // 等待当前任务的结束
+ *     if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+ *       pool.shutdownNow(); // 撤销当前执行中的任务
+ *       // 等待任务响应被取消
+ *       if (!pool.awaitTermination(60, TimeUnit.SECONDS))
+ *           System.err.println(&quot;Pool did not terminate&quot;);
+ *     }
+ *   } catch (InterruptedException ie) {
+ *     // 如果当前线程也被中断，则(重新-)取消
+ *     pool.shutdownNow();
+ *     // Preserve interrupt status
+ *     Thread.currentThread().interrupt();
+ *   }
+ * }}&lt;/pre&gt;
+ * @since 1.5
+ * @author Doug Lea
+ */
+public interface ExecutorService extends Executor {
+
+    /**
+     * 启动有序关闭，在该关闭中: 继续执行以前提交的任务，但不接受新任务
+     * 如果已关闭，则调用没有其他效果
+     *
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be accepted.
+     * Invocation has no additional effect if already shut down.
+     *
+     * 此方法不等待以前提交的任务完成执行
+     * 使用awaitTermination方法执行此操作
+     *
+     * &lt;p&gt;This method does not wait for previously submitted tasks to
+     * complete execution.  Use {@link #awaitTermination awaitTermination}
+     * to do that.
+     *
+     * 如果安全管理器存在并且关闭此执行器服务可能会操作调用方不允许修改的线程
+     * (因为它不持有java.lang.RuntimePermission)
+     * 或者安全管理器的{@code checkAccess}方法拒绝访问
+     * 将会抛出SecurityException
+     *
+     * @throws SecurityException if a security manager exists and
+     *         shutting down this ExecutorService may manipulate
+     *         threads that the caller is not permitted to modify
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}{@code (&quot;modifyThread&quot;)},
+     *         or the security manager&#39;s {@code checkAccess} method
+     *         denies access.
+     */
+    void shutdown();
+
+    /**
+     * 尝试停止所有正在执行的任务，停止处理等待的任务，并返回等待执行的任务列表
+     *
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution.
+     *
+     * 此方法不等待以前提交的任务完成执行
+     * 使用awaitTermination方法执行此操作
+     *
+     * &lt;p&gt;This method does not wait for actively executing tasks to
+     * terminate.  Use {@link #awaitTermination awaitTermination} to
+     * do that.
+     *
+     * 除了尽最大努力尝试停止处理正在积极执行的任务之外，没有任何保证
+     * 例如，典型的实现将通过Thread#interrupt取消
+     * 因此任何未能响应中断的任务都可能永远不会终止
+     *
+     * &lt;p&gt;There are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  For example, typical
+     * implementations will cancel via {@link Thread#interrupt}, so any
+     * task that fails to respond to interrupts may never terminate.
+     *
+     * @return 从未开始执行的任务列表
+     * @throws SecurityException if a security manager exists and
+     *         shutting down this ExecutorService may manipulate
+     *         threads that the caller is not permitted to modify
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}{@code (&quot;modifyThread&quot;)},
+     *         or the security manager&#39;s {@code checkAccess} method
+     *         denies access.
+     */
+    List&lt;Runnable&gt; shutdownNow();
+
+    /**
+     * 如果此执行器已关闭，则返回true
+     *
+     * @return {@code true} if this executor has been shut down
+     */
+    boolean isShutdown();
+
+    /**
+     * 如果关闭后所有任务都已完成，则返回true
+     * 注意isTerminated永远不是true，除非首先调用shutdownshutdownNow方法
+     *
+     * Returns {@code true} if all tasks have completed following shut down.
+     * Note that {@code isTerminated} is never {@code true} unless
+     * either {@code shutdown} or {@code shutdownNow} was called first.
+     *
+     * @return {@code true} if all tasks have completed following shut down
+     */
+    boolean isTerminated();
+
+    /**
+     * 阻塞，直到所有任务在关闭请求后完成执行
+     * 或发生超时，或当前线程中断(以先发生者为准)
+     *
+     * Blocks until all tasks have completed execution after a shutdown
+     * request, or the timeout occurs, or the current thread is
+     * interrupted, whichever happens first.
+     *
+     * @param timeout 最长等待时间
+     * @param unit timeout参数的时间单位
+     * @return {@code true}如果此执行器终止，{@code false}如果在终止之前超时
+     * @throws InterruptedException if interrupted while waiting
+     */
+    boolean awaitTermination(long timeout, TimeUnit unit)
+        throws InterruptedException;
+
+    /**
+     * 提交一个有返回值的任务以供执行，并返回表示该任务的执行结果的Future类
+     * Future的{@code get}方法将在任务成功完成后返回任务的结果(否则阻塞)
+     *
+     * Submits a value-returning task for execution and returns a
+     * Future representing the pending results of the task. The
+     * Future&#39;s {@code get} method will return the task&#39;s result upon
+     * successful completion.
+     *
+     * 如果要立即阻止等待任务
+     * 可以使用result = exec.submit(aCallable.get())格式的构造方法
+     *
+     * If you would like to immediately block waiting
+     * for a task, you can use constructions of the form
+     * {@code result = exec.submit(aCallable).get();}
+     *
+     * 注意：Executors类包含一组方法
+     * 这些方法可以将其他一些类似于闭包的对象
+     * (例如java.security.PrivilegedAction)转换为Callable表单，以便提交它们
+     *
+     * &lt;p&gt;Note: The {@link Executors} class includes a set of methods
+     * that can convert some other common closure-like objects,
+     * for example, {@link java.security.PrivilegedAction} to
+     * {@link Callable} form so they can be submitted.
+     *
+     * @param task 要提交的任务
+     * @param &lt;T&gt; 任务结果的类型
+     * @return 代表任务即将完成的Future类
+     * @throws 如果无法计划执行任务，遭到拒绝抛出RejectedExecutionException
+     * @throws NullPointerException if the task is null
+     */
+    &lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task);
+
+    /**
+     * 提交可运行的任务以供执行，并返回表示该任务的Future类
+     * Future的get方法将在成功完成后返回给定的结果
+     *
+     * Submits a Runnable task for execution and returns a Future
+     * representing that task. The Future&#39;s {@code get} method will
+     * return the given result upon successful completion.
+     *
+     * @param task the task to submit
+     * @param result 要返回的结果
+     * @param &lt;T&gt; the type of the result
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     * @throws NullPointerException if the task is null
+     */
+    &lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result);
+
+    /**
+     * 提交可运行的任务以供执行，并返回表示该任务结果的Future类
+     * Future的get方法将在成功完成后返回null!
+     *
+     * Submits a Runnable task for execution and returns a Future
+     * representing that task. The Future&#39;s {@code get} method will
+     * return {@code null} upon &lt;em&gt;successful&lt;/em&gt; completion.
+     *
+     * @param task the task to submit
+     * @return a Future representing pending completion of the task
+     * @throws RejectedExecutionException if the task cannot be
+     *         scheduled for execution
+     * @throws NullPointerException if the task is null
+     */
+    Future&lt;?&gt; submit(Runnable task);
+
+    /**
+     * 执行给定的任务，在所有任务完成时返回一个保存其状态和结果的Future列表
+     * Future.isDone()对于返回列表的每个元素都是true
+     * 请注意，已完成的任务可以正常终止，也可以引发异常
+     * 如果在执行此操作时修改了给定集合，则此方法的结果未定义
+     *
+     * Executes the given tasks, returning a list of Futures holding
+     * their status and results when all complete.
+     * {@link Future#isDone} is {@code true} for each
+     * element of the returned list.
+     * Note that a &lt;em&gt;completed&lt;/em&gt; task could have
+     * terminated either normally or by throwing an exception.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
+     *
+     * @param tasks 任务的集合
+     * @param &lt;T&gt; 从任务返回的值的类型
+     * @return 表示任务的Future列表，其顺序与迭代器为给定任务列表生成的顺序相同，每个任务列表都已完成
+     * @throws InterruptedException if interrupted while waiting, in
+     *         which case unfinished tasks are cancelled
+     * @throws NullPointerException if tasks or any of its elements are {@code null}
+     * @throws RejectedExecutionException if any task cannot be
+     *         scheduled for execution
+     */
+    &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)
+        throws InterruptedException;
+
+    /**
+     * 执行给定的任务，在所有任务完成时返回一个保存其状态和结果的Future列表(含有超时时间)
+     * Future.isDone()对于返回列表的每个元素都是true
+     * 请注意，已完成的任务可以正常终止，也可以引发异常
+     * 如果在执行此操作时修改了给定集合，则此方法的结果未定义
+     *
+     * Executes the given tasks, returning a list of Futures holding
+     * their status and results
+     * when all complete or the timeout expires, whichever happens first.
+     * {@link Future#isDone} is {@code true} for each
+     * element of the returned list.
+     * Upon return, tasks that have not completed are cancelled.
+     * Note that a &lt;em&gt;completed&lt;/em&gt; task could have
+     * terminated either normally or by throwing an exception.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
+     *
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @param &lt;T&gt; the type of the values returned from the tasks
+     * @return 代表任务的Future列表，其顺序与迭代器为给定任务列表生成的顺序相同
+     * 如果操作没有超时，则每个任务都将完成
+     * 如果它超时了，其中一些任务将不会完成
+     * @throws InterruptedException if interrupted while waiting, in
+     *         which case unfinished tasks are cancelled
+     * @throws NullPointerException if tasks, any of its elements, or
+     *         unit are {@code null}
+     * @throws RejectedExecutionException if any task cannot be scheduled
+     *         for execution
+     */
+    &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,
+                                  long timeout, TimeUnit unit)
+        throws InterruptedException;
+
+    /**
+     * 执行给定的任务，返回已成功完成的任务(即不引发异常的结果)[如果有]
+     * 在正常或异常返回时，未完成的任务将被取消
+     * 如果在执行此操作时修改了给定集合，则此方法的结果未知
+     *
+     * Executes the given tasks, returning the result
+     * of one that has completed successfully (i.e., without throwing
+     * an exception), if any do. Upon normal or exceptional return,
+     * tasks that have not completed are cancelled.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
+     *
+     * @param tasks the collection of tasks
+     * @param &lt;T&gt; the type of the values returned from the tasks
+     * @return the result returned by one of the tasks
+     * @throws InterruptedException if interrupted while waiting
+     * @throws NullPointerException if tasks or any element task
+     *         subject to execution is {@code null}
+     * @throws IllegalArgumentException if tasks is empty
+     * @throws ExecutionException if no task successfully completes
+     * @throws RejectedExecutionException if tasks cannot be scheduled
+     *         for execution
+     */
+    &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)
+        throws InterruptedException, ExecutionException;
+
+    /**
+     * 执行给定的任务
+     * 如果在给定的超时时间之前执行了某个任务，则返回已成功完成的任务的结果(不引发异常)
+     * 在正常或异常返回时，未完成的任务将被取消
+     * 如果在执行此操作时修改了给定集合，则此方法的结果未知
+     *
+     * Executes the given tasks, returning the result
+     * of one that has completed successfully (i.e., without throwing
+     * an exception), if any do before the given timeout elapses.
+     * Upon normal or exceptional return, tasks that have not
+     * completed are cancelled.
+     * The results of this method are undefined if the given
+     * collection is modified while this operation is in progress.
+     *
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @param &lt;T&gt; the type of the values returned from the tasks
+     * @return the result returned by one of the tasks
+     * @throws InterruptedException if interrupted while waiting
+     * @throws NullPointerException if tasks, or unit, or any element
+     *         task subject to execution is {@code null}
+     * @throws TimeoutException if the given timeout elapses before
+     *         any task successfully completes
+     * @throws ExecutionException if no task successfully completes
+     * @throws RejectedExecutionException if tasks cannot be scheduled
+     *         for execution
+     */
+    &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,
+                    long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException;
+}</code></pre>
+<p>上面为本人翻译过的ExecutorService的源码, 总结一下大概有这么几类方法:</p>
+<ul>
+<li>关闭相关方法</li>
+<li>任务提交相关方法</li>
+<li>批量任务激活相关方法</li>
+</ul>
+<p>这些方法在上面的注释都解释的很清楚了, 在这里说几个比较重要的点:</p>
+<p><strong>① 关闭相关方法</strong></p>
+<ul>
+<li><code>void shutdown();</code></li>
+<li><code>List&lt;Runnable&gt; shutdownNow();</code></li>
+<li><code>boolean isShutdown();</code></li>
+<li><code>boolean isTerminated();</code></li>
+<li><code>boolean awaitTermination(long timeout, TimeUnit unit)</code></li>
+</ul>
+<p>其中shutdown方法会调用awaitTermination, 经过timeout时间才会调用shutdownNow方法强制关闭;</p>
+<p>shutdownNow方法可能会造成任务的丢失;</p>
+<p>isShutdown方法判断线程池是否已经关闭;</p>
+<p>而isTerminated方法仅在关闭后所有任务都已完成时返回true</p>
+<p><strong>需要注意的是: 除非首先调用shutdown或者shutdownNow方法, 否则isTerminated永远不是true</strong></p>
+<blockquote>
+<br>
+
+<p><strong>上面的逻辑和上一文中手动实现的线程池的逻辑基本相同</strong></p>
+</blockquote>
+<hr>
+<p><strong>② 任务提交方法</strong></p>
+<ul>
+<li><code>&lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task);</code></li>
+<li><code>&lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result);</code></li>
+<li><code>Future&lt;?&gt; submit(Runnable task);</code></li>
+</ul>
+<p>前面说到, 任务提交包括Runnable这种无返回值的, 也包括Callable这种有返回值的;</p>
+<p>比较有意思的是<code>&lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result);</code>方法:</p>
+<p><strong>他可以通过传入一个表示结果的result和Runnable任务配合实现有返回值调用</strong></p>
+<p><font color="#f00"><strong>注意到:在Java中所以对象全部是引用传参(包括Integer这种包装类, 这个也是大坑!)</strong></font></p>
+<hr>
+<p><strong>③ 批量任务激活方法</strong></p>
+<ul>
+<li><code>&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)</code></li>
+<li><code>&lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks, long timeout, TimeUnit unit)</code></li>
+<li><code>&lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)</code></li>
+<li><code>&lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks, long timeout, TimeUnit unit)</code></li>
+</ul>
+<p>这两个方法可以做到批量提交任务, 区别在于:</p>
+<ul>
+<li><strong>invokeAny: 取得第一个方法的返回值, 当第一个任务结束后，会调用interrupt方法中断其它任务</strong></li>
+<li><strong>invokeAll: 等线程任务全部执行完毕后,取得全部任务的结果值</strong></li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>注意: 方法invokeAny, invokeAll具有阻塞性</strong></p>
+</blockquote>
+<p>接下来看一看AbstractExecutorService, 他实现了ExecutorService部分方法;</p>
+<br>
+
+<h2 id="三-AbstractExecutorService抽象类"><a href="#三-AbstractExecutorService抽象类" class="headerlink" title="三.AbstractExecutorService抽象类"></a>三.AbstractExecutorService抽象类</h2><p>AbstractExecutorService.java</p>
+<pre><code class="java">package java.util.concurrent;
+
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * 提供ExecutorService执行方法的默认实现
+ * 此类使用newTaskFor返回的RunnableFuture实现了submit, invokeAny和invokeAll}方法
+ * 该方法默认为此包中提供的FutureTask
+ * 例如，submit(Runnable)的实现创建了一个关联的RunnableFuture它被执行并返回
+ * 子类可以重写newTaskFor方法以返回RunnableFuture实现，而不是FutureTask
+ *
+ * Provides default implementations of {@link ExecutorService}
+ * execution methods. This class implements the {@code submit},
+ * {@code invokeAny} and {@code invokeAll} methods using a
+ * {@link RunnableFuture} returned by {@code newTaskFor}, which defaults
+ * to the {@link FutureTask} class provided in this package.  For example,
+ * the implementation of {@code submit(Runnable)} creates an
+ * associated {@code RunnableFuture} that is executed and
+ * returned. Subclasses may override the {@code newTaskFor} methods
+ * to return {@code RunnableFuture} implementations other than
+ * {@code FutureTask}.
+ *
+ * 扩展示例
+ * 下面是自定义ThreadPoolExecutor
+ * 使用了CustomTask类而不是默认FutureTask类
+ *
+ * &lt;p&gt;&lt;b&gt;Extension example&lt;/b&gt;. Here is a sketch of a class
+ * that customizes {@link ThreadPoolExecutor} to use
+ * a {@code CustomTask} class instead of the default {@code FutureTask}:
+ * &lt;pre&gt; {@code
+ * public class CustomThreadPoolExecutor extends ThreadPoolExecutor {
+ *
+ *   static class CustomTask&lt;V&gt; implements RunnableFuture&lt;V&gt; {...}
+ *
+ *   protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Callable&lt;V&gt; c) {
+ *       return new CustomTask&lt;V&gt;(c);
+ *   }
+ *   protected &lt;V&gt; RunnableFuture&lt;V&gt; newTaskFor(Runnable r, V v) {
+ *       return new CustomTask&lt;V&gt;(r, v);
+ *   }
+ *   // ... add constructors, etc.
+ * }}&lt;/pre&gt;
+ *
+ * @since 1.5
+ * @author Doug Lea
+ */
+public abstract class AbstractExecutorService implements ExecutorService {
+
+    /**
+     * 为给定的runnable和默认值返回RunnableFuture
+     *
+     * Returns a {@code RunnableFuture} for the given runnable and default
+     * value.
+     *
+     * @param runnable 要被包装的Runnable
+     * @param value 返回的Future的默认值
+     * @param &lt;T&gt; the type of the given value
+     * @return 一个RunnableFuture
+     * 当运行时，它将运行底层runnable，作为Future
+     * 它将产生给定的值作为其结果，并提供底层任务的取消
+     * @since 1.6
+     */
+    protected &lt;T&gt; RunnableFuture&lt;T&gt; newTaskFor(Runnable runnable, T value) {
+        return new FutureTask&lt;T&gt;(runnable, value);
+    }
+
+    /**
+     * 返回给定可调用任务的RunnableFuture
+     *
+     * @param callable the callable task being wrapped
+     * @param &lt;T&gt; the type of the callable&#39;s result
+     * @return a {@code RunnableFuture} which, when run, will call the
+     * underlying callable and which, as a {@code Future}, will yield
+     * the callable&#39;s result as its result and provide for
+     * cancellation of the underlying task
+     * @since 1.6
+     */
+    protected &lt;T&gt; RunnableFuture&lt;T&gt; newTaskFor(Callable&lt;T&gt; callable) {
+        return new FutureTask&lt;T&gt;(callable);
+    }
+
+    /**
+     * 无返回值的任务提交
+     * @throws RejectedExecutionException {@inheritDoc}
+     * @throws NullPointerException       {@inheritDoc}
+     */
+    public Future&lt;?&gt; submit(Runnable task) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture&lt;Void&gt; ftask = newTaskFor(task, null);
+        execute(ftask);
+        return ftask;
+    }
+
+    /**
+     * 与Runnable配合有返回值的任务提交
+     * @throws RejectedExecutionException {@inheritDoc}
+     * @throws NullPointerException       {@inheritDoc}
+     */
+    public &lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture&lt;T&gt; ftask = newTaskFor(task, result);
+        execute(ftask);
+        return ftask;
+    }
+
+    /**
+     * 有返回值的Callable的任务提交
+     * @throws RejectedExecutionException {@inheritDoc}
+     * @throws NullPointerException       {@inheritDoc}
+     */
+    public &lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture&lt;T&gt; ftask = newTaskFor(task);
+        execute(ftask);
+        return ftask;
+    }
+
+    /**
+     * invokeAny批量调用的主要机制
+     */
+    private &lt;T&gt; T doInvokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,
+                              boolean timed, long nanos)
+        throws InterruptedException, ExecutionException, TimeoutException {
+        // 任务为空
+        if (tasks == null)
+            throw new NullPointerException();
+        // 任务数
+        int ntasks = tasks.size();
+        // 任务数为0
+        if (ntasks == 0)
+            throw new IllegalArgumentException();
+        // ArrayList接收任务, 并创建ExecutorCompletionService
+        // 简单理解就是ExecutorCompletionService是一个批量任务管理接口
+        ArrayList&lt;Future&lt;T&gt;&gt; futures = new ArrayList&lt;&gt;(ntasks);
+        ExecutorCompletionService&lt;T&gt; ecs =
+            new ExecutorCompletionService&lt;T&gt;(this);
+
+        // 为了提高效率(特别是在并行性有限的执行器中)
+        // 请在提交更多任务之前检查以前提交的任务是否已完成
+        // 这种交错加上异常机制解释了(此方法中)主循环的混乱
+        try {
+            // 记录异常，以便如果我们无法获得任何结果，我们可以抛出最后一个异常
+            ExecutionException ee = null;
+            final long deadline = timed ? System.nanoTime() + nanos : 0L;
+            Iterator&lt;? extends Callable&lt;T&gt;&gt; it = tasks.iterator();
+
+            // 确保开始一项任务；其余的逐步进行
+            futures.add(ecs.submit(it.next()));
+            --ntasks;
+            int active = 1;
+
+            // 等待某个任务完成或者超时
+            for (;;) {
+                // 获取任务
+                Future&lt;T&gt; f = ecs.poll();
+                // 如果任务为空
+                if (f == null) {
+                    // 当前任务数大于0
+                    if (ntasks &gt; 0) {
+                        // 任务数减一
+                        --ntasks;
+                        // 加入下一个任务, 并且任务激活数+1
+                        futures.add(ecs.submit(it.next()));
+                        ++active;
+                    }
+                    // 如果当前无激活任务
+                    // 注意: 前面保证了一定会激活一个任务!
+                    // 退出循环
+                    else if (active == 0)
+                        break;
+                    // 如果是任务超时, 抛出TimeoutException(), 退出循环
+                    else if (timed) {
+                        f = ecs.poll(nanos, NANOSECONDS);
+                        if (f == null)
+                            throw new TimeoutException();
+                        nanos = deadline - System.nanoTime();
+                    }
+                    // 从批处理队列中获取future
+                    else
+                        f = ecs.take();
+                }
+                // 如果future不为空(这时候已经说明了有任务完成)
+                // 在这个里面一定会返回!!!
+                if (f != null) {
+                    // 激活数-1
+                    --active;
+                    try {
+                        // 获取Future接口结果
+                        return f.get();
+                    } catch (ExecutionException eex) {
+                        ee = eex;
+                    } catch (RuntimeException rex) {
+                        ee = new ExecutionException(rex);
+                    }
+                }
+            }
+
+            // 上面如果有异常, 直接抛出, 返回
+            if (ee == null)
+                ee = new ExecutionException();
+            throw ee;
+
+        } finally {
+            // 最后取消其他所有任务!!!
+            cancelAll(futures);
+        }
+    }
+
+    public &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)
+        throws InterruptedException, ExecutionException {
+        try {
+            return doInvokeAny(tasks, false, 0);
+        } catch (TimeoutException cannotHappen) {
+            assert false;
+            return null;
+        }
+    }
+
+    public &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,
+                           long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException {
+        return doInvokeAny(tasks, true, unit.toNanos(timeout));
+    }
+
+    // 其他invokeAll方法的实现方法
+    public &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)
+        throws InterruptedException {
+        // 如果任务列表为空, 返回NullPointerException()
+        if (tasks == null)
+            throw new NullPointerException();
+
+        // futures为一个ArrayList, 用于接收任务
+        ArrayList&lt;Future&lt;T&gt;&gt; futures = new ArrayList&lt;&gt;(tasks.size());
+        try {
+            // 加入执行列表
+            for (Callable&lt;T&gt; t : tasks) {
+                RunnableFuture&lt;T&gt; f = newTaskFor(t);
+                futures.add(f);
+                execute(f);
+            }
+            // 执行任务, 并忽略所以异常!
+            for (int i = 0, size = futures.size(); i &lt; size; i++) {
+                Future&lt;T&gt; f = futures.get(i);
+                if (!f.isDone()) {
+                    try { f.get(); }
+                    catch (CancellationException | ExecutionException ignore) {}
+                }
+            }
+            // 返回列表
+            return futures;
+        } catch (Throwable t) {
+            cancelAll(futures);
+            throw t;
+        }
+    }
+
+    // 含有超时的执行全部任务的方法
+    // 只是多了超时判断
+    public &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,
+                                         long timeout, TimeUnit unit)
+        throws InterruptedException {
+        if (tasks == null)
+            throw new NullPointerException();
+        final long nanos = unit.toNanos(timeout);
+        final long deadline = System.nanoTime() + nanos;
+        ArrayList&lt;Future&lt;T&gt;&gt; futures = new ArrayList&lt;&gt;(tasks.size());
+        int j = 0;
+        timedOut: try {
+            for (Callable&lt;T&gt; t : tasks)
+                futures.add(newTaskFor(t));
+
+            final int size = futures.size();
+
+            // Interleave time checks and calls to execute in case
+            // executor doesn&#39;t have any/much parallelism.
+            for (int i = 0; i &lt; size; i++) {
+                if (((i == 0) ? nanos : deadline - System.nanoTime()) &lt;= 0L)
+                    break timedOut;
+                execute((Runnable)futures.get(i));
+            }
+
+            for (; j &lt; size; j++) {
+                Future&lt;T&gt; f = futures.get(j);
+                if (!f.isDone()) {
+                    try { f.get(deadline - System.nanoTime(), NANOSECONDS); }
+                    catch (CancellationException | ExecutionException ignore) {}
+                    catch (TimeoutException timedOut) {
+                        break timedOut;
+                    }
+                }
+            }
+            return futures;
+        } catch (Throwable t) {
+            cancelAll(futures);
+            throw t;
+        }
+        // 在完成所有任务之前超时；取消剩余任务
+        cancelAll(futures, j);
+        return futures;
+    }
+
+    private static &lt;T&gt; void cancelAll(ArrayList&lt;Future&lt;T&gt;&gt; futures) {
+        cancelAll(futures, 0);
+    }
+
+    // 撤销ArrayList中j索引之后全部的任务
+    /** Cancels all futures with index at least j. */
+    private static &lt;T&gt; void cancelAll(ArrayList&lt;Future&lt;T&gt;&gt; futures, int j) {
+        for (int size = futures.size(); j &lt; size; j++)
+            futures.get(j).cancel(true);
+    }
+}</code></pre>
+<p>可以看出AbstractExecutorService这个抽象类还是比较简单的</p>
+<p>首先, 他<strong>实现了ExecutorService中除了关闭类型以外的其他所有方法(各个线程池关闭的方式可能会有所不同)</strong></p>
+<p>其中需要注意的是submit方法:</p>
+<p><font color="#f00"><strong>submit方法使用newTaskFor返回一个RunnableFuture类型, 并通过execute执行;</strong></font></p>
+<p>其中: 这个RunnableFuture继承了Runnable, Future, 可以说是两者的结合;</p>
+<p>然后加入了三个方法: doInvokeAny, cancelAll和newTaskFor方法;</p>
+<p><strong>① newTaskFor</strong></p>
+<p>newTaskFor方法完成了对Runnable和Callable接口的包装, 并通过RunnableFuture实现了对一个方法的抽象;</p>
+<hr>
+<p><strong>② doInvokeAny</strong></p>
+<p>遍历给定的任务队列, 并调用Future的cancel方法, 取消任务;</p>
+<hr>
+<p><strong>③ doInvokeAny</strong></p>
+<p>该方法是invokeAny方法的具体实现, 首先通过获取所有的任务方法, 生成任务队列; 然后通过判断是否有任务完成, 如果完成则返回该结果; 在finally块中取消所有其他任务;</p>
+<p>需要注意的有:</p>
+<ol>
+<li>在这个方法中定义了:<ul>
+<li>ntasks表示剩余任务数;</li>
+<li>任务队列futures;</li>
+<li>ExecutorCompletionService类型的ecs负责管理批量任务;</li>
+<li>ExecutionException ee负责处理整个方法的异常, 并在返回时抛出;</li>
+</ul>
+</li>
+<li>其次<strong>在执行for循环之前, 就已经执行了一个任务(确保一定有一个任务被执行)</strong></li>
+</ol>
+<p>更多细节可以看上面源码分析;</p>
+<br>
+
+<h2 id="四-四种类型的线程池"><a href="#四-四种类型的线程池" class="headerlink" title="四.四种类型的线程池"></a>四.四种类型的线程池</h2><p>在正式查看ThreadPoolExecutor之前, 先简单总结一下Java中四种类型的线程池;</p>
+<p><font color="#f00"><strong>这四种类型的线程池其实底层都是通过ThreadPoolExecutor实现的</strong></font></p>
+<p>对于这些类型线程池的原理在下面这个UP的视频中讲的很不错</p>
+<iframe src="//player.bilibili.com/player.html?aid=80930944&cid=138521148&page=1" height="320" width="638" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+
+<blockquote>
+<br>
+
+<p><strong>如果视频过小可以访问原网站:</strong> <a href="https://www.bilibili.com/video/av80930944/" target="_blank" rel="noopener">https://www.bilibili.com/video/av80930944/</a></p>
+</blockquote>
+<p>下面做一下总结, 在下一篇文章中会继续从源码分析实现:</p>
+<h3 id="1-ThreadPoolExecutor提供的构造函数"><a href="#1-ThreadPoolExecutor提供的构造函数" class="headerlink" title="1.ThreadPoolExecutor提供的构造函数"></a>1.ThreadPoolExecutor提供的构造函数</h3><pre><code class="java">//五个参数的构造函数
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue)
+//六个参数的构造函数-1
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          ThreadFactory threadFactory)
+//六个参数的构造函数-2
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          RejectedExecutionHandler handler)
+//七个参数的构造函数
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue&lt;Runnable&gt; workQueue,
+                          ThreadFactory threadFactory,
+                          RejectedExecutionHandler handler)</code></pre>
+<p><strong>参数解释</strong></p>
+<ul>
+<li><strong>int corePoolSize:</strong></li>
+</ul>
+<p>该线程池中核心线程数最大值</p>
+<p>核心线程：线程池新建线程的时候，如果当前线程总数小于corePoolSize，则新建的是核心线程，如果超过corePoolSize，则新建的是非核心线程核心线程默认情况下会一直存活在线程池中，即使这个核心线程啥也不干(闲置状态)</p>
+<p>如果指定ThreadPoolExecutor的allowCoreThreadTimeOut这个属性为true，那么核心线程如果不干活(闲置状态)的话，超过一定时间(时长下面参数决定)，就会被销毁掉</p>
+<ul>
+<li><strong>int maximumPoolSize:</strong></li>
+</ul>
+<p>该线程池中线程总数最大值</p>
+<p>线程总数 = 核心线程数 + 非核心线程数</p>
+<hr>
+<ul>
+<li><strong>long keepAliveTime:</strong></li>
+</ul>
+<p>该线程池中非核心线程闲置超时时长</p>
+<p>一个非核心线程，如果不干活(闲置状态)的时长超过这个参数所设定的时长，就会被销毁掉，如果设置<code>allowCoreThreadTimeOut = true</code>，则会作用于核心线程</p>
+<hr>
+<ul>
+<li><strong>BlockingQueue workQueue:</strong></li>
+</ul>
+<p>该线程池中的任务队列：维护着等待执行的Runnable对象</p>
+<p>当所有的核心线程都在干活时，新添加的任务会被添加到这个队列中等待处理，如果队列满了，则新建非核心线程执行任务</p>
+<blockquote>
+<br>
+
+<p><strong>常用的workQueue类型:</strong></p>
+<ul>
+<li><strong>SynchronousQueue:</strong> 这个队列接收到任务的时候，会直接提交给线程处理，而不保留它，如果所有线程都在工作怎么办？那就新建一个线程来处理这个任务！所以为了保证不出现<code>线程数达到了maximumPoolSize而不能新建线程</code>的错误，使用这个类型队列的时候，maximumPoolSize一般指定成Integer.MAX_VALUE，即无限大</li>
+<li><strong>LinkedBlockingQueue:</strong> 这个队列接收到任务的时候，如果当前线程数小于核心线程数，则新建线程(核心线程)处理任务；如果当前线程数等于核心线程数，则进入队列等待。由于这个队列没有最大值限制，即所有超过核心线程数的任务都将被添加到队列中，这也就导致了maximumPoolSize的设定失效，因为总线程数永远不会超过corePoolSize</li>
+<li><strong>ArrayBlockingQueue:</strong> 可以限定队列的长度，接收到任务的时候，如果没有达到corePoolSize的值，则新建线程(核心线程)执行任务，如果达到了，则入队等候，如果队列已满，则新建线程(非核心线程)执行任务，又如果总线程数到了maximumPoolSize，并且队列也满了，则发生错误</li>
+<li><strong>DelayQueue:</strong> 队列内元素必须实现Delayed接口，这就意味着你传进去的任务必须先实现Delayed接口。这个队列接收到任务时，首先先入队，只有达到了指定的延时时间，才会执行任务</li>
+</ul>
+</blockquote>
+<hr>
+<ul>
+<li><strong>ThreadFactory threadFactory:</strong></li>
+</ul>
+<p>创建线程的方式</p>
+<p>这是一个接口，你new他的时候需要实现他的Thread newThread(Runnable r)方法</p>
+<hr>
+<ul>
+<li><strong>RejectedExecutionHandler handler:</strong> </li>
+</ul>
+<p>当提交任务数超过maxmumPoolSize + workQueue之和时</p>
+<p>任务会交给RejectedExecutionHandler来处理;</p>
+<blockquote>
+<br>
+
+<p><strong>JDK提供了四种拒绝策略(在ThreadPoolExecutor中以内部类形式存在):</strong></p>
+<ul>
+<li><strong>AbortPolicy:</strong> 默认。直接抛异常</li>
+<li><strong>CallerRunsPolicy:</strong> 只用调用者所在的线程执行任务,重试添加当前的任务，它会自动重复调用execute()方法</li>
+<li><strong>DiscardOldestPolicy:</strong> 丢弃任务队列中最久的任务</li>
+<li><strong>DiscardPolicy:</strong> 丢弃当前任务</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="2-线程池的处理流程"><a href="#2-线程池的处理流程" class="headerlink" title="2.线程池的处理流程"></a>2.线程池的处理流程</h3><p>如下图所示:</p>
+<p><img src="https://img-blog.csdn.net/20180814214752746?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="线程池的处理流程.png"></p>
+<p>一个线程从被提交(submit)到执行共经历以下流程:</p>
+<ul>
+<li>线程池<strong>判断核心线程池</strong>里是的线程是否都在执行任务?<ul>
+<li>如果不是，则创建一个新的工作线程来执行任务; </li>
+<li>如果核心线程池里的线程都在执行任务，则进入下一个流程;</li>
+</ul>
+</li>
+<li>线程池<strong>判断工作队列</strong>是否已满?<ul>
+<li>如果工作队列没有满，则将新提交的任务储存在这个工作队列里;</li>
+<li>如果工作队列满了，则进入下一个流程;</li>
+</ul>
+</li>
+<li>线程池判断其<strong>内部线程是否都处于工作状态</strong>?<ul>
+<li>如果没有，则创建一个新的工作线程来执行任务</li>
+<li>如果已满了，则交给饱和策略来处理这个任务</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>从线程池在执行execute方法的角度来看, 主要有以下四种情况:</p>
+<ul>
+<li>如果当前运行的线程少于corePoolSize，则创建新线程来执行任务(需要获得全局锁)</li>
+<li>如果运行的线程等于或多于corePoolSize, 则将任务加入BlockingQueue</li>
+<li>如果无法将任务加入BlockingQueue(队列已满), 则创建新的线程来处理任务(需要获得全局锁)</li>
+<li>如果创建新线程将使当前运行的线程超出maxiumPoolSize，任务将被拒绝，并调用RejectedExecutionHandler.rejectedExecution()方法</li>
+</ul>
+<blockquote>
+<br>
+
+<p><strong>注意:</strong></p>
+<p><font color="#f00"><strong>线程池采取上述的流程进行设计是: 为了减少获取全局锁的次数</strong></font></p>
+<p><strong>在线程池完成预热(当前运行的线程数大于或等于corePoolSize)之后，几乎所有的execute方法调用都会执行步骤2</strong></p>
+</blockquote>
+<br>
+
+<h3 id="3-四种线程池"><a href="#3-四种线程池" class="headerlink" title="3.四种线程池"></a>3.四种线程池</h3><h4 id="1-FixedThreadPool-定长线程池"><a href="#1-FixedThreadPool-定长线程池" class="headerlink" title="1. FixedThreadPool 定长线程池"></a><strong>1. FixedThreadPool 定长线程池</strong></h4><p>首先看一下这个类的构造方法:</p>
+<pre><code class="java">public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads,
+                                  0L, TimeUnit.MILLISECONDS,
+                                  new LinkedBlockingQueue&lt;Runnable&gt;());
+}</code></pre>
+<p>下图是FixedThreadPool的实现原理:</p>
+<p><img src="https://img-blog.csdn.net/20180814222111804?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="FixedThreadPool.png"></p>
+<p>FixedThreadPool通过execute方法执行任务:</p>
+<ul>
+<li>如果线程池未满则通过corePool直接执行</li>
+<li>如果线程池已满则加入阻塞队列等待</li>
+<li>如果阻塞队列也满了, 则根据拒绝策略进行处理(下一篇文章会分析)</li>
+</ul>
+<p>总结:</p>
+<ul>
+<li>它是一种<strong>固定大小的线程池</strong>;</li>
+<li><strong>corePoolSize和maximunPoolSize都为用户设定的线程数量nThreads；</strong></li>
+<li><strong>keepAliveTime为0</strong>，意味着一旦有多余的空闲线程，就会被立即停止掉；但这里keepAliveTime无效；</li>
+<li><strong>阻塞队列采用了LinkedBlockingQueue，它是一个无界队列；</strong></li>
+<li>由于阻塞队列是一个无界队列，因此<strong>永远不可能拒绝任务；</strong></li>
+<li><strong>由于采用了无界队列，实际线程数量将永远维持在nThreads，因此maximumPoolSize和keepAliveTime将无效</strong></li>
+</ul>
+<hr>
+<h4 id="2-CachedThreadPool-可缓存线程池"><a href="#2-CachedThreadPool-可缓存线程池" class="headerlink" title="2.CachedThreadPool 可缓存线程池"></a>2.<strong>CachedThreadPool 可缓存线程池</strong></h4><p>构造方法:</p>
+<pre><code class="java">public static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                  60L, TimeUnit.SECONDS,
+                                  new SynchronousQueue&lt;Runnable&gt;());
+}</code></pre>
+<p>下图为CachedThreadPool的实现原理:</p>
+<p><img src="https://img-blog.csdn.net/20180814222325597?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="CachedThreadPool.png"></p>
+<p>CachedThreadPool通过execute方法执行任务:</p>
+<ul>
+<li>当corePool存在空余线程<strong>(核心虽然为0, 但是线程存在默认60秒回收时间)</strong>, 则直接执行</li>
+<li>当corePool不存在空余线程, 则放入SynchronousQueue等待; 而<strong>SynchronousQueue没有存储空间，这意味着只要有请求到来，就必须要找到一条工作线程处理他，如果当前没有空闲的线程，那么就会再创建一条新的线程</strong></li>
+</ul>
+<p>总结:</p>
+<ul>
+<li><p>CachedThreadPool是一个可以无限扩大的线程池;</p>
+</li>
+<li><p>CachedThreadPool比较<strong>适合处理执行时间比较小的任务;</strong></p>
+</li>
+<li><p><strong>corePoolSize为0，maximumPoolSize为无限大，意味着线程数量理论上可以无限大;(当然操作系统会有所限制, 不可能无限大)</strong></p>
+</li>
+<li><p>keepAliveTime为60S，意味着<strong>线程空闲时间超过60S就会被杀死;</strong></p>
+</li>
+<li><p>采用SynchronousQueue装等待的任务，这个阻塞队列<strong>没有存储空间，这意味着只要有请求到来，就必须要找到一条工作线程处理他，如果当前没有空闲的线程，那么就会再创建一条新的线程;</strong></p>
+</li>
+</ul>
+<hr>
+<h4 id="3-SingleThreadExecutor-单一线程池"><a href="#3-SingleThreadExecutor-单一线程池" class="headerlink" title="3.SingleThreadExecutor 单一线程池"></a>3.<strong>SingleThreadExecutor 单一线程池</strong></h4><p>SingleThreadExecutor构造方法:</p>
+<pre><code class="java">    public static ExecutorService newSingleThreadExecutor() {
+        return new FinalizableDelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue&lt;Runnable&gt;()));
+    }</code></pre>
+<p>下图为SingleThreadExecutor的实现原理:</p>
+<p><img src="https://img-blog.csdn.net/20180814222550617?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="SingleThreadExecutor.png"></p>
+<p>由于使用的是LinkedBlockingQueue, 所以理论上等待的任务可以是无穷多</p>
+<p>总结:</p>
+<ul>
+<li>它只会创建一条工作线程处理任务;</li>
+<li>采用的阻塞队列为LinkedBlockingQueue;</li>
+</ul>
+<hr>
+<h4 id="4-ScheduledThreadPool-可调度的线程池"><a href="#4-ScheduledThreadPool-可调度的线程池" class="headerlink" title="4.ScheduledThreadPool 可调度的线程池"></a>4.<strong>ScheduledThreadPool 可调度的线程池</strong></h4><p>它用来处理延时任务或定时任务, 他的构造方法如下:</p>
+<pre><code class="java">public static ScheduledExecutorService newScheduledThreadPool(
+    int corePoolSize, ThreadFactory threadFactory) {
+    return new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
+}</code></pre>
+<p>即他是通过ScheduledThreadPoolExecutor(它继承了ThreadPoolExecutor)实现的;</p>
+<p>ScheduledThreadPool的实现原理如下图:</p>
+<p><img src="https://img-blog.csdn.net/20180814222732879?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3pfc196MjAxNg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="ScheduledThreadPool.png"></p>
+<p><strong>① 提交任务</strong></p>
+<p>它接收SchduledFutureTask类型的任务，有两种提交任务的方式:</p>
+<ul>
+<li>scheduledAtFixedRate</li>
+<li>scheduledWithFixedDelay</li>
+</ul>
+<hr>
+<p><strong>② SchduledFutureTask任务参数</strong></p>
+<p>SchduledFutureTask接收的参数:</p>
+<ul>
+<li>time: 任务开始的时间</li>
+<li>sequenceNumber: 任务的序号</li>
+<li>period: 任务执行的时间间隔</li>
+</ul>
+<hr>
+<p>它采用DelayQueue存储等待的任务:</p>
+<p>DelayQueue内部封装了一个PriorityQueue，它会根据time的先后时间排序: 若time相同则根据sequenceNumber排序；DelayQueue也是一个无界队列；</p>
+<p>工作线程的执行过程:</p>
+<p><strong>工作线程会从DelayQueue取已经到期的任务去执行；</strong></p>
+<p><strong>执行结束后重新设置任务的到期时间，再次放回DelayQueue</strong></p>
+<br>
+
+<h3 id="4-如何选择合适的线程池"><a href="#4-如何选择合适的线程池" class="headerlink" title="4.如何选择合适的线程池"></a>4.如何选择合适的线程池</h3><p>任务一般可分为: CPU密集型、IO密集型、混合型</p>
+<p>对于不同类型的任务需要分配不同大小的线程池</p>
+<p><strong>① CPU密集型任务</strong></p>
+<p>尽量使用较小的线程池，一般为CPU核心数+1</p>
+<p>因为CPU密集型任务使得CPU使用率很高，若开过多的线程数，只能增加上下文切换的次数，因此会带来额外的开销</p>
+<p><strong>② IO密集型任务</strong></p>
+<p>可以使用稍大的线程池，一般为2*CPU核心数</p>
+<p>IO密集型任务(比如下载, 上传)CPU使用率并不高，因此可以让CPU在等待IO的时候去处理别的任务，充分利用CPU时间</p>
+<p><strong>③ 混合型任务</strong></p>
+<p>可以将任务分成IO密集型和CPU密集型任务，然后分别用不同的线程池去处理</p>
+<p>只要分完之后两个任务的执行时间相差不大，那么就会比串行执行来的高效</p>
+<p>因为如果划分之后两个任务执行时间相差甚远，那么先执行完的任务就要等后执行完的任务，最终的时间仍然取决于后执行完的任务，而且还要加上任务拆分与合并的开销，得不偿失</p>
+<br>
+
+<p>以上部分内容参考自<a href="https://blog.csdn.net/z_s_z2016/article/details/81674893" target="_blank" rel="noopener">Java线程池-ThreadPoolExecutor原理分析与实战</a></p>
+<blockquote>
+<br>
+
+<p><strong>后记:</strong></p>
+<p>下一篇文章, 也是最终篇将会分析ThreadPoolExecutor和Executors的源码</p>
+<p>文章地址: <a href="https://jasonkayzk.github.io/2020/03/05/Java线程池ThreadPoolExecutor分析与实战终/">Java线程池ThreadPoolExecutor分析与实战终</a></p>
+</blockquote>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯</p>
+<p>内容和博客同步更新~</p>
+<p>文章参考:</p>
+<ul>
+<li><a href="https://blog.csdn.net/z_s_z2016/article/details/81674893" target="_blank" rel="noopener">Java线程池-ThreadPoolExecutor原理分析与实战</a></li>
+</ul>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/" title="https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/03/04/Java线程池ThreadPoolExecutor分析与实战续/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725349189"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

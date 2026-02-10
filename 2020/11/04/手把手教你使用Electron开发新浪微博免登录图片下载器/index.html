@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>手把手教你使用Electron开发新浪微博免登录图片下载器 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近看了下Electron，并且自己有下载微博图片的需求，就了解了一下免登录下载微博图片的方法，最后花了几个小时写了一个小工具；">
+<meta name="keywords" content="工具分享,Electron,新浪微博">
+<meta property="og:type" content="article">
+<meta property="og:title" content="手把手教你使用Electron开发新浪微博免登录图片下载器">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/11/04/手把手教你使用Electron开发新浪微博免登录图片下载器/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近看了下Electron，并且自己有下载微博图片的需求，就了解了一下免登录下载微博图片的方法，最后花了几个小时写了一个小工具；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/electron_1.jpg">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_3.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_4.png">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.762Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="手把手教你使用Electron开发新浪微博免登录图片下载器">
+<meta name="twitter:description" content="最近看了下Electron，并且自己有下载微博图片的需求，就了解了一下免登录下载微博图片的方法，最后花了几个小时写了一个小工具；">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/electron_1.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725336882">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?66">
+    
+    <h1>手把手教你使用Electron开发新浪微博免登录图片下载器</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年11月04日</a>
+    <a><i class="nexmoefont icon-areachart"></i>5.3k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 28 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Electron/">Electron</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Electron/">Electron</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/工具分享/">工具分享</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/新浪微博/">新浪微博</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#使用Electron开发新浪微博免登录图片下载器"><span class="toc-text">使用Electron开发新浪微博免登录图片下载器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#初始化一个Electron-Vue项目"><span class="toc-text">初始化一个Electron-Vue项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编写主进程和渲染进程"><span class="toc-text">编写主进程和渲染进程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-免登录下载原理"><span class="toc-text">① 免登录下载原理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-爬虫逻辑"><span class="toc-text">② 爬虫逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-编写主进程"><span class="toc-text">③ 编写主进程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#④-编写渲染端"><span class="toc-text">④ 编写渲染端</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#⑤-启动测试"><span class="toc-text">⑤ 启动测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#打包应用"><span class="toc-text">打包应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近看了下Electron，并且自己有下载微博图片的需求，就了解了一下免登录下载微博图片的方法，最后花了几个小时写了一个小工具；</p>
+<p>源代码: </p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/weiboPicDownloader" target="_blank" rel="noopener">https://github.com/JasonkayZK/weiboPicDownloader</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h2 id="使用Electron开发新浪微博免登录图片下载器"><a href="#使用Electron开发新浪微博免登录图片下载器" class="headerlink" title="使用Electron开发新浪微博免登录图片下载器"></a>使用Electron开发新浪微博免登录图片下载器</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h3><p>本项目主要使用到的技术栈有：Electron + Vue、Node，前端UI使用了众所周知的ElementUI；</p>
+<p>话不多说，接下来就开始吧！</p>
+<br>
+
+<h3 id="初始化一个Electron-Vue项目"><a href="#初始化一个Electron-Vue项目" class="headerlink" title="初始化一个Electron-Vue项目"></a><strong>初始化一个Electron-Vue项目</strong></h3><blockquote>
+<p>  这里推荐使用<code>simulatedgreg/electron-vue</code>模板创建项目；</p>
+<p>  具体初始化项目可Google；</p>
+<p>  <strong>由于这个项目比较简单，我就没有使用这个模板初始化项目</strong></p>
+</blockquote>
+<p>首先我们使用vue初始化一个项目：</p>
+<pre><code class="bash">vue create weibo-pic-downloader</code></pre>
+<p>选择对应的组件之后，集成Electron；</p>
+<p>使用下面的命令：</p>
+<pre><code class="bash">vue add vue-cli-plugin-electron-builder</code></pre>
+<p>并选择最新的版本安装；</p>
+<blockquote>
+<p>  这一步会下载electron的依赖文件 60M 左右；</p>
+</blockquote>
+<p>此后，在src目录下会创建一个<code>background.js</code>文件，作为主进程；同时，<code>package.json</code>中会存在下面的一些命令：</p>
+<pre><code>&quot;electron:build&quot;: &quot;vue-cli-service electron:build&quot;,
+&quot;electron:serve&quot;: &quot;vue-cli-service electron:serve&quot;,</code></pre><p>我们使用<code>yarn electron:serve</code>或者<code>npm run electron:serve</code>即可启动；</p>
+<p>启动之后如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/electron_1.jpg" alt="electron_1.jpg"></p>
+<p>至此，我们的开发环境和初始化项目完成！</p>
+<p>此时的目录结构类似于下面：</p>
+<pre><code class="bash">$ tree
+.
+├─node_modules
+├─public
+├─package.json
+└─src
+    ├─background.js
+    ├─main.js
+    ├─assets
+        ├─...
+    └─components
+        ├─...</code></pre>
+<p>package.json中的内容如下所示：</p>
+<pre><code class="json">{
+  &quot;name&quot;: &quot;weibo-pic-downloader&quot;,
+  &quot;version&quot;: &quot;0.1.0&quot;,
+  &quot;private&quot;: true,
+  &quot;scripts&quot;: {
+    &quot;serve&quot;: &quot;vue-cli-service serve&quot;,
+    &quot;build&quot;: &quot;vue-cli-service build&quot;,
+    &quot;lint&quot;: &quot;vue-cli-service lint&quot;,
+    &quot;electron:build&quot;: &quot;vue-cli-service electron:build&quot;,
+    &quot;electron:serve&quot;: &quot;vue-cli-service electron:serve&quot;,
+    &quot;postinstall&quot;: &quot;electron-builder install-app-deps&quot;,
+    &quot;postuninstall&quot;: &quot;electron-builder install-app-deps&quot;
+  },
+  &quot;main&quot;: &quot;background.js&quot;,
+  &quot;dependencies&quot;: {
+    &quot;element-ui&quot;: &quot;^2.14.0&quot;,
+    &quot;request&quot;: &quot;^2.88.2&quot;,
+    &quot;vue&quot;: &quot;^2.6.11&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;@vue/cli-plugin-eslint&quot;: &quot;~4.5.0&quot;,
+    &quot;@vue/cli-service&quot;: &quot;~4.5.0&quot;,
+    &quot;electron&quot;: &quot;^9.0.0&quot;,
+    &quot;electron-devtools-installer&quot;: &quot;^3.1.0&quot;,
+    &quot;eslint&quot;: &quot;^6.7.2&quot;,
+    &quot;eslint-plugin-vue&quot;: &quot;^6.2.2&quot;,
+    &quot;vue-cli-plugin-electron-builder&quot;: &quot;~2.0.0-rc.5&quot;,
+    &quot;vue-template-compiler&quot;: &quot;^2.6.11&quot;
+  },
+  &quot;description&quot;: &quot;A no-login tool to download picture from Weibo&quot;,
+  &quot;author&quot;: {
+    &quot;name&quot;: &quot;jasonkay&quot;,
+    &quot;email&quot;: &quot;jasonkayzk@gmail.com&quot;,
+    &quot;url&quot;: &quot;https://jasonkayzk.github.io/&quot;
+  }
+}</code></pre>
+<p>可以看到，入口文件由main.js改为了background.js！</p>
+<blockquote>
+<p>  此时：</p>
+<ul>
+<li>main.js为渲染进程的入口；</li>
+<li>background.js为主进程的入口；</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="编写主进程和渲染进程"><a href="#编写主进程和渲染进程" class="headerlink" title="编写主进程和渲染进程"></a><strong>编写主进程和渲染进程</strong></h3><p>在编写主进程和渲染进程之前，还是要说一下，Electron是基于Chromium实现的（相当于打开应用时打开了一个Chrome浏览器），而Chromium是基于<strong>多进程</strong>实现的，所以我们的主进程和渲染进程是在不同的进程中存在的！</p>
+<p>而为了让主进程和渲染进程能够相互通信，就要使用IPC这种进程间通信的方法：</p>
+<p><strong>主进程和渲染进程分别通过注册/响应对应的事件来完成配合，这也是Electron的核心所在；</strong></p>
+<p>在了解了Electron的运行模式后，我们开始开发这个简单的应用吧！</p>
+<h4 id="①-免登录下载原理"><a href="#①-免登录下载原理" class="headerlink" title="① 免登录下载原理"></a><strong>① 免登录下载原理</strong></h4><p>经过一番调研，我发现微博手机版可以免登录查看几乎所有的博文，同时通过下面的链接我们可以很轻易的获取到当前页的json数据：</p>
+<pre><code>https://m.weibo.cn/api/container/getIndex?count=25&amp;page=&lt;pageIndex&gt;&amp;containerid=&lt;containerid&gt;</code></pre><p>其中包括了containerid对应用户发布的文章内容、日期、图片甚至是视频的地址；</p>
+<p>所以通过遍历pageIndex即可取到当前用户全部的博文，即可取到图片；</p>
+<p>那么这个containerid怎么计算呢？很简单！</p>
+<p>对于微博中某个ID来说，containerid就是<code>&quot;107603&quot; + uid</code>！</p>
+<blockquote>
+<p>  至于为什么选择107603，原因我也不清楚；</p>
+<p>  至于uid，通过查看网页源代码搜索uid即可：</p>
+<p>  <a href="https://jingyan.baidu.com/article/67662997970f6c54d51b8402.html" target="_blank" rel="noopener">https://jingyan.baidu.com/article/67662997970f6c54d51b8402.html</a></p>
+<p>  这里不再赘述；</p>
+</blockquote>
+<p>既然链接可以取到，那么这个爬虫就不难了！</p>
+<p>下面是一个示例的json：</p>
+<pre><code class="json">{
+    &quot;ok&quot;: 1,
+    &quot;data&quot;: {
+        &quot;cardlistInfo&quot;: {
+            &quot;containerid&quot;: &quot;1076036404087010&quot;,
+            &quot;v_p&quot;: 42,
+            &quot;show_style&quot;: 1,
+            &quot;total&quot;: 2264,
+            &quot;since_id&quot;: 4561408349971090
+        },
+        &quot;cards&quot;: [{
+            &quot;card_type&quot;: 9,
+            &quot;itemid&quot;: &quot;1076036404087010_-_4497263844203901&quot;,
+            &quot;scheme&quot;: &quot;https://m.weibo.cn/status/IEOhahDCR?mblogid=IEOhahDCR&amp;luicode=10000011&amp;lfid=1076036404087010&quot;,
+            &quot;mblog&quot;: {
+                &quot;visible&quot;: {
+                    &quot;type&quot;: 0,
+                    &quot;list_id&quot;: 0
+                },
+                &quot;created_at&quot;: &quot;04-24&quot;,
+                &quot;id&quot;: &quot;4497263844203901&quot;,
+                &quot;idstr&quot;: &quot;4497263844203901&quot;,
+                &quot;mid&quot;: &quot;4497263844203901&quot;,
+                &quot;can_edit&quot;: false,
+                &quot;show_additional_indication&quot;: 0,
+                &quot;text&quot;: &quot;在私信里收到的投稿 &lt;br /&gt;泡芙已经被网友魔改成这样了吗 =͟͟͞͞(●⁰ꈊ⁰● |||)&lt;br /&gt;你们有见过吗&lt;span class=\&quot;url-icon\&quot;&gt;&lt;img alt=[允悲] src=\&quot;https://h5.sinaimg.cn/m/emoticon/icon/default/d_yunbei-a14a649db8.png\&quot; style=\&quot;width:1em; height:1em;\&quot; /&gt;&lt;/span&gt;&lt;br /&gt;还有一个揣手手的找不到了&lt;span class=\&quot;url-icon\&quot;&gt;&lt;img alt=[允悲] src=\&quot;https://h5.sinaimg.cn/m/emoticon/icon/default/d_yunbei-a14a649db8.png\&quot; style=\&quot;width:1em; height:1em;\&quot; /&gt;&lt;/span&gt;&lt;span class=\&quot;url-icon\&quot;&gt;&lt;img alt=[允悲] src=\&quot;https://h5.sinaimg.cn/m/emoticon/icon/default/d_yunbei-a14a649db8.png\&quot; style=\&quot;width:1em; height:1em;\&quot; /&gt;&lt;/span&gt;&lt;span class=\&quot;url-icon\&quot;&gt;&lt;img alt=[允悲] src=\&quot;https://h5.sinaimg.cn/m/emoticon/icon/default/d_yunbei-a14a649db8.png\&quot; style=\&quot;width:1em; height:1em;\&quot; /&gt;&lt;/span&gt; &quot;,
+                &quot;textLength&quot;: 136,
+                &quot;source&quot;: &quot;大眼萌妹小泡芙超话&quot;,
+                &quot;favorited&quot;: false,
+                &quot;pic_types&quot;: &quot;0,0,0,0,0,0,0,0,0&quot;,
+                &quot;thumbnail_pic&quot;: &quot;http://wx3.sinaimg.cn/thumbnail/006ZoTzYgy1ge4wf88lyoj306o06owfd.jpg&quot;,
+                &quot;bmiddle_pic&quot;: &quot;http://wx3.sinaimg.cn/bmiddle/006ZoTzYgy1ge4wf88lyoj306o06owfd.jpg&quot;,
+                &quot;original_pic&quot;: &quot;http://wx3.sinaimg.cn/large/006ZoTzYgy1ge4wf88lyoj306o06owfd.jpg&quot;,
+                &quot;is_paid&quot;: false,
+                &quot;mblog_vip_type&quot;: 0,
+                &quot;user&quot;: {
+                    &quot;id&quot;: 6404087010,
+                    &quot;screen_name&quot;: &quot;香香软软的小泡芙&quot;,
+                    &quot;profile_image_url&quot;: &quot;https://tvax3.sinaimg.cn/crop.0.0.512.512.180/006ZoTzYly8g50rs2d4doj30e80e8gm1.jpg?KID=imgbed,tva&amp;Expires=1604485841&amp;ssig=NeH0xwVW5J&quot;,
+                    &quot;profile_url&quot;: &quot;https://m.weibo.cn/u/6404087010?uid=6404087010&amp;luicode=10000011&amp;lfid=1076036404087010&quot;,
+                    &quot;statuses_count&quot;: 2247,
+                    &quot;verified&quot;: true,
+                    &quot;verified_type&quot;: 0,
+                    &quot;verified_type_ext&quot;: 1,
+                    &quot;verified_reason&quot;: &quot;知名萌宠博主 微博故事原创作者&quot;,
+                    &quot;close_blue_v&quot;: false,
+                    &quot;description&quot;: &quot;ʚ♡⃛ɞ(ू•ᴗ•ू❁)欢迎来看泡芙小公举&quot;,
+                    &quot;gender&quot;: &quot;f&quot;,
+                    &quot;mbtype&quot;: 12,
+                    &quot;urank&quot;: 29,
+                    &quot;mbrank&quot;: 6,
+                    &quot;follow_me&quot;: false,
+                    &quot;following&quot;: false,
+                    &quot;followers_count&quot;: 1000209,
+                    &quot;follow_count&quot;: 402,
+                    &quot;cover_image_phone&quot;: &quot;https://wx2.sinaimg.cn/crop.0.0.640.640.640/006ZoTzYgy1ghzqqvym3aj30e80e8752.jpg&quot;,
+                    &quot;avatar_hd&quot;: &quot;https://wx3.sinaimg.cn/orj480/006ZoTzYly8g50rs2d4doj30e80e8gm1.jpg&quot;,
+                    &quot;like&quot;: false,
+                    &quot;like_me&quot;: false,
+                    &quot;badge&quot;: {
+                        &quot;panda&quot;: 1,
+                        &quot;user_name_certificate&quot;: 1,
+                        &quot;super_star_2018&quot;: 1,
+                        &quot;wenda_v2&quot;: 1,
+                        &quot;dailv_2018&quot;: 1,
+                        &quot;suishoupai_2019&quot;: 5,
+                        &quot;hongrenjie_2019&quot;: 1,
+                        &quot;hongbao_2020&quot;: 2,
+                        &quot;vpick_2020&quot;: 1,
+                        &quot;hongrenjie_2020&quot;: 1,
+                        &quot;china_2020&quot;: 1
+                    }
+                },
+                &quot;picStatus&quot;: &quot;0:1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1&quot;,
+                &quot;reposts_count&quot;: 587,
+                &quot;comments_count&quot;: 724,
+                &quot;attitudes_count&quot;: 6003,
+                &quot;pending_approval_count&quot;: 0,
+                &quot;isLongText&quot;: false,
+                &quot;reward_exhibition_type&quot;: 2,
+                &quot;reward_scheme&quot;: &quot;sinaweibo://reward?bid=1000293251&amp;enter_id=1000293251&amp;enter_type=1&amp;oid=4497263844203901&amp;seller=6404087010&amp;share=18cb5613ebf3d8aadd9975c1036ab1f47&amp;sign=f198daa7322fe7fb70e5df1472401a79&quot;,
+                &quot;hide_flag&quot;: 0,
+                &quot;mlevel&quot;: 0,
+                &quot;topic_id&quot;: &quot;1022:10080860c6d22143b3121b49324e3fde3358cf&quot;,
+                &quot;sync_mblog&quot;: true,
+                &quot;is_imported_topic&quot;: false,
+                &quot;mblogtype&quot;: 2,
+                &quot;more_info_type&quot;: 0,
+                &quot;extern_safe&quot;: 0,
+                &quot;number_display_strategy&quot;: {
+                    &quot;apply_scenario_flag&quot;: 3,
+                    &quot;display_text_min_number&quot;: 1000000,
+                    &quot;display_text&quot;: &quot;100万+&quot;
+                },
+                &quot;enable_comment_guide&quot;: true,
+                &quot;content_auth&quot;: 0,
+                &quot;pic_num&quot;: 14,
+                &quot;alchemy_params&quot;: {
+                    &quot;ug_red_envelope&quot;: false
+                },
+                &quot;mblog_menu_new_style&quot;: 0,
+                &quot;edit_config&quot;: {
+                    &quot;edited&quot;: false
+                },
+                &quot;isTop&quot;: 1,
+                &quot;weibo_position&quot;: 1,
+                &quot;show_attitude_bar&quot;: 0,
+                &quot;raw_text&quot;: &quot;在私信里收到的投稿 \n泡芙已经被网友魔改成这样了吗 =͟͟͞͞(●⁰ꈊ⁰● |||)\n你们有见过吗[允悲]\n还有一个揣手手的找不到了[允悲][允悲][允悲] ​​​&quot;,
+                &quot;bid&quot;: &quot;IEOhahDCR&quot;,
+                &quot;pics&quot;: [{
+                    &quot;pid&quot;: &quot;006ZoTzYgy1ge4wf88lyoj306o06owfd&quot;,
+                    &quot;url&quot;: &quot;https://wx3.sinaimg.cn/orj360/006ZoTzYgy1ge4wf88lyoj306o06owfd.jpg&quot;,
+                    &quot;size&quot;: &quot;orj360&quot;,
+                    &quot;geo&quot;: {
+                        &quot;width&quot;: &quot;240&quot;,
+                        &quot;height&quot;: &quot;240&quot;,
+                        &quot;croped&quot;: false
+                    },
+                    &quot;large&quot;: {
+                        &quot;size&quot;: &quot;large&quot;,
+                        &quot;url&quot;: &quot;https://wx3.sinaimg.cn/large/006ZoTzYgy1ge4wf88lyoj306o06owfd.jpg&quot;,
+                        &quot;geo&quot;: {
+                            &quot;width&quot;: &quot;240&quot;,
+                            &quot;height&quot;: &quot;240&quot;,
+                            &quot;croped&quot;: false
+                        }
+                    }
+                }]
+            }
+        }]
+    }
+}</code></pre>
+<p>可见我们的博文都在data.cards中，而图片在每个cards的pics.large中，链接就在图片的url中；</p>
+<hr>
+<h4 id="②-爬虫逻辑"><a href="#②-爬虫逻辑" class="headerlink" title="② 爬虫逻辑"></a><strong>② 爬虫逻辑</strong></h4><p>首先我们初始化一个空的list，用于存放爬虫完成的图片地址，方便后续下载；</p>
+<p>随后，对于传入的uid，我们每隔一定时间（防止被封）请求一页的数据，并判断和寻找符合要求的图片链接放入list中；</p>
+<p>最后爬虫完成后，遍历list进行图片下载即可！</p>
+<p>需要注意的有以下几点：</p>
+<p><strong>1.json中图片链接定位；</strong></p>
+<p>由上一节可知，图片链接在<code>data.cards[i].pics.large.url</code>中；</p>
+<p><strong>2.爬虫停止逻辑</strong></p>
+<p>微博中只能置顶单个推文，而除了第一条推文之外，其他的推文一定是按时间降序排列的；</p>
+<p>所以对于日期范围下载，我们只需要判断当前页的最后一个cards的日期小于规定的startTime就可以停止了！</p>
+<p><strong>3.日期处理</strong></p>
+<p>博客中的日期在<code>mblog.create_at</code>字段中，但是不是标准的YYYY-MM-DD hh:mm:ss的格式，而是包括了：<code>秒前、分钟前、小时前、昨天</code>等说明，所以我们还要将这些时间统一处理转换；</p>
+<hr>
+<h4 id="③-编写主进程"><a href="#③-编写主进程" class="headerlink" title="③ 编写主进程"></a><strong>③ 编写主进程</strong></h4><p>由于是一个小的工具软件，在这里我就没有对文件进行拆分：基本上所有的逻辑都在background.js中了！</p>
+<p>下面是代码：</p>
+<p>background.js</p>
+<pre><code class="javascript">&#39;use strict&#39;
+
+/* global __static */
+import {app, protocol, BrowserWindow, ipcMain, dialog} from &#39;electron&#39;
+import {createProtocol} from &#39;vue-cli-plugin-electron-builder/lib&#39;
+import installExtension, {VUEJS_DEVTOOLS} from &#39;electron-devtools-installer&#39;
+import request from &#39;request&#39;
+import util from &#39;util&#39;
+import path from &#39;path&#39;
+import fs from &#39;fs&#39;
+import {formatDate} from &quot;element-ui/src/utils/date-util&quot;;
+
+const getPromise = util.promisify(request.get);
+const isDevelopment = process.env.NODE_ENV !== &#39;production&#39;
+
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+    {scheme: &#39;app&#39;, privileges: {secure: true, standard: true}}
+])
+
+let mainList = []
+
+async function createWindow() {
+    // Create the browser window.
+    const win = new BrowserWindow({
+        width: 450,
+        height: 650,
+        webPreferences: {
+            nodeIntegration: true
+        },
+        icon: path.join(__static, &#39;favicon.ico&#39;)
+    })
+
+    if (process.env.WEBPACK_DEV_SERVER_URL) {
+        // Load the url of the dev server if in development mode
+        await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        if (!process.env.IS_TEST) win.webContents.openDevTools()
+    } else {
+        createProtocol(&#39;app&#39;)
+        // Load the index.html when not in development
+        win.loadURL(&#39;app://./index.html&#39;)
+    }
+
+    await regCrawlList();
+}
+
+function regCrawlList() {
+    ipcMain.on(&#39;crawl-list&#39;, async (e, userId, startDate, endDate) =&gt; {
+        // re-init list
+        mainList = []
+        // crawl-index
+        let pageIndex = 1;
+        // 防封，分析一次页面休息+1S
+        const interval = 1000;
+
+        // 获取全部url
+        while (await getAllImageUrl(userId, startDate, endDate, pageIndex, e.sender) &gt; 0) {
+            console.log(&#39;分析微博：&#39; + pageIndex);
+            pageIndex++;
+            await sleep(interval);
+        }
+
+        // 获取完毕，触发下载
+        handleList(mainList, e.sender)
+    })
+}
+
+async function getAllImageUrl(userId, startDate, endDate, page, sender) {
+    let url = &quot;https://m.weibo.cn/api/container/getIndex?count=25&amp;page=&quot; + page + &quot;&amp;containerid=&quot; + userIdToContainerId(userId);
+
+    let cards = [];
+    let lastCreateAt = new Date();
+    await getPromise(url).then((value) =&gt; {
+        console.log(value.body)
+        let jsonObj = JSON.parse(value.body);
+        cards = jsonObj.data.cards;
+        for (let i = 0; i &lt; cards.length; i++) {
+            let mblog = cards[i].mblog;
+            if (mblog != null) {
+                lastCreateAt = mblog.created_at.toString()
+                lastCreateAt = getDate(transWeiboDateStrToTimeStamp(lastCreateAt))
+                if (!checkDate(lastCreateAt, startDate, endDate)) {
+                    console.log(lastCreateAt, startDate, endDate)
+                    continue;
+                }
+                let pics = mblog.pics;
+                if (pics != null) {
+                    for (let j = 0; j &lt; pics.length; j++) {
+                        let large = pics[j].large;
+                        if (large != null) {
+                            let iUrl = large.url
+                            mainList.push({
+                                &quot;url&quot;: iUrl,
+                                &quot;date&quot;: formatDate(lastCreateAt),
+                            })
+                        }
+                    }
+                }
+            }
+        }
+        sender.send(&#39;crawl-list-add&#39;, page, mainList.length)
+    })
+
+    // 如果最后一个微博已经小于开始，可直接退出；
+    return cards.length === 0 ? 0 : (lastCreateAt.getTime() &gt;= startDate.getTime());
+}
+
+function handleList(urlList, sender) {
+    // 去重
+    urlList = Array.from(new Set(urlList))
+
+    // 空数组直接取消下载
+    if (urlList.length === 0) {
+        sender.send(&#39;crawl-download-canceled&#39;)
+    }
+
+    dialog
+        .showOpenDialog({properties: [&#39;openFile&#39;, &#39;openDirectory&#39;, &#39;multiSelections&#39;]})
+        .then(async res =&gt; {
+            if (res.canceled) {
+                sender.send(&#39;crawl-download-canceled&#39;)
+            }
+
+            let savePathPrefix = res.filePaths[0]
+            if (savePathPrefix == null || savePathPrefix === &quot;&quot;) {
+                return
+            }
+            for (let i = 0; i &lt; urlList.length; i++) {
+                let imgPath = path.join(savePathPrefix, (i + 1) + &#39;_&#39; + urlList[i].date + getSuffix(urlList[i].url));
+                await sleep(1000)
+                downloadAndSave(urlList[i].url, imgPath, sender)
+            }
+        })
+}
+
+function checkDate(checkDate, startDate, endDate) {
+    return checkDate.getTime() &gt;= startDate.getTime() &amp;&amp; checkDate.getTime() &lt;= endDate.getTime();
+}
+
+function getDate(dateTimestamp) {
+    return new Date(dateTimestamp);
+}
+
+function transWeiboDateStrToTimeStamp(weiboDateStr) {
+    console.log(&quot;translate before: &quot; + weiboDateStr)
+    if (weiboDateStr == null || &quot;&quot; === weiboDateStr) {
+        return 0;
+    }
+    if (weiboDateStr.search(&quot;秒前&quot;) &gt;= 0) {
+        weiboDateStr = weiboDateStr.replace(&quot;秒前&quot;, &quot;&quot;);
+        let second = parseInt(weiboDateStr);
+        return new Date().getTime() - second * 1000;
+    }
+    if (weiboDateStr.search(&quot;分钟前&quot;) &gt;= 0) {
+        weiboDateStr = weiboDateStr.replace(&quot;分钟前&quot;, &quot;&quot;);
+        let minite = parseInt(weiboDateStr);
+        return new Date().getTime() - minite * 1000 * 60;
+    }
+    if (weiboDateStr.search(&quot;小时前&quot;) &gt;= 0) {
+        weiboDateStr = weiboDateStr.replace(&quot;小时前&quot;, &quot;&quot;);
+        let hours = parseInt(weiboDateStr);
+        return new Date().getTime() - hours * 1000 * 3600;
+    }
+    if (weiboDateStr.search(&quot;昨天&quot;) &gt;= 0) {
+        return new Date().getTime() - 1000 * 60 * 60 * 24
+    }
+    if (weiboDateStr.search(&#39;-&#39;) &gt;= 0) {
+        if (!weiboDateStr.startsWith(&quot;20&quot;)) {
+            let year = new Date().getFullYear();
+            weiboDateStr = year + &quot;-&quot; + weiboDateStr;
+        }
+        try {
+            return parseDate(weiboDateStr).getTime();
+        } catch (e) {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+function parseDate(input, format) {
+    format = format || &#39;yyyy-mm-dd&#39;; // default format
+    let parts = input.match(/(\d+)/g),
+        i = 0, fmt = {};
+    // extract date-part indexes from the format
+    format.replace(/(yyyy|dd|mm)/g, function (part) {
+        fmt[part] = i++;
+    });
+
+    return new Date(parts[fmt[&#39;yyyy&#39;]], parts[fmt[&#39;mm&#39;]] - 1, parts[fmt[&#39;dd&#39;]]);
+}
+
+function getSuffix(iUrl) {
+    if (!iUrl.substring(iUrl.lastIndexOf(&quot;/&quot;)).includes(&quot;.&quot;)) {
+        return &quot;.jpg&quot;;
+    }
+    try {
+        return iUrl.substring(iUrl.lastIndexOf(&quot;.&quot;));
+    } catch (e) {
+        // default
+        console.error(e)
+    }
+    return &quot;.jpg&quot;;
+}
+
+function downloadAndSave(fileUrl, targetSavePath, sender) {
+    let out = fs.createWriteStream(targetSavePath);
+    request({
+        method: &#39;GET&#39;, uri: fileUrl
+    }).on(&#39;end&#39;, function () {
+        sender.send(&#39;crawl-download&#39;, fileUrl)
+    }).pipe(out);
+}
+
+function userIdToContainerId(userId) {
+    if (userId === null) {
+        return &quot;0&quot;;
+    }
+    return &quot;107603&quot; + userId;
+}
+
+function sleep(ms) {
+    return new Promise(resolve =&gt; setTimeout(resolve, ms))
+}
+
+// Quit when all windows are closed.
+app.on(&#39;window-all-closed&#39;, () =&gt; {
+    // On macOS it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    if (process.platform !== &#39;darwin&#39;) {
+        app.quit()
+    }
+})
+
+app.on(&#39;activate&#39;, () =&gt; {
+    // On macOS it&#39;s common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on(&#39;ready&#39;, async () =&gt; {
+    if (isDevelopment &amp;&amp; !process.env.IS_TEST) {
+        // Install Vue Devtools
+        try {
+            await installExtension(VUEJS_DEVTOOLS)
+        } catch (e) {
+            console.error(&#39;Vue Devtools failed to install:&#39;, e.toString())
+        }
+    }
+    createWindow()
+})
+
+// Exit cleanly on request from parent process in development mode.
+if (isDevelopment) {
+    if (process.platform === &#39;win32&#39;) {
+        process.on(&#39;message&#39;, (data) =&gt; {
+            if (data === &#39;graceful-exit&#39;) {
+                app.quit()
+            }
+        })
+    } else {
+        process.on(&#39;SIGTERM&#39;, () =&gt; {
+            app.quit()
+        })
+    }
+}</code></pre>
+<p>首先，主进程中的mainList就是用来存放，爬虫后图片的链接的；</p>
+<p>随后createWindow创建了一个窗口，并声明了窗口大小、icon等内容，在最后通过调用regCrawlList函数注册了一个<code>crawl-list</code>事件；</p>
+<p>在regCrawlList函数中，我们给ipcMain注册了一个<code>crawl-list</code>事件：该事件接受渲染进程中按钮点击触发的事件，并接收渲染进程中传送来的<code>userId, startDate, endDate</code>，调用getAllImageUrl执行爬虫逻辑；</p>
+<p>在getAllImageUrl中，我们使用了一些辅助函数完成了在第二步中讲述的爬虫逻辑；同时，每当加入一页的图片链接，我们的主进程调用send方法，触发<code>crawl-list-add</code>事件，向渲染进程报告当前爬虫的页数，以及已经爬取到的图片数量；</p>
+<p>爬虫完成后，在regCrawlList函数的最后调用handleList，触发下载事件；</p>
+<p>在handleList中，首先进行了链接去重，随后使用<code>dialog.showOpenDialog({properties: [&#39;openFile&#39;, &#39;openDirectory&#39;, &#39;multiSelections&#39;]})</code>打开了一个保存文件对话框；然后，计算每个文件的保存路径，并使用node中的fs和request进行下载并保存；并且每完成一个下载任务，会触发<code>crawl-download</code>事件，通知渲染进程进行进度条的渲染；</p>
+<hr>
+<h4 id="④-编写渲染端"><a href="#④-编写渲染端" class="headerlink" title="④ 编写渲染端"></a><strong>④ 编写渲染端</strong></h4><p>渲染端就是典型的Vue项目以及通过ipcRenderer处理的一些事件；</p>
+<p>下面是三个渲染端涉及到的文件：</p>
+<p>main.js</p>
+<pre><code class="javascript">import Vue from &#39;vue&#39;
+import ElementUI from &#39;element-ui&#39;;
+import &#39;element-ui/lib/theme-chalk/index.css&#39;;
+import App from &#39;./App.vue&#39;
+
+Vue.use(ElementUI);
+
+Vue.config.productionTip = false
+
+new Vue({
+    render: function (h) {
+        return h(App)
+    },
+}).$mount(&#39;#app&#39;)</code></pre>
+<p>App.vue</p>
+<pre><code class="vue">&lt;template&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;img alt=&quot;Vue logo&quot; src=&quot;./assets/logo.png&quot;&gt;
+        &lt;Crawler/&gt;
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+    import Crawler from &#39;./components/Crawler.vue&#39;
+
+    export default {
+        name: &#39;App&#39;,
+        components: {
+            Crawler
+        }
+    }
+&lt;/script&gt;
+
+&lt;style&gt;
+    #app {
+        font-family: Avenir, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 60px;
+    }
+&lt;/style&gt;</code></pre>
+<p>Crawler.vue</p>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div id=&quot;container&quot;&gt;
+    &lt;el-form ref=&quot;form&quot; :model=&quot;form&quot; label-width=&quot;80px&quot;&gt;
+      &lt;el-form-item label=&quot;用户Id&quot;&gt;
+        &lt;el-input v-model=&quot;form.userId&quot;
+                  placeholder=&quot;请输入Id&quot;
+                  style=&quot;width: 95%&quot;
+                  clearable&gt;
+        &lt;/el-input&gt;
+      &lt;/el-form-item&gt;
+      &lt;el-form-item label=&quot;发表时间&quot;&gt;
+        &lt;el-col :span=&quot;11&quot;&gt;
+          &lt;el-date-picker type=&quot;date&quot; placeholder=&quot;开始日期&quot; v-model=&quot;form.date1&quot;
+                          style=&quot;width: 100%;&quot;&gt;&lt;/el-date-picker&gt;
+        &lt;/el-col&gt;
+        &lt;el-col class=&quot;line&quot; :span=&quot;2&quot;&gt;-&lt;/el-col&gt;
+        &lt;el-col :span=&quot;11&quot;&gt;
+          &lt;el-date-picker type=&quot;date&quot; placeholder=&quot;结束日期&quot; v-model=&quot;form.date2&quot;
+                          style=&quot;width: 100%;&quot;&gt;&lt;/el-date-picker&gt;
+        &lt;/el-col&gt;
+      &lt;/el-form-item&gt;
+      &lt;el-form-item&gt;
+        &lt;el-button id=&quot;submitBtn&quot; type=&quot;primary&quot; @click=&quot;onSubmit&quot; :disabled=&quot;btnDisabledStatus&quot;&gt;立即下载&lt;/el-button&gt;
+      &lt;/el-form-item&gt;
+    &lt;/el-form&gt;
+
+    &lt;div id=&quot;crawl-list&quot; v-if=&quot;showCrawlList&quot;&gt;
+      &lt;span v-text=&quot;crawlListText&quot;&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div id=&quot;process-bar&quot; v-if=&quot;showProcessBar&quot;&gt;
+      &lt;el-progress
+          :text-inside=&quot;true&quot;
+          :percentage=&quot;$data.downloadPercent&quot;
+          :stroke-width=&quot;22&quot;
+          :color=&quot;processBarColor&quot;
+      &gt;&lt;/el-progress&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+#container {
+  margin-top: 20px;
+}
+
+#submitBtn {
+  margin-left: -80px;
+}
+
+#process-bar {
+  width: 85%;
+  margin-left: 42px;
+  margin-top: 15px;
+}
+
+&lt;/style&gt;
+
+&lt;script&gt;
+const {ipcRenderer} = window.require(&#39;electron&#39;)
+
+export default {
+  name: &#39;Crawler&#39;,
+  data() {
+    return {
+      form: {
+        userId: &#39;&#39;,
+        date1: &#39;&#39;,
+        date2: &#39;&#39;
+      },
+      crawlListLength: 0,
+      downloaded: 0,
+      downloadPercent: 0,
+      showCrawlList: false,
+      btnDisabledStatus: false,
+      showProcessBar: false,
+      processBarColor: &#39;#5cb87a&#39;,
+      crawlListText: &#39;&#39;
+    }
+  },
+  mounted: function () {
+    this.listenAddCrawlList();
+    this.listenDownloadList();
+    this.listenDownloadCanceled();
+  },
+  methods: {
+    onSubmit() {
+      this.downloaded = 0;
+      console.log(this.form.userId)
+      ipcRenderer.send(&#39;crawl-list&#39;, this.form.userId, this.form.date1, this.form.date2)
+      if (!this.showCrawlList) {
+        this.showCrawlList = true
+      }
+      if (!this.btnDisabledStatus) {
+        this.btnDisabledStatus = true;
+      }
+    },
+    listenAddCrawlList() {
+      let that = this
+      ipcRenderer.on(&#39;crawl-list-add&#39;, function (e, pageIndex, mainListLength) {
+        that.crawlListLength = mainListLength;
+        that.crawlListText = &#39;目前扫描&#39; + pageIndex + &quot;页，预计下载图片&quot; + mainListLength + &quot;张！&quot;
+      })
+    },
+    listenDownloadList() {
+      let that = this
+      that.downloaded = 0
+      ipcRenderer.on(&#39;crawl-download&#39;, function () {
+        if (!that.showProcessBar) {
+          that.showProcessBar = true
+        }
+        that.downloaded++;
+        that.downloadPercent = Number((that.downloaded / that.crawlListLength * 100).toFixed(2))
+
+        // 下载完成
+        console.log(that.downloaded, that.crawlListLength)
+
+        if (that.downloaded === that.crawlListLength) {
+          that.btnDisabledStatus = false;
+          that.downloaded = 0;
+          that.crawlListText = &#39;下载已完成&#39;;
+        }
+      })
+    },
+    listenDownloadCanceled() {
+      let that = this
+      ipcRenderer.on(&#39;crawl-download-canceled&#39;, function () {
+        that.btnDisabledStatus = false;
+        that.downloaded = 0;
+      })
+    }
+  },
+};
+&lt;/script&gt;</code></pre>
+<p>main.js和App.vue就是通常的Vue项目，几乎无改动，下面我们重点看Crawler.vue；</p>
+<p>在template中我们定义了：</p>
+<ul>
+<li>一个表单：用于接收用户参数以及触发爬虫和下载的按钮；</li>
+<li>一个list：显示当前内容；</li>
+<li>一个process-bar：显示当前下载进度；</li>
+</ul>
+<p>在这个组件中，我们定义了几个参数：</p>
+<ul>
+<li>form：<ul>
+<li>userId：微博用户uid；</li>
+<li>date1：开始日期；</li>
+<li>date2：结束日期；</li>
+</ul>
+</li>
+<li>crawlListLength：当前图片链接个数；</li>
+<li>downloaded：已下载图片个数；</li>
+<li>downloadPercent：已下载百分比；</li>
+<li>showCrawlList：是否显示通知内容；</li>
+<li>btnDisabledStatus：提交按钮可用？；</li>
+<li>showProcessBar：是否显示进度条；</li>
+<li>crawlListText：通知内容；</li>
+</ul>
+<p>在mounted中我们触发了三个函数：</p>
+<ul>
+<li>this.listenAddCrawlList();</li>
+<li>this.listenDownloadList();</li>
+<li>this.listenDownloadCanceled();</li>
+</ul>
+<p>分别监听了<code>crawl-list-add</code>、<code>crawl-download</code>以及<code>crawl-download-canceled</code>事件；</p>
+<p>最后的onSubmit函数触发了主进程中的<code>crawl-list</code>事件，开始爬虫；</p>
+<p>至此，主进程和渲染进程都开发完毕；</p>
+<hr>
+<h4 id="⑤-启动测试"><a href="#⑤-启动测试" class="headerlink" title="⑤ 启动测试"></a><strong>⑤ 启动测试</strong></h4><p>在开发时就可以使用<code>npm run electron:serve</code>进行热部署开发；</p>
+<p>我们在软件中填入userId，并选择时间日期，最后点击“立即下载”；</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_1.png" alt="weiboPicDownloader_1.png"></p>
+<p>稍等片刻，爬虫完成后，会弹出保存窗口，选择下载目录后即可开始下载：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_2.png" alt="weiboPicDownloader_2.png"></p>
+<p>开始下载：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_3.png" alt="weiboPicDownloader_3.png"></p>
+<p>完成下载：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/weiboPicDownloader_4.png" alt="weiboPicDownloader_4.png"></p>
+<p>最后即可在你选择的目录找的下载的图片啦！</p>
+<br>
+
+<h3 id="打包应用"><a href="#打包应用" class="headerlink" title="打包应用"></a><strong>打包应用</strong></h3><p>本项目使用了<code>vue-cli-plugin-electron-builder</code>进行打包；</p>
+<p>使用起来也非常简单：</p>
+<ul>
+<li>win平台：<code>npm run electron:build -- --win nsis</code></li>
+<li>mac平台：<code>npm run electron:build -- --mac</code></li>
+<li>linux平台：<code>npm run electron:build -- --linux deb</code></li>
+</ul>
+<blockquote>
+<p>  Vue CLI Plugin Electron Builder官方文档：</p>
+<p>  <a href="https://nklayman.github.io/vue-cli-plugin-electron-builder/" target="_blank" rel="noopener">Vue CLI Plugin Electron Builder</a></p>
+</blockquote>
+<p>其他使用方法可见上方文档；</p>
+<blockquote>
+<p>  由于Electron的Linux和Mac的编译地址down掉，目前还没有恢复！</p>
+<p>  所以mac和linux上述命令会报错，类似于：</p>
+<pre><code class="bash">  • cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+  attempt=0
+  waitTime=2
+  • cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+  attempt=1
+  waitTime=4
+  ……
+  ⨯ Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443: connectex: A connection attempt failed because the connected party did not properly respond after a
+  period of time, or established connection failed because connected host has failed to respond.
+  ⨯ C:\Users\mcw\AppData\Roaming\npm\node_modules\electron-builder\node_modules\app-builder-bin\win\x64\app-builder.exe exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE stackTrace=..</code></pre>
+<p>  见下面的issue：</p>
+<ul>
+<li><a href="https://github.com/electron-userland/electron-builder/issues/4318" target="_blank" rel="noopener">Unable to build AppImage on Windows (service.electron.build)</a></li>
+<li><a href="https://github.com/electron-userland/electron-build-service/issues/9" target="_blank" rel="noopener">Error: Cannot get, wait error=Get https://service.electron.build/find-build-agent?no-cache=1f42oro: dial tcp 51.15.76.176:443:</a></li>
+</ul>
+</blockquote>
+<blockquote>
+<p>  解决方案见：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2020/11/08/在Win10下交叉编译Electron项目/">在Win10下交叉编译Electron项目</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h3><p>由于我主要是做后端开发相关的工作，前端并不是我的强项（最多也就是用js写一下node），所以有些功能可能实现的并不是很好，但是基本的需求已经完全满足了；</p>
+<p>源代码: </p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/weiboPicDownloader" target="_blank" rel="noopener">https://github.com/JasonkayZK/weiboPicDownloader</a></li>
+</ul>
+<p>有兴趣的可以去看看，给个star~</p>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/11/04/手把手教你使用Electron开发新浪微博免登录图片下载器/" title="https://jasonkayzk.github.io/2020/11/04/手把手教你使用Electron开发新浪微博免登录图片下载器/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/11/04/手把手教你使用Electron开发新浪微博免登录图片下载器/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725337018"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

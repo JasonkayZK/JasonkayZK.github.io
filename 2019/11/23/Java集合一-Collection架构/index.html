@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Java集合一-Collection架构 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="本篇总结了Java中提供的集合类的相关知识">
+<meta name="keywords" content="Java基础,面试总结,集合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java集合一-Collection架构">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="本篇总结了Java中提供的集合类的相关知识">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Collection%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.739Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java集合一-Collection架构">
+<meta name="twitter:description" content="本篇总结了Java中提供的集合类的相关知识">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Collection%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725359809">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?21">
+    
+    <h1>Java集合一-Collection架构</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年11月23日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 25 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Java源码/">Java源码</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java基础/">Java基础</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/集合/">集合</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/面试总结/">面试总结</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-集合总体框架概述"><span class="toc-text">一. 集合总体框架概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Collection-框架概述"><span class="toc-text">二. Collection 框架概述</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>本篇总结了Java中提供的集合类的相关知识, 即java.util.*包中的集合类.</p>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一-集合总体框架概述"><a href="#一-集合总体框架概述" class="headerlink" title="一. 集合总体框架概述"></a>一. 集合总体框架概述</h2><p>Java集合是java 提供的工具包<code>java.util.*</code>, 包含了常用的数据结构：集合、链表、队列、栈、数组、映射等。</p>
+<p>Java集合主要可以划分为4个部分：</p>
+<ul>
+<li>List列表;</li>
+<li>Set集合;</li>
+<li>Map映射;</li>
+<li>工具类(Iterator迭代器、Enumeration枚举类、Arrays和Collections)</li>
+</ul>
+<p>Java集合工具包框架图(如下)：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/Collection%E6%A1%86%E6%9E%B6%E7%BB%93%E6%9E%84.jpg" alt="Collection框架结构.jpg"></p>
+<p> 看上面的框架图，先抓住它的主干，即Collection和Map。</p>
+<p><strong>① Collection</strong></p>
+<p>Collection是一个接口，是高度抽象出来的集合，它包含了集合的基本操作和属性。AbstractCollection抽象类，它实现了Collection中的绝大部分函数;</p>
+<p>Collection包含了List和Set两大分支。  AbstractList和AbstractSet都继承于AbstractCollection; 具体的List实现类继承于AbstractList，而Set的实现类则继承于AbstractSet。</p>
+<p>(1) List是一个<strong>有序</strong>的队列，每一个元素都有它的索引。第一个元素的索引值是0. List的实现类有: LinkedList, ArrayList, Vector, Stack</p>
+<p>(2) Set是一个不允许有重复元素的集合. Set的实现类有: HashSet和TreeSet. HashSet依赖于HashMap，它实际上是通过HashMap实现的；TreeSet依赖于TreeMap，它实际上是通过TreeMap实现的。</p>
+<p><strong>② Map</strong></p>
+<p>Map是一个映射接口，即key-value键值对。 </p>
+<p>AbstractMap是个抽象类，它实现了Map接口中的大部分API。HashMap，TreeMap，WeakHashMap都是继承于AbstractMap。<br>   Hashtable虽然继承于Dictionary，但它实现了Map接口。</p>
+<p>接下来，再看Iterator。</p>
+<p><strong>③ Iterator</strong></p>
+<p>Iterator是遍历集合的工具，即我们通常通过Iterator迭代器来遍历集合。我们说Collection依赖于Iterator，是因为Collection的实现类都要实现iterator()函数，返回一个Iterator对象. ListIterator是专门为遍历List而存在的。</p>
+<p><strong>④ Enumeration</strong></p>
+<p>再看Enumeration，它是JDK 1.0引入的抽象类。作用和Iterator一样，也是遍历集合；但是Enumeration的功能要比Iterator少。在上面的框图中，Enumeration只能在Hashtable, Vector, Stack中使用。</p>
+<p><strong>⑤ Arrays和Collections</strong></p>
+<p>最后，看Arrays和Collections。它们是操作数组、集合的两个工具类。</p>
+<br>
+
+<h2 id="二-Collection-框架概述"><a href="#二-Collection-框架概述" class="headerlink" title="二. Collection 框架概述"></a>二. Collection 框架概述</h2><p>Collection实现了Iterable接口, 先来看一下Iterable:</p>
+<pre><code class="java">public interface Iterable&lt;T&gt; {
+
+    Iterator&lt;T&gt; iterator();
+
+    default void forEach(Consumer&lt;? super T&gt; action) {
+        Objects.requireNonNull(action);
+        for (T t : this) {
+            action.accept(t);
+        }
+    }
+
+    default Spliterator&lt;T&gt; spliterator() {
+        return Spliterators.spliteratorUnknownSize(iterator(), 0);
+    }
+}
+</code></pre>
+<p>在Iterable接口中, 定义了一个Interator类型的属性(接口中默认为public static final类型), 和forEach以及seliterator方法, 并通过default声明了默认方法</p>
+<blockquote>
+<br>
+
+<p><strong>备注: default函数</strong></p>
+<p>在java8之前 ,一个类实现一个接口需要实现接口所有的方法. </p>
+<p>但是这样会导致一个问题: 当一个接口有很多的实现类的时候,修改这个接口就变成了一个非常麻烦的事,需要修改这个接口的所有实现类!</p>
+<p>不过在java8中这个问题得到了解决: default函数</p>
+<p>看下面这个例子:</p>
+<pre><code class="java">interface DefaultInterface {
+   int operate(int a, int b);
+
+   default int addition(int a, int b) {
+       return a + b;
+   }
+}
+
+public class Test implements DefaultInterface {
+
+   @Override
+   public int operate(int a, int b) {
+       return a - b;
+   }
+
+   public static void main(String[] args) {
+       Test defaultMethodTest = new Test();
+       System.out.println(&quot;5 + 3 = &quot; + defaultMethodTest.addition(5, 3)); // 5 + 3 = 8
+       System.out.println(&quot;5 - 3 = &quot; + defaultMethodTest.operate(5, 3)); // 5 - 3 = 2
+   }
+}</code></pre>
+<p>可以看到 DefaultInterface 接口的addition方法用default进行了修饰,并且有自己的默认实现. </p>
+<p>而Test仅仅实现DefaultInterface 接口一个方法, 却不用实现addition方法.</p>
+<p><font color="#ff0000">如果我们对一个接口进行修改,而又不想修改已经有的实现类的时候就变得非常有用!</font></p>
+</blockquote>
+<p><strong>1.</strong> <strong>Iterator</strong></p>
+<p>Iterator 是一个接口，它是集合的迭代器, 集合可以通过Iterator去遍历集合中的元素。</p>
+<p>Iterator提供的API接口，包括：</p>
+<ul>
+<li><strong>是否存在下一个元素</strong>: boolean hasNext()</li>
+<li><strong>获取下一个元素</strong>: E next()</li>
+<li><strong>删除当前元素</strong>: void remove()</li>
+</ul>
+<pre><code class="java">public interface Iterator&lt;E&gt; {
+
+    boolean hasNext();
+    E next();
+
+    // JDK 8加入默认方法(之前只有声明)
+    default void remove() { throw new UnsupportedOperationException(&quot;remove&quot;); }
+
+    // JDK 8加入
+    default void forEachRemaining(Consumer&lt;? super E&gt; action) {
+        Objects.requireNonNull(action);
+        while (hasNext())
+            action.accept(next());
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>注意:</strong></p>
+<p><strong>① Iterator遍历Collection时，是 fail-fast 机制的</strong>: <font color="#0000ff">当某一个线程A通过iterator去遍历某集合的过程中，若该集合的内容被其他线程所改变了；那么线程A访问集合时，就会抛出ConcurrentModificationException异常，产生fail-fast事件;</font></p>
+<p><strong>② JDK 8中加入了forEachRemaining()默认方法.</strong></p>
+<ol>
+<li><p><strong>与forEach()方法的区别在于:</strong> <font color="#0000ff">可以多次调用forEach，并将元素进行多次传递。而forEachRemaining()使用迭代器Iterator的所有元素之后，第二次调用它将不会做任何事情，因为不再有下一个元素!</font></p>
+</li>
+<li><p><strong>forEachRemaining可使用Lambda表达式来遍历集合元素</strong>, 例如:</p>
+<pre><code class="java">public class Test {
+
+   public static void main(String[] args) {
+       List&lt;String&gt; list = new ArrayList&lt;&gt;();
+       list.add(&quot;1&quot;);
+       list.add(&quot;make&quot;);
+       list.add(&quot;2&quot;);
+       Iterator&lt;String&gt; it=list.iterator();
+
+       it.forEachRemaining(System.out::println); // 1 make 2
+       it.forEachRemaining(System.out::println); // 已经没有输出了
+   }
+
+}</code></pre>
+</li>
+</ol>
+</blockquote>
+<p><strong>2. ListIterator</strong></p>
+<p>ListIterator 是一个<strong>继承于Iterator的接口</strong>，它是队列迭代器, <strong>专门用于遍历List，能提供向前向后遍历。</strong></p>
+<p>相比于Iterator它新增了: </p>
+<ul>
+<li>添加</li>
+<li>是否存在上一个元素</li>
+<li>获取上一个元素等;</li>
+</ul>
+<pre><code class="java">public interface ListIterator&lt;E&gt; extends Iterator&lt;E&gt; {
+
+    /* Iterator接口中的方法 */
+    boolean hasNext();
+    E next();
+    void remove();
+
+    /* ListIterator中定义的方法 */
+    boolean hasPrevious();
+    E previous();
+    int nextIndex();
+    int previousIndex();
+    void set(E e);
+    void add(E e);
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注: ListIterator相比于Iterator只是扩充了一些针对于List遍历的方法而已!</strong></p>
+</blockquote>
+<p><strong>3. Collection</strong></p>
+<p>Collection 是一个接口，是高度抽象出来的集合，它包含了集合的基本操作：添加、删除、清空、遍历(读取)、是否为空、获取大小、是否保护某元素等等；</p>
+<p><font color="#0000ff">Collection 接口的所有子类(直接子类和间接子类)都必须实现2种构造函数：不带参数的构造函数 和 参数为Collection的构造函数。带参数的构造函数，可以用来转换Collection的类型;</font></p>
+<pre><code class="java">public interface Collection&lt;E&gt; extends Iterable&lt;E&gt; { 
+    int size(); 
+    boolean isEmpty(); 
+    boolean contains(Object o); 
+    Iterator&lt;E&gt; iterator(); 
+    Object[] toArray();
+
+    // String[] y = x.toArray(new String[0]);
+    &lt;T&gt; T[] toArray(T[] a); 
+
+    boolean add(E e); 
+    boolean remove(Object o); 
+    boolean containsAll(Collection&lt;?&gt; c); 
+    boolean addAll(Collection&lt;? extends E&gt; c); 
+    boolean removeAll(Collection&lt;?&gt; c); 
+    boolean retainAll(Collection&lt;?&gt; c); 
+    void clear(); 
+    boolean equals(Object o); 
+    int hashCode(); 
+
+    // JDK 11新添加
+    default &lt;T&gt; T[] toArray(IntFunction&lt;T[]&gt; generator) { 
+        return toArray(generator.apply(0));
+    }
+
+    // JDK 8添加
+    default boolean removeIf(Predicate&lt;? super E&gt; filter) {
+        Objects.requireNonNull(filter);
+        boolean removed = false;
+        final Iterator&lt;E&gt; each = iterator();
+        while (each.hasNext()) {
+            if (filter.test(each.next())) {
+                each.remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    // JDK 8新添加
+    @Override
+    default Spliterator&lt;E&gt; spliterator() {
+        return Spliterators.spliterator(this, 0);
+    }
+
+    // JDK 8新添加
+    default Stream&lt;E&gt; stream() {
+        return StreamSupport.stream(spliterator(), false);
+    }    
+    // JDK 8新添加
+    default Stream&lt;E&gt; parallelStream() {
+        return StreamSupport.stream(spliterator(), true);
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注:</strong> 可以看到, 除了一些正常的增删改查操作之外, JDK8/11还加入了一些流操作</p>
+</blockquote>
+<p><strong>4. List</strong></p>
+<p>List是一个继承于Collection的接口，即List是集合中的一种。List是<strong>有序</strong>的队列，List中的每一个元素都有一个索引；第一个元素的索引值是0，往后的元素的索引值依次+1。和Set不同，List中允许有重复的元素。</p>
+<p><font color="#0000ff">关于API方面。既然List是继承于Collection接口，它自然就包含了Collection中的全部函数接口；由于List是有序队列，它也额外的有自己的API接口。主要有“添加、删除、获取、修改指定位置的元素”、“获取List中的子队列”等</font></p>
+<pre><code class="java">public interface List&lt;E&gt; extends Collection&lt;E&gt; {
+
+    /* Collection的API */
+    boolean         add(E object)
+    boolean         addAll(Collection&lt;? extends E&gt; collection)
+    void            clear()
+    boolean         contains(Object object)
+    boolean         containsAll(Collection&lt;?&gt; collection)
+    boolean         equals(Object object)
+    int             hashCode()
+    boolean         isEmpty()
+    Iterator&lt;E&gt;     iterator()
+    boolean         remove(Object object)
+    boolean         removeAll(Collection&lt;?&gt; collection)
+    boolean         retainAll(Collection&lt;?&gt; collection)
+    int             size()
+    &lt;T&gt; T[]         toArray(T[] array)
+    Object[]        toArray()
+
+    // JDK 8新加入 
+    @Override
+    default Spliterator&lt;E&gt; spliterator() {
+        if (this instanceof RandomAccess) {
+            return new AbstractList.RandomAccessSpliterator&lt;&gt;(this);
+        } else {
+            return Spliterators.spliterator(this, Spliterator.ORDERED);
+        }
+    }
+
+    /* 相比与Collection，List新增的API */
+    void                add(int location, E object)
+    boolean             addAll(int location, Collection&lt;? extends E&gt; collection)
+    E                   get(int location)
+    int                 indexOf(Object object)
+    int                 lastIndexOf(Object object)
+    ListIterator&lt;E&gt;     listIterator(int location)
+    ListIterator&lt;E&gt;     listIterator()
+    E                   remove(int location)
+    E                   set(int location, E object)
+    List&lt;E&gt;             subList(int start, int end)
+
+    // JDK 8新加入 
+    default void replaceAll(UnaryOperator&lt;E&gt; operator) {
+        Objects.requireNonNull(operator);
+        final ListIterator&lt;E&gt; li = this.listIterator();
+        while (li.hasNext()) {
+            li.set(operator.apply(li.next()));
+        }
+    }
+
+    // JDK 8新加入 
+    @SuppressWarnings({&quot;unchecked&quot;, &quot;rawtypes&quot;})
+    default void sort(Comparator&lt;? super E&gt; c) {
+            Object[] a = this.toArray();
+            Arrays.sort(a, (Comparator) c);
+            ListIterator&lt;E&gt; i = this.listIterator();
+            for (Object e : a) {
+                i.next();
+                i.set((E) e);
+            }
+    }
+
+    // JDK 9新加入
+    static &lt;E&gt; List&lt;E&gt; of() {
+        return ImmutableCollections.emptyList();
+    }
+
+    // JDK 9新加入
+    static &lt;E&gt; List&lt;E&gt; of(E e1) {
+        return new ImmutableCollections.List12&lt;&gt;(e1);
+    }
+
+    // JDK 9新加入
+    static &lt;E&gt; List&lt;E&gt; of(E e1, E e2) {
+        return new ImmutableCollections.List12&lt;&gt;(e1, e2);
+    }
+
+    ...
+
+    // JDK 9新加入
+    static &lt;E&gt; List&lt;E&gt; of(E e1, E e2, E e3, E e4, E e5, E e6, E e7, E e8, E e9, E e10) {
+        return new ImmutableCollections.ListN&lt;&gt;(e1, e2, e3, e4, e5,
+                                                e6, e7, e8, e9, e10);
+    }
+
+    // JDK 9新加入
+    @SafeVarargs
+    @SuppressWarnings(&quot;varargs&quot;)
+    static &lt;E&gt; List&lt;E&gt; of(E... elements) {
+        switch (elements.length) { // implicit null check of elements
+            case 0:
+                return ImmutableCollections.emptyList();
+            case 1:
+                return new ImmutableCollections.List12&lt;&gt;(elements[0]);
+            case 2:
+                return new ImmutableCollections.List12&lt;&gt;(elements[0], elements[1]);
+            default:
+                return new ImmutableCollections.ListN&lt;&gt;(elements);
+        }
+    }
+
+    // JDK 10加入
+    static &lt;E&gt; List&lt;E&gt; copyOf(Collection&lt;? extends E&gt; coll) {
+        return ImmutableCollections.listCopy(coll);
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注:</strong> 可以看到, JDK 8中List添加了sort方法, JDK 10中添加了copyOf方法(虽然大多数人还是习惯使用Collections中的方法)</p>
+</blockquote>
+<p><strong>5. Set</strong></p>
+<p>Set 是一个继承于Collection的接口，即Set也是集合中的一种。Set是没有重复元素的集合。</p>
+<p>关于API方面。Set的API和Collection几乎完全一样。</p>
+<pre><code class="java">public interface Set&lt;E&gt; extends Collection&lt;E&gt; {
+
+    /* Collection的API */
+    boolean         add(E object)
+    boolean         addAll(Collection&lt;? extends E&gt; collection)
+    void             clear()
+    boolean         contains(Object object)
+    boolean         containsAll(Collection&lt;?&gt; collection)
+    boolean         equals(Object object)
+    int             hashCode()
+    boolean         isEmpty()
+    Iterator&lt;E&gt;     iterator()
+    boolean         remove(Object object)
+    boolean         removeAll(Collection&lt;?&gt; collection)
+    boolean         retainAll(Collection&lt;?&gt; collection)
+    int             size()
+    &lt;T&gt; T[]         toArray(T[] array)
+    Object[]         toArray()
+
+    // JDK 8新增
+    @Override
+    default Spliterator&lt;E&gt; spliterator() {
+        return Spliterators.spliterator(this, Spliterator.DISTINCT);
+    }        
+
+    /* Set新增API */
+    // JDK 9新增
+    static &lt;E&gt; Set&lt;E&gt; of() {
+        return ImmutableCollections.emptySet();
+    }
+
+    // JDK 9新增
+    static &lt;E&gt; Set&lt;E&gt; of(E e1) {
+        return new ImmutableCollections.Set12&lt;&gt;(e1);
+    }
+
+    // JDK 9新增
+    static &lt;E&gt; Set&lt;E&gt; of(E e1, E e2) {
+        return new ImmutableCollections.Set12&lt;&gt;(e1, e2);
+    }
+
+    ...
+
+    // JDK 9新增        
+    static &lt;E&gt; Set&lt;E&gt; of(E e1, E e2, E e3, E e4, E e5, E e6, E e7, E e8, E e9, E e10) {
+        return new ImmutableCollections.SetN&lt;&gt;(e1, e2, e3, e4, e5,
+                                               e6, e7, e8, e9, e10);
+    }        
+
+    // JDK 9新增
+    @SafeVarargs
+    @SuppressWarnings(&quot;varargs&quot;)
+    static &lt;E&gt; Set&lt;E&gt; of(E... elements) {
+        switch (elements.length) { // implicit null check of elements
+            case 0:
+                return ImmutableCollections.emptySet();
+            case 1:
+                return new ImmutableCollections.Set12&lt;&gt;(elements[0]);
+            case 2:
+                return new ImmutableCollections.Set12&lt;&gt;(elements[0], elements[1]);
+            default:
+                return new ImmutableCollections.SetN&lt;&gt;(elements);
+        }
+    }
+
+    // JDK 10新增
+    @SuppressWarnings(&quot;unchecked&quot;)
+    static &lt;E&gt; Set&lt;E&gt; copyOf(Collection&lt;? extends E&gt; coll) {
+        if (coll instanceof ImmutableCollections.AbstractImmutableSet) {
+            return (Set&lt;E&gt;)coll;
+        } else {
+            return (Set&lt;E&gt;)Set.of(new HashSet&lt;&gt;(coll).toArray());
+        }
+    }    
+
+}</code></pre>
+<p><strong>6. AbstractCollection</strong></p>
+<p>AbstractCollection是一个<strong>抽象类</strong>，它<font color="#ff0000">实现了Collection中除iterator()和size()之外的方法</font>, 从而<strong>方便其它类实现Collection</strong>. </p>
+<p>比如ArrayList、LinkedList等，它们这些类想要实现Collection接口，而通过继承AbstractCollection就已经实现了大部分的接口了。</p>
+<pre><code class="java">public abstract class AbstractCollection&lt;E&gt; implements Collection&lt;E&gt; {
+
+    protected AbstractCollection() {}
+
+    /* Collection中未实现的方法 */
+    public abstract Iterator&lt;E&gt; iterator();
+    public abstract int size();
+
+    /* 实现Collection接口中的方法 */
+    public boolean isEmpty() {...}
+    public boolean contains(Object o) {...}
+    public Object[] toArray() {...}
+    public &lt;T&gt; T[] toArray(T[] a) {...}
+    public boolean add(E e) {...}
+    public boolean remove(Object o) {...}
+    public boolean containsAll(Collection&lt;?&gt; c) {...}
+    public boolean addAll(Collection&lt;? extends E&gt; c) {...}
+    public boolean removeAll(Collection&lt;?&gt; c) {...}
+    public boolean retainAll(Collection&lt;?&gt; c) {...}
+    public void clear() {...}
+
+    /* 继承Object的方法 */
+    public String toString() {...}
+
+    /* AbstractCollection中的方法 */
+    private static &lt;T&gt; T[] finishToArray(T[] r, Iterator&lt;?&gt; it) {...}
+    private static int hugeCapacity(int minCapacity) {...}
+
+    /* AbstractCollection中的属性 */
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注:</strong></p>
+<p><strong>①</strong> <strong>AbstractCollection抽象类</strong>中实现了Collection接口<strong>除iterator()和size()的方法</strong>, 并且请注意, <font color="#ff0000">对于那些没有重写但是被声明为default的方法, 类中也是可以使用的!</font></p>
+<p><strong>②</strong> AbstractCollection中已经重写了toString()方法;</p>
+<p><strong>③</strong> AbstractCollection中定义了MAX_ARRAY_SIZE, 表示数组可分配的最大容量, 原文:</p>
+<blockquote>
+<br>
+
+<p><strong>The maximum size of array to allocate. Some VMs reserve some header words in an array.</strong> </p>
+<p><strong>Attempts to allocate larger arrays may result in OutOfMemoryError: Requested array size exceeds VM limit</strong></p>
+</blockquote>
+<p><strong>④</strong> AbstractCollection中存在两个private方法:</p>
+<ul>
+<li><strong>finishToArray:</strong> 在toArray()方法中使用, 当迭代器返回的元素比预期的多时，重新分配toArray中使用的数组，并从迭代器中完成数组填充。(Reallocates the array being used within toArray when the iterator returned more elements than expected, and finishes filling it from the iterator.)</li>
+<li><strong>hugeCapacity:</strong> 在finishToArray方法中使用, 当finished方法需要开辟更大数组空间时, 判断空间大小并返回新的大小</li>
+</ul>
+</blockquote>
+<p><strong>7. AbstractList</strong></p>
+<p>AbstractList 是一个<strong>继承于AbstractCollection，并且实现List接口的抽象类</strong>。</p>
+<p><font color="#0000ff">它实现了List中除size()、get(int location)之外的函数, 从而方便其它类继承List。  另外，和AbstractCollection相比，AbstractList抽象类中，<strong>实现了iterator()接口</strong>。</font></p>
+<pre><code class="java">public abstract class AbstractList&lt;E&gt; extends AbstractCollection&lt;E&gt; implements List&lt;E&gt; {
+
+    protected transient int modCount = 0;
+
+    protected AbstractList() {}
+
+    /* AbstractList中未实现的List接口方法 */
+    public abstract E get(int index);
+
+    /* AbstractList中实现的List接口(AbstractList他自己实现的) */
+    public boolean add(E e) {...}
+    public E set(int index, E element) {...}
+    public void add(int index, E element) {...}
+    public E remove(int index) {...}
+    public int indexOf(Object o) {...}
+    public int lastIndexOf(Object o) {...}
+    public void clear() {...}
+    public boolean addAll(int index, Collection&lt;? extends E&gt; c) {...}
+    public Iterator&lt;E&gt; iterator() {...}
+    public ListIterator&lt;E&gt; listIterator() {...}
+    public ListIterator&lt;E&gt; listIterator(final int index) {...}
+    public List&lt;E&gt; subList(int fromIndex, int toIndex) {...}
+
+    /* 重写Collection中的方法 */
+    public boolean equals(Object o) {...}
+    public int hashCode() {...}
+
+    /* AbstractList中定义的方法 */
+    static void subListRangeCheck(int fromIndex, int toIndex, int size) {...}
+    protected void removeRange(int fromIndex, int toIndex) {...}
+    private void rangeCheckForAdd(int index) {...}
+    private String outOfBoundsMsg(int index) {...}
+
+
+    /* AbstractList中的Iterator实现类, 真正List元素ListItr的父类 */
+    private class Itr implements Iterator&lt;E&gt; {
+        /**
+         * Index of element to be returned by subsequent call to next.
+         */        
+        int cursor = 0;
+        /**
+         * Index of element returned by most recent call to next or
+         * previous.  Reset to -1 if this element is deleted by a call
+         * to remove.
+         */
+        int lastRet = -1; 
+        /**
+         * The modCount value that the iterator believes that the backing
+         * List should have.  If this expectation is violated, the iterator
+         * has detected concurrent modification.
+         */
+        int expectedModCount = modCount;
+
+        /* Iterator接口中的方法 */
+        public boolean hasNext() {...}        
+        public E next() {...}
+        public void remove() {...}
+
+        /* Itr中定义的方法 */
+        final void checkForComodification() {...}
+    }
+
+
+    /* AbstractList中Iterator真正的元素 */
+    private class ListItr extends Itr implements ListIterator&lt;E&gt; {
+        ListItr(int index) { cursor = index; }    
+
+        /* ListIterator接口中的方法 */
+        public boolean hasPrevious() {...}
+        public E previous() {...}
+        public int nextIndex() {...}
+        public int previousIndex() {...}
+        public void set(E e) {...}
+        public void add(E e) {...}
+    }
+
+
+    /* JDK 8之后, 为了并行遍历元素而设计的一个可分割迭代器(splitable iterator) */
+    static final class RandomAccessSpliterator&lt;E&gt; implements Spliterator&lt;E&gt; {
+
+        private final List&lt;E&gt; list;
+        private int index; // current index, modified on advance/split
+        private int fence; // -1 until used; then one past last index
+        private final AbstractList&lt;E&gt; alist; // The following fields are valid if covering an AbstractList
+        private int expectedModCount; // initialized when fence set
+
+        /* RandomAccessSpliterator的构造方法 */
+        RandomAccessSpliterator(List&lt;E&gt; list) {...}
+
+        /* Spliterator接口中的方法 */
+        public Spliterator&lt;E&gt; trySplit() {...}
+        public boolean tryAdvance(Consumer&lt;? super E&gt; action) {...}
+        public long estimateSize() {...}
+        public int characteristics() {...}
+        public void forEachRemaining(Consumer&lt;? super E&gt; action) {...}
+
+        /* RandomAccessSpliterator类中定义的方法 */
+        RandomAccessSpliterator(List&lt;E&gt; list) {...}
+        private RandomAccessSpliterator(RandomAccessSpliterator&lt;E&gt; parent, int origin, int fence) {...} // Create new spliterator covering the given range
+        private static &lt;E&gt; E get(List&lt;E&gt; list, int i) {...}
+        private int getFence() {...} // initialize fence to size on first use
+    }
+
+    /* AbstractList的内部类SubList, 继承了AbstractList本身, 是List的一个视图 */
+    private static class SubList&lt;E&gt; extends AbstractList&lt;E&gt; {
+
+        private final AbstractList&lt;E&gt; root;
+        private final SubList&lt;E&gt; parent;
+        private final int offset;
+        protected int size;
+
+        /* AbstractList抽象类(内部类继承了包括他的类!)的方法 */
+        public E set(int index, E element) {...}
+        public void add(int index, E element) {...}
+        public E remove(int index) {...}
+        protected void removeRange(int fromIndex, int toIndex) {...}
+        public boolean addAll(int index, Collection&lt;? extends E&gt; c) {...}
+        public Iterator&lt;E&gt; iterator() {...}
+        public ListIterator&lt;E&gt; listIterator(int index) {...}
+        public List&lt;E&gt; subList(int fromIndex, int toIndex) {...}
+        public E get(int index) {...}
+
+        /* AbstractCollection抽象类中的方法 */
+        public int size() {...} // AbstractCollection并未实现该方法, 另一个未实现的方法是Iterator()
+        public boolean addAll(Collection&lt;? extends E&gt; c) {...} // 覆盖AbstractCollection的方法
+
+        /* SubList中定义的方法 */
+        public SubList(AbstractList&lt;E&gt; root, int fromIndex, int toIndex) {...} // Constructs a sublist of an arbitrary AbstractList, which is not a SubList itself.
+        protected SubList(SubList&lt;E&gt; parent, int fromIndex, int toIndex) {...} // Constructs a sublist of another SubList.
+        private void rangeCheckForAdd(int index) {...}
+        private String outOfBoundsMsg(int index) {...}
+        private void checkForComodification() {...}
+        private void updateSizeAndModCount(int sizeChange) {...}
+    }
+
+    /* 继承自SubList(他的爸爸就是AbstractList), 并实现RandomAccess接口 */
+    private static class RandomAccessSubList&lt;E&gt; extends SubList&lt;E&gt; implements RandomAccess {
+
+        /* 覆盖了父类SubList的方法 */
+        public List&lt;E&gt; subList(int fromIndex, int toIndex) {...}
+
+        /* RandomAccessSubList中定义的方法 */
+         RandomAccessSubList(AbstractList&lt;E&gt; root, int fromIndex, int toIndex) {...} // Constructs a sublist of an arbitrary AbstractList, which is not a RandomAccessSubList itself.
+        RandomAccessSubList(RandomAccessSubList&lt;E&gt; parent, int fromIndex, int toIndex) {...} // Constructs a sublist of another RandomAccessSubList.
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注:</strong></p>
+<p>这里的关系比较复杂, 首先先说明一下RandomAccess接口: </p>
+<p><strong>RandomAccess接口:</strong> </p>
+<p>它是JDK 1.4中加入的接口, 它内部一个方法都没定义, 是一个标志接口, 文档原文为:</p>
+<blockquote>
+  <br>
+
+<p>  <strong>Marker interface used by <code>List</code> implementations to indicate that they support fast (generally constant time) random access.</strong></p>
+</blockquote>
+<p>即RandomAccess 是一个标志接口，表明实现这个这个接口的 List 集合是支持快速随机访问的。也就是说，实现了这个接口的集合是支持 <strong>快速随机访问</strong> 策略的;</p>
+<p>且如果是实现了这个接口的 <strong>List</strong>，那么使用for循环的方式获取数据会优于用迭代器获取数据。</p>
+<p>接下来结合代码, 再看一下AbstractList:</p>
+<p><strong>① AbstractList本身:</strong></p>
+<ol>
+<li><p>AbstractList自身继承自AbstractCollection(显而易见, 为了方便才创立的AbstractCollection, <strong>要注意AbstractCollection未实现iterator()和size()方法</strong>);</p>
+</li>
+<li><p>同时AbstractList实现了List的部分接口<font color="#ff0000">(除了get()方法, 因为数组实现和链表实现的get显然是不同的!)</font></p>
+</li>
+<li><p><strong>AbstractList重写了equals()和hashcode()方法!</strong></p>
+</li>
+<li><p>AbstractList定义了四个方法:</p>
+<ul>
+<li><strong>void subListRangeCheck(int fromIndex, int toIndex, int size)</strong>: 包内可见的方法, 用于subList()方法, 截取自列表前判断index, size的合法性;</li>
+<li><strong>removeRange</strong>: 删除指定区间的元素;</li>
+<li><strong>rangeCheckForAdd</strong>: 用于addAll方法, 判断index的合法性;</li>
+<li><strong>outOfBoundsMsg</strong>: 代码: return “Index: “+index+”, Size: “+size(); 用于rangeCheckForAdd抛出的IndexOutOfBoundsException时的错误信息;</li>
+</ul>
+</li>
+</ol>
+<p><strong>② AbstractList中定义的内部类:</strong></p>
+<ul>
+<li><strong>Itr</strong>: AbstractList中的一个Iterator实现类, 为ListItr服务的父类;</li>
+<li><strong>ListItr</strong>: AbstractList中Iterator真正的元素, 继承了Itr, 并实现了ListIterator接口<strong>(ListIterator是一个继承了Iterator的接口, 为List遍历而创建)</strong>;</li>
+<li><strong>RandomAccessSpliterator</strong>: 实现了Spliterator接口. JDK 8之后, 为了并行遍历元素而设计的一个可分割迭代器(splitable iterator);</li>
+<li><strong>SubList</strong>: AbstractList的内部类SubList, 继承了AbstractList本身, 作为List的一个视图, 为RandomAccessSubList服务;<font color="#ff0000">这个内部类的牛逼之处在于, 他继承了包含他的类!</font></li>
+<li><strong>RandomAccessSubList</strong>: 继承自SubList(那个很牛逼的内部类), 并实现了RandomAccess接口;</li>
+</ul>
+<p><strong>③ AbstractList中的内部类关系整理:</strong></p>
+<ol>
+<li><p><strong>RandomAccessSpliterator与其他内部类没有关系</strong>, 它仅仅是实现了Spliterator接口, 在JDK 8之后, 为了并行遍历元素而设计的;</p>
+</li>
+<li><p><strong>Itr与ListItr是一组</strong>: 两者为父子完成了对ListIterator接口的实现; 是普遍使用的List内部的迭代器实现;</p>
+</li>
+<li><p><strong>SubList与RandomAccessSubList是一组</strong>: 最牛逼的父子组合, 连续继承了包含他们的AbstractList, 并配合实现了RandomAccess和AbstractList; 主要应用于创建List的子视图;</p>
+</li>
+</ol>
+</blockquote>
+<br>
+
+<p><strong>8. AbstractSet</strong></p>
+<p>AbstractSet 是一个继承于AbstractCollection，并且实现Set接口的抽象类。<font color="#ff0000">由于Set接口和Collection接口中的API完全一样，Set也就没有自己单独的API。</font></p>
+<p><strong>和AbstractCollection一样，它实现了List中除iterator()和size()之外的方法, 从而方便其它类实现Set接口。</strong></p>
+<pre><code class="java">public abstract class AbstractSet&lt;E&gt; extends AbstractCollection&lt;E&gt; implements Set&lt;E&gt; {
+
+    protected AbstractSet() {}
+
+    /* 重写了Collection中的equals()和hashcode()方法 */
+    public boolean equals(Object o) {...}
+    public int hashCode() {...}
+
+    /* 实现了Set接口中的removeAll()方法 */
+    public boolean removeAll(Collection&lt;?&gt; c) {...}
+}
+</code></pre>
+<blockquote>
+<br>
+
+<p><strong>备注:</strong></p>
+<p>AbstractSet比较简单, 因为Set接口在继承自Collection时, 除了of()方法和copyOf()方法之外, 也确实没声明什么新的东西;</p>
+<p>不过在AbstractSet中就实现了removeAll, 说明下面的代码估计都懒省事了233.</p>
+</blockquote>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/" title="https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/11/23/Java集合一-Collection架构/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725359948"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

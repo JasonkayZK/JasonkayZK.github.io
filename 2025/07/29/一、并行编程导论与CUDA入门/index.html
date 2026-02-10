@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>一、并行编程导论与CUDA入门 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="随着人工智能的发展，科学计算（尤其是矩阵/张量计算）越来越重要；因此，基于CUDA的张量编程也越来越重要。在上一篇文章中翻译了《An Even Easier Introduction to CUDA》，但是感觉作者写的不是很好；这里重新写了一篇。同时，也作为CUDA和并行编程的开篇。">
+<meta name="keywords" content="CUDA,GPU,并行计算">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一、并行编程导论与CUDA入门">
+<meta property="og:url" content="https://jasonkayzk.github.io/2025/07/29/一、并行编程导论与CUDA入门/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="随着人工智能的发展，科学计算（尤其是矩阵/张量计算）越来越重要；因此，基于CUDA的张量编程也越来越重要。在上一篇文章中翻译了《An Even Easier Introduction to CUDA》，但是感觉作者写的不是很好；这里重新写了一篇。同时，也作为CUDA和并行编程的开篇。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-1.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-2.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-3.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-4.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-6.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-7.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-8.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-9.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-10.png">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.752Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一、并行编程导论与CUDA入门">
+<meta name="twitter:description" content="随着人工智能的发展，科学计算（尤其是矩阵/张量计算）越来越重要；因此，基于CUDA的张量编程也越来越重要。在上一篇文章中翻译了《An Even Easier Introduction to CUDA》，但是感觉作者写的不是很好；这里重新写了一篇。同时，也作为CUDA和并行编程的开篇。">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-1.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725301348">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?24">
+    
+    <h1>一、并行编程导论与CUDA入门</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2025年07月29日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4.4k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 22 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/CUDA/">CUDA</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/CUDA/">CUDA</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/GPU/">GPU</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/并行计算/">并行计算</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#一、并行编程导论与CUDA入门"><span class="toc-text">一、并行编程导论与CUDA入门</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#（一）、CUDA编程概述"><span class="toc-text">（一）、CUDA编程概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、什么是CUDA"><span class="toc-text">1、什么是CUDA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、CUDA-运算硬件单元"><span class="toc-text">2、CUDA 运算硬件单元</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）SM-单元"><span class="toc-text">（1）SM 单元</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）CPU与GPU协作"><span class="toc-text">（2）CPU与GPU协作</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#（二）、CUDA运算示例：加法"><span class="toc-text">（二）、CUDA运算示例：加法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、CPU加法"><span class="toc-text">1、CPU加法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、修改为GPU加法（重点！）"><span class="toc-text">2、修改为GPU加法（重点！）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）修改文件名为-cu"><span class="toc-text">（1）修改文件名为 *.cu</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）准备和初始化数据（CPU）"><span class="toc-text">（2）准备和初始化数据（CPU）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（3）数据传输到-GPU"><span class="toc-text">（3）数据传输到 GPU</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4：补）CUDA层级结构"><span class="toc-text">（4：补）CUDA层级结构</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#i-线程层级结构"><span class="toc-text">i.线程层级结构</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ii-线程索引计算方法"><span class="toc-text">ii.线程索引计算方法</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（4）编写和调用核函数"><span class="toc-text">（4）编写和调用核函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（5）将-GPU-数据传输回-CPU"><span class="toc-text">（5）将 GPU 数据传输回 CPU</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（6）验证结果，释放内存"><span class="toc-text">（6）验证结果，释放内存</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3、编译-amp-运行CUDA程序"><span class="toc-text">3、编译&amp;运行CUDA程序</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（1）编译流程"><span class="toc-text">（1）编译流程</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#补：GPU虚拟架构"><span class="toc-text">补：GPU虚拟架构</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）编译命令"><span class="toc-text">（2）编译命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#（三）、GPU性能测试"><span class="toc-text">（三）、GPU性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、并行加法性能对比"><span class="toc-text">1、并行加法性能对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、将循环放入核函数（Grid-strided-loop）"><span class="toc-text">2、将循环放入核函数（Grid-strided loop）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3、CUDA并行加法性能评估（加速比）"><span class="toc-text">3、CUDA并行加法性能评估（加速比）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#为什么-lt-lt-lt-1-1-gt-gt-gt-比-CPU慢？"><span class="toc-text">为什么&lt;&lt;&lt;1,1&gt;&gt;&gt; 比 CPU慢？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4、CUDA并行加法性能评估（总耗时）"><span class="toc-text">4、CUDA并行加法性能评估（总耗时）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#（四）、设备信息"><span class="toc-text">（四）、设备信息</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、cudaDeivceProp"><span class="toc-text">1、cudaDeivceProp</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、CUDA版本"><span class="toc-text">2、CUDA版本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>随着人工智能的发展，科学计算（尤其是矩阵/张量计算）越来越重要；因此，基于CUDA的张量编程也越来越重要。</p>
+<p>在<a href="https://github.com/JasonkayZK/high-performance-computing-learn/blob/main/cuda/0-an-even-easier-intro-to-cuda.ipynb" target="_blank" rel="noopener">上一篇笔记</a>中翻译了<a href="https://developer.nvidia.com/blog/even-easier-introduction-cuda/" target="_blank" rel="noopener">《An Even Easier Introduction to CUDA》</a>，但是感觉作者写的不是很好；</p>
+<p>这里重新写了一篇。同时，也作为CUDA和并行编程的开篇。</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb" target="_blank" rel="noopener">https://github.com/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="一、并行编程导论与CUDA入门"><a href="#一、并行编程导论与CUDA入门" class="headerlink" title="一、并行编程导论与CUDA入门"></a><strong>一、并行编程导论与CUDA入门</strong></h1><blockquote>
+<p><strong>温馨提示：本文章配合 Colab 一同执行学习效果更佳：</strong></p>
+<ul>
+<li><a href="https://colab.research.google.com/github/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb" target="_blank" rel="noopener">https://colab.research.google.com/github/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb</a></li>
+</ul>
+</blockquote>
+<h2 id="（一）、CUDA编程概述"><a href="#（一）、CUDA编程概述" class="headerlink" title="（一）、CUDA编程概述"></a><strong>（一）、CUDA编程概述</strong></h2><h3 id="1、什么是CUDA"><a href="#1、什么是CUDA" class="headerlink" title="1、什么是CUDA"></a><strong>1、什么是CUDA</strong></h3><p>CUDA 是 NVIDIA 开发的并行计算平台和编程模型；</p>
+<p>具有以下特点：</p>
+<ul>
+<li>C/C++ 语法；</li>
+<li>SIMT（Single Instruction Multiple Threads）模式：<strong>一个指令会被多个线程同时执行！</strong></li>
+<li>需要与CPU协作：CPU负责整理结果、处理逻辑；</li>
+<li>自动调度：根据设定的执行参数，自动调度；</li>
+</ul>
+<br>
+
+<h3 id="2、CUDA-运算硬件单元"><a href="#2、CUDA-运算硬件单元" class="headerlink" title="2、CUDA 运算硬件单元"></a><strong>2、CUDA 运算硬件单元</strong></h3><h4 id="（1）SM-单元"><a href="#（1）SM-单元" class="headerlink" title="（1）SM 单元"></a><strong>（1）SM 单元</strong></h4><p>下面是一个 GPU 硬件单元：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-1.png" alt="cuda-1.png"></p>
+<p>每个核心中包含了多个 SM（Stream Multi-processor），任务在 SM 中处理；</p>
+<p>SM 中包含了：</p>
+<ul>
+<li><strong>CUDA Core/SP</strong>：进行并行的加减法等计算；</li>
+<li><strong>Tensor Core：</strong>张量计算</li>
+<li>……</li>
+</ul>
+<br>
+
+<h4 id="（2）CPU与GPU协作"><a href="#（2）CPU与GPU协作" class="headerlink" title="（2）CPU与GPU协作"></a><strong>（2）CPU与GPU协作</strong></h4><p>CPU 与 GPU 协同工作的流程如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-2.png" alt="cuda-2.png"></p>
+<p>首先，习惯上将：</p>
+<ul>
+<li>CPU 所在端称为：Host 端，对应内存为 RAM；</li>
+<li>GPU 所在称为：Device 端，对应内存为 Global Memory（通常对应 GPU RAM，显存）；</li>
+</ul>
+<blockquote>
+<p>  通常，Global Memory 在其范围和生命周期中是全局的！</p>
+<p>  <strong>也就是说，每个在<a href="https://modal.com/gpu-glossary/device-software/thread-block-grid" target="_blank" rel="noopener">thread block grid</a> 中的 <a href="https://modal.com/gpu-glossary/device-software/thread" target="_blank" rel="noopener">thread</a> 都可以访问Global Memory，并且生命周期与程序的执行时间一样长！</strong></p>
+<p>  <strong>更多内容：</strong></p>
+<ul>
+<li><a href="https://modal.com/gpu-glossary/device-software/global-memory" target="_blank" rel="noopener">https://modal.com/gpu-glossary/device-software/global-memory</a></li>
+</ul>
+</blockquote>
+<p>CUDA 程序执行时主要分为以下几个步骤：</p>
+<ul>
+<li><strong>CPU 准备（CPU Prepare）</strong>：在主机端（Host ，包含 CPU 和 RAM 主存 ），CPU 负责初始化数据、设置计算参数等准备工作，为后续在 GPU 上的运算任务做铺垫，确定要处理的数据和运算逻辑；</li>
+<li><strong>CPU 传输数据至 GPU（CPU Transfers Data to GPU）</strong>：通过总线（Bus），CPU 把主存（RAM）中准备好的数据传输到 GPU 端的全局内存（Global Memory ，GM），因为 GPU 运算需要的数据要先存放到其可访问的内存空间；</li>
+<li><strong>从 GM 读数据（Read Data from GM）</strong>：GPU（如 NVIDIA A100 ）从自身的全局内存中读取需要参与运算的数据，将数据加载到运算单元可处理的位置；</li>
+<li><strong>运算（Compute）</strong>：NVIDIA A100 等 GPU 设备利用自身的并行运算核心，对读取的数据执行 CUDA 核函数定义的运算操作，发挥 GPU 并行计算优势，高效处理大规模数据计算任务；</li>
+<li><strong>写回 GM（Write Back to GM）</strong>：运算完成后，GPU 将运算结果写回到全局内存中，暂存运算产出的数据；</li>
+<li><strong>GPU 传输数据至 CPU（GPU Transfers Data to CPU）</strong>：再次通过总线，GPU 把全局内存中存储的运算结果传输回主机端的主存（RAM），供 CPU 进一步处理（如数据展示、后续其他主机端逻辑运算等 ），完成一次 CUDA 编程的计算流程；</li>
+</ul>
+<p>CUDA 这种流程实现了 CPU 与 GPU 协同，让 GPU 承担并行计算 heavy - lifting ，提升计算密集型任务效率，广泛用于深度学习训练推理、科学计算等场景！</p>
+<br>
+
+<h2 id="（二）、CUDA运算示例：加法"><a href="#（二）、CUDA运算示例：加法" class="headerlink" title="（二）、CUDA运算示例：加法"></a><strong>（二）、CUDA运算示例：加法</strong></h2><h3 id="1、CPU加法"><a href="#1、CPU加法" class="headerlink" title="1、CPU加法"></a><strong>1、CPU加法</strong></h3><p>add_cpu.cpp</p>
+<pre><code class="c++">#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+// Step 2: Define add function
+void add_cpu(std::vector&lt;float&gt; &amp;c, const std::vector&lt;float&gt; &amp;a, const std::vector&lt;float&gt; &amp;b) {
+    // CPU use loop to calculate
+    for (size_t i = 0; i &lt; a.size(); i++) {
+        c[i] = a[i] + b[i];
+    }
+}
+
+int main() {
+    // Step 1: Prepare &amp; initialize data
+    constexpr size_t N = 1 &lt;&lt; 20; // ~1M elements
+
+    // Initialize data
+    const std::vector&lt;float&gt; a(N, 1);
+    const std::vector&lt;float&gt; b(N, 2);
+    std::vector&lt;float&gt; c(N, 0);
+
+    // Step 3: Call the cpu addition function
+    add_cpu(c, a, b);
+
+    // Step 4: Check for errors (all values should be 3.0f)
+    float maxError = 0.0f;
+    for (int i = 0; i &lt; N; i++) {
+        maxError = fmax(maxError, fabs(c[i] - 3.0f));
+    }
+    std::cout &lt;&lt; &quot;Max error: &quot; &lt;&lt; maxError &lt;&lt; std::endl;
+}</code></pre>
+<p>主要分为以下几个步骤：</p>
+<ul>
+<li>准备和初始化数据；</li>
+<li>定义加法函数<ul>
+<li>靠<strong>循环</strong>来进行所有的元素加法</li>
+</ul>
+</li>
+<li>调用函数</li>
+<li>验证结果</li>
+</ul>
+<br>
+
+<h3 id="2、修改为GPU加法（重点！）"><a href="#2、修改为GPU加法（重点！）" class="headerlink" title="2、修改为GPU加法（重点！）"></a><strong>2、修改为GPU加法（重点！）</strong></h3><p>分为以下几个步骤：</p>
+<ul>
+<li><strong>修改文件名为 <code>*.cu</code></strong>：例如<code>add_cuda.cu</code>（表示 CUDA 程序）</li>
+<li><strong>准备和初始化数据（CPU）</strong>：使用 vector 等进行 Host 端的 RAM 分配；</li>
+<li><strong>数据传输到 GPU</strong>：使用 <code>cudaMalloc</code> 分配显存、使用 <code>cudaMemcpy</code> 复制数据等；</li>
+<li><strong>GPU 从 GM 中读取并计算后写回（调用核（kernel）函数计算）</strong>：<ul>
+<li>修改核函数声明：</li>
+<li>修改调用方式：</li>
+</ul>
+</li>
+<li><strong>将 GPU 数据传输回 CPU</strong>：</li>
+<li>验证结果</li>
+</ul>
+<p>下面分别来看；</p>
+<br>
+
+<h4 id="（1）修改文件名为-cu"><a href="#（1）修改文件名为-cu" class="headerlink" title="（1）修改文件名为 *.cu"></a>（1）修改文件名为 <code>*.cu</code></h4><p>CUDA 规定其文件扩展名为 <code>*.cu</code>，语法和 C++ 类似！</p>
+<br>
+
+<h4 id="（2）准备和初始化数据（CPU）"><a href="#（2）准备和初始化数据（CPU）" class="headerlink" title="（2）准备和初始化数据（CPU）"></a><strong>（2）准备和初始化数据（CPU）</strong></h4><p>这步比较简单：</p>
+<p>add_cuda.cu</p>
+<pre><code class="c++">// Step 1: Prepare &amp; initialize data
+constexpr size_t N = 1 &lt;&lt; 20; // ~1M elements
+constexpr size_t size_bytes = sizeof(float) * N;
+
+// Initialize data
+const std::vector&lt;float&gt; h_a(N, 1);
+const std::vector&lt;float&gt; h_b(N, 2);
+std::vector&lt;float&gt; h_c(N, 0);</code></pre>
+<p>此时在 Host 端的 RAM 分配内存；</p>
+<br>
+
+<h4 id="（3）数据传输到-GPU"><a href="#（3）数据传输到-GPU" class="headerlink" title="（3）数据传输到 GPU"></a><strong>（3）数据传输到 GPU</strong></h4><p>数据传输到 GPU 使用 CUDA 提供的函数：</p>
+<ul>
+<li>使用 <code>cudaMalloc</code> 分配显存；</li>
+<li>使用 <code>cudaMemcpy</code> 复制数据；</li>
+</ul>
+<p>add_cuda.cu</p>
+<pre><code class="c++">float *d_a, *d_b, *d_c;
+CUDA_CHECK(cudaMalloc(&amp;d_a, size_bytes));
+CUDA_CHECK(cudaMalloc(&amp;d_b, size_bytes));
+CUDA_CHECK(cudaMalloc(&amp;d_c, size_bytes));
+
+CUDA_CHECK(cudaMemcpy(d_a, h_a.data(), size_bytes, cudaMemcpyHostToDevice));
+CUDA_CHECK(cudaMemcpy(d_b, h_b.data(), size_bytes, cudaMemcpyHostToDevice));
+CUDA_CHECK(cudaMemcpy(d_c, h_c.data(), size_bytes, cudaMemcpyHostToDevice));</code></pre>
+<p>这里使用了：</p>
+<ul>
+<li><code>CUDA_CHECK</code> 宏进行校验；</li>
+<li><code>cudaMemcpyHostToDevice</code> 指定数据流方向；</li>
+</ul>
+<p>CUDA_CHECK 宏定义如下：</p>
+<pre><code class="c++">#define CUDA_CHECK(call) \
+{ \
+    cudaError_t err = call; \
+    if (err != cudaSuccess) { \
+        std::cerr &lt;&lt; &quot;CUDA Error at &quot; &lt;&lt; __FILE__ &lt;&lt; &quot;:&quot; &lt;&lt; __LINE__ \
+        &lt;&lt; &quot; - &quot; &lt;&lt; cudaGetErrorString(err) &lt;&lt; std::endl; \
+    } \
+}</code></pre>
+<br>
+
+<h4 id="（4：补）CUDA层级结构"><a href="#（4：补）CUDA层级结构" class="headerlink" title="（4：补）CUDA层级结构"></a><strong>（4：补）CUDA层级结构</strong></h4><h5 id="i-线程层级结构"><a href="#i-线程层级结构" class="headerlink" title="i.线程层级结构"></a><strong>i.线程层级结构</strong></h5><p>在 CPU 中，使用<strong>循环</strong>进行执行；</p>
+<p><strong>而在 GPU 中，使用的是 <code>SIMT</code>，即：<code>一条命令会同时被多个线程执行！</code></strong></p>
+<p><strong>此时需要指挥每个线程：组织结构和编号！</strong></p>
+<p>在 CUDA 中，包含：</p>
+<ul>
+<li>Grid：</li>
+<li>Block：</li>
+<li>Thread：</li>
+</ul>
+<p>如下图：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-3.png" alt="cuda-3.png"></p>
+<p>其中：<strong>每一个 Grid 中包含多个已编号的 Block，而每一个 Block 中包含多个已编号的 Thread！</strong></p>
+<p>同时，<strong>每个 Block 中包含的线程数是一样的！</strong></p>
+<p><strong>一共有：<code>0~N-1</code>个Thread（假设每个 Block 包含 N 个 Thread）；</strong></p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-4.png" alt="cuda-4.png"></p>
+<br>
+
+<h5 id="ii-线程索引计算方法"><a href="#ii-线程索引计算方法" class="headerlink" title="ii.线程索引计算方法"></a><strong>ii.线程索引计算方法</strong></h5><p>在 CUDA 中：</p>
+<ul>
+<li>每个线程都有 <strong>独一无二</strong> 的编号索引(idx)；</li>
+<li><code>idx = BlockID * BlockSize + ThreadID</code>；</li>
+</ul>
+<p>如下图：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-5.png" alt="cuda-5.png"></p>
+<br>
+
+<h4 id="（4）编写和调用核函数"><a href="#（4）编写和调用核函数" class="headerlink" title="（4）编写和调用核函数"></a><strong>（4）编写和调用核函数</strong></h4><p>相对于 CPU 中使用循环的方式执行，<strong>在 GPU 中主要使用的是：<code>多线程并行</code>；</strong></p>
+<p>步骤如下：</p>
+<ul>
+<li>定义 block 的数量和大小来指挥线程、进行/并行计算；</li>
+<li>定义 GPU 上的加法函数（核函数）；</li>
+<li>结合定义的信息调用 GPU 加法函数；</li>
+</ul>
+<p>层级结构定义：</p>
+<pre><code class="c++">// Set up kernel configuration
+dim3 block_dim(256);
+dim3 grid_dim((N + block_dim.x - 1) / block_dim.x);</code></pre>
+<p>核函数定义：</p>
+<pre><code class="c++">template&lt;typename T&gt;
+__global__ void add_kernel(T *c, const T *a, const T *b, int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx &lt; n) {
+        c[idx] = a[idx] + b[idx];
+    }
+}</code></pre>
+<blockquote>
+<p>  <strong>只能通过指针的方式传递！</strong></p>
+<p>  <font color="#f00"><strong>因为像是 vector 等数据结构，都是在 Host 端定义的，并不能在 Global Memory 中分配！</strong></font></p>
+</blockquote>
+<p>核函数调用：</p>
+<pre><code class="c++">// Call cuda add kernel
+add_kernel&lt;&lt;&lt;grid_dim, block_dim&gt;&gt;&gt;(d_c, d_a, d_b, N);</code></pre>
+<p>其中：</p>
+<ul>
+<li><code>dim3</code>：CUDA 表示线程层级结构的类型（包括：x、y、z 三个维度）；</li>
+<li><code>&lt;&lt;&lt;&gt;&gt;&gt;</code>：传递线程层级信息给核函数；</li>
+<li><code>核函数(kernel)</code>：设备侧的入口函数；</li>
+<li><code>__global__</code>：表示这是个核函数；</li>
+<li><code>blockldx</code>：表示 block 的编号，第几个 block；</li>
+<li><code>blockDim</code>：表示 block 的大小，一个 block 多少个线程；</li>
+<li><code>threadldx</code>：表示 thread 的编号，表示第几个 thread；</li>
+</ul>
+<br>
+
+<h4 id="（5）将-GPU-数据传输回-CPU"><a href="#（5）将-GPU-数据传输回-CPU" class="headerlink" title="（5）将 GPU 数据传输回 CPU"></a><strong>（5）将 GPU 数据传输回 CPU</strong></h4><p>同样，使用 <code>cudaMemcpy</code>：</p>
+<pre><code class="c++">CUDA_CHECK(cudaMemcpy(h_c.data(), d_c, size_bytes, cudaMemcpyDeviceToHost));</code></pre>
+<br>
+
+<h4 id="（6）验证结果，释放内存"><a href="#（6）验证结果，释放内存" class="headerlink" title="（6）验证结果，释放内存"></a><strong>（6）验证结果，释放内存</strong></h4><p>验证结果使用已经复制到 <code>h_c</code> 中的数据；</p>
+<p>释放内存使用 <code>cudaFree</code>：</p>
+<p>add_cuda.cu</p>
+<pre><code class="c++">float maxError = 0.0f;
+for (int i = 0; i &lt; N; i++) {
+    maxError = fmax(maxError, fabs(h_c[i] - 3.0f));
+}
+std::cout &lt;&lt; &quot;Max error: &quot; &lt;&lt; maxError &lt;&lt; std::endl;
+
+if (d_a) {
+    CUDA_CHECK(cudaFree(d_a));
+}
+if (d_b) {
+    CUDA_CHECK(cudaFree(d_b));
+}
+if (d_c) {
+    CUDA_CHECK(cudaFree(d_c));
+}</code></pre>
+<br>
+
+<h3 id="3、编译-amp-运行CUDA程序"><a href="#3、编译-amp-运行CUDA程序" class="headerlink" title="3、编译&amp;运行CUDA程序"></a><strong>3、编译&amp;运行CUDA程序</strong></h3><p>需要使用 <code>NVCC（NIVIDEA CUDA Compiler）</code> 的编译器来编译程序；</p>
+<blockquote>
+<p>  NVCC 是 CUDA Toolkit 的一部分：</p>
+<ul>
+<li><a href="https://developer.nvidia.com/cuda-toolkit" target="_blank" rel="noopener">https://developer.nvidia.com/cuda-toolkit</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="（1）编译流程"><a href="#（1）编译流程" class="headerlink" title="（1）编译流程"></a><strong>（1）编译流程</strong></h4><p>如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-6.png" alt="cuda-6.png"></p>
+<p>流程如下：</p>
+<ol>
+<li><strong>每个 cu</strong>：Host 代码与 Device 代码分离（部分在CPU执行、部分在GPU执行）</li>
+<li><strong>每个虚拟架构：</strong>Device 代码编译出 fatbin</li>
+<li>Host 端使用系统的 C++ 编译器(如 g++)</li>
+<li>链接（device，host）</li>
+<li>最终获得可使用 GPU 的可执行二进制文件</li>
+</ol>
+<br>
+
+<h5 id="补：GPU虚拟架构"><a href="#补：GPU虚拟架构" class="headerlink" title="补：GPU虚拟架构"></a><strong>补：GPU虚拟架构</strong></h5><p>NVIDIA 不同年代生产的GPU可能有不同的架构，如下图所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-7.png" alt="cuda-7.png"></p>
+<p>以 A100 为例，A100 为 Ampere 架构；同时，各个架构间有区别；</p>
+<p>因此提出：Compute Capability (CC)</p>
+<ul>
+<li>类似版本，表示能支持的功能和指令集合</li>
+<li>A100 (Ampere 架构)是：cc8.0</li>
+</ul>
+<blockquote>
+<p>  <strong>虽然 A100 举例，但从 CUDA 编程的角度目前各种架构没有本质区别！</strong></p>
+<p>  <font color="#f00"><strong>正因为如此，所以说CUDA是一个编程平台</strong></font></p>
+</blockquote>
+<p>同时，在编译时也可以指定架构编译选项：</p>
+<ul>
+<li><code>-arch</code>：指定虚拟架构，PTX生成目标。决定代码中可使用的CUDA 功能；</li>
+<li><code>-code</code>：指定实际架构，生成针对特定 GPU 硬件的二进制机器码(cubin)；</li>
+</ul>
+<br>
+
+<h4 id="（2）编译命令"><a href="#（2）编译命令" class="headerlink" title="（2）编译命令"></a><strong>（2）编译命令</strong></h4><p>通过：</p>
+<pre><code class="bash">nvcc add_cuda.cu -o add_cuda</code></pre>
+<p>即可编译！</p>
+<p>运行：</p>
+<pre><code class="bash">./add_cuda</code></pre>
+<br>
+
+<h2 id="（三）、GPU性能测试"><a href="#（三）、GPU性能测试" class="headerlink" title="（三）、GPU性能测试"></a>（三）、GPU性能测试</h2><p>可以通过：</p>
+<pre><code>nvidia-smi</code></pre><p>观察 GPU 利用率！</p>
+<h3 id="1、并行加法性能对比"><a href="#1、并行加法性能对比" class="headerlink" title="1、并行加法性能对比"></a><strong>1、并行加法性能对比</strong></h3><p>分别对比：</p>
+<ul>
+<li>CPU；</li>
+<li><code>&lt;&lt;&lt;1,1&gt;&gt;&gt;</code>；</li>
+<li><code>&lt;&lt;&lt;256，256&gt;&gt;&gt;</code>；</li>
+<li>GPU 满载；</li>
+</ul>
+<p>代码如下：</p>
+<p>add_cuda_profiling.cu</p>
+<pre><code class="c++">#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+
+#define CUDA_CHECK(call) \
+{ \
+    cudaError_t err = call; \
+    if (err != cudaSuccess) { \
+        std::cerr &lt;&lt; &quot;CUDA Error at &quot; &lt;&lt; __FILE__ &lt;&lt; &quot;:&quot; &lt;&lt; __LINE__ \
+        &lt;&lt; &quot; - &quot; &lt;&lt; cudaGetErrorString(err) &lt;&lt; std::endl; \
+    } \
+}
+
+// Step 3: Define add kernel
+template&lt;typename T&gt;
+__global__ void add_kernel(T *c, const T *a, const T *b, const size_t n, const size_t step) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x + step;
+    if (idx &lt; n) {
+        c[idx] = a[idx] + b[idx];
+    }
+}
+
+template&lt;typename T&gt;
+void vector_add(T *c, const T *a, const T *b, size_t n, const dim3&amp; grid_dim, const dim3&amp; block_dim) {
+    size_t step = grid_dim.x * block_dim.x;
+    for (size_t i = 0; i &lt; n; i += step) {
+        add_kernel&lt;&lt;&lt;grid_dim, block_dim&gt;&gt;&gt;(c, a, b, n, i);
+    }
+}
+
+int main() {
+    // Step 1: Prepare &amp; initialize data
+    constexpr size_t N = 1 &lt;&lt; 20; // ~1M elements
+    constexpr size_t size_bytes = sizeof(float) * N;
+
+    // Initialize data
+    const std::vector&lt;float&gt; h_a(N, 1);
+    const std::vector&lt;float&gt; h_b(N, 2);
+    std::vector&lt;float&gt; h_c(N, 0);
+
+    // Step 2: Allocate device memory &amp; transfer to global memory
+    float *d_a, *d_b, *d_c;
+    CUDA_CHECK(cudaMalloc(&amp;d_a, size_bytes));
+    CUDA_CHECK(cudaMalloc(&amp;d_b, size_bytes));
+    CUDA_CHECK(cudaMalloc(&amp;d_c, size_bytes));
+
+    CUDA_CHECK(cudaMemcpy(d_a, h_a.data(), size_bytes, cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_b, h_b.data(), size_bytes, cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_c, h_c.data(), size_bytes, cudaMemcpyHostToDevice));
+
+    // Step 4: Call the cpu addition function
+    // Set up kernel configuration
+    dim3 block_dim(1);
+    dim3 grid_dim(1);
+
+    // Call cuda add kernel
+    vector_add(d_c, d_a, d_b, N, block_dim, grid_dim);
+
+    // Step 5: Transfer data from global mem to host mem
+    CUDA_CHECK(cudaMemcpy(h_c.data(), d_c, size_bytes, cudaMemcpyDeviceToHost));
+
+    // Step 6: Check for errors (all values should be 3.0f)
+    float sumError = 0.0f;
+    for (int i = 0; i &lt; N; i++) {
+        sumError += fabs(h_c[i] - 3.0f);
+    }
+    std::cout &lt;&lt; &quot;Sum error: &quot; &lt;&lt; sumError &lt;&lt; std::endl;
+
+    if (d_a) {
+        CUDA_CHECK(cudaFree(d_a));
+    }
+    if (d_b) {
+        CUDA_CHECK(cudaFree(d_b));
+    }
+    if (d_c) {
+        CUDA_CHECK(cudaFree(d_c));
+    }
+}</code></pre>
+<blockquote>
+<p>  可以修改其中的：</p>
+<pre><code class="c++">  dim3 block_dim(1);
+  dim3 grid_dim(1);</code></pre>
+</blockquote>
+<p>不同情况下的性能如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-8.png" alt="cuda-8.png"></p>
+<p>可以使用 Nsight Systems（nsys，NVIDIA系统级性能分析工具）来分析；</p>
+<p>启动 profiling：</p>
+<pre><code class="bash">nsys profile -t cuda,nvtx,osrt -o add_cuda_profiling -f true ./add_cuda_profiling</code></pre>
+<p>解析并统计性能信息：</p>
+<pre><code class="bash">nsys stats add_cuda_profiling.nsys-rep
+
+
+ ** OS Runtime Summary (osrt_sum):
+
+ Time (%)  Total Time (ns)  Num Calls    Avg (ns)       Med (ns)      Min (ns)    Max (ns)     StdDev (ns)            Name         
+ --------  ---------------  ---------  -------------  -------------  ----------  -----------  -------------  ----------------------
+     56.2    7,592,724,284         84   90,389,574.8  100,130,776.0       2,330  370,626,986   45,049,255.4  poll                  
+     42.4    5,736,493,727         26  220,634,374.1  189,702,756.5  41,077,614  752,975,386  124,762,585.8  sem_wait              
+      1.2      164,252,099        543      302,490.1       13,509.0         529  111,402,991    4,818,716.4  ioctl                 
+      0.1       14,968,499         38      393,907.9      131,267.0         135    5,539,804      890,642.6  pthread_rwlock_wrlock                 
+......
+
+ ** CUDA API Summary (cuda_api_sum):
+
+ Time (%)  Total Time (ns)  Num Calls    Avg (ns)     Med (ns)    Min (ns)   Max (ns)     StdDev (ns)            Name         
+ --------  ---------------  ---------  ------------  -----------  --------  -----------  -------------  ----------------------
+     96.9    6,504,565,162  1,048,576       6,203.2      5,159.0     2,928   37,814,020       99,097.6  cudaLaunchKernel      
+      3.0      203,141,797          3  67,713,932.3    103,908.0    73,162  202,964,727  117,130,625.1  cudaMalloc            
+      0.1        4,017,591          4   1,004,397.8  1,012,632.0   941,545    1,050,782       45,652.8  cudaMemcpy            
+      0.0          524,788          3     174,929.3    136,182.0   122,785      265,821       78,999.0  cudaFree              
+      0.0            2,584          1       2,584.0      2,584.0     2,584        2,584            0.0  cuModuleGetLoadingMode
+
+......</code></pre>
+<p>各个类型 API Summary 分析结果如下：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-9.png" alt="cuda-9.png"></p>
+<p>可以看到：<code>&lt;&lt;&lt;1,1&gt;&gt;&gt;</code> cudaLaunchKernel 占比非常高这是由于：</p>
+<p><strong>核函数调用有开销，在外面多次循环调用开销巨大！</strong></p>
+<p>因此，需要进行优化！</p>
+<br>
+
+<h3 id="2、将循环放入核函数（Grid-strided-loop）"><a href="#2、将循环放入核函数（Grid-strided-loop）" class="headerlink" title="2、将循环放入核函数（Grid-strided loop）"></a><strong>2、将循环放入核函数（Grid-strided loop）</strong></h3><p>由于在循环中频繁的调用核函数具有巨大的性能开销，因此可以将循环放入核函数中：</p>
+<pre><code class="c++">template&lt;typename T&gt;
+__global__ void add_kernel_inner_loop(T *c, const T *a, const T *b, const size_t n, const size_t step) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    for (size_t i = idx; i &lt; n; i += step) {
+        if (i &lt; n) {
+            c[i] = a[i] + b[i];
+        }
+    }
+}
+
+template&lt;typename T&gt;
+void vector_add(T *c, const T *a, const T *b, size_t n, const dim3&amp; grid_dim, const dim3&amp; block_dim) {
+    size_t step = grid_dim.x * block_dim.x;
+    add_kernel_inner_loop&lt;&lt;&lt;grid_dim, block_dim&gt;&gt;&gt;(c, a, b, n, step);
+}</code></pre>
+<p>分析后结果如下图：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cuda-10.png" alt="cuda-10.png"></p>
+<p>同时使用 nsys 分析：</p>
+<pre><code class="bash"> ** CUDA API Summary (cuda_api_sum):
+
+ Time (%)  Total Time (ns)  Num Calls    Avg (ns)     Med (ns)    Min (ns)   Max (ns)     StdDev (ns)            Name         
+ --------  ---------------  ---------  ------------  -----------  --------  -----------  -------------  ----------------------
+     55.4      204,935,456          3  68,311,818.7    104,741.0    79,097  204,751,618  118,160,333.0  cudaMalloc            
+     44.4      164,057,041          4  41,014,260.3  1,000,521.5   926,775  161,129,223   80,076,651.2  cudaMemcpy            
+      0.2          653,441          3     217,813.7    204,732.0   194,409      254,300       32,016.9  cudaFree              
+      0.1          264,055          1     264,055.0    264,055.0   264,055      264,055            0.0  cudaLaunchKernel      
+      0.0            2,429          1       2,429.0      2,429.0     2,429        2,429            0.0  cuModuleGetLoadingMode
+</code></pre>
+<p>可以看到 cudaLaunchKernel 的确少了很多！ </p>
+<blockquote>
+<p>  这说明：</p>
+<p>  <font color="#f00"><strong>核函数的发射数量减少，因此总体执行时间降低！</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="3、CUDA并行加法性能评估（加速比）"><a href="#3、CUDA并行加法性能评估（加速比）" class="headerlink" title="3、CUDA并行加法性能评估（加速比）"></a><strong>3、CUDA并行加法性能评估（加速比）</strong></h3><p>指标：</p>
+<p>加速比 = T<sub>cpu</sub> / T<sub>gpu</sub></p>
+<p>其中：</p>
+<ul>
+<li><strong>T_cpu</strong> 是任务在 CPU 上的执行时间；</li>
+<li><strong>T_gpu</strong> 是任务在 GPU 上的执行时间；</li>
+</ul>
+<blockquote>
+<p>  <strong>理想加速比与实际加速比</strong></p>
+<ol>
+<li><strong>理想加速比</strong>：当任务完全并行化且没有任何开销时，加速比等于处理器核心数之比。例如，一个具有 1000 个 CUDA 核心的 GPU 理论上可以实现 1000 倍的加速（相对于单核 CPU）。</li>
+<li><strong>实际加速比</strong>：由于以下因素，实际加速比通常远低于理想值：<ul>
+<li>任务中存在无法并行化的串行部分</li>
+<li>数据在 CPU 和 GPU 之间的传输开销</li>
+<li>线程同步和内存访问延迟</li>
+<li>算法在 GPU 架构上的效率低下</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<h4 id="为什么-lt-lt-lt-1-1-gt-gt-gt-比-CPU慢？"><a href="#为什么-lt-lt-lt-1-1-gt-gt-gt-比-CPU慢？" class="headerlink" title="为什么&lt;&lt;&lt;1,1&gt;&gt;&gt; 比 CPU慢？"></a><strong>为什么<code>&lt;&lt;&lt;1,1&gt;&gt;&gt;</code> 比 CPU慢？</strong></h4><p>这是由于，单个 GPU 的核心实际上要比 CPU 的能力要弱！</p>
+<p>实际上，GPU 是由于干活的人多，所以快！</p>
+<br>
+
+<h3 id="4、CUDA并行加法性能评估（总耗时）"><a href="#4、CUDA并行加法性能评估（总耗时）" class="headerlink" title="4、CUDA并行加法性能评估（总耗时）"></a><strong>4、CUDA并行加法性能评估（总耗时）</strong></h3><p>实际上观察 nsys 的输出结果：</p>
+<pre><code class="bash"> ** CUDA GPU Kernel Summary (cuda_gpu_kern_sum):
+
+ Time (%)  Total Time (ns)  Instances    Avg (ns)       Med (ns)      Min (ns)     Max (ns)    StdDev (ns)                                              Name                                             
+ --------  ---------------  ---------  -------------  -------------  -----------  -----------  -----------  ---------------------------------------------------------------------------------------------
+    100.0      160,054,287          1  160,054,287.0  160,054,287.0  160,054,287  160,054,287          0.0  void add_kernel_inner_loop&lt;float&gt;(T1 *, const T1 *, const T1 *, unsigned long, unsigned long)
+
+Processing [add_cuda_profiling2.sqlite] with [/usr/local/cuda-12.1/nsight-systems-2023.1.2/host-linux-x64/reports/cuda_gpu_mem_time_sum.py]... 
+
+ ** CUDA GPU MemOps Summary (by Time) (cuda_gpu_mem_time_sum):
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)   Med (ns)   Min (ns)  Max (ns)  StdDev (ns)      Operation     
+ --------  ---------------  -----  ---------  ---------  --------  --------  -----------  ------------------
+     78.4        2,318,310      3  772,770.0  763,159.0   761,400   793,751     18,191.4  [CUDA memcpy HtoD]
+     21.6          640,473      1  640,473.0  640,473.0   640,473   640,473          0.0  [CUDA memcpy DtoH]</code></pre>
+<p>总体的耗时应当是三个部分：</p>
+<ul>
+<li><strong>总耗时 = T<sub>H2D</sub> + T<sub>kernel</sub> + T<sub>D2H</sub></strong></li>
+</ul>
+<p>并且，对于 <code>&lt;&lt;&lt;256,256&gt;&gt;&gt;</code> 来说：<strong>HtoD 和 DtoH 的耗时会远大于 kernel 的运行时间！</strong></p>
+<blockquote>
+<p>  <strong>这就说明，来回的移动和复制数据比计算更消耗时间！</strong></p>
+</blockquote>
+<p>能否对这一部分进行优化呢？</p>
+<p>后面的文章中会讲解！</p>
+<br>
+
+<h2 id="（四）、设备信息"><a href="#（四）、设备信息" class="headerlink" title="（四）、设备信息"></a><strong>（四）、设备信息</strong></h2><p>对于 GPU 而言：<strong>越多的线程 =&gt; 越大的并行度 =&gt; 越好的性能</strong></p>
+<p>GPU 最大可以启动的线程数可以参考：</p>
+<ul>
+<li>官网查询硬件：<a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications" target="_blank" rel="noopener">https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications</a></li>
+<li>代码动态获取（cudaDeivceProp）：<a href="https://docs.nvidia.com/cuda/cuda-runtime-api/index.html" target="_blank" rel="noopener">https://docs.nvidia.com/cuda/cuda-runtime-api/index.html</a></li>
+</ul>
+<blockquote>
+<p>  也可以参考：</p>
+<ul>
+<li><a href="https://www.nvidia.cn/docs/IO/51635/NVIDIA_CUDA_Programming_Guide_1.1_chs.pdf" target="_blank" rel="noopener">https://www.nvidia.cn/docs/IO/51635/NVIDIA_CUDA_Programming_Guide_1.1_chs.pdf</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="1、cudaDeivceProp"><a href="#1、cudaDeivceProp" class="headerlink" title="1、cudaDeivceProp"></a><strong>1、cudaDeivceProp</strong></h3><p>重点的几个参数：</p>
+<ul>
+<li><strong>maxGridSize（int[3]）</strong>：x、y、z三个方向分别最多可支持的 block 数；</li>
+<li><strong>maxBlockSize（int[3]）</strong>：每个 Block中x、y、z三个方向分别最多可支持的线程数；</li>
+<li><strong>maxThreadsPerBlock（int）</strong>：每个 block 中最多可有的线程数</li>
+</ul>
+<blockquote>
+<p>  <strong>其中：Blocksize 需同时满足这两组条件：maxBlockSize、maxThreadsPerBlock：</strong></p>
+<ul>
+<li>x、y、z加起来不超过：maxThreadsPerBlock；</li>
+<li>x、y、z各个方向不超过：maxBlockSize；</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="2、CUDA版本"><a href="#2、CUDA版本" class="headerlink" title="2、CUDA版本"></a><strong>2、CUDA版本</strong></h3><p>查看 CUDA 版本使用：</p>
+<pre><code class="bash"># CUDA版本
+nvcc --version
+
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Tue_Feb__7_19:32:13_PST_2023
+Cuda compilation tools, release 12.1, V12.1.66
+Build cuda_12.1.r12.1/compiler.32415258_0</code></pre>
+<blockquote>
+<p>  可以看到 CUDA 为 12.1！</p>
+</blockquote>
+<p>而 <code>nvidia-smi</code> 命令输出的是：<strong>驱动支持的的最高版本，而非实际正在使用的版本！</strong></p>
+<pre><code class="bash">Tue Jul 29 09:30:09 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.54.15              Driver Version: 550.54.15      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Tesla T4                       Off |   00000000:00:04.0 Off |                    0 |
+| N/A   38C    P8             10W /   70W |       0MiB /  15360MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+</code></pre>
+<blockquote>
+<p>  <strong>可以看到，最高支持 12.4！</strong></p>
+</blockquote>
+<br>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h2><p>更加详细的内容，可以看：</p>
+<ul>
+<li><a href="https://qiankunli.github.io/2025/03/22/cuda.html" target="_blank" rel="noopener">https://qiankunli.github.io/2025/03/22/cuda.html</a></li>
+</ul>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb" target="_blank" rel="noopener">https://github.com/JasonkayZK/high-performance-computing-learn/blob/main/cuda/1_introduction_to_parallel_programming_and_cuda.ipynb</a></li>
+</ul>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://beta.infinitensor.com/camp/summer2025/stage/1/course/cuda-programming" target="_blank" rel="noopener">https://beta.infinitensor.com/camp/summer2025/stage/1/course/cuda-programming</a></li>
+<li><a href="https://qiankunli.github.io/2025/03/22/cuda.html#simd%E5%92%8Csimt" target="_blank" rel="noopener">https://qiankunli.github.io/2025/03/22/cuda.html#simd%E5%92%8Csimt</a></li>
+<li><a href="https://www.nvidia.cn/docs/IO/51635/NVIDIA_CUDA_Programming_Guide_1.1_chs.pdf" target="_blank" rel="noopener">https://www.nvidia.cn/docs/IO/51635/NVIDIA_CUDA_Programming_Guide_1.1_chs.pdf</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2025/07/29/一、并行编程导论与CUDA入门/" title="https://jasonkayzk.github.io/2025/07/29/一、并行编程导论与CUDA入门/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2025/07/29/一、并行编程导论与CUDA入门/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725301488"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

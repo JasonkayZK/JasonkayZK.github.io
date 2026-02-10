@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>【翻译】Go内存模型 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="MIT的Lecture5要求先阅读Go内存模型，这篇文章写的挺好的，所以打算翻译一下；">
+<meta name="keywords" content="Golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【翻译】Go内存模型">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/10/26/【翻译】Go内存模型/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="MIT的Lecture5要求先阅读Go内存模型，这篇文章写的挺好的，所以打算翻译一下；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.751Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【翻译】Go内存模型">
+<meta name="twitter:description" content="MIT的Lecture5要求先阅读Go内存模型，这篇文章写的挺好的，所以打算翻译一下；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725315912">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?99">
+    
+    <h1>【翻译】Go内存模型</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年10月26日</a>
+    <a><i class="nexmoefont icon-areachart"></i>11.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 57 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Golang/">Golang</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Golang/">Golang</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#【翻译】Go内存模型"><span class="toc-text">【翻译】Go内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#介绍-Introduction"><span class="toc-text">介绍(Introduction)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#建议-Advice"><span class="toc-text">建议(Advice)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#正式开始前的碎碎念-Informal-Overview"><span class="toc-text">正式开始前的碎碎念(Informal Overview)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存模型-Memory-Model"><span class="toc-text">内存模型(Memory Model)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#含有data-race的代码实现的限制"><span class="toc-text">含有data-race的代码实现的限制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#同步（Synchronization）"><span class="toc-text">同步（Synchronization）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#初始化（Initialization）"><span class="toc-text">初始化（Initialization）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Goroutine（Goroutine-creation）"><span class="toc-text">创建Goroutine（Goroutine creation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#销毁Goroutine（Goroutine-destruction）"><span class="toc-text">销毁Goroutine（Goroutine destruction）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Channel通信（Channel-communication）"><span class="toc-text">Channel通信（Channel communication）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#无缓存Channel"><span class="toc-text">无缓存Channel</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#有缓存Channel"><span class="toc-text">有缓存Channel</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Locks"><span class="toc-text">Locks</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Once"><span class="toc-text">Once</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Atomic-Values"><span class="toc-text">Atomic Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Finalizers"><span class="toc-text">Finalizers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Additional-Mechanisms"><span class="toc-text">Additional Mechanisms</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#不正确的同步（Incorrect-synchronization）"><span class="toc-text">不正确的同步（Incorrect synchronization）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译相关的错误（Incorrect-compilation）"><span class="toc-text">编译相关的错误（Incorrect compilation）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>MIT的Lecture5要求先阅读Go内存模型，这篇文章写的挺好的，所以打算翻译一下；</p>
+<p>原文地址：</p>
+<ul>
+<li><a href="https://go.dev/ref/mem" target="_blank" rel="noopener">https://go.dev/ref/mem</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/go-learn/tree/go-memory-model" target="_blank" rel="noopener">https://github.com/JasonkayZK/go-learn/tree/go-memory-model</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="【翻译】Go内存模型"><a href="#【翻译】Go内存模型" class="headerlink" title="【翻译】Go内存模型"></a><strong>【翻译】Go内存模型</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p><strong>本文是基于 <code>Version of June 6, 2022</code> 翻译；</strong></p>
+<p>之前在网上找了不少关于 <code>The Go Memory Model</code> 的翻译，大多数都是比较老的版本；</p>
+<p>而新版本加了不少的内容，所以想要再翻译一下；</p>
+<p><strong>本文结合了我个人的一些理解，如果有翻译不对的地方，也希望大家能够在下方评论区指出！</strong></p>
+<br>
+
+<h2 id="介绍-Introduction"><a href="#介绍-Introduction" class="headerlink" title="介绍(Introduction)"></a><strong>介绍(Introduction)</strong></h2><blockquote>
+<p>  The Go memory model specifies the conditions under which reads of a variable in one goroutine can be guaranteed to observe values produced by writes to the same variable in a different goroutine.</p>
+</blockquote>
+<p>Go内存模型特别指定了一些条件，在这些条件下可以保证在一个 goroutine 中可以观察（读取）到其他 goroutine 中对相同变量的写入的值；</p>
+<h3 id="建议-Advice"><a href="#建议-Advice" class="headerlink" title="建议(Advice)"></a><strong>建议(Advice)</strong></h3><blockquote>
+<p>Programs that modify data being simultaneously accessed by multiple goroutines must serialize such access.</p>
+<p>To serialize access, protect the data with channel operations or other synchronization primitives such as those in the <a href="https://go.dev/pkg/sync/" target="_blank" rel="noopener"><code>sync</code></a> and <a href="https://go.dev/pkg/sync/atomic/" target="_blank" rel="noopener"><code>sync/atomic</code></a> packages.</p>
+<p>If you must read the rest of this document to understand the behavior of your program, you are being too clever.</p>
+<p>Don’t be clever.</p>
+</blockquote>
+<p>代码中如果存在多个 Goroutine 同时访问并修改同一个数据的场景，则必须（采用同步的方式）序列化这些操作；</p>
+<p>为了序列化访问这些共享的数据，可以采用 Channel 操作或者其他同步原语，比如：<a href="https://go.dev/pkg/sync/" target="_blank" rel="noopener"><code>sync</code></a> 和 <a href="https://go.dev/pkg/sync/atomic/" target="_blank" rel="noopener"><code>sync/atomic</code></a> 包提供的功能；</p>
+<p>如果你选择了阅读这篇文档剩下的内容来了解你的代码到底是如何工作的，那你的选择是明智的！</p>
+<p>不要自作聪明！</p>
+<blockquote>
+<p>  <strong>总结：你觉得你自己懂了，我觉得你没懂；233</strong></p>
+</blockquote>
+<h3 id="正式开始前的碎碎念-Informal-Overview"><a href="#正式开始前的碎碎念-Informal-Overview" class="headerlink" title="正式开始前的碎碎念(Informal Overview)"></a><strong>正式开始前的碎碎念(Informal Overview)</strong></h3><blockquote>
+<p>  Go approaches its memory model in much the same way as the rest of the language, aiming to keep the semantics simple, understandable, and useful. This section gives a general overview of the approach and should suffice for most programmers. The memory model is specified more formally in the next section.</p>
+</blockquote>
+<p>Go 在实现他自己的内存模型时，和其他大多数的编程语言十分类似，目的是为了保证语义的简单、好理解并且好用；这一小节给出了一个 Go 内存模型实现的总体概述，但是足以满足大多数开发者的知识需要了；在下一小节中会更加深入的探讨内存模型；</p>
+<blockquote>
+<p>  A <em>data race</em> is defined as a write to a memory location happening concurrently with another read or write to that same location, unless all the accesses involved are atomic data accesses as provided by the <code>sync/atomic</code> package. As noted already, programmers are strongly encouraged to use appropriate synchronization to avoid data races. In the absence of data races, Go programs behave as if all the goroutines were multiplexed onto a single processor. This property is sometimes referred to as DRF-SC: data-race-free programs execute in a sequentially consistent manner.</p>
+</blockquote>
+<blockquote>
+<p>  <strong><code>data race</code>：数据竞争，指的是多个线程并发访问某一共享数据从而可能造成并发问题，下文将使用原单词；</strong></p>
+</blockquote>
+<p><code>data race</code> 指的是在向内存的某一地址写入数据的同时，存在其他线程并发的在同一内存地址进行读取或写入操作；所有上述涉及到数据访问的操作都是由  <code>sync/atomic</code> 包提供的原子操作除外！</p>
+<p>正如前文提到的，我们强烈推荐开发者使用合适的同步策略（如，锁、Channel等）来避免 data race；</p>
+<p>在没有 data race 的场景下，Go 程序表现的就像是所有的 goroutine 被同一个处理器进行多路调度一样（<code>all the goroutines were multiplexed onto a single processor</code>）；</p>
+<p>这种特性有时也被称作为 <code>DRF-SC</code>：无 data race 的程序以顺序一致的方式执行（data-race-free programs execute in a sequentially consistent manner）；</p>
+<blockquote>
+<p>  While programmers should write Go programs without data races, there are limitations to what a Go implementation can do in response to a data race. An implementation may always react to a data race by reporting the race and terminating the program. Otherwise, each read of a single-word-sized or sub-word-sized memory location must observe a value actually written to that location (perhaps by a concurrent executing goroutine) and not yet overwritten. These implementation constraints make Go more like Java or JavaScript, in that most races have a limited number of outcomes, and less like C and C++, where the meaning of any program with a race is entirely undefined, and the compiler may do anything at all. Go’s approach aims to make errant programs more reliable and easier to debug, while still insisting that races are errors and that tools can diagnose and report them.</p>
+</blockquote>
+<p>虽然开发者应当在没有 data race 的情况下编写 Go 代码，但是 Go 的实现实际上限制了这一点（使得你不得不关注 并解决 data race 问题）；</p>
+<blockquote>
+<p>  <strong>我猜这里作者的意思是像C++这种语言不会限制你去处理 data race 开发者不需要关心 data race 代码也能跑，但是对不对就是你自己的事情了～</strong></p>
+</blockquote>
+<p>一个（好的）实现应该总是能察觉并对 data race 做出反应，比如：报错说存在 data race 并且终止程序运行；</p>
+<p>否则，每次在内存地址中读取一个字或者一个字节的时候，必须确保（观察到）这个值确实被写入到了内存的这个地方（可能是被多个 goroutine 并发写入），并且这个值还没有被（其他 goroutine）覆盖；</p>
+<p>正是这些实现的约束，使得 Go 和 Java 或者 JavaScript 非常类似，即：大多数的 data race 只会造成不是很严重的后果（have a limited number of outcomes）；</p>
+<p>而不像 C 和 C++（点名表扬！），data race 会造成未定义的行为，并且编译器（尤其是代码优化阶段）可能会做各种各样离谱的事！</p>
+<p>Go 的实现目的是让犯错误的程序也能够尽量可靠，并且容易 debug，并且也坚持： data race 就是错误，应当提供相应的工具来诊断并报告这些错误；</p>
+<br>
+
+<h2 id="内存模型-Memory-Model"><a href="#内存模型-Memory-Model" class="headerlink" title="内存模型(Memory Model)"></a><strong>内存模型(Memory Model)</strong></h2><blockquote>
+<p>  The following formal definition of Go’s memory model closely follows the approach presented by Hans-J. Boehm and Sarita V. Adve in “<a href="https://www.hpl.hp.com/techreports/2008/HPL-2008-56.pdf" target="_blank" rel="noopener">Foundations of the C++ Concurrency Memory Model</a>”, published in PLDI 2008. The definition of data-race-free programs and the guarantee of sequential consistency for race-free programs are equivalent to the ones in that work.</p>
+</blockquote>
+<p>Go 中内存模型的定义与 <code>Hans-J. Boehm</code> 和 <code>Sarita V. Adve</code> 在2008年发表在 PLDI 上的论文 <a href="https://www.hpl.hp.com/techreports/2008/HPL-2008-56.pdf" target="_blank" rel="noopener">Foundations of the C++ Concurrency Memory Model</a> 内容非常接近；同时，关于禁止 data-race（<code>data-race-free</code>）和保证在禁止数据竞争（<code>race-free</code>）程序中顺序一致性的描述和论文内容完全一致。</p>
+<blockquote>
+<p>  The memory model describes the requirements on program executions, which are made up of goroutine executions, which in turn are made up of memory operations.</p>
+<p>  A <em>memory operation</em> is modeled by four details:</p>
+<ul>
+<li>its kind, indicating whether it is an ordinary data read, an ordinary data write, or a <em>synchronizing operation</em> such as an atomic data access, a mutex operation, or a channel operation,</li>
+<li>its location in the program,</li>
+<li>the memory location or variable being accessed, and</li>
+<li>the values read or written by the operation.</li>
+</ul>
+</blockquote>
+<p><strong>内存模型描述了代码执行的基本需求：Go 的执行是由大量 goroutine 执行组成，当然最终这些执行都会转化为内存操作；</strong></p>
+<p>内存操作的建模细节如下（内存模型定义）：</p>
+<ul>
+<li><strong>内存操作类型</strong>：表示这个内存操作是：普通读数据、普通写数据、或者是一个同步操作，如：原子数据访问、互斥锁操作、Channel 操作等；</li>
+<li>操作本身在代码中的位置；</li>
+<li>需要操作的内存地址、或正在被访问的变量和；</li>
+<li>对应的正在被操作读取或写入的值；</li>
+</ul>
+<blockquote>
+<p>  Some memory operations are <em>read-like</em>, including read, atomic read, mutex lock, and channel receive. Other memory operations are <em>write-like</em>, including write, atomic write, mutex unlock, channel send, and channel close. Some, such as atomic compare-and-swap, are both read-like and write-like.</p>
+</blockquote>
+<p>一些操作是具有 <code>写特性的</code>（<code>read-like</code>），包括：读、原子读、互斥锁和 Channel 接收消息；</p>
+<p>一些操作是 <code>读特性的</code>（<code>write-line</code>），包括：写、原子写、解互斥锁、Channel 发送消息 和 关闭 Channel；</p>
+<p>还有一些特性是同时具有两种属性的，比如：原子的CAS（atomic compare-and-swap）操作；</p>
+<blockquote>
+<p>  <strong>CAS 操作首先要比较值（Read），然后再交换写入（Write）；</strong></p>
+</blockquote>
+<blockquote>
+<p>  A <em>goroutine execution</em> is modeled as a set of memory operations executed by a single goroutine.</p>
+</blockquote>
+<p><strong>而 Goroutine 的执行会被抽象为由单个 Goroutine 执行的一组内存操作；</strong></p>
+<br>
+
+<blockquote>
+<p>  <strong>Requirement 1</strong>: The memory operations in each goroutine must correspond to a correct sequential execution of that goroutine, given the values read from and written to memory. That execution must be consistent with the <em>sequenced before</em> relation, defined as the partial order requirements set out by the <a href="https://go.dev/ref/spec" target="_blank" rel="noopener">Go language specification</a> for Go’s control flow constructs as well as the <a href="https://go.dev/ref/spec#Order_of_evaluation" target="_blank" rel="noopener">order of evaluation for expressions</a>.</p>
+<p>  A Go <em>program execution</em> is modeled as a set of goroutine executions, together with a mapping <em>W</em> that specifies the write-like operation that each read-like operation reads from. (Multiple executions of the same program can have different program executions.)</p>
+</blockquote>
+<p><strong>要求1</strong>：给定从内存读取和写入的值，每个goroutine中的内存操作必须对应于该goroutin的正确顺序执行；该执行必须与之前的顺序关系（<em>sequenced before</em>）保持一致，这个部分顺序的要求（<code>the partial order requirements</code>）在 <a href="https://go.dev/ref/spec" target="_blank" rel="noopener">Go language specification</a>（或者 <a href="https://go.dev/ref/spec#Order_of_evaluation" target="_blank" rel="noopener">order of evaluation for expressions</a>）中被定义为 Go的控制流结构；</p>
+<p>Go 程序执行被抽象为一组 goroutine 的执行，以及一个抽象映射 <em>W</em>：表示每个读特性的操作都用来读取的写特性的操作；（同一个程序的多次执行可以由不同的程序执行）；</p>
+<blockquote>
+<p>  <strong>这里说的是由哪个 goroutine 执行是不确定的？</strong></p>
+</blockquote>
+<blockquote>
+<p>  <strong>Requirement 2</strong>: For a given program execution, the mapping <em>W</em>, when limited to synchronizing operations, must be explainable by some implicit total order of the synchronizing operations that is consistent with sequencing and the values read and written by those operations.</p>
+<p>  The <em>synchronized before</em> relation is a partial order on synchronizing memory operations, derived from <em>W</em>. If a synchronizing read-like memory operation <em>r</em> observes a synchronizing write-like memory operation <em>w</em> (that is, if <em>W</em>(<em>r</em>) = <em>w</em>), then <em>w</em> is synchronized before <em>r</em>. Informally, the synchronized before relation is a subset of the implied total order mentioned in the previous paragraph, limited to the information that <em>W</em> directly observes.</p>
+<p>  The <em>happens before</em> relation is defined as the transitive closure of the union of the sequenced before and synchronized before relations.</p>
+</blockquote>
+<p><strong>要求2：</strong> 对于一个给定的执行程序，映射 <em>W</em> 只是同步操作时，必须以某种隐含的同步操作的一致性顺序来解释和执行，该操作必须（与代码）顺序一致，并且（每一个操作执行后的）值是由这些操作读取和修改的值；</p>
+<p><em>synchronized before</em>（操作前同步）关系源自映射 <em>W</em>，并且是一个同步内存操作基础上的部分有序操作。</p>
+<p>如果一个被同步化的读特性内存操作 <em>r</em> 观察到了此时存在一个被同步化了的写特性操作 <em>w</em> （即：<em>W</em>(<em>r</em>) = <em>w</em>），此时 <em>w</em> 就需要在 <em>r</em> 执行前被同步（<em>w</em> is synchronized before <em>r</em>）；</p>
+<p>不严格的讲，刚才提到的 <em>synchronized before*（操作前同步）操作是前文中提到的全局顺序执行的一个子集，原因主要是受限于映射 *W</em> 所能直接观察到的信息；</p>
+<p><em>happens before</em> 关系是：顺序前序执行和同步前序执行两者的并集（the transitive closure of the union of the sequenced before and synchronized before relations.）；</p>
+<blockquote>
+<p>  <strong>Requirement 3</strong>: For an ordinary (non-synchronizing) data read <em>r</em> on a memory location <em>x</em>, <em>W</em>(<em>r</em>) must be a write <em>w</em> that is <em>visible</em> to <em>r</em>, where visible means that both of the following hold:</p>
+<ol>
+<li><em>w</em> happens before <em>r</em>.</li>
+<li><em>w</em> does not happen before any other write <em>w’</em> (to <em>x</em>) that happens before <em>r</em>.</li>
+</ol>
+</blockquote>
+<p><strong>要求3：</strong> 对于一个普通（非同步）的在内存地址 <em>x</em> 上的读取操作 <em>r</em>，W(<em>r</em>) 操作也必须要保证，写入操作 <em>w</em> 对于读取操作 <em>r</em> 是可见的，这里的可见性主要包括两点：</p>
+<ul>
+<li>写入操作 <em>w</em> 操作发生在读取操作 <em>r</em> 之前；</li>
+<li>写入操作 <em>w</em> 不会发生在读取操作 <em>r</em> 之前的任何其他写入 <em>w’</em>（至 <em>x</em>）之前；</li>
+</ul>
+<blockquote>
+<p>  上面这一段不太好理解，总的来说主要就是讲述了 <em>happen before</em> 的一些特性，即，两个事件的结果之间的关系：</p>
+<p>  <strong>如果一个事件应该在另一个事件之前发生，则结果必须反映这一点，即使这些事件实际上是无序执行的（通常是为了优化程序流程）；</strong></p>
+<p>  主要包括了以下八大原则：</p>
+<ul>
+<li><p><strong>单线程happen-before原则：在同一个线程中，书写在前面的操作happen-before后面的操作。</strong></p>
+</li>
+<li><p><strong>锁的happen-before原则：同一个锁的unlock操作happen-before此锁的lock操作。</strong></p>
+</li>
+<li><p><strong>volatile的happen-before原则：对一个volatile变量的写操作happen-before对此变量的任意操作(当然也包括写操作了)。</strong></p>
+</li>
+<li><p><strong>happen-before的传递性原则：如果A操作 happen-before B操作，B操作happen-before C操作，那么A操作happen-before C操作。</strong></p>
+</li>
+<li><p><strong>线程启动的happen-before原则：同一个线程的start方法happen-before此线程的其它方法。</strong></p>
+</li>
+<li><p><strong>线程中断的happen-before原则：对线程interrupt方法的调用happen-before被中断线程的检测到中断发送的代码。</strong></p>
+</li>
+<li><p><strong>线程终结的happen-before原则：线程中的所有操作都happen-before线程的终止检测。</strong></p>
+</li>
+<li><p><strong>对象创建的happen-before原则：一个对象的初始化完成先于他的finalize方法调用。</strong></p>
+<p>扩展阅读：</p>
+</li>
+<li><p><a href="https://en.wikipedia.org/wiki/Happened-before" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Happened-before</a></p>
+</li>
+<li><p><a href="https://www.jianshu.com/p/1508eedba54d" target="_blank" rel="noopener">https://www.jianshu.com/p/1508eedba54d</a></p>
+</li>
+<li><p><a href="https://www.51cto.com/article/712408.html" target="_blank" rel="noopener">https://www.51cto.com/article/712408.html</a></p>
+</li>
+<li><p><a href="https://cloud.tencent.com/developer/article/1734515" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1734515</a></p>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>  A <em>read-write data race</em> on memory location <em>x</em> consists of a read-like memory operation <em>r</em> on <em>x</em> and a write-like memory operation <em>w</em> on <em>x</em>, at least one of which is non-synchronizing, which are unordered by happens before (that is, neither <em>r</em> happens before <em>w</em> nor <em>w</em> happens before <em>r</em>).</p>
+<p>  A <em>write-write data race</em> on memory location <em>x</em> consists of two write-like memory operations <em>w</em> and <em>w’</em> on <em>x</em>, at least one of which is non-synchronizing, which are unordered by happens before.</p>
+<p>  Note that if there are no read-write or write-write data races on memory location <em>x</em>, then any read <em>r</em> on <em>x</em> has only one possible <em>W</em>(<em>r</em>): the single <em>w</em> that immediately precedes it in the happens before order.</p>
+</blockquote>
+<p>一个在内存地址为 <em>x</em> 上的 读写data race，主要包括：一个在内存 <em>x</em> 处的读特性操作 <em>r</em> 和一个在同一地址下的写特性操作 <em>w</em>，并且两者至少有一个没有进行同步操作，最终就导致了无序的 <em>happens before</em> （即：即不能保证 <em>r</em> 在 <em>w</em> 之前执行，也不能保证 <em>w</em> 在 <em>r</em> 之前执行）；</p>
+<p>一个在内存地址为 <em>x</em> 上的 写写data race，主要包括：两个在内存 <em>x</em> 处的写特性操作 <em>w</em> 和 <em>w‘</em>，并且两者至少有一个没有进行同步操作，最终就导致了无序的 <em>happens before</em>；</p>
+<p>注意到：如果在内存 <em>x</em> 处没有 读写或写写data race，那么此时任何读操作 <em>r</em> 都只会有一个唯一确定的 <em>W</em>(<em>r</em>)：一个紧跟着的 <em>w</em> 操作；</p>
+<blockquote>
+<p>  More generally, it can be shown that any Go program that is data-race-free, meaning it has no program executions with read-write or write-write data races, can only have outcomes explained by some sequentially consistent interleaving of the goroutine executions. (The proof is the same as Section 7 of Boehm and Adve’s paper cited above.) This property is called DRF-SC.</p>
+</blockquote>
+<p>更一般的结论：任何一个 data-race-free 的 Go 程序都表示其不存在 read-write 或 write-write data race，并且都可以被唯一的被解释为一些顺序一致的被交织在许多 goroutine 中的执行过程（这一点和前面提到的 Boehm 和 Adve 论文中的第七小节中的证明完全一致！），这个性质就被称为 <code>DRF-SC</code>；</p>
+<blockquote>
+<p>  The intent of the formal definition is to match the DRF-SC guarantee provided to race-free programs by other languages, including C, C++, Java, JavaScript, Rust, and Swift.</p>
+<p>  Certain Go language operations such as goroutine creation and memory allocation act as synchronization operations. The effect of these operations on the synchronized-before partial order is documented in the “Synchronization” section below. Individual packages are responsible for providing similar documentation for their own operations.</p>
+</blockquote>
+<p>更加广义化的 DRF-SC 的定义的目的是为其他编程语言提供了 race-free 编程的实现，包括：C, C++, Java, JavaScript, Rust, 和 Swift等；</p>
+<p>某些 Go 中的操作例如：创建 goroutine、内存分配等，都表现为同步操作（内部实现）；</p>
+<p>这些操作对于“在同步操作前保证局部顺序”（<code>synchronized-before partial order</code>）在下面的 <code>Synchronization</code> 小节会详细讲述。此外，每个独立的库都有责任为自己提供的操作提供相应的类似的文档。</p>
+<br>
+
+<h2 id="含有data-race的代码实现的限制"><a href="#含有data-race的代码实现的限制" class="headerlink" title="含有data-race的代码实现的限制"></a><strong>含有data-race的代码实现的限制</strong></h2><blockquote>
+<p>  The preceding section gave a formal definition of data-race-free program execution. This section informally describes the semantics that implementations must provide for programs that do contain races.</p>
+<p>  First, any implementation can, upon detecting a data race, report the race and halt execution of the program. Implementations using ThreadSanitizer (accessed with “<code>go</code> <code>build</code> <code>-race</code>”) do exactly this.</p>
+<p>  Otherwise, a read <em>r</em> of a memory location <em>x</em> that is not larger than a machine word must observe some write <em>w</em> such that <em>r</em> does not happen before <em>w</em> and there is no write <em>w’</em> such that <em>w</em> happens before <em>w’</em> and <em>w’</em> happens before <em>r</em>. That is, each read must observe a value written by a preceding or concurrent write.</p>
+</blockquote>
+<p>前面的内容给出了 data-race-free 程序执行的定义；本节主要是讲述为那些实现必须为包含 data-race 的程序所必须提供的语义；</p>
+<p>首先，（Go 提供了相关工具使得）任何代码实现都可以在检测到 data race 之后报告 race 内容，并且停止执行程序；这个特性主要是通过 <code>ThreadSanitizer</code> （可以使用 “<code>go</code> <code>build</code> <code>-race</code>”）来实现的；</p>
+<p>否则，对于一个在读取内存地址为 <em>x</em> 且大小不超过一个机器字长的操作，必须能够观测到在这个读操作之前的一个写操作 <em>w</em>，同时在这个 <em>w</em> 和 <em>r</em> 之间不能插入另外一个写操作 <em>w‘</em> 使得 <em>w</em> 在 <em>w‘</em> 之前执行，而 <em>w‘</em> 在 <em>r</em> 之前执行！</p>
+<p>即：（同步操作应该保证）每个读取操作都应当能够观测到在他之前或者并发执行的写操作的值！</p>
+<blockquote>
+<p>  这里解释一下：</p>
+<p>  <strong>为什么读取操作会看不到在他之前执行的写操作的值：</strong></p>
+<p>  在现代 CPU 架构中，基本上都会存在多级的 CPU Cache 来缓存，这样避免了所有的操作都要去访问内存空间，但是也导致了一个显然的问题：</p>
+<p>  <font color="#f00"><strong>由于CPU存在多个核，某个核中的数据可能不会立即刷入到内存中，这就导致了如果其他CPU核心去内存中取值，取到的是旧的值，而非 CPU Cache 中的值！</strong></font></p>
+<p>  <font color="#f00"><strong>Go 中的同步原语，如：lock、channel、atomic 都保证了 Cache 中的值能够在多个 goroutine 中可见（刷入内存中），这也是上面的内容讲的；</strong></font></p>
+<p>  <font color="#f00"><strong>对于 Java、C++ 等语言，还提供了类似 <code>volatile</code> 的关键字，保证变量直接被刷入内存，以确保对其他线程的可用性；</strong></font></p>
+  <br>
+
+<p>  <strong>关于不大于一个字长的定义：</strong></p>
+<p>  对于大于一个字长的结构，通常其空间都是在堆上分配，而在操作时都是通过一个机器字长的指针进行操作；</p>
+<p>  所以这里关注的都是不大于一个字长的定义，而通常对于这些数据，拷贝他们的值消耗的性能，和移动他们的值消耗的性能几乎没什么区别，例如：int类型；</p>
+</blockquote>
+<blockquote>
+<p>  Additionally, observation of acausal and “out of thin air” writes is disallowed.</p>
+<p>  Reads of memory locations larger than a single machine word are encouraged but not required to meet the same semantics as word-sized memory locations, observing a single allowed write <em>w</em>. For performance reasons, implementations may instead treat larger operations as a set of individual machine-word-sized operations in an unspecified order. This means that races on multiword data structures can lead to inconsistent values not corresponding to a single write. When the values depend on the consistency of internal (pointer, length) or (pointer, type) pairs, as can be the case for interface values, maps, slices, and strings in most Go implementations, such races can in turn lead to arbitrary memory corruption.</p>
+<p>  Examples of incorrect synchronization are given in the “Incorrect synchronization” section below.</p>
+<p>  Examples of the limitations on implementations are given in the “Incorrect compilation” section below.</p>
+</blockquote>
+<p>此外，观察到未分配空间的（<code>acausal</code>，无配偶的）和未初始化完成的对象（<code>“out of thin air”</code>）的写入是不允许的；</p>
+<p>我们鼓励读取超过一个机器字长的内存空间的操作，但是他的语义和单机器字长的场景有所不同：观察单个允许写入<em>w</em>；</p>
+<p>出于性能方面的考虑，在真正实现时，超过一个机器字长的内存空间的操作可能被处理为多个独立的单机器字长的无序操作。这表示多字长的数据上的 data race 可能会导致数据的不一致性，这和（之前）单个的写入操作（的表现）不同；</p>
+<p>当某个复杂类型的取值依靠：内部实现（指针，长度）或者数据对（指针，类型）时，例如：map、slice、string 在 Go 中的实现，这样的数据竞争会导致内存中的数据损坏（memory corruption），出现不一致；</p>
+<p>下面的“不正确同步”（<code>“Incorrect synchronization”</code>）小节给出了错误同步的代码例子；</p>
+<p>下面的“错误编译”（<code>“Incorrect compilation”</code>）小节给出了data race 实现限制的代码例子；</p>
+<br>
+
+<h2 id="同步（Synchronization）"><a href="#同步（Synchronization）" class="headerlink" title="同步（Synchronization）"></a><strong>同步（Synchronization）</strong></h2><h3 id="初始化（Initialization）"><a href="#初始化（Initialization）" class="headerlink" title="初始化（Initialization）"></a><strong>初始化（Initialization）</strong></h3><blockquote>
+<p>  Program initialization runs in a single goroutine, but that goroutine may create other goroutines, which run concurrently.</p>
+<p>  If a package <code>p</code> imports package <code>q</code>, the completion of <code>q</code>‘s <code>init</code> functions happens before the start of any of <code>p</code>‘s.</p>
+<p>  The completion of all <code>init</code> functions is synchronized before the start of the function <code>main.main</code>.</p>
+</blockquote>
+<p>Go 程序的初始化都是运行在单一的一个 goroutine 中的，但是这个 goroutine 可以创建大量其他的 goroutine，并且这些 goroutine 是并行运行的！</p>
+<blockquote>
+<p>  <strong>即，开始的时候，main 函数创建第一个 goroutine，然后这个 goroutine 创造了万物！</strong></p>
+</blockquote>
+<p>如果包 <code>p</code> import 了包 <code>q</code>，那么包 <code>q</code> 中的 <code>init</code> 函数的执行要严格优先于包 <code>p</code>！</p>
+<p>在 <code>main</code> 函数开始之前，所有的 <code>init</code> 函数都是同步执行的；</p>
+<p>例如下面的代码：</p>
+<p>initialization</p>
+<pre><code class="go">// p/p.go
+package p
+
+import &quot;fmt&quot;
+
+func init() {
+    func() {
+        fmt.Println(&quot;p init in a new goroutine&quot;)
+    }()
+}
+
+func P() {
+    fmt.Println(&quot;this is p&quot;)
+}
+
+// q/q.go
+package q
+
+import (
+    &quot;fmt&quot;
+    &quot;initialization/p&quot;
+)
+
+func init() {
+    func() {
+        fmt.Println(&quot;q init in a new goroutine&quot;)
+    }()
+}
+
+func RunP() {
+    p.P()
+}
+
+// main.go
+package main
+
+import (
+    _ &quot;initialization/q&quot;
+
+    _ &quot;initialization/p&quot;
+)
+
+// Will print:
+//  p init in a new goroutine
+//  q init in a new goroutine
+// Even though the q is imported first!
+func main() {
+}</code></pre>
+<p>由于包 <code>q</code> import 了 包 <code>p</code>，因此，在 main 中，即使包 <code>q</code> 首先被引入，但是由于上面的限制，会首先执行包 <code>p</code> 中的 <code>init</code>，然后再执行包 <code>q</code> 中的 <code>init</code> 函数！因此输出：</p>
+<pre><code>p init in a new goroutine
+q init in a new goroutine</code></pre><p>但是如果我们将 <code>q.go</code> 中的 <code>p.P()</code> 注释掉，即：不再 import 包 <code>p</code>，则此时根据 main 中 import 的优先级，会输出：</p>
+<pre><code>q init in a new goroutine
+p init in a new goroutine</code></pre><br>
+
+<h3 id="创建Goroutine（Goroutine-creation）"><a href="#创建Goroutine（Goroutine-creation）" class="headerlink" title="创建Goroutine（Goroutine creation）"></a><strong>创建Goroutine（Goroutine creation）</strong></h3><blockquote>
+<p>  The <code>go</code> statement that starts a new goroutine is synchronized before the start of the goroutine’s execution.</p>
+<p>  For example, in this program:</p>
+<p>  calling <code>hello</code> will print <code>&quot;hello, world&quot;</code> at some point in the future (perhaps after <code>hello</code> has returned).</p>
+</blockquote>
+<p><code>go</code> 关键字会开启一个新的 goroutine，并且在这个 goroutine 开始执行之前，这个 goroutine 是同步被创建的！</p>
+<p>例如下面的代码：</p>
+<p>goroutine-creation/main.go</p>
+<pre><code class="go">var a string
+
+func f() {
+    fmt.Println(a)
+}
+
+func hello() {
+    a = &quot;hello, world&quot;
+    go f()
+}
+
+func main() {
+
+    hello()
+
+    fmt.Println(&quot;hello returned&quot;)
+
+    &lt;-time.After(1 * time.Second)
+}</code></pre>
+<p>调用 hello 在未来的某个时间总是会保证输出 <code>&quot;hello, world&quot;</code>（并且有可能是函数 hello 返回之后输出）；</p>
+<blockquote>
+<p>  <strong>这里解释一下：</strong></p>
+<p>  <strong>对应于上面讲述的 goroutine 的创建是一个同步的过程，因此保证了在执行 <code>go f()</code> 之前，<code>a = &quot;hello, world&quot;</code> 一定会被执行，因此变量 a 一定会被正常的初始化，所以可以输出 <code>&quot;hello, world&quot;</code>！</strong></p>
+</blockquote>
+<p>因此，上面的代码最终可能会输出：</p>
+<pre><code>hello returned
+hello, world</code></pre><br>
+
+<h3 id="销毁Goroutine（Goroutine-destruction）"><a href="#销毁Goroutine（Goroutine-destruction）" class="headerlink" title="销毁Goroutine（Goroutine destruction）"></a><strong>销毁Goroutine（Goroutine destruction）</strong></h3><blockquote>
+<p>  The exit of a goroutine is not guaranteed to be synchronized before any event in the program. For example, in this program:</p>
+<p>  the assignment to <code>a</code> is not followed by any synchronization event, so it is not guaranteed to be observed by any other goroutine. In fact, an aggressive compiler might delete the entire <code>go</code> statement.</p>
+<p>  If the effects of a goroutine must be observed by another goroutine, use a synchronization mechanism such as a lock or channel communication to establish a relative ordering.</p>
+</blockquote>
+<p>Goroutine 的退出不能保证操作的同步，例如：</p>
+<p>goroutine-destruction/main.go</p>
+<pre><code class="go">var a string
+
+func hello() {
+    go func() { a = &quot;hello&quot; }()
+    fmt.Println(a)
+}
+
+func main() {
+
+    hello()
+
+    fmt.Println(&quot;hello returned&quot;)
+
+    &lt;-time.After(1 * time.Second)
+}</code></pre>
+<p>由于给变量 <code>a</code> 赋值时没有使用任何的同步操作，因此不能够保证对变量 <code>a</code> 的赋值能够直接被其他的 goroutine 观测到。事实上，一些优化比较激进的编译器会直接把上面的整个 <code>go</code> 语句删除；</p>
+<p>如果 goroutine 对程序产生的影响必须被其他 goroutine 观测到，那么必须要使用一些同步的机制，比如：锁或者 Channel 来建立强一致的关联顺序；</p>
+<br>
+
+<h3 id="Channel通信（Channel-communication）"><a href="#Channel通信（Channel-communication）" class="headerlink" title="Channel通信（Channel communication）"></a><strong>Channel通信（Channel communication）</strong></h3><h4 id="无缓存Channel"><a href="#无缓存Channel" class="headerlink" title="无缓存Channel"></a><strong>无缓存Channel</strong></h4><blockquote>
+<p>  Channel communication is the main method of synchronization between goroutines. Each send on a particular channel is matched to a corresponding receive from that channel, usually in a different goroutine.</p>
+<p>  A send on a channel is synchronized before the completion of the corresponding receive from that channel.</p>
+<p>  This program:</p>
+<p>  is guaranteed to print <code>&quot;hello, world&quot;</code>. The write to <code>a</code> is sequenced before the send on <code>c</code>, which is synchronized before the corresponding receive on <code>c</code> completes, which is sequenced before the <code>print</code>.</p>
+<p>  The closing of a channel is synchronized before a receive that returns a zero value because the channel is closed.</p>
+<p>  In the previous example, replacing <code>c &lt;- 0</code> with <code>close(c)</code> yields a program with the same guaranteed behavior.</p>
+</blockquote>
+<p>Channel 是一个在 goroutine 之间进行同步的主要手段；每个向 channel 发送的消息，都存在一个对应的接收者，并且通常这个接收者在另一个 goroutine 中；</p>
+<p>在 Channel 上的发送操作会在被对应的接收者接收之前而被同步；</p>
+<p>以下面的代码为例：</p>
+<p>channel-communication/demo_1_test.go</p>
+<pre><code class="go">var c = make(chan int, 10)
+var a string
+
+func f() {
+    a = &quot;hello, world&quot;
+    c &lt;- 0
+    //close(c)
+}
+
+func TestDemo1(t *testing.T) {
+    go f()
+    &lt;-c
+    print(a)
+}</code></pre>
+<p>上面的代码保证会打印出 <code>&quot;hello, world&quot;</code>；因为对于 <code>a</code> 的写入操作会被下一行 <code>c &lt;- 0</code> 的发送同步，只有在 channel <code>c</code> 中的数据被接收后，才会执行 <code>print</code>；</p>
+<p>channel 的关闭会在接收操作之前同步的执行，此后由于 channel 已经关闭，接收者会接收到零值！</p>
+<p>在上面的例子中，将 <code>c &lt;- 0</code> 替换为  <code>close(c)</code>，也能得到相同的结果；</p>
+<br>
+
+<blockquote>
+<p>  A receive from an unbuffered channel is synchronized before the completion of the corresponding send on that channel.</p>
+<p>  This program (as above, but with the send and receive statements swapped and using an unbuffered channel):</p>
+<p>  is also guaranteed to print <code>&quot;hello, world&quot;</code>. The write to <code>a</code> is sequenced before the receive on <code>c</code>, which is synchronized before the corresponding send on <code>c</code> completes, which is sequenced before the <code>print</code>.</p>
+<p>  If the channel were buffered (e.g., <code>c = make(chan int, 1)</code>) then the program would not be guaranteed to print <code>&quot;hello, world&quot;</code>. (It might print the empty string, crash, or do something else.)</p>
+</blockquote>
+<p>（前面看到了）从一个无缓存的 Channel 中读取消息时（该 goroutine）会被强制同步，直到存在消息发送到了对应的 Channel 中；</p>
+<p>下面的代码和上面的例子类似，不过将发送和接收消息的位置交换了；</p>
+<p>channel-communication/demo_2_test.go</p>
+<pre><code class="go">var c2 = make(chan int, 10)
+var a2 string
+
+func f2() {
+    a2 = &quot;hello, world&quot;
+    &lt;-c2
+}
+
+func TestDemo2(t *testing.T) {
+    go f2()
+    c2 &lt;- 0
+    print(a2)
+}</code></pre>
+<p>和前面的例子类似，这里的代码也能够保证打印出 <code>&quot;hello, world&quot;</code>；对变量 <code>a2</code> 的写入会被 <code>&lt;-c2</code> 阻塞等待而同步；</p>
+<p>但是，如果这是一个有缓存的 Channel（<code>c = make(chan int, 1)</code>），则就无法保证输出 <code>&quot;hello, world&quot;</code> 了（可能会发生：输出空字符串、程序崩溃等等）；</p>
+<br>
+
+<h4 id="有缓存Channel"><a href="#有缓存Channel" class="headerlink" title="有缓存Channel"></a><strong>有缓存Channel</strong></h4><blockquote>
+<p>  The <em>k</em>th receive on a channel with capacity <em>C</em> is synchronized before the completion of the <em>k</em>+<em>C</em>th send from that channel completes.</p>
+<p>  This rule generalizes the previous rule to buffered channels. It allows a counting semaphore to be modeled by a buffered channel: the number of items in the channel corresponds to the number of active uses, the capacity of the channel corresponds to the maximum number of simultaneous uses, sending an item acquires the semaphore, and receiving an item releases the semaphore. This is a common idiom for limiting concurrency.</p>
+<p>  This program starts a goroutine for every entry in the work list, but the goroutines coordinate using the <code>limit</code> channel to ensure that at most three are running work functions at a time.</p>
+</blockquote>
+<p>第 k 个在缓存为 C 的 Channel 上被同步，直到第 k+C 个发生到这个 channel 的消息被成功发送；</p>
+<p>这个规则是一个推广后的结论；它允许了有限个数的信号量（<code>semaphore</code>）被抽象为了一个有缓存的 Channel：Channel 中的消息数量对于目前正在活跃的使用数（线程数），Channel 的缓存大小对应于可以同时并发的数量；当发送消息时获取信号量，当接收消息后释放信号量；这也是限制并发的通常用法；</p>
+<p>下面的程序为任务列表中的每一个条目都开启了一个 goroutine，但是由于有缓存 Channel 的限制，保证了一次最多有 3 个 goroutine 在同时执行；</p>
+<p>channel-communication/demo_3_test.go</p>
+<pre><code class="go">var limit = make(chan int, 3)
+
+func TestDemo3(t *testing.T) {
+
+    work := make([]func(), 0)
+    for i := 0; i &lt; 10; i++ {
+        aI := i
+        work = append(work, func() {
+            fmt.Printf(&quot;Hello, this is: %d\n&quot;, aI)
+        })
+    }
+
+    for _, w := range work {
+        go func(w func()) {
+            limit &lt;- 1
+            w()
+            time.Sleep(time.Second * 1)
+            &lt;-limit
+        }(w)
+    }
+
+    &lt;-time.After(time.Second * 10)
+}</code></pre>
+<p>上面的代码会每次输出3个任务，直到最后结束；</p>
+<br>
+
+<h3 id="Locks"><a href="#Locks" class="headerlink" title="Locks"></a><strong>Locks</strong></h3><blockquote>
+<p>  The <code>sync</code> package implements two lock data types, <code>sync.Mutex</code> and <code>sync.RWMutex</code>.</p>
+<p>  For any <code>sync.Mutex</code> or <code>sync.RWMutex</code> variable <code>l</code> and <em>n</em> &lt; <em>m</em>, call <em>n</em> of <code>l.Unlock()</code> is synchronized before call <em>m</em> of <code>l.Lock()</code> returns.</p>
+<p>  This program:</p>
+<p>  is guaranteed to print <code>&quot;hello, world&quot;</code>. The first call to <code>l.Unlock()</code> (in <code>f</code>) is synchronized before the second call to <code>l.Lock()</code> (in <code>main</code>) returns, which is sequenced before the <code>print</code>.</p>
+</blockquote>
+<p><code>sync</code> 包提供了两种锁类型：<code>sync.Mutex</code> 和 <code>sync.RWMutex</code>；</p>
+<p>对于 <code>sync.Mutex</code> 或 <code>sync.RWMutex</code> 类型的变量 <code>l</code>，并且 <em>n</em> &lt; <em>m</em>，n 次调用 <code>l.Unlock()</code> 会在 m 次调用 <code>l.Lock()</code> 返回之前被同步；</p>
+<p>来看下面的例子：</p>
+<p>locks/demo1_test.go</p>
+<pre><code class="go">var l sync.Mutex
+var a string
+
+func f() {
+    a = &quot;hello, world&quot;
+    l.Unlock()
+}
+
+func TestDemo1(t *testing.T) {
+    l.Lock()
+    go f()
+    l.Lock()
+    print(a)
+}</code></pre>
+<p>代码保证能够打印出：<code>&quot;hello, world&quot;</code>，首次在 <code>f()</code> 中调用 <code>l.Unlock()</code> 被第二次在 main 函数中调用的 <code>l.Lock()</code> 所同步，因此保证了（变量的赋值）顺序一定在 <code>print</code> 之前；</p>
+<blockquote>
+<p>  For any call to <code>l.RLock</code> on a <code>sync.RWMutex</code> variable <code>l</code>, there is an <em>n</em> such that the <em>n</em>th call to <code>l.Unlock</code> is synchronized before the return from <code>l.RLock</code>, and the matching call to <code>l.RUnlock</code> is synchronized before the return from call <em>n</em>+1 to <code>l.Lock</code>.</p>
+<p>  A successful call to <code>l.TryLock</code> (or <code>l.TryRLock</code>) is equivalent to a call to <code>l.Lock</code> (or <code>l.RLock</code>). An unsuccessful call has no synchronizing effect at all. As far as the memory model is concerned, <code>l.TryLock</code> (or <code>l.TryRLock</code>) may be considered to be able to return false even when the mutex <em>l</em> is unlocked.</p>
+</blockquote>
+<p>对于任意调用 <code>l.RLock</code> 的 <code>sync.RWMutex</code> 类型的变量 <code>l</code>，存在一个 <em>n</em>，使得第 n 次调用 <code>l.Unlock</code> 在 <code>l.RLock</code> 返回之前被同步，并且 <code>l.RUnlock</code> 在 <code>l.Lock</code> 被 n+1 次调用返回之前被同步；</p>
+<p>一个成功的调用 <code>l.TryLock</code> (或者 <code>l.TryRLock</code>) 和调用 <code>l.Lock</code> (或者 <code>l.RLock</code>) 的结果是一致的；但是，一个不成功的调用，不会产生任何同步的效果；</p>
+<p>就内存模型（的定义）来说，即使 Mutex 已经被解锁了，<code>l.TryLock</code> (或者 <code>l.TryRLock</code>) 也有可能返回 false（即获取锁失败！）；</p>
+<br>
+
+<h3 id="Once"><a href="#Once" class="headerlink" title="Once"></a><strong>Once</strong></h3><blockquote>
+<p>  The <code>sync</code> package provides a safe mechanism for initialization in the presence of multiple goroutines through the use of the <code>Once</code> type. Multiple threads can execute <code>once.Do(f)</code> for a particular <code>f</code>, but only one will run <code>f()</code>, and the other calls block until <code>f()</code> has returned.</p>
+<p>  The completion of a single call of <code>f()</code> from <code>once.Do(f)</code> is synchronized before the return of any call of <code>once.Do(f)</code>.</p>
+<p>  In this program:</p>
+<p>  calling <code>twoprint</code> will call <code>setup</code> exactly once. The <code>setup</code> function will complete before either call of <code>print</code>. The result will be that <code>&quot;hello, world&quot;</code> will be printed twice.</p>
+</blockquote>
+<p><code>sync</code> 包提供了一种安全的机制，可以通过使用 <code>Once</code> 类型在多个 goroutines 并发执行的的情况下进行初始化；</p>
+<p><strong>多个线程可以对函数 <code>f</code> 执行 <code>once.Do(f)</code>，但是只有一个线程能够执行 <code>f()</code>，而其他线程在调用时会被阻塞，直到（上一个调用） <code>f()</code> （的线程）返回；</strong></p>
+<p>来看下面的例子：</p>
+<p>once/main.go</p>
+<pre><code class="go">var a string
+var once sync.Once
+
+func setup() {
+    a = &quot;hello, world&quot;
+    fmt.Println(&quot;a has been setup&quot;)
+}
+
+func doPrint() {
+    once.Do(setup)
+    fmt.Println(a)
+}
+
+func twoPrint() {
+    go doPrint()
+    go doPrint()
+}
+
+func main() {
+
+    twoPrint()
+
+    &lt;-time.After(1 * time.Second)
+}</code></pre>
+<p>调用 <code>twoPrint</code> 后会且仅会调用 <code>setup</code> 函数一次；此后任意一个 <code>doPrint</code> 的调用，<code>setup</code> 函数 都会立即完成！</p>
+<p>因此，上面的代码会打印 <code>&quot;a has been setup&quot;</code> 一次，<code>&quot;hello, world&quot;</code> 两次：</p>
+<pre><code>a has been setup
+hello, world
+hello, world</code></pre><br>
+
+<h3 id="Atomic-Values"><a href="#Atomic-Values" class="headerlink" title="Atomic Values"></a><strong>Atomic Values</strong></h3><blockquote>
+<p>  The APIs in the <a href="https://go.dev/pkg/sync/atomic/" target="_blank" rel="noopener"><code>sync/atomic</code></a> package are collectively “atomic operations” that can be used to synchronize the execution of different goroutines. If the effect of an atomic operation <em>A</em> is observed by atomic operation <em>B</em>, then <em>A</em> is synchronized before <em>B</em>. All the atomic operations executed in a program behave as though executed in some sequentially consistent order.</p>
+<p>  The preceding definition has the same semantics as C++’s sequentially consistent atomics and Java’s <code>volatile</code> variables.</p>
+</blockquote>
+<p>在 <a href="https://go.dev/pkg/sync/atomic/" target="_blank" rel="noopener"><code>sync/atomic</code></a> 包中的 API 提供了 <code>原子操作</code> 的集合，可以用于在多个 goroutine 之间同步执行（变量的可观测性）；如果一个原子性操作 <code>A</code> 能够被另一个原子性操作 <code>B</code> 观测到，则说明操作A在操作B之前进行了同步；一个程序中执行的所有原子操作，都会以某种顺序一致的顺序依次执行；</p>
+<p>上面的定义和 C++ 中顺序一致原子定义以及 Java 中 <code>volatile</code> 类型的变量的语义是一致的！</p>
+<p>来看下面的例子：</p>
+<p>atomic/main.go</p>
+<pre><code class="go">func main() {
+
+    var ops uint64 = 0
+
+    for i := 0; i &lt; 50; i++ {
+        go func() {
+            atomic.AddUint64(&amp;ops, 1)
+        }()
+    }
+
+    time.Sleep(time.Second)
+
+    opsFinal := atomic.LoadUint64(&amp;ops)
+    fmt.Println(&quot;ops:&quot;, opsFinal)
+}</code></pre>
+<p>atomic 原子操作主要用于并发环境下，无须加锁对整数进行安全的加减、比较、读取操作；</p>
+<p>因此上面的代码能够准确无误的输出：</p>
+<pre><code>ops: 50</code></pre><br>
+
+<h3 id="Finalizers"><a href="#Finalizers" class="headerlink" title="Finalizers"></a><strong>Finalizers</strong></h3><blockquote>
+<p>  The <a href="https://go.dev/pkg/runtime/" target="_blank" rel="noopener"><code>runtime</code></a> package provides a <code>SetFinalizer</code> function that adds a finalizer to be called when a particular object is no longer reachable by the program. A call to <code>SetFinalizer(x, f)</code> is synchronized before the finalization call <code>f(x)</code>.</p>
+</blockquote>
+<p><a href="https://go.dev/pkg/runtime/" target="_blank" rel="noopener"><code>runtime</code></a> 提供了 <code>SetFinalizer</code> 函数来为某个特定的对象定义终结器（<code>finalizer</code>），当这个对象在程序中不可达之后调用；</p>
+<p>同时调用 <code>SetFinalizer(x, f)</code> 一定在调用 <code>f(x)</code> 之前被同步；</p>
+<p>来看例子：</p>
+<p>finalizer/main.go</p>
+<pre><code class="go">type Foo struct {
+    a int
+}
+
+func main() {
+    for i := 0; i &lt; 3; i++ {
+        f := NewFoo(i)
+        println(f.a)
+    }
+
+    runtime.GC()
+
+    time.Sleep(time.Second)
+}
+
+//go:noinline
+func NewFoo(i int) *Foo {
+    f := &amp;Foo{a: rand.Intn(50)}
+    runtime.SetFinalizer(f, func(f *Foo) {
+        fmt.Println(`foo ` + strconv.Itoa(i) + ` has been garbage collected`)
+    })
+
+    return f
+}</code></pre>
+<p>需要注意的是，Finalizer 无法保证被调用，即：</p>
+<p><strong>在程序无法获取到一个 obj 所指向的对象后的任意时刻，finalizer 被调度运行，且无法保证 finalizer 运行在程序退出之前；</strong></p>
+<blockquote>
+<p>  更多内容，见：</p>
+<ul>
+<li><a href="https://studygolang.com/articles/23461" target="_blank" rel="noopener">https://studygolang.com/articles/23461</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="Additional-Mechanisms"><a href="#Additional-Mechanisms" class="headerlink" title="Additional Mechanisms"></a><strong>Additional Mechanisms</strong></h3><blockquote>
+<p>  The <code>sync</code> package provides additional synchronization abstractions, including <a href="https://go.dev/pkg/sync/#Cond" target="_blank" rel="noopener">condition variables</a>, <a href="https://go.dev/pkg/sync/#Map" target="_blank" rel="noopener">lock-free maps</a>, <a href="https://go.dev/pkg/sync/#Pool" target="_blank" rel="noopener">allocation pools</a>, and <a href="https://go.dev/pkg/sync/#WaitGroup" target="_blank" rel="noopener">wait groups</a>. The documentation for each of these specifies the guarantees it makes concerning synchronization.</p>
+<p>  Other packages that provide synchronization abstractions should document the guarantees they make too.</p>
+</blockquote>
+<p><code>sync</code> 包还提供了更多关于同步操作的抽象，包括：<a href="https://go.dev/pkg/sync/#Cond" target="_blank" rel="noopener">condition variables</a>, <a href="https://go.dev/pkg/sync/#Map" target="_blank" rel="noopener">lock-free maps</a>, <a href="https://go.dev/pkg/sync/#Pool" target="_blank" rel="noopener">allocation pools</a>, <a href="https://go.dev/pkg/sync/#WaitGroup" target="_blank" rel="noopener">wait groups</a> 等等；对应的每个文档都详细说明了它在同步方面的作用；</p>
+<p>其他提供同步抽象的包也应该为他们在线程同步中的作用提供文档；</p>
+<br>
+
+<h2 id="不正确的同步（Incorrect-synchronization）"><a href="#不正确的同步（Incorrect-synchronization）" class="headerlink" title="不正确的同步（Incorrect synchronization）"></a><strong>不正确的同步（Incorrect synchronization）</strong></h2><blockquote>
+<p>  Programs with races are incorrect and can exhibit non-sequentially consistent executions. In particular, note that a read <em>r</em> may observe the value written by any write <em>w</em> that executes concurrently with <em>r</em>. Even if this occurs, it does not imply that reads happening after <em>r</em> will observe writes that happened before <em>w</em>.</p>
+<p>  In this program:</p>
+<p>  it can happen that <code>g</code> prints <code>2</code> and then <code>0</code>.</p>
+<p>  This fact invalidates a few common idioms.</p>
+</blockquote>
+<p>含有 data race 的程序会导致不正确性，并且他们的执行顺序也表现的非顺序一致；尤其是，在并发读写操作的时候，一个读操作 <em>r</em> 可能也可能没有读到另外一个并发的写操作 <em>w</em> 写入的值；</p>
+<p>即使读操作 <em>r</em> 读到了写入的新值，也不能说明写操作 <em>w</em> 一定先于读操作 <em>r</em> 发生；</p>
+<p>来看下面的例子：</p>
+<p>incorrect-synchronization/demo1_test.go</p>
+<pre><code class="go">var a, b int
+
+func f() {
+    a = 1
+    b = 2
+}
+
+func g() {
+    print(b)
+    print(a)
+}
+
+func TestDemo1(t *testing.T) {
+    go f()
+    g()
+}</code></pre>
+<p>上面的代码有时可能会输出：<code>2</code> 然后输出 <code>0</code>！</p>
+<p>这个事实可能会颠覆我们的认知；</p>
+<blockquote>
+<p>  Double-checked locking is an attempt to avoid the overhead of synchronization. For example, the <code>twoprint</code> program might be incorrectly written as:</p>
+<p>  but there is no guarantee that, in <code>doprint</code>, observing the write to <code>done</code> implies observing the write to <code>a</code>. This version can (incorrectly) print an empty string instead of <code>&quot;hello, world&quot;</code>.</p>
+</blockquote>
+<p>双重检查锁是为了避免代码同步开销；</p>
+<p>例如，一个不正确的  <code>twoprint</code> 的实现：</p>
+<p>incorrect-synchronization/demo2_test.go</p>
+<pre><code class="go">var a2 string
+var done bool
+var once sync.Once
+
+func setup() {
+    a2 = &quot;hello, world&quot;
+    done = true
+}
+
+func doprint() {
+    if !done {
+        once.Do(setup)
+    }
+    print(a2)
+}
+
+func twoprint() {
+    go doprint()
+    go doprint()
+}
+
+func TestDemo2(t *testing.T) {
+    twoprint()
+}</code></pre>
+<p>上面的 <code>doprint</code> 函数不能保证，在观察到 <code>done</code> 的同时，观察到 <code>a</code> 的写入；</p>
+<p>因此，上面的代码可能会出现输出了空字符串而非  <code>&quot;hello, world&quot;</code> 的情况！</p>
+<blockquote>
+<p>  Another incorrect idiom is busy waiting for a value, as in:</p>
+<p>  As before, there is no guarantee that, in <code>main</code>, observing the write to <code>done</code> implies observing the write to <code>a</code>, so this program could print an empty string too. Worse, there is no guarantee that the write to <code>done</code> will ever be observed by <code>main</code>, since there are no synchronization events between the two threads. The loop in <code>main</code> is not guaranteed to finish.</p>
+</blockquote>
+<p>另一个不正确的常见认知是，忙于等待一个值；</p>
+<p>例如：</p>
+<p>incorrect-synchronization/demo3_test.go</p>
+<pre><code class="go">var a3 string
+var done3 bool
+
+func setup3() {
+    a3 = &quot;hello, world&quot;
+    done3 = true
+}
+
+func TestDemo3(t *testing.T) {
+    go setup3()
+    for !done3 {
+    }
+    print(a3)
+}</code></pre>
+<p>和前面的例子类似，这里的 main 函数也无法保证在观察到 <code>done</code> 的同时，观察到 <code>a</code> 的写入，因此这段代码也有可能打印出空字符串；</p>
+<p>更坏的是，他甚至不能保证对变量 <code>done</code> 的写入能够在 main 中观测到，毕竟两个线程之间没有任何的同步机制；</p>
+<p>因此有可能在 main 中的 for 循环永远不会停止！</p>
+<blockquote>
+<p>  There are subtler variants on this theme, such as this program.</p>
+<p>  Even if <code>main</code> observes <code>g != nil</code> and exits its loop, there is no guarantee that it will observe the initialized value for <code>g.msg</code>.</p>
+<p>  In all these examples, the solution is the same: use explicit synchronization.</p>
+</blockquote>
+<p>这个里还有另外一个比较微妙的变体，来看下面的代码：</p>
+<p>incorrect-synchronization/demo4_test.go</p>
+<pre><code class="go">type T struct {
+    msg string
+}
+
+var g4 *T
+
+func setup4() {
+    t := new(T)
+    t.msg = &quot;hello, world&quot;
+    g4 = t
+}
+
+func TestDemo4(t *testing.T) {
+    go setup4()
+    for g4 == nil {
+    }
+    print(g4.msg)
+}</code></pre>
+<p>即使在 main 函数中观察到了 <code>g != nil</code> 并退出了循环，这也不能保证 main 函数能够观测到在 <code>g</code> 中被初始化的值  <code>g.msg</code>！</p>
+<blockquote>
+<p>  <strong>这里可以参考前面说到的超过一个机器字长的同步；</strong></p>
+</blockquote>
+<p>在上面所有的例子中，解决方法都是一样的：显式的使用同步机制；</p>
+<br>
+
+<h2 id="编译相关的错误（Incorrect-compilation）"><a href="#编译相关的错误（Incorrect-compilation）" class="headerlink" title="编译相关的错误（Incorrect compilation）"></a><strong>编译相关的错误（Incorrect compilation）</strong></h2><blockquote>
+<p>  The Go memory model restricts compiler optimizations as much as it does Go programs. Some compiler optimizations that would be valid in single-threaded programs are not valid in all Go programs. In particular, a compiler must not introduce writes that do not exist in the original program, it must not allow a single read to observe multiple values, and it must not allow a single write to write multiple values.</p>
+<p>  All the following examples assume that <code>*p</code> and <code>*q</code> refer to memory locations accessible to multiple goroutines.</p>
+<p>  Not introducing data races into race-free programs means not moving writes out of conditional statements in which they appear. For example, a compiler must not invert the conditional in this program:</p>
+<pre><code>  *p = 1
+  if cond {
+      *p = 2
+  }</code></pre><p>  That is, the compiler must not rewrite the program into this one:</p>
+<pre><code>  *p = 2
+  if !cond {
+      *p = 1
+  }</code></pre><p>  If <code>cond</code> is false and another goroutine is reading <code>*p</code>, then in the original program, the other goroutine can only observe any prior value of <code>*p</code> and <code>1</code>. In the rewritten program, the other goroutine can observe <code>2</code>, which was previously impossible.</p>
+</blockquote>
+<p>Go 的内存模型严格限制了它能为 Go 程序所做的优化；有一些能够在单线程下进行的编译优化，在 Go 程序中并非是合法的；尤其是，编译器不能在原程序中引入原本不存在的写操作，也不能允许单个读操作观察到多个不同的值，并且他必须禁止单次写入可写入多个值；</p>
+<p>在下面所有的例子中，都假设 ``<em>p<code>和</code></em>q` 在多个 goroutine 中指向的内存地址；</p>
+<p>不导致 data race 表示，不要将写操作从他们之前的条件语句块中移出；</p>
+<p>例如，编译器不能够转换下面的代码：</p>
+<pre><code class="go">*p = 1
+if cond {
+    *p = 2
+}</code></pre>
+<p>即，不能重写为下面的代码：</p>
+<pre><code class="go">*p = 2
+if !cond {
+    *p = 1
+}</code></pre>
+<p>如果 <code>cond</code> 是 false，并且另一个goroutine正在读取 <code>*p</code>；</p>
+<p>那么在之前的代码中，另一个 goroutine 只能观察到 <code>*p</code> 为 1；而在重写后的代码中，其他goroutin可以观察到 2，这在转换之前不可能的！</p>
+<blockquote>
+<p>  Not introducing data races also means not assuming that loops terminate. For example, a compiler must in general not move the accesses to <code>*p</code> or <code>*q</code> ahead of the loop in this program:</p>
+<pre><code>  n := 0
+  for e := list; e != nil; e = e.next {
+      n++
+  }
+  i := *p
+  *q = 1</code></pre><p>  If <code>list</code> pointed to a cyclic list, then the original program would never access <code>*p</code> or <code>*q</code>, but the rewritten program would. (Moving <code>*p</code> ahead would be safe if the compiler can prove <code>*p</code> will not panic; moving <code>*q</code> ahead would also require the compiler proving that no other goroutine can access <code>*q</code>.)</p>
+</blockquote>
+<p>不导致 data race 还说明了，不假设循环会终止；</p>
+<p>例如，编译器不能将  <code>*p</code> or <code>*q</code> 提出到循环之前：</p>
+<pre><code class="go">n := 0
+for e := list; e != nil; e = e.next {
+    n++
+}
+i := *p
+*q = 1</code></pre>
+<p>如果 <code>list</code> 是一个循环列表，那么在转换之前的程序是无法访问到  <code>*p</code> 和 <code>*q</code> 的，但是转换之后的代码就会了！</p>
+<p>（能够将 <code>*p</code> 安全提前的前提条件是编译器能够保证 <code>*p</code> 不会引发 panic；能够将  <code>*q</code>  提前的前提条件是编译器能够保证没有其他的 goroutine 会访问  <code>*q</code> 的内存地址）；</p>
+<blockquote>
+<p>  Not introducing data races also means not assuming that called functions always return or are free of synchronization operations. For example, a compiler must not move the accesses to <code>*p</code> or <code>*q</code> ahead of the function call in this program (at least not without direct knowledge of the precise behavior of <code>f</code>):</p>
+<pre><code>  f()
+  i := *p
+  *q = 1</code></pre><p>  If the call never returned, then once again the original program would never access <code>*p</code> or <code>*q</code>, but the rewritten program would. And if the call contained synchronizing operations, then the original program could establish happens before edges preceding the accesses to <code>*p</code> and <code>*q</code>, but the rewritten program would not.</p>
+</blockquote>
+<p>不导致 data race 还说明了，不能假设所有的函数调用都能正常返回，或者假设（函数内）无同步操作；</p>
+<p>例如下面的代码：</p>
+<pre><code class="go">f()
+i := *p
+*q = 1</code></pre>
+<p>编译器不能将  <code>*p</code> or <code>*q</code> 移动到函数调用之前（至少在不了解函数 <code>f</code> 的行为的时候）；</p>
+<p>如果函数调用永远也不返回，那么之前的代码是无法访问  <code>*p</code> 或者 <code>*q</code> 的，但是重写之后的代码就会访问；</p>
+<p>并且，如果函数中存在同步操作，那么之前的代码会在访问 <code>*p</code> 或者 <code>*q</code> 之前建立 happen-before 隔离，而重写之后的代码就不会；</p>
+<blockquote>
+<p>  Not allowing a single read to observe multiple values means not reloading local variables from shared memory. For example, a compiler must not discard <code>i</code> and reload it a second time from <code>*p</code> in this program:</p>
+<pre><code>  i := *p
+  if i &lt; 0 || i &gt;= len(funcs) {
+      panic(&quot;invalid function index&quot;)
+  }
+  ... complex code ...
+  // compiler must NOT reload i = *p here
+  funcs[i]()</code></pre><p>  If the complex code needs many registers, a compiler for single-threaded programs could discard <code>i</code> without saving a copy and then reload <code>i = *p</code> just before <code>funcs[i]()</code>. A Go compiler must not, because the value of <code>*p</code> may have changed. (Instead, the compiler could spill <code>i</code> to the stack.)</p>
+</blockquote>
+<p>不允许单个读操作读取到多个值表示：不从共享内存中重新加载局部变量；</p>
+<p>例如下面的代码：</p>
+<pre><code class="go">i := *p
+if i &lt; 0 || i &gt;= len(funcs) {
+    panic(&quot;invalid function index&quot;)
+}
+... complex code ...
+// compiler must NOT reload i = *p here
+funcs[i]()</code></pre>
+<p>编译器不能将原 <code>i</code> 值丢弃，并且重新从 <code>*p</code> 中读取新的值！</p>
+<p>如果一些复杂的代码需要许多寄存器，则有一些编译器在优化单线程的程序时，会在调用  <code>funcs[i]()</code> 之前，先丢弃 <code>i</code> 并且不保存他的值，而且再次使用  <code>i = *p</code> 重新写入新值；</p>
+<p>而 Go 编译器不允许这么做，因为 <code>*p</code> 的值可能会变（取而代之，编译器会将 <code>i</code> 写入到函数栈上）；</p>
+<blockquote>
+<p>  Not allowing a single write to write multiple values also means not using the memory where a local variable will be written as temporary storage before the write. For example, a compiler must not use <code>*p</code> as temporary storage in this program:</p>
+<pre><code>  *p = i + *p/2</code></pre><p>  That is, it must not rewrite the program into this one:</p>
+<pre><code>  *p /= 2
+  *p += i</code></pre><p>  If <code>i</code> and <code>*p</code> start equal to 2, the original code does <code>*p = 3</code>, so a racing thread can read only 2 or 3 from <code>*p</code>. The rewritten code does <code>*p = 1</code> and then <code>*p = 3</code>, allowing a racing thread to read 1 as well.</p>
+</blockquote>
+<p>不允许单个写操作多次写入也表示：不是使用 local 变量将被写入的内存作为写入前的临时存储；</p>
+<p>例如下面的例子：</p>
+<pre><code class="go">*p = i + *p/2</code></pre>
+<p>编译器不能将  <code>*p</code>  作为临时计算结果值的存储区域；</p>
+<p>也即，编译器不能将代码重写为这样：</p>
+<pre><code class="go">*p /= 2
+*p += i</code></pre>
+<p>如果 <code>i</code> 和 <code>*p</code> 最初都为 2，则最初的代码会将 <code>*p</code> 赋值为 3，因此具有 data race 的代码可能会从 <code>*p</code> 读取到 2 或者 3；</p>
+<p>而重写后的代码可能会从 <code>*p</code> 中读取到 1 或者 3！</p>
+<blockquote>
+<p>  Note that all these optimizations are permitted in C/C++ compilers: a Go compiler sharing a back end with a C/C++ compiler must take care to disable optimizations that are invalid for Go.</p>
+<p>  Note that the prohibition on introducing data races does not apply if the compiler can prove that the races do not affect correct execution on the target platform. For example, on essentially all CPUs, it is valid to rewrite</p>
+<pre><code>  n := 0
+  for i := 0; i &lt; m; i++ {
+      n += *shared
+  }</code></pre><p>  into:</p>
+<pre><code>  n := 0
+  local := *shared
+  for i := 0; i &lt; m; i++ {
+      n += local
+  }</code></pre><p>  provided it can be proved that <code>*shared</code> will not fault on access, because the potential added read will not affect any existing concurrent reads or writes. On the other hand, the rewrite would not be valid in a source-to-source translator.</p>
+</blockquote>
+<p>需要注意的是，上面提到的所有优化在 C/C++ 的编译器中都是被允许的；因此，一个与 C/C++ 编译器共享后端的 Go编译器的实现必须要注意禁用掉在 Go 中被禁止的优化！</p>
+<p>同时要注意，如果编译器能够保证 data race 不会影响到目标平台执行的正确性，则上述禁止引入 data race 的规定就可以不适用；</p>
+<p>例如：在基本上所有的CPU上，下面的重写是可以的：</p>
+<pre><code class="go">n := 0
+for i := 0; i &lt; m; i++ {
+    n += *shared
+}</code></pre>
+<p>重写后：</p>
+<pre><code class="go">n := 0
+local := *shared
+for i := 0; i &lt; m; i++ {
+    n += local
+}</code></pre>
+<p>前提是可以证明 <code>*shared</code> 不会在访问时出错，因为添加读操作不会影响到任何原有的并发读或写；</p>
+<p>另一方面，重写在源到源转换器（source-to-source translator）中无效；</p>
+<br>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><blockquote>
+<p>  Go programmers writing data-race-free programs can rely on sequentially consistent execution of those programs, just as in essentially all other modern programming languages.</p>
+<p>  When it comes to programs with races, both programmers and compilers should remember the advice: don’t be clever.</p>
+</blockquote>
+<p>Go 的开发者可以依靠前文中所说的顺序一致执行来编写 data-race-free 的代码，这个其他现代编程语言是一样的；</p>
+<p>当遇到了 data race，开发者和编译器都应当听取这个建议：不要自作聪明（<code>don&#39;t be clever.</code>）</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>原文地址：</p>
+<ul>
+<li><a href="https://go.dev/ref/mem" target="_blank" rel="noopener">https://go.dev/ref/mem</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/go-learn/tree/go-memory-model" target="_blank" rel="noopener">https://github.com/JasonkayZK/go-learn/tree/go-memory-model</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/10/26/【翻译】Go内存模型/" title="https://jasonkayzk.github.io/2022/10/26/【翻译】Go内存模型/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/10/26/【翻译】Go内存模型/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725316053"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

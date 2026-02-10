@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>mini-redis项目-3-连接层 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="上一篇文章讲解了mini-redis数据存储层的实现，这一篇在这个基础之上，讲解连接层的实现；连接层负责建立服务端和客户端之间的连接，通过tokio框架我们可以异步的处理连接；">
+<meta name="keywords" content="数据库,Redis,Rust">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mini-redis项目-3-连接层">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="上一篇文章讲解了mini-redis数据存储层的实现，这一篇在这个基础之上，讲解连接层的实现；连接层负责建立服务端和客户端之间的连接，通过tokio框架我们可以异步的处理连接；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.749Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mini-redis项目-3-连接层">
+<meta name="twitter:description" content="上一篇文章讲解了mini-redis数据存储层的实现，这一篇在这个基础之上，讲解连接层的实现；连接层负责建立服务端和客户端之间的连接，通过tokio框架我们可以异步的处理连接；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725312430">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?3">
+    
+    <h1>mini-redis项目-3-连接层</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年12月06日</a>
+    <a><i class="nexmoefont icon-areachart"></i>7.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 40 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Redis/">Redis</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/数据库/">数据库</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#mini-redis项目-3-连接层"><span class="toc-text">mini-redis项目-3-连接层</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis序列化通信协议"><span class="toc-text">Redis序列化通信协议</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RESP简介"><span class="toc-text">RESP简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RESP基本内容"><span class="toc-text">RESP基本内容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#向服务端发送命令"><span class="toc-text">向服务端发送命令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mini-redis连接层实现"><span class="toc-text">mini-redis连接层实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#消息块Frame"><span class="toc-text">消息块Frame</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Frame定义"><span class="toc-text">Frame定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Frame实现"><span class="toc-text">Frame实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#消息解析Parse"><span class="toc-text">消息解析Parse</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#连接管理Connection"><span class="toc-text">连接管理Connection</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Connection定义"><span class="toc-text">Connection定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#读取数据：read-frame"><span class="toc-text">读取数据：read_frame</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#写入数据：write-frame"><span class="toc-text">写入数据：write_frame</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>上一篇文章 <a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/">《mini-redis项目-2-存储层》</a> 中讲解了mini-redis数据存储层的实现，这一篇在这个基础之上，讲解连接层的实现；</p>
+<p>连接层负责建立服务端和客户端之间的连接，通过tokio框架我们可以异步的处理连接；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/mini-redis" target="_blank" rel="noopener">https://github.com/JasonkayZK/mini-redis</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/">《mini-redis项目-1-简介》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/">《mini-redis项目-2-存储层》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/">《mini-redis项目-3-连接层》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/06/mini-redis项目-4-服务端/">《mini-redis项目-4-服务端》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/07/mini-redis项目-5-客户端/">《mini-redis项目-5-客户端》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/07/mini-redis项目-6-测试与示例/">《mini-redis项目-6-测试与示例》</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="mini-redis项目-3-连接层"><a href="#mini-redis项目-3-连接层" class="headerlink" title="mini-redis项目-3-连接层"></a><strong>mini-redis项目-3-连接层</strong></h1><p>连接层主要是屏蔽客户端与服务端之间的底层通信协议，并处理两端之间连接的建立、断开等；</p>
+<h2 id="Redis序列化通信协议"><a href="#Redis序列化通信协议" class="headerlink" title="Redis序列化通信协议"></a><strong>Redis序列化通信协议</strong></h2><h3 id="RESP简介"><a href="#RESP简介" class="headerlink" title="RESP简介"></a><strong>RESP简介</strong></h3><p>和其他的通信协议类似，客户端和服务端之间也需要定义一个通信协议规则才能进行通信；</p>
+<p>Redis 中的通信协议被称为：RESP，即：Redis serialization protocol (RESP)</p>
+<p>官方文档如下：</p>
+<ul>
+<li><a href="https://redis.io/docs/reference/protocol-spec/" target="_blank" rel="noopener">https://redis.io/docs/reference/protocol-spec/</a></li>
+</ul>
+<p>这个通信协议的优势：</p>
+<ul>
+<li>Simple to implement.</li>
+<li>Fast to parse.</li>
+<li>Human readable.</li>
+</ul>
+<p>RESP 可以序列化不同的数据类型，如整数，字符串和数组；同时，错误也有特定类型；</p>
+<p>请求从客户端发送到服务器时，命令被解析为带有的参数字符串数组（下文中的Frame），服务端使用特定的数据类型回复；</p>
+<p>同时，<strong>RESP 中使用前缀来标记数据类型以及长度</strong>（prefixed-length）；</p>
+<br>
+
+<h3 id="RESP基本内容"><a href="#RESP基本内容" class="headerlink" title="RESP基本内容"></a><strong>RESP基本内容</strong></h3><p>RESP 是一个串行化协议（serialization protocol），支持以下几种数据类型：</p>
+<ul>
+<li>Simple Strings；</li>
+<li>Errors；</li>
+<li>Integers；</li>
+<li>Bulk Strings；</li>
+<li>Arrays；</li>
+</ul>
+<p>同时 RESP 使用的是请求-响应模型（request-response protocol）：</p>
+<ul>
+<li>客户端将命令作为 Array of Bulk Strings 发送到Redis服务器；</li>
+<li>服务器获取命令，根据不同的类型进行回复；</li>
+</ul>
+<p>在 RESP 中，不同的数据类型是由他首个字节决定：</p>
+<ul>
+<li>For <strong>Simple Strings</strong>：the first byte of the reply is “+”；</li>
+<li>For <strong>Errors</strong>：the first byte of the reply is “-“；</li>
+<li>For <strong>Integers</strong>：the first byte of the reply is “:”；</li>
+<li>For <strong>Bulk Strings</strong>：the first byte of the reply is “$”；</li>
+<li>For <strong>Arrays</strong>：the first byte of the reply is “<code>*</code>“；</li>
+</ul>
+<p>对于 Null 值，可以使用 Bulk Strings 或者 Array 的特殊值来实现；</p>
+<p>在 RESP 中，不同消息之间总是以 <code>&quot;\r\n&quot;</code> 结尾（different parts of the protocol are always terminated with “\r\n” (CRLF)）；</p>
+<p>最后，官方文档提供了不同数据类型的例子：</p>
+<pre><code class="bash"># Simple Strings
+&quot;+OK\r\n&quot;
+
+# Errors
+&quot;-ERR unknown command &#39;helloworld&#39;\r\n&quot;
+
+# Integers
+&quot;:1000\r\n&quot;
+
+# Bulk Strings
+&quot;$5\r\nhello\r\n&quot; =&gt; &quot;hello&quot;
+&quot;$0\r\n\r\n&quot; =&gt; &quot;&quot;
+&quot;$-1\r\n&quot; =&gt; Null(Null Bulk String)
+
+# Arrays
+&quot;*0\r\n&quot; =&gt; []
+&quot;*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n&quot; =&gt; [&quot;hello&quot;,&quot;world&quot;]
+&quot;*3\r\n:1\r\n:2\r\n:3\r\n&quot; =&gt; [1,2,3]
+&quot;*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$5\r\nhello\r\n&quot; =&gt; [1,2,3,4,&quot;hello&quot;]
+&quot;*-1\r\n&quot; =&gt; Null(Null Array)
+
+# Nested arrays
+*2\r\n
+*3\r\n
+:1\r\n
+:2\r\n
+:3\r\n
+*2\r\n
++Hello\r\n
+-World\r\n =&gt; [[1,2,3],[&quot;Hello&quot;, Err(&quot;World&quot;)]]
+
+# Null elements in Arrays
+*3\r\n
+$5\r\n
+hello\r\n
+$-1\r\n
+$5\r\n
+world\r\n =&gt; [&quot;hello&quot;,nil,&quot;world&quot;]</code></pre>
+<p>官方文档还列出了不同数据类型的一些实现细节，你在阅读下面一部分时，建议先阅读官方文档；</p>
+<ul>
+<li><a href="https://redis.io/docs/reference/protocol-spec/" target="_blank" rel="noopener">https://redis.io/docs/reference/protocol-spec/</a></li>
+</ul>
+<p>否则对于一些实现可能会一脸懵比；</p>
+<br>
+
+<h3 id="向服务端发送命令"><a href="#向服务端发送命令" class="headerlink" title="向服务端发送命令"></a><strong>向服务端发送命令</strong></h3><p>前面介绍了 RESP 各个数据类型的定义，那么客户端和服务端到底是如何交互的呢？</p>
+<p>也就是说，客户端要如何发送命令到服务端，并且服务端进行响应的呢？</p>
+<p>下面来看一个客户端发送 <strong><code>LLEN mylist</code></strong>（获取 mylist 长度） 的例子：</p>
+<pre><code class="bash">Client: &quot;*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n&quot;
+
+Server: :48293\r\n</code></pre>
+<p>客户端首先将 <code>LLEN mylist</code> 包装后，发送 <code>&quot;*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n&quot;</code> 到服务端；</p>
+<p>服务端处理后返回 <code>:48293\r\n</code> 给客户端；</p>
+<p>客户端收到结果并解析后，得到结果 <code>48293</code>；</p>
+<br>
+
+<h2 id="mini-redis连接层实现"><a href="#mini-redis连接层实现" class="headerlink" title="mini-redis连接层实现"></a><strong>mini-redis连接层实现</strong></h2><p>mini-redis 中的连接层主要分为三个部分：</p>
+<ul>
+<li><strong>消息块 Frame：对应于上文所说的一整条使用 <code>\r\n</code> 分隔的序列化的命令，但是经过了格式化和拆分；</strong></li>
+<li><strong>消息解析 Parse：将 Frame 消息解析为对应类型的命令；</strong></li>
+<li><strong>连接管理 Connection：管理连接，发送并接收相应的消息；</strong></li>
+</ul>
+<p>代码结构如下：</p>
+<pre><code class="bash">$ tree ./src/connection 
+./src/connection
+├── connect.rs
+├── frame.rs
+├── mod.rs
+└── parse.rs</code></pre>
+<p>下面我们一个一个来看；</p>
+<br>
+
+<h3 id="消息块Frame"><a href="#消息块Frame" class="headerlink" title="消息块Frame"></a><strong>消息块Frame</strong></h3><p>前文说了一个 Frame 对应于一整条使用 <code>\r\n</code> 分隔的序列化的命令，我们将这条命令封装到了 Frame 中；</p>
+<p>而由于在 Redis 中，命令的类型是固定的，那么使用 Rust 中强大的枚举类型来定义再合适不过！</p>
+<p>实现如下：</p>
+<p>src/connection/frame.rs</p>
+<pre><code class="rust">#[derive(Clone, Debug)]
+pub enum Frame {
+    Simple(String),
+    Error(String),
+    Integer(u64),
+    Bulk(Bytes),
+    Null,
+    Array(Vec&lt;Frame&gt;),
+}
+
+impl PartialEq&lt;&amp;str&gt; for Frame {
+    fn eq(&amp;self, other: &amp;&amp;str) -&gt; bool {
+        match self {
+            Frame::Simple(s) =&gt; s.eq(other),
+            Frame::Bulk(s) =&gt; s.eq(other),
+            _ =&gt; false,
+        }
+    }
+}
+
+impl fmt::Display for Frame {
+    fn fmt(&amp;self, fmt: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        use std::str;
+
+        match self {
+            Frame::Simple(response) =&gt; response.fmt(fmt),
+            Frame::Error(msg) =&gt; write!(fmt, &quot;error: {}&quot;, msg),
+            Frame::Integer(num) =&gt; num.fmt(fmt),
+            Frame::Bulk(msg) =&gt; match str::from_utf8(msg) {
+                Ok(string) =&gt; string.fmt(fmt),
+                Err(_) =&gt; write!(fmt, &quot;{:?}&quot;, msg),
+            },
+            Frame::Null =&gt; &quot;(nil)&quot;.fmt(fmt),
+            Frame::Array(parts) =&gt; {
+                for (i, part) in parts.iter().enumerate() {
+                    if i &gt; 0 {
+                        write!(fmt, &quot; &quot;)?;
+                        part.fmt(fmt)?;
+                    }
+                }
+
+                Ok(())
+            }
+        }
+    }
+}
+
+impl Frame {
+    pub(crate) fn array() -&gt; Frame {
+        Frame::Array(vec![])
+    }
+
+    pub(crate) fn push_bulk(&amp;mut self, bytes: Bytes) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match self {
+            Frame::Array(vec) =&gt; {
+                vec.push(Frame::Bulk(bytes));
+                Ok(())
+            }
+            _ =&gt; Err(MiniRedisParseError::ParseArrayFrame),
+        }
+    }
+
+    pub(crate) fn push_int(&amp;mut self, value: u64) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match self {
+            Frame::Array(vec) =&gt; {
+                vec.push(Frame::Integer(value));
+                Ok(())
+            }
+            _ =&gt; Err(MiniRedisParseError::ParseArrayFrame),
+        }
+    }
+
+    pub fn check(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match get_u8(src)? {
+            b&#39;+&#39; =&gt; {
+                get_line(src)?;
+                Ok(())
+            }
+            b&#39;-&#39; =&gt; {
+                get_line(src)?;
+                Ok(())
+            }
+            b&#39;:&#39; =&gt; {
+                let _ = get_decimal(src)?;
+                Ok(())
+            }
+            b&#39;$&#39; =&gt; {
+                if b&#39;-&#39; == peek_u8(src)? {
+                    skip(src, 4)
+                } else {
+                    let len: usize = get_decimal(src)?.try_into()?;
+
+                    skip(src, len + 2)
+                }
+            }
+            b&#39;*&#39; =&gt; {
+                let len = get_decimal(src)?;
+
+                for _ in 0..len {
+                    Frame::check(src)?;
+                }
+
+                Ok(())
+            }
+            actual =&gt; Err(MiniRedisParseError::Parse(format!(
+                &quot;protocol error; invalid frame type byte `{}`&quot;,
+                actual
+            ))),
+        }
+    }
+
+    pub fn parse(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;Frame, MiniRedisParseError&gt; {
+        match get_u8(src)? {
+            b&#39;+&#39; =&gt; {
+                let line = get_line(src)?.to_vec();
+
+                let string = String::from_utf8(line)?;
+
+                Ok(Frame::Simple(string))
+            }
+            b&#39;-&#39; =&gt; {
+                let line = get_line(src)?.to_vec();
+
+                let string = String::from_utf8(line)?;
+
+                Ok(Frame::Error(string))
+            }
+            b&#39;:&#39; =&gt; {
+                let len = get_decimal(src)?;
+                Ok(Frame::Integer(len))
+            }
+            b&#39;$&#39; =&gt; {
+                if b&#39;-&#39; == peek_u8(src)? {
+                    let line = get_line(src)?;
+
+                    if line != b&quot;-1&quot; {
+                        return Err(MiniRedisParseError::Parse(
+                            &quot;protocol error; invalid frame format&quot;.into(),
+                        ));
+                    }
+
+                    Ok(Frame::Null)
+                } else {
+                    let len = get_decimal(src)?.try_into()?;
+                    let n = len + 2;
+
+                    if src.remaining() &lt; n {
+                        return Err(MiniRedisParseError::Incomplete);
+                    }
+
+                    let data = Bytes::copy_from_slice(&amp;src.chunk()[..len]);
+
+                    skip(src, n)?;
+
+                    Ok(Frame::Bulk(data))
+                }
+            }
+            b&#39;*&#39; =&gt; {
+                let len = get_decimal(src)?.try_into()?;
+                let mut out = Vec::with_capacity(len);
+
+                for _ in 0..len {
+                    out.push(Frame::parse(src)?);
+                }
+
+                Ok(Frame::Array(out))
+            }
+            _ =&gt; Err(MiniRedisParseError::Unimplemented),
+        }
+    }
+}
+
+fn skip(src: &amp;mut Cursor&lt;&amp;[u8]&gt;, n: usize) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+    if src.remaining() &lt; n {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    src.advance(n);
+    Ok(())
+}
+
+fn peek_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u8, MiniRedisParseError&gt; {
+    if !src.has_remaining() {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    Ok(src.chunk()[0])
+}
+
+fn get_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u8, MiniRedisParseError&gt; {
+    if !src.has_remaining() {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    Ok(src.get_u8())
+}
+
+fn get_decimal(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u64, MiniRedisParseError&gt; {
+    use atoi::atoi;
+
+    let line = get_line(src)?;
+
+    atoi::&lt;u64&gt;(line).ok_or_else(|| {
+        MiniRedisParseError::Parse(&quot;protocol error; invalid frame format to get decimal&quot;.into())
+    })
+}
+
+fn get_line&lt;&#39;a&gt;(src: &amp;mut Cursor&lt;&amp;&#39;a [u8]&gt;) -&gt; Result&lt;&amp;&#39;a [u8], MiniRedisParseError&gt; {
+    let start = src.position() as usize;
+    let end = src.get_ref().len() - 1;
+
+    for i in start..end {
+        if src.get_ref()[i] == b&#39;\r&#39; &amp;&amp; src.get_ref()[i + 1] == b&#39;\n&#39; {
+            src.set_position((i + 2) as u64);
+
+            return Ok(&amp;src.get_ref()[start..i]);
+        }
+    }
+
+    Err(MiniRedisParseError::Incomplete)
+}</code></pre>
+<br>
+
+<h4 id="Frame定义"><a href="#Frame定义" class="headerlink" title="Frame定义"></a><strong>Frame定义</strong></h4><p>和上面 Redis 官方文档相对应，我们定义了 Frame 枚举，并重写了 PartialEq 和 Display Trait；</p>
+<pre><code class="rust">#[derive(Clone, Debug)]
+pub enum Frame {
+    Simple(String),
+    Error(String),
+    Integer(u64),
+    Bulk(Bytes),
+    Null,
+    Array(Vec&lt;Frame&gt;),
+}
+
+impl PartialEq&lt;&amp;str&gt; for Frame {
+    fn eq(&amp;self, other: &amp;&amp;str) -&gt; bool {
+        match self {
+            Frame::Simple(s) =&gt; s.eq(other),
+            Frame::Bulk(s) =&gt; s.eq(other),
+            _ =&gt; false,
+        }
+    }
+}
+
+impl fmt::Display for Frame {
+    fn fmt(&amp;self, fmt: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        use std::str;
+
+        match self {
+            Frame::Simple(response) =&gt; response.fmt(fmt),
+            Frame::Error(msg) =&gt; write!(fmt, &quot;error: {}&quot;, msg),
+            Frame::Integer(num) =&gt; num.fmt(fmt),
+            Frame::Bulk(msg) =&gt; match str::from_utf8(msg) {
+                Ok(string) =&gt; string.fmt(fmt),
+                Err(_) =&gt; write!(fmt, &quot;{:?}&quot;, msg),
+            },
+            Frame::Null =&gt; &quot;(nil)&quot;.fmt(fmt),
+            Frame::Array(parts) =&gt; {
+                for (i, part) in parts.iter().enumerate() {
+                    if i &gt; 0 {
+                        write!(fmt, &quot; &quot;)?;
+                        part.fmt(fmt)?;
+                    }
+                }
+
+                Ok(())
+            }
+        }
+    }
+}</code></pre>
+<p><strong>需要注意：的是我们直接使用了 Vector 来存储 Array 类型的命令；</strong></p>
+<p>其他部分实现非常简单，这里不再解释了；</p>
+<p>下面来具体看 Frame 的实现部分；</p>
+<br>
+
+<h4 id="Frame实现"><a href="#Frame实现" class="headerlink" title="Frame实现"></a><strong>Frame实现</strong></h4><p>我们在 Frame 中定义了下面几个方法：</p>
+<ul>
+<li>array：返回一个空的 Array 类型的 Frame，大多用于服务端响应时自行填充返回值时使用，配合下面的各种push方法；</li>
+<li>push_bulk：向 Frame 对象中填充 Bulk 类型的值；</li>
+<li>push_int：向 Frame 对象中填充 Int 类型的值；</li>
+<li>check：校验当前字节数组中的值是否合法，主要用在服务端、客户端接受到请求和响应后进行消息校验；</li>
+<li>parse：将当前字节数组中的值解析为 Frame；</li>
+</ul>
+<p>实现如下：</p>
+<pre><code class="rust">impl Frame {
+    /// Returns an empty array
+    pub(crate) fn array() -&gt; Frame {
+        Frame::Array(vec![])
+    }
+
+    /// Push a &quot;bulk&quot; frame into the array. `self` must be an Array frame.
+    pub(crate) fn push_bulk(&amp;mut self, bytes: Bytes) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match self {
+            Frame::Array(vec) =&gt; {
+                vec.push(Frame::Bulk(bytes));
+                Ok(())
+            }
+            _ =&gt; Err(MiniRedisParseError::ParseArrayFrame),
+        }
+    }
+
+    /// Push an &quot;integer&quot; frame into the array. `self` must be an Array frame.
+    pub(crate) fn push_int(&amp;mut self, value: u64) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match self {
+            Frame::Array(vec) =&gt; {
+                vec.push(Frame::Integer(value));
+                Ok(())
+            }
+            _ =&gt; Err(MiniRedisParseError::ParseArrayFrame),
+        }
+    }
+
+    /// Checks if an entire message can be decoded from `src`
+    pub fn check(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        match get_u8(src)? {
+            b&#39;+&#39; =&gt; {
+                get_line(src)?;
+                Ok(())
+            }
+            b&#39;-&#39; =&gt; {
+                get_line(src)?;
+                Ok(())
+            }
+            b&#39;:&#39; =&gt; {
+                let _ = get_decimal(src)?;
+                Ok(())
+            }
+            b&#39;$&#39; =&gt; {
+                if b&#39;-&#39; == peek_u8(src)? {
+                    // Skip &#39;-1\r\n&#39;
+                    skip(src, 4)
+                } else {
+                    // Read the bulk string
+                    let len: usize = get_decimal(src)?.try_into()?;
+
+                    // skip that number of bytes + 2 (\r\n).
+                    skip(src, len + 2)
+                }
+            }
+            b&#39;*&#39; =&gt; {
+                let len = get_decimal(src)?;
+
+                for _ in 0..len {
+                    Frame::check(src)?;
+                }
+
+                Ok(())
+            }
+            actual =&gt; Err(MiniRedisParseError::Parse(format!(
+                &quot;protocol error; invalid frame type byte `{}`&quot;,
+                actual
+            ))),
+        }
+    }
+
+    pub fn parse(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;Frame, MiniRedisParseError&gt; {
+        match get_u8(src)? {
+            b&#39;+&#39; =&gt; {
+                // Read the line and convert it to `Vec&lt;u8&gt;`
+                let line = get_line(src)?.to_vec();
+
+                // Convert the line to a String
+                let string = String::from_utf8(line)?;
+
+                Ok(Frame::Simple(string))
+            }
+            b&#39;-&#39; =&gt; {
+                // Read the line and convert it to `Vec&lt;u8&gt;`
+                let line = get_line(src)?.to_vec();
+
+                // Convert the line to a String
+                let string = String::from_utf8(line)?;
+
+                Ok(Frame::Error(string))
+            }
+            b&#39;:&#39; =&gt; {
+                let len = get_decimal(src)?;
+                Ok(Frame::Integer(len))
+            }
+            b&#39;$&#39; =&gt; {
+                if b&#39;-&#39; == peek_u8(src)? {
+                    let line = get_line(src)?;
+
+                    if line != b&quot;-1&quot; {
+                        return Err(MiniRedisParseError::Parse(
+                            &quot;protocol error; invalid frame format&quot;.into(),
+                        ));
+                    }
+
+                    Ok(Frame::Null)
+                } else {
+                    // Read the bulk string
+                    let len = get_decimal(src)?.try_into()?;
+                    let n = len + 2;
+
+                    if src.remaining() &lt; n {
+                        return Err(MiniRedisParseError::Incomplete);
+                    }
+
+                    let data = Bytes::copy_from_slice(&amp;src.chunk()[..len]);
+
+                    // skip that number of bytes + 2 (\r\n).
+                    skip(src, n)?;
+
+                    Ok(Frame::Bulk(data))
+                }
+            }
+            b&#39;*&#39; =&gt; {
+                let len = get_decimal(src)?.try_into()?;
+                let mut out = Vec::with_capacity(len);
+
+                for _ in 0..len {
+                    out.push(Frame::parse(src)?);
+                }
+
+                Ok(Frame::Array(out))
+            }
+            _ =&gt; Err(MiniRedisParseError::Unimplemented),
+        }
+    }
+}</code></pre>
+<p>写入 Frame 的方法：</p>
+<ul>
+<li>array 方法：实现非常简单，就是返回一个空的 Array 类型的 Frame，并初始化一个空的 vector；</li>
+<li>push_bulk 方法：如果当前 Frame 对象是 Array 类型，则将 bytes 加入数组中，否则报错；</li>
+<li>push_int 方法：和上面类似，如果当前 Frame 对象是 Array 类型，则将 u64 加入数组中；</li>
+</ul>
+<p>重点来看<strong>解析 Frame 的方法：check 和 parse；</strong></p>
+<p>他们将接收到的字节，根据前文中的 RESP 规则解析为对应类型的 Frame；</p>
+<p>两者的实现及其类似，这里主要解析 check 方法，parse 方法只是在 check 逻辑的基础之上将 Frame 封装后返回；</p>
+<p>首先来看几个辅助函数：</p>
+<pre><code class="rust">fn skip(src: &amp;mut Cursor&lt;&amp;[u8]&gt;, n: usize) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+    if src.remaining() &lt; n {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    src.advance(n);
+    Ok(())
+}
+
+fn peek_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u8, MiniRedisParseError&gt; {
+    if !src.has_remaining() {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    Ok(src.chunk()[0])
+}
+
+fn get_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u8, MiniRedisParseError&gt; {
+    if !src.has_remaining() {
+        return Err(MiniRedisParseError::Incomplete);
+    }
+
+    Ok(src.get_u8())
+}
+
+/// Read a new-line terminated decimal
+fn get_decimal(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;u64, MiniRedisParseError&gt; {
+    use atoi::atoi;
+
+    let line = get_line(src)?;
+
+    atoi::&lt;u64&gt;(line).ok_or_else(|| {
+        MiniRedisParseError::Parse(&quot;protocol error; invalid frame format to get decimal&quot;.into())
+    })
+}
+
+/// Find a line in a frame
+fn get_line&lt;&#39;a&gt;(src: &amp;mut Cursor&lt;&amp;&#39;a [u8]&gt;) -&gt; Result&lt;&amp;&#39;a [u8], MiniRedisParseError&gt; {
+    // Scan the bytes directly
+    let start = src.position() as usize;
+    // Scan to the second to last byte
+    let end = src.get_ref().len() - 1;
+
+    for i in start..end {
+        if src.get_ref()[i] == b&#39;\r&#39; &amp;&amp; src.get_ref()[i + 1] == b&#39;\n&#39; {
+            // We found a line, update the position to be *after* the \n
+            src.set_position((i + 2) as u64);
+
+            // Return the line
+            return Ok(&amp;src.get_ref()[start..i]);
+        }
+    }
+
+    Err(MiniRedisParseError::Incomplete)
+}</code></pre>
+<p>上面定义了几个辅助函数：</p>
+<ul>
+<li><strong><code>skip(src: &amp;mut Cursor&lt;&amp;[u8]&gt;, n: usize)</code>：将当前 Cursor 前移 n 个字节；</strong><ul>
+<li>前面说到了在 RESP 中会通过 prefixed-length 来指定数据的字节长度，这里就可以直接将这个数据跳过，继续解析下一个数据；</li>
+<li>当然，如果后面已经没有 n 个字节，说明数据不完整，此时无法解析，返回 <code>MiniRedisParseError::Incomplete</code> 类型的错误，说明消息不完整；</li>
+</ul>
+</li>
+<li><strong><code>peek_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;)</code>：查看下一个字节对应字符；</strong><ul>
+<li>peek_u8 主要是在不移动指针的前提下获取下一个字节，可以用来判断，例如：Array 中的下一个数据类型、是否为空的 Bulk（<code>-</code> 开头）等；</li>
+</ul>
+</li>
+<li><strong><code>get_u8(src: &amp;mut Cursor&lt;&amp;[u8]&gt;)</code>：直接获取下一个字节，用于直接判断某个命令的数据类型；</strong></li>
+<li><strong><code>get_line&lt;&#39;a&gt;(src: &amp;mut Cursor&lt;&amp;&#39;a [u8]&gt;)</code>：获取以 <code>\r\n</code> 结尾的一整行数据；</strong><ul>
+<li>前文提到了每个独立的命令都是以 <code>\r\n</code> 结尾；</li>
+</ul>
+</li>
+<li><strong><code>get_decimal(src: &amp;mut Cursor&lt;&amp;[u8]&gt;)</code>：获取一整行整型类型，主要用在简化整型数据解析的场景；</strong></li>
+</ul>
+<p>下面来看具体的 check 方法的实现：</p>
+<pre><code class="rust">pub fn check(src: &amp;mut Cursor&lt;&amp;[u8]&gt;) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+  match get_u8(src)? {
+    b&#39;+&#39; =&gt; {
+      get_line(src)?;
+      Ok(())
+    }
+    b&#39;-&#39; =&gt; {
+      get_line(src)?;
+      Ok(())
+    }
+    b&#39;:&#39; =&gt; {
+      let _ = get_decimal(src)?;
+      Ok(())
+    }
+    b&#39;$&#39; =&gt; {
+      if b&#39;-&#39; == peek_u8(src)? {
+        // Skip &#39;-1\r\n&#39;
+        skip(src, 4)
+      } else {
+        // Read the bulk string
+        let len: usize = get_decimal(src)?.try_into()?;
+
+        // skip that number of bytes + 2 (\r\n).
+        skip(src, len + 2)
+      }
+    }
+    b&#39;*&#39; =&gt; {
+      let len = get_decimal(src)?;
+
+      for _ in 0..len {
+        Frame::check(src)?;
+      }
+
+      Ok(())
+    }
+    actual =&gt; Err(MiniRedisParseError::Parse(format!(
+      &quot;protocol error; invalid frame type byte `{}`&quot;,
+      actual
+    ))),
+  }
+}</code></pre>
+<p>逻辑如下：</p>
+<ul>
+<li><strong><code>+</code> 或者 <code>-</code> 开头（简单字符串、错误信息）：只要是一行数据（<code>\r\n</code> 结尾）即可；</strong></li>
+<li><strong><code>:</code> 开头（整数类型）：不光要是一行数据，还要能被解析为整数；</strong></li>
+<li><strong><code>$</code> 开头（Bulk String）：</strong><ul>
+<li><strong>如果 <code>-</code> 开头，说明是空字符串（<code>$-1\r\n</code>）；</strong></li>
+<li><strong>否则，先通过 get_decimal 取出字符串长度、再跳过 <code>对应长度 + 2(\r\n)</code> 个字节，取出 Frame；</strong></li>
+</ul>
+</li>
+<li><strong><code>*</code> 开头（Array）：先取出数组的长度 len，再递归的调用 check 来校验每一个元素；</strong></li>
+<li><strong>否则是不支持的数据类型，直接报错；</strong></li>
+</ul>
+<p>parse 方法的逻辑和 check 基本上是一致的，这里不再赘述；</p>
+<p><font color="#f00"><strong>需要注意的是：check 方法会移动 Cursor 指针到 <code>\r\n</code> 之后，这是为了后面在调用 parse 方法时可以直接获取到一整条 Frame 的长度；</strong></font></p>
+<p>另外还有一个问题：<strong>为什么将解析分为了 check、parse 两个功能相似的方法？</strong></p>
+<p>这是因为：</p>
+<ul>
+<li><font color="#f00"><strong>首先，在一整条命令尚未完全接收到的时候，我们会可能会进行多次解析，而 check 的效率是高于 parse 的；</strong></font></li>
+<li><font color="#f00"><strong>另外，在没有完全确定我们收到了一个完整的 Frame 之前如果直接强行的 parse 会分配内存，而先调用 check 方法是不需要内存分配的；</strong></font></li>
+</ul>
+<br>
+
+<h3 id="消息解析Parse"><a href="#消息解析Parse" class="headerlink" title="消息解析Parse"></a><strong>消息解析Parse</strong></h3><p>Parse 是对 Frame 的一个包装，将例如：<code>set foo 123</code> 一整个 Frame 包装为一个类似于 cursor 的结构；这样，Parse 中的第一个元素即 redis 中的命令；</p>
+<p>这在遍历 Frame 中的 Array 等结构时非常有用！</p>
+<p>Parse 定义如下：</p>
+<p>src/connection/parse.rs</p>
+<pre><code class="rust">/// Utility for parsing a command
+///
+/// Commands are represented as array frames. Each entry in the frame is a
+/// &quot;token&quot;. A `Parse` is initialized with the array frame and provides a
+/// cursor-like API. Each command struct includes a `parse_frame` method that
+/// uses a `Parse` to extract its fields.
+#[derive(Debug)]
+pub(crate) struct Parse {
+    /// Array frame iterator.
+    parts: vec::IntoIter&lt;Frame&gt;,
+}</code></pre>
+<p>对应实现的方法：</p>
+<p>src/connection/parse.rs</p>
+<pre><code class="rust">impl Parse {
+    /// Create a new `Parse` to parse the contents of `frame`.
+    /// Returns `Err` if `frame` is not an array frame.
+    pub(crate) fn new(frame: Frame) -&gt; Result&lt;Parse, MiniRedisParseError&gt; {
+        let array = match frame {
+            Frame::Array(array) =&gt; array,
+            frame =&gt; {
+                return Err(MiniRedisParseError::Parse(format!(
+                    &quot;protocol error; expected array, got {:?}&quot;,
+                    frame
+                )))
+            }
+        };
+
+        Ok(Parse {
+            parts: array.into_iter(),
+        })
+    }
+
+    /// Return the next entry. Array frames are arrays of frames, so the next
+    /// entry is a frame.
+    fn next(&amp;mut self) -&gt; Result&lt;Frame, MiniRedisParseError&gt; {
+        self.parts.next().ok_or(MiniRedisParseError::EndOfStream)
+    }
+
+    /// Return the next entry as a string.
+    /// If the next entry cannot be represented as a String, then an error is returned.
+    pub(crate) fn next_string(&amp;mut self) -&gt; Result&lt;String, MiniRedisParseError&gt; {
+        match self.next()? {
+            // Both `Simple` and `Bulk` representation may be strings. Strings
+            // are parsed to UTF-8.
+            //
+            // While errors are stored as strings, they are considered separate
+            // types.
+            Frame::Simple(s) =&gt; Ok(s),
+            Frame::Bulk(data) =&gt; std::str::from_utf8(&amp;data[..])
+                .map(|s| s.to_string())
+                .map_err(|_| MiniRedisParseError::Parse(&quot;protocol error; invalid string&quot;.into())),
+            frame =&gt; Err(MiniRedisParseError::Parse(format!(
+                &quot;protocol error; expected simple frame or bulk frame, got {:?}&quot;,
+                frame
+            ))),
+        }
+    }
+
+    /// Return the next entry as raw bytes.
+    /// If the next entry cannot be represented as raw bytes, an error is
+    /// returned.
+    pub(crate) fn next_bytes(&amp;mut self) -&gt; Result&lt;Bytes, MiniRedisParseError&gt; {
+        match self.next()? {
+            // Both `Simple` and `Bulk` representation may be raw bytes.
+            //
+            // Although errors are stored as strings and could be represented as
+            // raw bytes, they are considered separate types.
+            Frame::Simple(s) =&gt; Ok(Bytes::from(s.into_bytes())),
+            Frame::Bulk(data) =&gt; Ok(data),
+            frame =&gt; Err(MiniRedisParseError::Parse(format!(
+                &quot;protocol error; expected simple frame or bulk frame, got {:?}&quot;,
+                frame
+            ))),
+        }
+    }
+
+    /// Return the next entry as an integer.
+    ///
+    /// This includes `Simple`, `Bulk`, and `Integer` frame types. `Simple` and
+    /// `Bulk` frame types are parsed.
+    ///
+    /// If the next entry cannot be represented as an integer, then an error is
+    /// returned.
+    pub(crate) fn next_int(&amp;mut self) -&gt; Result&lt;u64, MiniRedisParseError&gt; {
+        use atoi::atoi;
+
+        match self.next()? {
+            // An integer frame type is already stored as an integer.
+            Frame::Integer(v) =&gt; Ok(v),
+            // Simple and bulk frames must be parsed as integers. If the parsing
+            // fails, an error is returned.
+            Frame::Simple(data) =&gt; atoi::&lt;u64&gt;(data.as_bytes())
+                .ok_or_else(|| MiniRedisParseError::Parse(&quot;protocol error; invalid number&quot;.into())),
+            Frame::Bulk(data) =&gt; atoi::&lt;u64&gt;(&amp;data)
+                .ok_or_else(|| MiniRedisParseError::Parse(&quot;protocol error; invalid number&quot;.into())),
+            frame =&gt; Err(MiniRedisParseError::Parse(format!(
+                &quot;protocol error; expected int frame but got {:?}&quot;,
+                frame
+            ))),
+        }
+    }
+
+    /// Ensure there are no more entries in the array
+    pub(crate) fn finish(&amp;mut self) -&gt; Result&lt;(), MiniRedisParseError&gt; {
+        if self.parts.next().is_none() {
+            Ok(())
+        } else {
+            Err(MiniRedisParseError::Parse(
+                &quot;protocol error; expected end of frame, but there was more&quot;.into(),
+            ))
+        }
+    }
+}</code></pre>
+<p>解析如下：</p>
+<ul>
+<li><strong>new 方法：</strong>创建了一个 IntoIter 类型的迭代器，类似于流数据，一旦获取到了下一个 Frame，则交出所有权！</li>
+<li><strong>next、next_string、next_bytes、next_int 方法：</strong>提供了直接获取下一个 Frame 的方法，如果类型不匹配则直接报错，避免了自己再去判断数据类型，简化了使用；</li>
+<li><strong>finish 方法：</strong>当命令解析完成后调用该方法，确保 Frame 用完，保证 Frame 格式的正确性；</li>
+</ul>
+<p>Parse 模块主要是给 Command 模块提供一个更高层次上的命令抽象，方便使用；</p>
+<br>
+
+<h3 id="连接管理Connection"><a href="#连接管理Connection" class="headerlink" title="连接管理Connection"></a><strong>连接管理Connection</strong></h3><h4 id="Connection定义"><a href="#Connection定义" class="headerlink" title="Connection定义"></a><strong>Connection定义</strong></h4><p>最后来看连接管理 Connection，他负责在 Client 和 Server 之间建立一个 TCP 连接，并负责写入或读取低层次的 Frame 数据；</p>
+<p>Connection 的定义如下：</p>
+<p>src/connection/connect.rs</p>
+<pre><code class="rust">/// Send and receive `Frame` values from a remote peer.
+///
+/// When implementing networking protocols, a message on that protocol is
+/// often composed of several smaller messages known as frames. The purpose of
+/// `Connection` is to read and write frames on the underlying `TcpStream`.
+///
+/// To read frames, the `Connection` uses an internal buffer, which is filled
+/// up until there are enough bytes to create a full frame. Once this happens,
+/// the `Connection` creates the frame and returns it to the caller.
+///
+/// When sending frames, the frame is first encoded into the write buffer.
+/// The contents of the write buffer are then written to the socket.
+#[derive(Debug)]
+pub struct Connection {
+    /// The `TcpStream`. It is decorated with a `BufWriter`, which provides write
+    /// level buffering. The `BufWriter` implementation provided by Tokio is
+    /// sufficient for our needs.
+    stream: BufWriter&lt;TcpStream&gt;,
+
+    // The buffer for reading frames.
+    buffer: BytesMut,
+}</code></pre>
+<p>Connection 包含了：</p>
+<ul>
+<li><strong>stream：</strong><code>BufWriter&lt;TcpStream&gt;</code> 类型；<font color="#f00"><strong>stream 被 BufWriter 包装，这样我们在写入数据的时候，可以先分块写入（类似于Java中的StringBuilder），最后再调用 flush 一次发送，避免多次调用内核函数，提高效率；</strong></font></li>
+<li><strong>buffer：</strong>连接读取数据时的缓冲；<font color="#f00"><strong>注意到我们使用的是 tokio 框架，因此将数据读取到 buffer 是一个异步操作；</strong></font></li>
+</ul>
+<p>在 Connection 中定义并暴露了下面两个方法：</p>
+<ul>
+<li><code>new</code>：构造函数；</li>
+<li><code>read_frame</code>：从 buffer 中读取并解析数据为 Frame；</li>
+<li><code>write_frame</code>：向 TCP 流中写入一个完整的 Frame 数据；</li>
+</ul>
+<p>下面来看实现：</p>
+<pre><code class="rust">impl Connection {
+    pub fn new(socket: TcpStream) -&gt; Connection {
+        Connection {
+            stream: BufWriter::new(socket),
+            buffer: BytesMut::with_capacity(4 * 1024),
+        }
+    }
+
+    pub async fn read_frame(&amp;mut self) -&gt; Result&lt;Option&lt;Frame&gt;, MiniRedisConnectionError&gt; {
+        loop {
+            if let Some(frame) = self.parse_frame()? {
+                return Ok(Some(frame));
+            }
+
+            if 0 == self.stream.read_buf(&amp;mut self.buffer).await? {
+                return if self.buffer.is_empty() {
+                    Ok(None)
+                } else {
+                    Err(MiniRedisConnectionError::Disconnect)
+                };
+            }
+        }
+    }
+
+    fn parse_frame(&amp;mut self) -&gt; Result&lt;Option&lt;Frame&gt;, MiniRedisConnectionError&gt; {
+        let mut buf = Cursor::new(&amp;self.buffer[..]);
+
+        match Frame::check(&amp;mut buf) {
+            Ok(_) =&gt; {
+                let len = buf.position() as usize;
+
+                buf.set_position(0);
+
+                let frame = Frame::parse(&amp;mut buf)?;
+
+                self.buffer.advance(len);
+                Ok(Some(frame))
+            }
+            Err(MiniRedisParseError::Incomplete) =&gt; Ok(None),
+            Err(e) =&gt; Err(e.into()),
+        }
+    }
+
+    pub async fn write_frame(&amp;mut self, frame: &amp;Frame) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+        match frame {
+            Frame::Array(val) =&gt; {
+                self.stream.write_u8(b&#39;*&#39;).await?;
+
+                self.write_decimal(val.len() as u64).await?;
+
+                for entry in val {
+                    self.write_value(entry).await?;
+                }
+            }
+            _ =&gt; self.write_value(frame).await?,
+        }
+
+        self.stream.flush().await.map_err(|e| e.into())
+    }
+
+    async fn write_value(&amp;mut self, frame: &amp;Frame) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+        match frame {
+            Frame::Simple(val) =&gt; {
+                self.stream.write_u8(b&#39;+&#39;).await?;
+                self.stream.write_all(val.as_bytes()).await?;
+                self.stream.write_all(b&quot;\r\n&quot;).await?;
+            }
+            Frame::Error(val) =&gt; {
+                self.stream.write_u8(b&#39;-&#39;).await?;
+                self.stream.write_all(val.as_bytes()).await?;
+                self.stream.write_all(b&quot;\r\n&quot;).await?;
+            }
+            Frame::Integer(val) =&gt; {
+                self.stream.write_u8(b&#39;:&#39;).await?;
+                self.write_decimal(*val).await?;
+            }
+            Frame::Null =&gt; {
+                self.stream.write_all(b&quot;$-1\r\n&quot;).await?;
+            }
+            Frame::Bulk(val) =&gt; {
+                let len = val.len();
+
+                self.stream.write_u8(b&#39;$&#39;).await?;
+                self.write_decimal(len as u64).await?;
+                self.stream.write_all(val).await?;
+                self.stream.write_all(b&quot;\r\n&quot;).await?;
+            }
+            Frame::Array(_val) =&gt; {
+                warn!(&quot;unreachable code: recursive write_value: {:?}&quot;, _val);
+                return Err(MiniRedisParseError::Unimplemented.into());
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn write_decimal(&amp;mut self, val: u64) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+        use std::io::Write;
+
+        let mut buf = [0u8; 20];
+        let mut buf = Cursor::new(&amp;mut buf[..]);
+
+        write!(&amp;mut buf, &quot;{}&quot;, val)?;
+
+        let pos = buf.position() as usize;
+        self.stream.write_all(&amp;buf.get_ref()[..pos]).await?;
+        self.stream.write_all(b&quot;\r\n&quot;).await?;
+
+        Ok(())
+    }
+}</code></pre>
+<p>new 方法的实现非常简单，对于读取 Buffer 而言开辟了一个 4Kb 的 buffer 空间（对于 prototype 来说是合适的），这里不再赘述，下面重点来看异步数据读写的实现；</p>
+<br>
+
+<h4 id="读取数据：read-frame"><a href="#读取数据：read-frame" class="headerlink" title="读取数据：read_frame"></a><strong>读取数据：read_frame</strong></h4><p>读取数据 read_frame：</p>
+<pre><code class="rust">use tokio::io::{AsyncReadExt};
+pub async fn read_frame(&amp;mut self) -&gt; Result&lt;Option&lt;Frame&gt;, MiniRedisConnectionError&gt; {
+  loop {
+    // Attempt to parse a frame from the buffered data. If enough data
+    // has been buffered, the frame is returned.
+    if let Some(frame) = self.parse_frame()? {
+      return Ok(Some(frame));
+    }
+
+    // There is not enough buffered data to read a frame. Attempt to
+    // read more data from the socket.
+    //
+    // On success, the number of bytes is returned. `0` indicates &quot;end
+    // of stream&quot;.
+    if 0 == self.stream.read_buf(&amp;mut self.buffer).await? {
+      // The remote closed the connection. For this to be a clean
+      // shutdown, there should be no data in the read buffer. If
+      // there is, this means that the peer closed the socket while
+      // sending a frame.
+      return if self.buffer.is_empty() {
+        Ok(None)
+      } else {
+        Err(MiniRedisConnectionError::Disconnect)
+      };
+    }
+  }
+}</code></pre>
+<p>在 read_frame 方法中会循环读取数据，并调用内部的 parse_frame 方法解析当前 buffer 中的数据：</p>
+<ul>
+<li>如果 parse_frame 方法成功解析了一个 frame，则退出循环并返回这个 Frame；</li>
+<li>如果 parse_frame 方法保存则返回错误；</li>
+<li>否则继续调用 <code>self.stream.read_buf(&amp;mut self.buffer).await</code> 异步的向 buffer 中读取数据（依赖 tokio 中的 AsyncReadExt Trait），如果 read_buf 返回 0 则说明流已关闭（对面客户端关闭了连接）！</li>
+</ul>
+<p>当流关闭后：</p>
+<ul>
+<li>如果 buffer 中无数据，则表示客户端并未发送数据，此时正常退出即可；</li>
+<li>如果 buffer 中存在数据，则表示客户端在发送数据的中途关闭了连接，此时要报错：<code>MiniRedisConnectionError::Disconnect</code>；</li>
+</ul>
+<blockquote>
+<p>  <strong>上面基本上是使用 tokio stream 的标准结构；</strong></p>
+</blockquote>
+<p>下面具体来看解析 Frame 部分：</p>
+<pre><code class="rust">fn parse_frame(&amp;mut self) -&gt; Result&lt;Option&lt;Frame&gt;, MiniRedisConnectionError&gt; {
+  // Cursor is used to track the &quot;current&quot; location in the
+  // buffer. Cursor also implements `Buf` from the `bytes` crate
+  // which provides a number of helpful utilities for working
+  // with bytes.
+  let mut buf = Cursor::new(&amp;self.buffer[..]);
+
+  // The first step is to check if enough data has been buffered to parse a single frame.
+  // This step is usually much faster than doing a full
+  // parse of the frame, and allows us to skip allocating data structures
+  // to hold the frame data unless we know the full frame has been received.
+  match Frame::check(&amp;mut buf) {
+    Ok(_) =&gt; {
+      // The `check` function will have advanced the cursor until the
+      // end of the frame. Since the cursor had position set to zero
+      // before `Frame::check` was called, we obtain the length of the
+      // frame by checking the cursor position.
+      let len = buf.position() as usize;
+
+      // Reset the position to zero before passing the cursor to
+      // `Frame::parse`.
+      buf.set_position(0);
+
+      // Parse the frame from the buffer. This allocates the necessary
+      // structures to represent the frame and returns the frame value.
+      //
+      // If the encoded frame representation is invalid, an error is
+      // returned. This should terminate the **current** connection
+      // but should not impact any other connected client.
+      let frame = Frame::parse(&amp;mut buf)?;
+
+      // Discard the parsed data from the read buffer.
+      //
+      // When `advance` is called on the read buffer, all of the data
+      // up to `len` is discarded. The details of how this works is
+      // left to `BytesMut`. This is often done by moving an internal
+      // cursor, but it may be done by reallocating and copying data.
+      self.buffer.advance(len);
+
+      // Return the parsed frame to the caller.
+      Ok(Some(frame))
+    }
+    // There is not enough data present in the read buffer to parse a
+    // single frame. We must wait for more data to be received from the
+    // socket. Reading from the socket will be done in the statement
+    // after this `match`.
+    //
+    // We do not want to return `Err` from here as this &quot;error&quot; is an
+    // expected runtime condition.
+    Err(MiniRedisParseError::Incomplete) =&gt; Ok(None),
+    // An error was encountered while parsing the frame. The connection
+    // is now in an invalid state. Returning `Err` from here will result
+    // in the connection being closed.
+    Err(e) =&gt; Err(e.into()),
+  }
+}</code></pre>
+<p>在 parse_frame 内部方法中就用到了我们前文中所述的 <code>Frame::check</code> 方法；</p>
+<p>parse_frame 首先将 buffer 转为 Cursor，随后调用 <code>Frame::check</code> 方法对 buffer 中的数据进行校验：</p>
+<ul>
+<li>如果校验成功：<ul>
+<li>获取当前 buf 的长度作为整个 Frame 的长度（<strong>前文提到 check 方法会移动<code>当前 Cursor</code>（每次调用 parse_frame 创建一个新的 Cursor） 的位置到 Frame 末尾</strong>）；</li>
+<li>同时将 cursor 恢复后调用 <code>Frame::parse</code> 方法解析 Frame；</li>
+<li>最后调用 <code>self.buffer.advance(len)</code> 移动指针并丢弃 buffer 中我们已经解析的数据；</li>
+</ul>
+</li>
+<li>如果校验失败：<ul>
+<li>如果是 <code>MiniRedisParseError::Incomplete</code> 类型的错误，则说明 buffer 中的数据还不够组成一个 Frame，此时返回 None；</li>
+<li>否则，直接返回错误即可；</li>
+</ul>
+</li>
+</ul>
+<p><font color="#f00"><strong>这里就体现了我们使用 thiserror 库的优势：我们可以判断具体的错误类型为数据不足，进而继续从 buffer 中读取数据；</strong></font></p>
+<br>
+
+<h4 id="写入数据：write-frame"><a href="#写入数据：write-frame" class="headerlink" title="写入数据：write_frame"></a><strong>写入数据：write_frame</strong></h4><p>写入 Frame write_frame：</p>
+<pre><code class="rust">use tokio::io::{AsyncWriteExt, BufWriter};
+
+/// Write a single `Frame` value to the underlying stream.
+///
+/// The `Frame` value is written to the socket using the various `write_*`
+/// functions provided by `AsyncWrite`. Calling these functions directly on
+/// a `TcpStream` is **not** advised, as this will result in a large number of
+/// syscalls. However, it is fine to call these functions on a *buffered*
+/// write stream. The data will be written to the buffer. Once the buffer is
+/// full, it is flushed to the underlying socket.
+pub async fn write_frame(&amp;mut self, frame: &amp;Frame) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+  // Arrays are encoded by encoding each entry. All other frame types are
+  // considered literals. For now, mini-redis is not able to encode
+  // recursive frame structures. See below for more details.
+  match frame {
+    Frame::Array(val) =&gt; {
+      // Encode the frame type prefix. For an array, it is `*`.
+      self.stream.write_u8(b&#39;*&#39;).await?;
+
+      // Encode the length of the array.
+      self.write_decimal(val.len() as u64).await?;
+
+      // Iterate and encode each entry in the array.
+      for entry in val {
+        self.write_value(entry).await?;
+      }
+    }
+    // The frame type is a literal. Encode the value directly.
+    _ =&gt; self.write_value(frame).await?,
+  }
+
+  // Ensure the encoded frame is written to the socket. The calls above
+  // are to the buffered stream and writes. Calling `flush` writes the
+  // remaining contents of the buffer to the socket.
+  self.stream.flush().await.map_err(|e| e.into())
+}</code></pre>
+<p>write_frame 异步写入数据的实现逻辑非常简单：</p>
+<ul>
+<li>如果是 Array 类型的 Frame，则先写入 <code>*len(arr)</code>，然后遍历数组，调用 write_value 内部方法向流中写入数组中的每一个 Frame；</li>
+<li>否则，直接调用 write_value 内部方法写入 Frame；</li>
+<li>最后，调用 <code>stream.flush()</code> 发送数据即可！</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>由于我们使用 <code>BufWriter&lt;TcpStream&gt;</code> 包装了 Stream，因此我们可以多次调用 write_value 向流中写入数据，而只有 buffer 装满，或调用 flush 后才会真正的将数据发送给 socket！</strong></font></p>
+</blockquote>
+<p>下面来看 write_value 内部方法，他根据 RESP 规则写入具体格式的数据：</p>
+<pre><code class="rust">/// Write a frame literal to the stream
+async fn write_value(&amp;mut self, frame: &amp;Frame) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+  match frame {
+    Frame::Simple(val) =&gt; {
+      self.stream.write_u8(b&#39;+&#39;).await?;
+      self.stream.write_all(val.as_bytes()).await?;
+      self.stream.write_all(b&quot;\r\n&quot;).await?;
+    }
+    Frame::Error(val) =&gt; {
+      self.stream.write_u8(b&#39;-&#39;).await?;
+      self.stream.write_all(val.as_bytes()).await?;
+      self.stream.write_all(b&quot;\r\n&quot;).await?;
+    }
+    Frame::Integer(val) =&gt; {
+      self.stream.write_u8(b&#39;:&#39;).await?;
+      self.write_decimal(*val).await?;
+    }
+    Frame::Null =&gt; {
+      self.stream.write_all(b&quot;$-1\r\n&quot;).await?;
+    }
+    Frame::Bulk(val) =&gt; {
+      let len = val.len();
+
+      self.stream.write_u8(b&#39;$&#39;).await?;
+      self.write_decimal(len as u64).await?;
+      self.stream.write_all(val).await?;
+      self.stream.write_all(b&quot;\r\n&quot;).await?;
+    }
+    // Encoding an `Array` from within a value cannot be done using a
+    // recursive strategy. In general, async fns do not support
+    // recursion. Mini-redis has not needed to encode nested arrays yet,
+    // so for now it is skipped.
+    Frame::Array(_val) =&gt; {
+      warn!(&quot;unreachable code: recursive write_value: {:?}&quot;, _val);
+      return Err(MiniRedisParseError::Unimplemented.into());
+    }
+  }
+
+  Ok(())
+}
+
+/// Write a decimal frame to the stream
+async fn write_decimal(&amp;mut self, val: u64) -&gt; Result&lt;(), MiniRedisConnectionError&gt; {
+  use std::io::Write;
+
+  // Convert the value to a string
+  let mut buf = [0u8; 20];
+  let mut buf = Cursor::new(&amp;mut buf[..]);
+
+  write!(&amp;mut buf, &quot;{}&quot;, val)?;
+
+  let pos = buf.position() as usize;
+  self.stream.write_all(&amp;buf.get_ref()[..pos]).await?;
+  self.stream.write_all(b&quot;\r\n&quot;).await?;
+
+  Ok(())
+}</code></pre>
+<p>实现逻辑基本上跟我们解析字节到 Frame 中的逻辑相反；</p>
+<p>然而，write_value 的逻辑更加简单，直接根据 RESP 规则，针对不同类型的数据写入不同格式的数据即可；</p>
+<p><font color="#f00"><strong>需要注意的是：目前在 rust 中 async 函数不允许直接递归，因此 write_value 还不能处理另外一个 Array 类型的数据；</strong></font></p>
+<blockquote>
+<p>  <strong>实际上这是因为递归的 async 生成的 Future 块的大小是不确定的，而 Rust 又规定在编译器所有类型的内存大小是确定的；</strong></p>
+<p>  <strong>这可以通过 Box 将 Future 移动到堆上解决：</strong></p>
+<ul>
+<li><a href="https://rust-lang.github.io/async-book/07_workarounds/04_recursion.html" target="_blank" rel="noopener">https://rust-lang.github.io/async-book/07_workarounds/04_recursion.html</a></li>
+</ul>
+<p>  <strong>另外也有一些库提供了 <code>#[async_recursion]</code> 宏，例如：</strong></p>
+<ul>
+<li><a href="https://github.com/dcchut/async-recursion" target="_blank" rel="noopener">https://github.com/dcchut/async-recursion</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><p>本文实现了 mini-redis 的连接层，主要包括下面几个部分：</p>
+<ul>
+<li>消息块 Frame：字节流抽象；</li>
+<li>消息解析 Prase：RESP 完整实现；</li>
+<li>连接管理 Connection：TCP 连接中的异步读写 Frame 块功能；</li>
+</ul>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/mini-redis" target="_blank" rel="noopener">https://github.com/JasonkayZK/mini-redis</a></li>
+</ul>
+<p>系列文章：</p>
+<ul>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-1-简介/">《mini-redis项目-1-简介》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-2-存储层/">《mini-redis项目-2-存储层》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/">《mini-redis项目-3-连接层》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/06/mini-redis项目-4-服务端/">《mini-redis项目-4-服务端》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/07/mini-redis项目-5-客户端/">《mini-redis项目-5-客户端》</a></li>
+<li><a href="https://jasonkayzk.github.io/2022/12/07/mini-redis项目-6-测试与示例/">《mini-redis项目-6-测试与示例》</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://redis.io/docs/reference/protocol-spec/" target="_blank" rel="noopener">https://redis.io/docs/reference/protocol-spec/</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/" title="https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/12/05/mini-redis项目-3-连接层/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725312568"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

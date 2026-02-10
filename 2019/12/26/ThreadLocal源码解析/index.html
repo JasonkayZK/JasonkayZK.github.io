@@ -1,0 +1,3157 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>ThreadLocal源码解析 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近总结了一套阿里云的面试题, 其中有一个ThreadLocal和线程池配合使用造成内存泄露的问题. 当时写了答案但是感觉对于ThreadLocal的理解还不是特别深入, 所以想再看一下源码.">
+<meta name="keywords" content="Java源码,并发编程,哈希表,线性探测法,hash冲突">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ThreadLocal源码解析">
+<meta property="og:url" content="https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近总结了一套阿里云的面试题, 其中有一个ThreadLocal和线程池配合使用造成内存泄露的问题. 当时写了答案但是感觉对于ThreadLocal的理解还不是特别深入, 所以想再看一下源码.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ThreadLocalMap%E7%9A%84%E5%9B%BE%E7%A4%BA.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/threadLocal%E5%BC%95%E7%94%A8%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/threadLocal%E5%BC%95%E7%94%A8%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cleanSomeSlots%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cleanSomeSlots%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%90%91%E5%89%8D%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry%EF%BC%8C%E5%90%91%E5%90%8E%E7%8E%AF%E5%BD%A2%E6%9F%A5%E6%89%BE%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry%E7%9A%84%E6%83%85%E5%86%B5.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry,%E5%90%91%E5%90%8E%E7%8E%AF%E5%BD%A2%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%8F%AF%E8%A6%86%E7%9B%96entry.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry%EF%BC%8C%E5%90%8E%E5%90%91%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry.png">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E7%8E%AF%E5%BD%A2%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry,%E5%90%8E%E5%90%91%E7%8E%AF%E5%BD%A2%E6%9F%A5%E6%89%BE%E6%9C%AA%E6%9F%A5%E6%89%BE%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry.png">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.748Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ThreadLocal源码解析">
+<meta name="twitter:description" content="最近总结了一套阿里云的面试题, 其中有一个ThreadLocal和线程池配合使用造成内存泄露的问题. 当时写了答案但是感觉对于ThreadLocal的理解还不是特别深入, 所以想再看一下源码.">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ThreadLocalMap%E7%9A%84%E5%9B%BE%E7%A4%BA.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725355321">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?8">
+    
+    <h1>ThreadLocal源码解析</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2019年12月26日</a>
+    <a><i class="nexmoefont icon-areachart"></i>16k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 75 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Java源码/">Java源码</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Java源码/">Java源码</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/hash冲突/">hash冲突</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/哈希表/">哈希表</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/并发编程/">并发编程</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/线性探测法/">线性探测法</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-ThreadLocal的简介"><span class="toc-text">一. ThreadLocal的简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ThreadLocal介绍"><span class="toc-text">ThreadLocal介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ThreadLocal的构造方法"><span class="toc-text">ThreadLocal的构造方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ThreadLocal的API"><span class="toc-text">ThreadLocal的API</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-ThreadLocal源码分析-基于JDK11-0-4"><span class="toc-text">二. ThreadLocal源码分析(基于JDK11.0.4)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#线性探测法"><span class="toc-text">线性探测法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#阅读源码前的解读"><span class="toc-text">阅读源码前的解读</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-关于ThreadLocal源码中的一些问题"><span class="toc-text">三. 关于ThreadLocal源码中的一些问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ThreadLocalMap到底存放在哪里"><span class="toc-text">ThreadLocalMap到底存放在哪里</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么使用0x61c88647进行Rehash操作"><span class="toc-text">为什么使用0x61c88647进行Rehash操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ThreadLocal源码中为了防止内存泄露做出的努力"><span class="toc-text">ThreadLocal源码中为了防止内存泄露做出的努力</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在使用ThreadLocal时防止内存泄漏你应该做出的努力"><span class="toc-text">在使用ThreadLocal时防止内存泄漏你应该做出的努力</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-ThreadLocal实例"><span class="toc-text">四. ThreadLocal实例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#用ThreadLocal解决SimpleDateFormat的线程不安全的问题"><span class="toc-text">用ThreadLocal解决SimpleDateFormat的线程不安全的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用ThreadLocal实现数字自增"><span class="toc-text">使用ThreadLocal实现数字自增</span></a></li></ol></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近总结了一套阿里云的面试题, 其中有一个ThreadLocal和线程池配合使用造成内存泄露的问题. 当时写了答案但是感觉对于ThreadLocal的理解还不是特别深入, 所以想再看一下源码.</p>
+<br>
+
+<a id="more"></a>
+
+<h2 id="一-ThreadLocal的简介"><a href="#一-ThreadLocal的简介" class="headerlink" title="一. ThreadLocal的简介"></a>一. ThreadLocal的简介</h2><h3 id="ThreadLocal介绍"><a href="#ThreadLocal介绍" class="headerlink" title="ThreadLocal介绍"></a>ThreadLocal介绍</h3><p>ThreadLocal望文生义，简单解释就是线程的本地变量</p>
+<blockquote>
+  <br>
+
+<p>  JDK对它的定义：</p>
+<p>  <strong>该类提供了线程局部 (thread-local) 变量。这些变量不同于它们的普通对应物，因为访问某个变量(通过其 <code>get</code> 或 <code>set</code>方法)的每个线程都有自己的局部变量，它独立于变量的初始化副本。<code>ThreadLocal</code> 实例通常是类中的 private static 字段，它们希望将状态与某一个线程(例如，用户 ID 或事务 ID)相关联</strong></p>
+</blockquote>
+<p>从这段解释中可以看出它是实现线程安全的一种新的方式，不同于以前加锁synchronized的方式, 每个线程都有自己的独立的变量，这样他们之间是互不影响的，这样就间接的解决线程安全的问题。举个通俗的例子，相当于由以前的贫穷年代，大家哄抢一块蛋糕，到现在的物质丰盛年代，每个人都有一块自己的蛋糕，大家互不影响，就不会存在争抢的情况</p>
+<blockquote>
+<br>
+
+<p><strong>评价:</strong></p>
+<p><font color="#ff0000"><strong>ThreadLocal解决了线程局部变量统一定义问题，</strong>多线程数据不能共享。(InheritableThreadLocal特例除外)<strong>不能解决并发问题</strong></font></p>
+<p><font color="#ff0000">解决了：<strong>基于类级别的变量定义，每一个线程单独维护自己线程内的变量值（存、取、删的功能）</strong></font></p>
+</blockquote>
+<h3 id="ThreadLocal的构造方法"><a href="#ThreadLocal的构造方法" class="headerlink" title="ThreadLocal的构造方法"></a>ThreadLocal的构造方法</h3><pre><code class="java">/**
+* 创建一个ThreadLocal变量
+* Creates a thread local variable.
+* @see #withInitial(java.util.function.Supplier)
+*/
+public ThreadLocal() {}
+
+/**
+* JDK 1.8 新加入内容, 通过Supplier创建一个ThreadLocal
+* (实际上是一个内部类SuppliedThreadLocal, 继承自ThreadLocal)
+* 获取时采用Supplier的get()方法
+*
+* Creates a thread local variable. The initial value of the variable is
+* determined by invoking the {@code get} method on the {@code Supplier}.
+*
+* @param &lt;S&gt; the type of the thread local&#39;s value
+* @param supplier the supplier to be used to determine the initial value
+* @return a new thread local variable
+* @throws NullPointerException if the specified supplier is null
+* @since 1.8
+*/    
+public static &lt;S&gt; ThreadLocal&lt;S&gt; withInitial(Supplier&lt;? extends S&gt; supplier) {
+    return new SuppliedThreadLocal&lt;&gt;(supplier);
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>评价:</strong></p>
+<p>构造方法比较简单, 一个是默认的空的构造方法, 另一个是JDK 1.8之后加入的通过Supplier(实际上也是Lambda表达式)构造.</p>
+<p>下面给出一个通过Supplier创建ThreadLocal的例子:</p>
+<pre><code class="java">/**
+* ThreadLocal的Lambda构造方式: withInitial
+*
+* @author zk
+*/
+public class ThreadLocalWithInitial {
+
+   /**
+    * 运行入口
+    *
+    * @param args 运行参数
+    */
+   public static void main(String[] args) throws InterruptedException {
+       System.out.println(&quot;Safe deposit&quot;);
+       safeDeposit();
+
+       Thread.sleep(1000);
+       System.out.println();
+
+       System.out.println(&quot;Not safe deposit&quot;);
+       notSafeDeposit();
+   }
+
+   /**
+    * 线程安全的存款
+    */
+   private static void safeDeposit() {
+       SafeBank bank = new SafeBank();
+       Thread thread1 = new Thread(() -&gt; bank.deposit(200), &quot;Jasonkay&quot;);
+       Thread thread2 = new Thread(() -&gt; bank.deposit(200), &quot;马云&quot;);
+       Thread thread3 = new Thread(() -&gt; bank.deposit(500), &quot;马化腾&quot;);
+       thread1.start();
+       thread2.start();
+       thread3.start();
+   }
+
+   /**
+    * 非线程安全的存款
+    */
+   private static void notSafeDeposit() {
+       NotSafeBank bank = new NotSafeBank();
+       Thread thread1 = new Thread(() -&gt; bank.deposit(200), &quot;Jasonkay&quot;);
+       Thread thread2 = new Thread(() -&gt; bank.deposit(200), &quot;马云&quot;);
+       Thread thread3 = new Thread(() -&gt; bank.deposit(500), &quot;马化腾&quot;);
+       thread1.start();
+       thread2.start();
+       thread3.start();
+   }
+
+}
+
+class NotSafeBank {
+
+   /**
+    * 当前余额
+    */
+   private int balance = 1000;
+
+   /**
+    * 存款
+    *
+    * @param money 存款金额
+    */
+   public void deposit(int money) {
+       String threadName = Thread.currentThread().getName();
+       System.out.println(threadName + &quot; -&gt; 当前账户余额为：&quot; + this.balance);
+       this.balance += money;
+       System.out.println(threadName + &quot; -&gt; 存入 &quot; + money + &quot; 后，当前账户余额为：&quot; + this.balance);
+   }
+
+}
+
+/**
+* 线程安全的银行
+*/
+class SafeBank {
+
+   /**
+    * 当前余额
+    */
+   private ThreadLocal&lt;Integer&gt; balance = ThreadLocal.withInitial(() -&gt; 1000);
+
+   /**
+    * 存款
+    *
+    * @param money 存款金额
+    */
+   public void deposit(int money) {
+       String threadName = Thread.currentThread().getName();
+       System.out.println(threadName + &quot; -&gt; 当前账户余额为：&quot; + this.balance.get());
+       this.balance.set(this.balance.get() + money);
+       System.out.println(threadName + &quot; -&gt; 存入 &quot; + money + &quot; 后，当前账户余额为：&quot; + this.balance.get());
+   }
+}
+------- Output --------
+Safe deposit
+Jasonkay -&gt; 当前账户余额为：1000
+马化腾 -&gt; 当前账户余额为：1000
+马云 -&gt; 当前账户余额为：1000
+马云 -&gt; 存入 200 后，当前账户余额为：1200
+Jasonkay -&gt; 存入 200 后，当前账户余额为：1200
+马化腾 -&gt; 存入 500 后，当前账户余额为：1500
+
+Not safe deposit
+Jasonkay -&gt; 当前账户余额为：1000
+马化腾 -&gt; 当前账户余额为：1200
+马云 -&gt; 当前账户余额为：1000
+马云 -&gt; 存入 200 后，当前账户余额为：1900
+马化腾 -&gt; 存入 500 后，当前账户余额为：1700
+Jasonkay -&gt; 存入 200 后，当前账户余额为：1200</code></pre>
+<p>可见使用ThreadLocal保证了各线程分配各自的数据</p>
+<p>而使用<code>private ThreadLocal&lt;Integer&gt; balance = ThreadLocal.withInitial(() -&gt; 1000);</code>创建则省去了先new再setValue的繁琐过程</p>
+</blockquote>
+<br>
+
+<h3 id="ThreadLocal的API"><a href="#ThreadLocal的API" class="headerlink" title="ThreadLocal的API"></a>ThreadLocal的API</h3><p>ThreadLocal向外暴露出基本的增删改查方法，几个方法都是很简单:</p>
+<p>通过get和set方法是访问和修改的入口，再通过remove方法移除值</p>
+<table>
+<thead>
+<tr>
+<th align="left">方法</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>T get()</strong></td>
+<td align="left">返回此线程局部变量的当前线程副本中的值</td>
+</tr>
+<tr>
+<td align="left"><strong>void set(T value)</strong></td>
+<td align="left">将此线程局部变量的当前线程副本中的值设置为指定值</td>
+</tr>
+<tr>
+<td align="left"><strong>void remove()</strong></td>
+<td align="left">移除此线程局部变量当前线程的值</td>
+</tr>
+</tbody></table>
+<br>
+
+<h2 id="二-ThreadLocal源码分析-基于JDK11-0-4"><a href="#二-ThreadLocal源码分析-基于JDK11-0-4" class="headerlink" title="二. ThreadLocal源码分析(基于JDK11.0.4)"></a>二. ThreadLocal源码分析(基于JDK11.0.4)</h2><h3 id="线性探测法"><a href="#线性探测法" class="headerlink" title="线性探测法"></a><strong>线性探测法</strong></h3><p>由于在ThreadLocalMap中数据存储采用的是线性探测法解决hash冲突, 所以在这里补充一下有关线性探测法的知识:</p>
+<p>线性探测法是散列解决冲突的一种方法:</p>
+<ul>
+<li>当hash一个关键字时，发现没有冲突，就保存关键字;</li>
+<li>如果出现冲突，则就探测冲突地址下一个地址，依次按照线性查找，直到发现有空地址为止，从而解决冲突</li>
+</ul>
+<p>例如: 关键字集合{7、8、30、11、18、9、14}，散列函数为: H(key) = (key x 3) MOD 7， 设装填因子（元素个数/散列表长度）为0.7，那么散列表的长度为10</p>
+<p>关键字（key）集合存放位置分别为：</p>
+<table>
+<thead>
+<tr>
+<th>7</th>
+<th>8</th>
+<th>30</th>
+<th>11</th>
+<th>18</th>
+<th>9</th>
+<th>14</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>3</td>
+<td>6</td>
+<td>5</td>
+<td>5</td>
+<td>6</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>由表格知道，这里的7和14、30和9、11和18出现了位置存放冲突。存放key=7时，散列表长度为10的表中其实没有冲突，  因为7是第一个存在到表中的key，所以一定不会有冲突的，所以7对应散列表的地址0;</p>
+<p>8、30、11存放的地址分别是3、 6  、5，但是到了key=18时候，发现存放的地址为5，而地址5已经存放了key=11, 这时发生了地址冲突</p>
+<p>根据线性探测法，算法会探测地址5的下一个地址，即地址6，而此时地址6已经存放了key=30，程序继续探测下一个地址，发现地址7位空，此时把key=18存放到地址7处。以此类推，最后得出的散列表为：</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7</td>
+<td>14</td>
+<td></td>
+<td>8</td>
+<td></td>
+<td>11</td>
+<td>30</td>
+<td>18</td>
+<td>9</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>成功查找率：（1+1+1+1+3+3+2）/ 7</p>
+<p>不成功查找率:</p>
+<p>计算查找不成功的次数就直接找<strong>关键字到第一个地址上关键字为空的距离</strong>即可， 但根据哈希函数地址为MOD7，因此初始只可能在0-6的位置。等概率情况下，查找0-6位置查找失败的查找次数为:</p>
+<p>地址0，到第一个关键字为空的地址2的距离为3，因此查找不成功的次数为3.　　 </p>
+<p>地址1， 到第一个关键为空的地址2的距离为2，因此查找不成功的次数为2.</p>
+<p>地址2， 到第一个关键为空的地址2的距离为1，因此查找不成功的次数为1.</p>
+<p>地址3，到第一个关键为空的地址4的距离为2，因此查找不成功的次数为2.</p>
+<p>地址4，到第一个关键为空的地址4的距离为1，因此查找不成功的次数为1.</p>
+<p>地址5，到第一个关键为空的地址2(注意不是地址9，因为初始只可能在0~6之间，因此循环回去)的距离为5，因此查找不成功的次数为5.</p>
+<p>地址6，到第一个关键为空的地址2(注意不是地址9，因为初始只可能在0~6之间，因此循环回去)的距离为4，因此查找不成功的次数为4.</p>
+<p>不成功查找率:（3+2+1+2+1+5+4）/ 7</p>
+<blockquote>
+<br>
+
+<p><strong>扩展: 在ThreadLocal中改进了线性探测</strong></p>
+<p><strong>① ThreadLocal生成hashcode方法: nextHashCode()</strong></p>
+<pre><code class="java">private static AtomicInteger nextHashCode = new AtomicInteger();
+private static int nextHashCode() {return extHashCode.getAndAdd(HASH_INCREMENT);}</code></pre>
+<p>从nextHashCode方法可以看出: <font color="#ff0000"><strong>ThreadLocal每实例化一次，其hash值就原子增加HASH_INCREMENT = 0x61c88647(选择原因后面解释)</strong></font></p>
+<p><strong>② set方法解读</strong></p>
+<pre><code class="java">// threadLocal.set()
+public void set(T value) {
+   Thread t = Thread.currentThread();
+   ThreadLocalMap map = getMap(t);
+   if (map != null)
+       map.set(this, value);
+   else
+       createMap(t, value);
+}
+
+ThreadLocalMap getMap(Thread t) {
+   return t.threadLocals;
+}
+// threadLocalMap.set()
+private void set(ThreadLocal&lt;?&gt; key, Object value) {
+   Entry[] tab = table;
+   int len = tab.length;
+   int i = key.threadLocalHashCode &amp; (len-1);
+   for (Entry e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+       ThreadLocal&lt;?&gt; k = e.get();
+       if (k == key) {
+           e.value = value;
+           return;
+       }
+       if (k == null) {
+           replaceStaleEntry(key, value, i);
+           return;
+       }
+   }
+   tab[i] = new Entry(key, value);
+   int sz = ++size;
+   if (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)
+       rehash();
+}</code></pre>
+<p><strong>ThreadLocal从当前线程Thread中获取ThreadLocalMap实例(ThreadLocal的内部类);</strong></p>
+<p><strong>调用ThreadLocalMap的set()方法[实际set()的实现方法], 进行设置:</strong></p>
+<ul>
+<li>通过 <code>hash &amp; (len -1)</code>定位到table的位置i，假设table中i位置的元素为f</li>
+<li>如果f != null，假设f中的引用为k:<ul>
+<li>如果k和当前ThreadLocal实例一致，则修改value值，返回;</li>
+<li>如果k为null，说明这个f已经是stale(陈旧的)的元素。调用replaceStaleEntry方法删除table中所有陈旧的元素（即entry的引用为null）并插入新元素，返回</li>
+<li>否则通过nextIndex方法找到下一个元素f，继续进行线性探索。 如果f == null，则把Entry加入到table的i位置中。 通过cleanSomeSlots删除陈旧的元素，如果table中没有元素删除，需判断当前情况下是否要进行扩容;</li>
+</ul>
+</li>
+<li>如果f == null，则把Entry加入到table的i位置中</li>
+<li>通过cleanSomeSlots删除陈旧的元素，如果table中没有元素删除，需判断当前情况下是否要进行扩容</li>
+</ul>
+<p><font color="#ff0000"><strong>所以在ThreadLocal中的线性探索公式为: <code>index = hash &amp; (len - 1)</code>, 并且hash = pre_hash + 0x61c88647(HASH_INCREMENT)</strong></font></p>
+<p><font color="#ff0000"><strong>顺便提一下: ThreadLocal中使用的是AtomicInteger存放nextHashCode, 所以每次增加是原子操作</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="阅读源码前的解读"><a href="#阅读源码前的解读" class="headerlink" title="阅读源码前的解读"></a><strong>阅读源码前的解读</strong></h3><p>另外, 在进行源码分析之前先纠正一个误区: 很多人以为ThreadLocal的内部维持了一个map，其中以当前线程作为键，传入的数据作为值来进行封装的，这个想法是<strong>错误</strong>的!</p>
+<p><font color="#ff0000"><strong>ThreadLocal的内部维护着一个叫做ThreadLocalmap的静态类，它由一个首尾闭合的动态数组组成（默认大小为16），每个数组都是一个Entry对象，该对象以ThreadLocal对象作为key，以传入的数据作为值进行封装而成.</strong></font>以下是TheadLocalMap的图示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/ThreadLocalMap%E7%9A%84%E5%9B%BE%E7%A4%BA.png" alt="ThreadLocalMap的图示.png"></p>
+<blockquote>
+<br>
+
+<p><strong>注意:</strong></p>
+<p><strong>1. ThreadLocal类封装了set()、get()、remove()3个核心方法</strong></p>
+<p><strong>2. 通过getMap()获取每个子线程Thread持有自己的ThreadLocalMap实例, 因此它们是不存在并发竞争的可以理解为每个线程有自己的变量副本</strong></p>
+<p><strong>3. ThreadLocalMap中Entry[]数组存储数据，初始化长度16，后续每次都是2倍扩容(主线程中定义了几个变量，Entry[]才有几个key)</strong></p>
+<p><strong>4. <code>Entry</code>的key是对ThreadLocal的弱引用，当抛弃掉ThreadLocal对象时，垃圾收集器会忽略这个key的引用而清理掉ThreadLocal对象， 防止了内存泄漏</strong></p>
+</blockquote>
+<br>
+
+<blockquote>
+  <br>
+
+<p>  <strong>注释中的示例代码：</strong></p>
+<pre><code class="java">  import java.util.concurrent.atomic.AtomicInteger;
+
+  /**
+   * 每个线程都保持对线程本地变量的副本的隐式引用，
+   * 只要线程是活动的并且{@code ThreadLocal}实例是可访问的；
+   * 在线程离开之后，线程本地实例的所有副本都受到垃圾收集
+   *（除非存在对这些副本的其他引用）
+   *
+   * Each thread holds an implicit reference to its copy of a thread-local
+   * variable as long as the thread is alive and the {@code ThreadLocal}
+   * instance is accessible; after a thread goes away, all of its copies of
+   * thread-local instances are subject to garbage collection (unless other
+   * references to these copies exist).
+   */
+  public class ThreadId {
+      // Atomic integer containing the next thread ID to be assigned
+      // 包含要分配的下一个线程ID的原子整数
+      private static final AtomicInteger nextId = new AtomicInteger(0);
+
+      // Thread local variable containing each thread&#39;s ID
+      // 包含每个线程ID的线程局部变量
+      private static final ThreadLocal&lt;Integer&gt; threadId =
+          new ThreadLocal&lt;Integer&gt;() {
+          @Override protected Integer initialValue() {
+              return nextId.getAndIncrement();
+          }
+      };
+
+      // Returns the current thread&#39;s unique ID, assigning it if necessary
+      //  返回当前线程的唯一ID，必要时将其赋值
+      public static int get() {
+          return threadId.get();
+      }
+  }
+</code></pre>
+<p>  ThreadId类会在每个线程中生成唯一标识符。线程的id在第一次调用threadid.get()时被分配，在随后的调用中保持不变</p>
+<p>   ThreadId类利用AtomicInteger原子方法getAndIncrement为每个线程创建一个threadId变量，例如: 第一个线程是1，第二个线程是2…，并供一个类静态get方法用以获取当前线程ID</p>
+<p>  有一个注意点是：<font color="#ff0000"><strong>用户可以自定义initialValue()初始化方法，来初始化threadLocal的值</strong></font></p>
+</blockquote>
+<p><strong>关于Entry对象</strong></p>
+<pre><code class="java">//用虚引用封装的ThreadLocal
+static class Entry extends WeakReference&lt;ThreadLocal&gt; {
+    Object value; // 声明一个值
+    Entry(ThreadLocal k, Object v) { // 用ThreadLocal对象和值创建一个Entry
+        super(k);
+        value = v;
+    }
+}</code></pre>
+<p>该对象继承自弱引用WeakReference. 我们知道java中引用类分为4种，强度从大到小的排列顺序为：<strong>强引用、软引用、弱引用、虚引用</strong>。这样做的最大好处就是可以方便GC处理</p>
+<p>其中关于弱引用： <font color="#ff0000"><strong>具有弱引用的对象拥有更短暂的生命周期。在垃圾回收器线程扫描它所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存。不过，由于垃圾回收器是一个优先级很低的线程，因此不一定会很快发现那些只具有弱引用的对象</strong></font></p>
+<br>
+
+<p>下面进行源码解读:</p>
+<pre><code class="java">import jdk.internal.misc.TerminatingThreadLocal;
+
+import java.lang.ref.*;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+public class ThreadLocal&lt;T&gt; {
+    /**
+     * ThreadLocals依赖于附加到每个线程的线性探测哈希映射
+     * (thread.ThreadLocals和inheritablethrreadlocals)
+     * ThreadLocal对象充当键，通过threadLocalHashCode进行搜索
+     * 这是一个自定义散列代码(仅在ThreadLocalMaps中有用)
+     * 它消除了在相同线程使用连续构造的threadlocal的常见情况下的冲突
+     * 同时在不太常见的情况下保持良好的性能
+     *
+     * ThreadLocals rely on per-thread linear-probe hash maps attached
+     * to each thread (Thread.threadLocals and
+     * inheritableThreadLocals).  The ThreadLocal objects act as keys,
+     * searched via threadLocalHashCode.  This is a custom hash code
+     * (useful only within ThreadLocalMaps) that eliminates collisions
+     * in the common case where consecutively constructed ThreadLocals
+     * are used by the same threads, while remaining well-behaved in
+     * less common cases.
+     */
+    private final int threadLocalHashCode = nextHashCode();
+
+    /**
+     * 下一个hashcode, 原子更新, 从零开始
+     * The next hash code to be given out. Updated atomically. Starts at zero.
+     */
+    private static AtomicInteger nextHashCode = new AtomicInteger();
+
+    /**
+     * 连续生成的散列码之间的差异
+     * -将隐式顺序线程局部id转换为近似最优分布的乘法散列值
+     * 以获得两个大小表的幂
+     *
+     * The difference between successively generated hash codes - turns
+     * implicit sequential thread-local IDs into near-optimally spread
+     * multiplicative hash values for power-of-two-sized tables.
+     */
+    private static final int HASH_INCREMENT = 0x61c88647;
+
+    /**
+     * 返回下一个hashcode
+     * Returns the next hash code.
+     */
+    private static int nextHashCode() { 
+        return nextHashCode.getAndAdd(HASH_INCREMENT);
+    }
+
+    /**
+     * 返回此线程局部变量的当前线程“初始值”
+     * 此方法将在线程第一次使用{@link#get}方法访问变量时调用
+     * 除非线程以前调用了{@link#set}方法，在这种情况下，不会为线程调用{@code initialValue}方法
+     * 通常，每个线程最多调用一次此方法，但在随后调用{@link#remove}和{@link#get}时，可能会再次调用此方法
+     *
+     * Returns the current thread&#39;s &quot;initial value&quot; for this
+     * thread-local variable.  This method will be invoked the first
+     * time a thread accesses the variable with the {@link #get}
+     * method, unless the thread previously invoked the {@link #set}
+     * method, in which case the {@code initialValue} method will not
+     * be invoked for the thread.  Normally, this method is invoked at
+     * most once per thread, but it may be invoked again in case of
+     * subsequent invocations of {@link #remove} followed by {@link #get}.
+     *
+     * 此实现只返回{@code null}；
+     * 如果程序员希望线程局部变量具有{@code null}以外的初始值
+     * 则必须对{@code thread local}进行子类化，并重写此方法。通常，将使用匿名内部类
+     *
+     * &lt;p&gt;This implementation simply returns {@code null}; if the
+     * programmer desires thread-local variables to have an initial
+     * value other than {@code null}, {@code ThreadLocal} must be
+     * subclassed, and this method overridden.  Typically, an
+     * anonymous inner class will be used.
+     *
+     * @return the initial value for this thread-local
+     */
+    protected T initialValue() {
+        return null;
+    }
+
+    /**
+     * JDK 1.8新加入的, 通过Supplier创建一个ThreadLocal
+     *
+     * @param &lt;S&gt; the type of the thread local&#39;s value
+     * @param supplier the supplier to be used to determine the initial value
+     * @return a new thread local variable
+     * @throws NullPointerException if the specified supplier is null
+     * @since 1.8
+     */
+    public static &lt;S&gt; ThreadLocal&lt;S&gt; withInitial(Supplier&lt;? extends S&gt; supplier) {
+        return new SuppliedThreadLocal&lt;font color=&quot;#ff0000&quot;&gt;(supplier);
+    }
+
+    /**
+     * ThreadLocal默认的构造器
+     * @see #withInitial(java.util.function.Supplier)
+     */
+    public ThreadLocal() { }
+
+    /**
+     * 返回此线程局部变量的当前线程副本中的值
+     * 如果变量没有当前线程的值，则首先将其初始化为调用{@link#initialValue}方法返回的值
+     *
+     * Returns the value in the current thread&#39;s copy of this
+     * thread-local variable.  If the variable has no value for the
+     * current thread, it is first initialized to the value returned
+     * by an invocation of the {@link #initialValue} method.
+     *
+     * @return the current thread&#39;s value of this thread-local
+     */
+    public T get() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t); // 通过当前Thread获得ThreadLocalMap对象
+        if (map != null) {
+            ThreadLocalMap.Entry e = map.getEntry(this); // 通过当前ThreadLocal对象获得ThreadLocalMap.Entry
+            if (e != null) {
+                @SuppressWarnings(&quot;unchecked&quot;)
+                T result = (T)e.value;
+                return result;
+            }
+        }
+        // 如果无法找到对应线程的value值, 则调用setInitialValue()方法将其初始化为null
+        return setInitialValue();
+    }
+
+    /**
+     * 如果此线程局部变量的当前线程副本中有值，则返回true
+     * 即使该值为null
+     * (即: 没有存值时返回为false; 存了值, 即使为null也返回true, 因为此时会创建一个新的Entry)
+     * Returns {@code true} if there is a value in the current thread&#39;s copy of
+     * this thread-local variable, even if that values is {@code null}.
+     *
+     * @return {@code true} if current thread has associated value in this
+     *         thread-local variable; {@code false} if not
+     */
+    boolean isPresent() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        return map != null &amp;&amp; map.getEntry(this) != null;
+    }
+
+    /**
+     * set()的另一种实现方式来初始化值;
+     * 如果用户重写了set()方法, 则此方法作为原set()方法(进行初始化)
+     * 
+     * Variant of set() to establish initialValue. Used instead
+     * of set() in case user has overridden the set() method.
+     *
+     * @return the initial value
+     */
+    private T setInitialValue() {
+        T value = initialValue(); // 默认实现返回 null
+        Thread t = Thread.currentThread(); // 获取当前线程
+        ThreadLocalMap map = getMap(t); // 根据当前线程获取ThreadLocalMap
+        if (map != null) { // 如果map不为空(说明之前使用过set, 并完成过初始化), 直接调用map的set
+            map.set(this, value);
+        } else { // map为空, 创建map
+            createMap(t, value);
+        }
+        if (this instanceof TerminatingThreadLocal) {
+            TerminatingThreadLocal.register((TerminatingThreadLocal&lt;?&gt;) this);
+        }
+        return value;
+    }
+
+    /**
+     * 将此线程的当前线程副本设置为指定值
+     * 大多数子类无需重写此方法，只需依赖initialValue方法来设置线程局部变量的值
+     *
+     * Sets the current thread&#39;s copy of this thread-local variable
+     * to the specified value.  Most subclasses will have no need to
+     * override this method, relying solely on the {@link #initialValue}
+     * method to set the values of thread-locals.
+     *
+     * @param value the value to be stored in the current thread&#39;s copy of
+     *        this thread-local.
+     */
+    public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null) {
+            map.set(this, value);
+        } else {
+            createMap(t, value);
+        }
+    }
+
+    /**
+     * 删除此线程局部变量的当前线程值
+     * 如果此线程局部变量随后被当前线程get/read，则其值将通过调用其initialValue方法重新初始化
+     * 除非其值在中间被当前线程set
+     * 这可能导致在当前线程中多次调用initialValue方法
+     *
+     * Removes the current thread&#39;s value for this thread-local
+     * variable.  If this thread-local variable is subsequently
+     * {@linkplain #get read} by the current thread, its value will be
+     * reinitialized by invoking its {@link #initialValue} method,
+     * unless its value is {@linkplain #set set} by the current thread
+     * in the interim.  This may result in multiple invocations of the
+     * {@code initialValue} method in the current thread.
+     *
+     * @since 1.5
+     */
+     public void remove() {
+         ThreadLocalMap m = getMap(Thread.currentThread());
+         if (m != null) {
+             m.remove(this);
+         }
+     }
+
+    /**
+     * 获取与ThreadLocal关联的映射
+     * 在InheritableThreadLocal中被重写了
+     *
+     * Get the map associated with a ThreadLocal. Overridden in
+     * InheritableThreadLocal.
+     *
+     * @param  t the current thread
+     * @return the map
+     */
+    ThreadLocalMap getMap(Thread t) {
+        return t.threadLocals;
+    }
+
+    /**
+     * 创建与ThreadLocal关联的映射
+     * 在InheritableThreadLocal中被重写
+     *
+     * Create the map associated with a ThreadLocal. Overridden in
+     * InheritableThreadLocal.
+     *
+     * @param t the current thread
+     * @param firstValue value for the initial entry of the map
+     */
+    void createMap(Thread t, T firstValue) {
+        t.threadLocals = new ThreadLocalMap(this, firstValue);
+    }
+
+    /**
+     * 创建继承的线程局部变量map的工厂方法
+     * 设计为仅从Thread的构造方法调用
+     *
+     * Factory method to create map of inherited thread locals.
+     * Designed to be called only from Thread constructor.
+     *
+     * @param  parentMap the map associated with parent thread
+     * @return a map containing the parent&#39;s inheritable bindings
+     */
+    static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
+        return new ThreadLocalMap(parentMap);
+    }
+
+    /**
+     * childValue方法显式地在子类InheritableThreadLocal中定义
+     * 但在这里内部定义是为了提供createInheritedMap 工厂方法
+     * 而无需在InheritableThreadLocal中对map类进行子类化
+     * 这种技术比在方法中嵌入测试实例的方法更可取
+     *
+     * Method childValue is visibly defined in subclass
+     * InheritableThreadLocal, but is internally defined here for the
+     * sake of providing createInheritedMap factory method without
+     * needing to subclass the map class in InheritableThreadLocal.
+     * This technique is preferable to the alternative of embedding
+     * instanceof tests in methods.
+     */
+    T childValue(T parentValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 继承自ThreadLocal: 从指定的Supplier获取初始值
+     *
+     * An extension of ThreadLocal that obtains its initial value from
+     * the specified {@code Supplier}.
+     */
+    static final class SuppliedThreadLocal&lt;T&gt; extends ThreadLocal&lt;T&gt; {
+
+        private final Supplier&lt;? extends T&gt; supplier;
+
+        SuppliedThreadLocal(Supplier&lt;? extends T&gt; supplier) {
+            this.supplier = Objects.requireNonNull(supplier);
+        }
+
+        @Override
+        protected T initialValue() {
+            return supplier.get();
+        }
+    }
+
+    /**
+     * ThreadLocalMap是一个定制的HashMap，仅适用于维护线程本地值
+     * 在ThreadLocal类之外不暴露任何方法
+     * 该类是包私有的，允许在类线程中声明字段
+     * 为了帮助处理非常大且使用寿命长的场景，哈希表条目使用WeakReferences作为键
+     * 但是，由于不使用引用队列，因此只有当表开始耗尽空间时，才保证删除过时的条目(存在内存泄漏)
+     *
+     * ThreadLocalMap is a customized hash map suitable only for
+     * maintaining thread local values. No operations are exported
+     * outside of the ThreadLocal class. The class is package private to
+     * allow declaration of fields in class Thread.  To help deal with
+     * very large and long-lived usages, the hash table entries use
+     * WeakReferences for keys. However, since reference queues are not
+     * used, stale entries are guaranteed to be removed only when
+     * the table starts running out of space.
+     */
+    static class ThreadLocalMap {
+
+        /**
+         * ThreadLocalMap的内部类, 用于真正存放ThreadLocal的K-V对
+         * 其中Key是ThreadLocal实例, Value是线程的副本
+         *
+         * 此哈希映射中的Entry继承了WeakReference
+         * 使用包含他的类作为键(始终是ThreadLocal对象)
+         * 请注意，空键(即entry.get() == null)意味着不再引用该键，因此可以从表中删除该项
+         * 这些条目在下面的代码中称为“stale entries”(过时的Entry)
+         *
+         * The entries in this hash map extend WeakReference, using
+         * its main ref field as the key (which is always a
+         * ThreadLocal object).  Note that null keys (i.e. entry.get()
+         * == null) mean that the key is no longer referenced, so the
+         * entry can be expunged from table.  Such entries are referred to
+         * as &quot;stale entries&quot; in the code that follows.
+         */
+        static class Entry extends WeakReference&lt;ThreadLocal&lt;?&gt;&gt; {
+            /** The value associated with this ThreadLocal. */
+            Object value;
+
+            Entry(ThreadLocal&lt;?&gt; k, Object v) {
+                super(k); // 调用WeakReference的构造方法
+                value = v;
+            }
+        }
+
+        /**
+         * 容量初值为16, 一定是2的幂!(配合HASH_INCREMENT[0x61c88647]实现hashcode平均分布)
+         */
+        private static final int INITIAL_CAPACITY = 16;
+
+        /**
+         * ThreadLocalMap内部采用Entry的动态数组实现, 进行动态扩容(扩容大小为2的幂)
+         *
+         * The table, resized as necessary.
+         * table.length MUST always be a power of two.
+         */
+        private Entry[] table;
+
+        /**
+         * ThreadLocalMap中Entry的实际数量
+         *
+         * The number of entries in the table.
+         */
+        private int size = 0;
+
+        /**
+         * 进行下一次扩容的阈值
+         */
+        private int threshold; // Default to 0
+
+        /**
+         * 设置扩容阈值, 其值为len的2/3(内部调用时len就是动态数组table的长度)
+         *
+         * Set the resize threshold to maintain at worst a 2/3 load factor.
+         */
+        private void setThreshold(int len) {
+            threshold = len * 2 / 3;
+        }
+
+        /**
+         * 计算 (i + 1) % len
+         * Increment i modulo len.
+         */
+        private static int nextIndex(int i, int len) {
+            return ((i + 1 &lt; len) ? i + 1 : 0);
+        }
+
+        /**
+         * 计算(i + len - 1) % len
+         * Decrement i modulo len.
+         */
+        private static int prevIndex(int i, int len) {
+            return ((i - 1 &gt;= 0) ? i - 1 : len - 1);
+        }
+
+        /**
+         * ThreadLocalMap的构造方法, 根据给定的初始的K-V进行初始化:
+         * (初始化类型为Entry的动态数组, 容量为16; 初始化索引i; 初始化threshold为16 * 2/3 = 10)
+         * ThreadLocalMaps是懒加载的，我们只在至少有一个条目要放入其中时创建
+         * 
+         * Construct a new map initially containing (firstKey, firstValue).
+         * ThreadLocalMaps are constructed lazily, so we only create
+         * one when we have at least one entry to put in it.
+         */
+        ThreadLocalMap(ThreadLocal&lt;?&gt; firstKey, Object firstValue) {
+            table = new Entry[INITIAL_CAPACITY];
+            int i = firstKey.threadLocalHashCode &amp; (INITIAL_CAPACITY - 1);
+            table[i] = new Entry(firstKey, firstValue);
+            size = 1;
+            setThreshold(INITIAL_CAPACITY);
+        }
+
+        /**
+         * ThreadLocalMap的构造方法, 根据给定的父ThreadLocalMap进行初始化:
+         * 其中包含来自给定父映射的所有可继承线程局部变量
+         * (是对于父ThreadLocalMap中table数组各元素的浅复制)
+         * 仅由CreateInheriteMap调用
+         *
+         * Construct a new map including all Inheritable ThreadLocals
+         * from given parent map. Called only by createInheritedMap.
+         *
+         * @param parentMap the map associated with parent thread.
+         */
+        private ThreadLocalMap(ThreadLocalMap parentMap) {
+            Entry[] parentTable = parentMap.table;
+            int len = parentTable.length;
+
+            // 通过父ThreadLocalMap元素数量初始化扩容阈值
+            setThreshold(len);
+            // 初始化数组
+            table = new Entry[len];
+
+            // 对父ThreadLocalMap中的table进行浅复制
+            // 产生新的Entry, 但存放的是原来的Object的索引!
+            for (Entry e : parentTable) {
+                if (e != null) {
+                    @SuppressWarnings(&quot;unchecked&quot;)
+                    ThreadLocal&lt;Object&gt; key = (ThreadLocal&lt;Object&gt;) e.get();
+                    if (key != null) {
+                        Object value = key.childValue(e.value);
+                        // new了Entry, 放入的是父table中的value
+                        Entry c = new Entry(key, value);
+                        int h = key.threadLocalHashCode &amp; (len - 1);
+                        while (table[h] != null)
+                            h = nextIndex(h, len);
+                        table[h] = c;
+                        size++;
+                    }
+                }
+            }
+        }
+
+        /**
+         * 获取对应key的Entry
+         * 此方法本身只处理快速路径: 现有键的直接命中
+         * 否则它将转发到getEntryAfterMiss方法
+         * 这是为了最大限度地提高性能直接命中，部分通过使这种方法易于链接
+         *
+         * Get the entry associated with key.  This method
+         * itself handles only the fast path: a direct hit of existing
+         * key. It otherwise relays to getEntryAfterMiss.  This is
+         * designed to maximize performance for direct hits, in part
+         * by making this method readily inlinable.
+         *
+         * @param  key the thread local object
+         * @return the entry associated with key, or null if no such
+         */
+        private Entry getEntry(ThreadLocal&lt;?&gt; key) {
+            // 通过hashcode计算索引i
+            int i = key.threadLocalHashCode &amp; (table.length - 1);
+            Entry e = table[i];
+            if (e != null &amp;&amp; e.get() == key) // 通过hash槽直接找到了, 则返回
+                return e;
+            else // hash槽中没找到, 则调用getEntryAfterMiss()方法
+                return getEntryAfterMiss(key, i, e);
+        }
+
+        /**
+         * 在其直接哈希槽中找不到key时使用的getEntry方法(发生了hash冲突)
+         * 
+         * Version of getEntry method for use when key is not found in
+         * its direct hash slot.
+         *
+         * @param  key the thread local object
+         * @param  i the table index for key&#39;s hash code
+         * @param  e the entry at table[i]
+         * @return the entry associated with key, or null if no such
+         */
+        private Entry getEntryAfterMiss(ThreadLocal&lt;?&gt; key, int i, Entry e) {
+            Entry[] tab = table;
+            int len = tab.length;
+
+            // 当前e不为空
+            while (e != null) { 
+                ThreadLocal&lt;?&gt; k = e.get(); // 获得当前Entry的key
+                if (k == key) // 找到对应key的value, 返回
+                    return e;
+                if (k == null) // key为null(遇到了脏entry, key为null, 但是value没有被回收)
+                    // 调用expungeStaleEntry()方法, 清理掉脏entry
+                    expungeStaleEntry(i);
+                else // 否则根据当前索引计算下一个索引i
+                    i = nextIndex(i, len);
+                // 寻找下一个i
+                e = tab[i];
+            }
+            return null;
+        }
+
+        /**
+         * 设置(添加或修改)给定key的value
+         *
+         * set方法可能会有的情况:
+         * 1. 探测过程中slot都不无效，并且顺利找到key所在的slot，直接替换即可;
+         * 2. 探测过程中发现有无效slot，调用replaceStaleEntry
+         *     效果是最终一定会把key和value放在这个slot，并且会尽可能清理无效slot;
+         *       - 在replaceStaleEntry过程中，如果找到了key，则做一个swap把它放到那个无效slot中，value置为新值
+         *       - 在replaceStaleEntry过程中，没有找到key，直接在无效slot原地放entry
+         * 3. 探测没有发现key，则在连续段末尾的后一个空位置放上entry，这也是线性探测法的一部分
+         *     放完后，做一次启发式清理，如果没清理出去key，并且当前table大小已经超过阈值了，则做一次rehash
+         *     rehash函数会调用一次全量清理slot方法也即expungeStaleEntries
+         *     如果完了之后table大小超过了threshold - threshold / 4，则进行扩容2倍
+         *
+         * Set the value associated with key.
+         *
+         * @param key the thread local object
+         * @param value the value to be set
+         */
+        private void set(ThreadLocal&lt;?&gt; key, Object value) {
+            // 不使用get()方法
+            // 因为在使用set()方法创建新的Entry时, 需要替换之前的旧的Entry
+            // 这使得在get()方法中使用的快速路径会更频繁的失败
+            // (我觉得是在方法调用栈等方面的权衡, 最终导致作者用inline又实现了一遍方法)
+
+            // We don&#39;t use a fast path as with get() because it is at
+            // least as common to use set() to create new entries as
+            // it is to replace existing ones, in which case, a fast
+            // path would fail more often than not.
+
+            // 获得table
+            Entry[] tab = table;
+            // 获得len
+            int len = tab.length;
+            // 获得key对应的索引i
+            int i = key.threadLocalHashCode &amp; (len-1);
+
+            // 线性探测
+            // 基本上又写了一遍get()方法的核心内容...
+            for (Entry e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+                ThreadLocal&lt;?&gt; k = e.get();
+
+                if (k == key) { // 找到了key, 修改value;
+                    e.value = value;
+                    return;
+                }
+
+                if (k == null) { // key为null, 替换失效的entry
+                    replaceStaleEntry(key, value, i);
+                    return;
+                }
+            }
+
+            // 没有发现key
+            tab[i] = new Entry(key, value);
+            int sz = ++size;
+            // 调用cleanSomeSlots()做一次启发式清理
+            // 如果没清理出去key, 并且当前table大小已经超过阈值了, 做一次rehash
+            if (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)
+                // rehash方法会调用一次全量清理slot方法也即expungeStaleEntries
+                // 如果完了之后table大小超过了threshold - threshold / 4，则进行扩容2倍
+                rehash();
+        }
+
+        /**
+         * 从map中删除ThreadLocal
+         * 直接在table中找key，如果找到了，把弱引用断了做一次段清理
+         *
+         * Remove the entry for key.
+         */
+        private void remove(ThreadLocal&lt;?&gt; key) {
+            Entry[] tab = table;
+            int len = tab.length;
+            int i = key.threadLocalHashCode &amp; (len-1);
+            for (Entry e = tab[i];
+                 e != null;
+                 e = tab[i = nextIndex(i, len)]) {
+                if (e.get() == key) {
+                    // 显式断开弱引用
+                    e.clear();
+                    // 进行段清理
+                    expungeStaleEntry(i);
+                    return;
+                }
+            }
+        }
+
+        /**
+         * 用指定key的Entry替换set操作期间遇到的过时Entry
+         * 在value中传递的值被存储在Entry中，无论是否已存在指定键的条目
+         *
+         * Replace a stale entry encountered during a set operation
+         * with an entry for the specified key.  The value passed in
+         * the value parameter is stored in the entry, whether or not
+         * an entry already exists for the specified key.
+         *
+         * 作为副作用，此方法将删除包含替换Entry在内的“运行”中的所有过时Entry
+         *（两个空槽之间的条目序列） 
+         *
+         * As a side effect, this method expunges all stale entries in the
+         * &quot;run&quot; containing the stale entry.  (A run is a sequence of entries
+         * between two null slots.)
+         *
+         * @param  key the key
+         * @param  value the value to be associated with key
+         * @param  staleSlot index of the first stale entry encountered while
+         *         searching for key.
+         */
+        private void replaceStaleEntry(ThreadLocal&lt;?&gt; key, Object value,
+                                       int staleSlot) {
+            Entry[] tab = table;
+            int len = tab.length;
+            Entry e;
+
+            // 向前扫描，查找最前的一个无效slot
+            // 我们一次清理整个运行运行期间的无效Entry
+            // 避免由于垃圾收集器释放大量的引用（即每当收集器运行时）而导致持续的增量rehash
+            // We clean out whole runs at a time to avoid continual
+            // incremental rehashing due to garbage collector freeing
+            // up refs in bunches (i.e., whenever the collector runs).
+            int slotToExpunge = staleSlot;
+            for (int i = prevIndex(staleSlot, len);
+                 (e = tab[i]) != null;
+                 i = prevIndex(i, len))
+                if (e.get() == null)
+                    slotToExpunge = i;
+
+            // 向后遍历table, 查找key后面的尾随空槽，以先出现的为准
+            // Find either the key or trailing null slot of run, whichever occurs first
+            for (int i = nextIndex(staleSlot, len);
+                 (e = tab[i]) != null;
+                 i = nextIndex(i, len)) {
+                ThreadLocal&lt;?&gt; k = e.get();
+
+                // 如果找到密钥，则需要将其与陈旧的Entry交换，以维护哈希表顺序
+                // 然后，可以将新失效的空槽或其上方遇到的任何其他失效空槽发送到expungeStaleEntry
+                // 以删除或重新刷新运行中的所有其他Entry
+                // If we find key, then we need to swap it
+                // with the stale entry to maintain hash table order.
+                // The newly stale slot, or any other stale slot
+                // encountered above it, can then be sent to expungeStaleEntry
+                // to remove or rehash all of the other entries in run.
+                if (k == key) {
+                    // 更新对应slot的value值
+                    e.value = value;
+
+                    tab[i] = tab[staleSlot];
+                    tab[staleSlot] = e;
+
+                    /*
+                     * 如果在整个扫描过程中（包括函数一开始的向前扫描与i之前的向后扫描）
+                     * 找到了之前的无效slot则以那个位置作为清理的起点，
+                     * 否则则以当前的i作为清理起点
+                     */
+                    if (slotToExpunge == staleSlot)
+                        slotToExpunge = i;
+                    cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+                    return;
+                }
+
+                // 如果当前的slot已经无效，并且向前扫描过程中没有无效slot
+                // 则更新slotToExpunge为当前位置
+                // If we didn&#39;t find stale entry on backward scan, the
+                // first stale entry seen while scanning for key is the
+                // first still present in the run.
+                if (k == null &amp;&amp; slotToExpunge == staleSlot)
+                    slotToExpunge = i;
+            }
+
+            // 如果key在table中不存在，则在原地放一个即可
+            // If key not found, put new entry in stale slot
+            tab[staleSlot].value = null;
+            tab[staleSlot] = new Entry(key, value);
+
+            // 在探测过程中如果发现任何无效slot，则做一次清理（连续段清理+启发式清理）
+            // If there are any other stale entries in run, expunge them
+            if (slotToExpunge != staleSlot)
+                cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+        }
+
+        /**
+         * ThreadLocal中核心清理方法，它做的事情很简单:
+         * 从staleSlot开始遍历，将无效（弱引用指向对象被回收）清理
+         * 即对应entry中的value置为null，将指向这个entry的table[i]置为null，直到扫到空entry
+         * 另外，在过程中还会对非空的entry作rehash
+         * 可以说这个方法的作用就是从staleSlot开始清理连续段中的slot(断开强引用，rehash slot等)
+         *
+         * 通过重新清除位于过时槽和下一个空槽之间的任何可能发生冲突的Entry来删除过时的Entry
+         * 这还将删除在后面的null之前遇到的任何其他过时Entry
+         *
+         * Expunge a stale entry by rehashing any possibly colliding entries
+         * lying between staleSlot and the next null slot.  This also expunges
+         * any other stale entries encountered before the trailing null.  See
+         * Knuth, Section 6.4
+         *
+         * @param staleSlot index of slot known to have null key
+         * @return the index of the next null slot after staleSlot
+         * (all between staleSlot and this slot will have been checked
+         * for expunging).
+         */
+        private int expungeStaleEntry(int staleSlot) {
+            Entry[] tab = table;
+            int len = tab.length;
+
+            // 因为entry对应的ThreadLocal已经被回收，value设为null，显式断开强引用
+            tab[staleSlot].value = null;
+            // 显式设置该entry为null，以便垃圾回收
+            tab[staleSlot] = null;
+            size--;
+
+            // Rehash until we encounter null
+            Entry e;
+            int i;
+            for (i = nextIndex(staleSlot, len);
+                 (e = tab[i]) != null;
+                 i = nextIndex(i, len)) {
+                ThreadLocal&lt;?&gt; k = e.get();
+                // 清理对应ThreadLocal已经被回收的entry
+                if (k == null) {
+                    e.value = null;
+                    tab[i] = null;
+                    size--;
+                } else {
+                    /*
+                      * 对于还没有被回收的情况，需要做一次rehash
+                      * 如果对应的ThreadLocal的ID对len取模出来的索引h不为当前位置i
+                      * 则从h向后线性探测到第一个空的slot，把当前的entry给挪过去
+                      */
+                    int h = k.threadLocalHashCode &amp; (len - 1);
+                    if (h != i) {
+                        tab[i] = null;
+
+                        /*
+                         * 在原代码的这里有句注释值得一提，原注释如下：
+                         *
+                         * Unlike Knuth 6.4 Algorithm R, we must scan until
+                         * null because multiple entries could have been stale.
+                         *
+                         * 这段话提及了Knuth高德纳的著作TAOCP《计算机程序设计艺术》的6.4章节（散列）
+                         * 中的R算法
+                         * R算法描述了如何从使用线性探测的散列表中删除一个元素
+                         * R算法维护了一个上次删除元素的index，当在非空连续段中扫到某个entry的哈希值取模后的索引
+                         * 还没有遍历到时，会将该entry挪到index那个位置，并更新当前位置为新的index，
+                         * 继续向后扫描直到遇到空的entry
+                         *
+                         * ThreadLocalMap因为使用了弱引用，所以其实每个slot的状态有三种也即
+                         * 有效（value未回收），无效（value已回收），空（entry==null）
+                         * 正是因为ThreadLocalMap的entry有三种状态，所以不能完全套高德纳原书的R算法
+                         *
+                         * 因为expungeStaleEntry函数在扫描过程中还会对无效slot清理将之转为空slot，
+                         * 如果直接套用R算法，可能会出现具有相同哈希值的entry之间断开(中间有空entry)
+                         */
+                        while (tab[h] != null)
+                            h = nextIndex(h, len);
+                        tab[h] = e;
+                    }
+                }
+            }
+            // 返回staleSlot之后第一个空的slot索引
+            return i;
+        }
+
+        /**
+         * 启发式地清理slot,
+         * i对应entry是非无效(指向的ThreadLocal没被回收，或者entry本身为空)
+         * n是用于控制扫描次数的
+         * 正常情况下如果log n次扫描没有发现无效slot，方法就结束了
+         * 但是如果发现了无效的slot，将n置为table的长度len，做一次连续段的清理
+         * 再从下一个空的slot开始继续扫描
+         * 
+         * 这个函数有两处地方会被调用:
+         * 一处是插入的时候可能会被调用，另外个是在替换无效slot的时候可能会被调用，
+         * 区别是前者传入的n为元素个数，后者为table的容量
+         *
+         * Heuristically scan some cells looking for stale entries.
+         * This is invoked when either a new element is added, or
+         * another stale one has been expunged. It performs a
+         * logarithmic number of scans, as a balance between no
+         * scanning (fast but retains garbage) and a number of scans
+         * proportional to number of elements, that would find all
+         * garbage but would cause some insertions to take O(n) time.
+         *
+         * @param i a position known NOT to hold a stale entry. The
+         * scan starts at the element after i.
+         *
+         * @param n scan control: {@code log2(n)} cells are scanned,
+         * unless a stale entry is found, in which case
+         * {@code log2(table.length)-1} additional cells are scanned.
+         * When called from insertions, this parameter is the number
+         * of elements, but when from replaceStaleEntry, it is the
+         * table length. (Note: all this could be changed to be either
+         * more or less aggressive by weighting n instead of just
+         * using straight log n. But this version is simple, fast, and
+         * seems to work well.)
+         *
+         * @return true if any stale entries have been removed.
+         */
+        private boolean cleanSomeSlots(int i, int n) {
+            boolean removed = false;
+            Entry[] tab = table;
+            int len = tab.length;
+            do {
+                // i在任何情况下自己都不会是一个无效slot，所以从下一个开始判断
+                i = nextIndex(i, len);
+                Entry e = tab[i];
+                if (e != null &amp;&amp; e.get() == null) {
+                    // 扩大扫描控制因子
+                    n = len;
+                    removed = true;
+                    // 清理一个连续段
+                    i = expungeStaleEntry(i);
+                }
+            } while ( (n &gt;&gt;&gt;= 1) != 0);
+            return removed;
+        }
+
+        /**
+         * 重新包装和/或调整table的容量
+         * 首先扫描整个表以删除过时的Entry
+         * 如果这不能充分缩小表的大小(使得数据能够插入, 并且小于threshold)，将表容量增加一倍
+         *
+         * Re-pack and/or re-size the table. First scan the entire
+         * table removing stale entries. If this doesn&#39;t sufficiently
+         * shrink the size of the table, double the table size.
+         */
+        private void rehash() {
+            // 做一次全量清理
+            expungeStaleEntries();
+
+            /*
+              * 因为做了一次清理，所以size很可能会变小
+              * ThreadLocalMap这里的实现是调低阈值来判断是否需要扩容，
+              * threshold默认为len*2/3，所以这里的threshold - threshold / 4相当于len/2
+              */
+            if (size &gt;= threshold - threshold / 4)
+                resize();
+        }
+
+        /**
+         * 扩容，因为需要保证table的容量len为2的幂，所以扩容即扩大2倍
+         * 复制table的元素到newTab，忽略陈旧的元素
+         * 假设table中的元素e需要复制到newTab的i位置，如果i位置存在元素，则找下一个空位置进行插入
+         *
+         * Double the capacity of the table.
+         */
+        private void resize() {
+            Entry[] oldTab = table;
+            int oldLen = oldTab.length;
+            int newLen = oldLen * 2;
+            Entry[] newTab = new Entry[newLen];
+            int count = 0;
+
+            for (Entry e : oldTab) {
+                if (e != null) {
+                    ThreadLocal&lt;?&gt; k = e.get();
+                    if (k == null) {
+                        e.value = null; // Help the GC
+                    } else {
+                        // 线性探测来存放Entry
+                        int h = k.threadLocalHashCode &amp; (newLen - 1);
+                        while (newTab[h] != null)
+                            h = nextIndex(h, newLen);
+                        newTab[h] = e;
+                        count++;
+                    }
+                }
+            }
+
+            setThreshold(newLen);
+            size = count;
+            table = newTab;
+        }
+
+        /**
+         * 做一次全量清理
+         * Expunge all stale entries in the table.
+         */
+        private void expungeStaleEntries() {
+            Entry[] tab = table;
+            int len = tab.length;
+            for (int j = 0; j &lt; len; j++) {
+                Entry e = tab[j];
+                if (e != null &amp;&amp; e.get() == null)
+                    /*
+                      * 这里可以取返回值，如果大于j的话取了用，这样也是可行的
+                      * 因为expungeStaleEntry执行过程中是把连续段内所有无效slot都清理了一遍了
+                      */
+                    expungeStaleEntry(j);
+            }
+        }
+    }
+}</code></pre>
+<br>
+
+<h2 id="三-关于ThreadLocal源码中的一些问题"><a href="#三-关于ThreadLocal源码中的一些问题" class="headerlink" title="三. 关于ThreadLocal源码中的一些问题"></a>三. 关于ThreadLocal源码中的一些问题</h2><h3 id="ThreadLocalMap到底存放在哪里"><a href="#ThreadLocalMap到底存放在哪里" class="headerlink" title="ThreadLocalMap到底存放在哪里"></a><strong>ThreadLocalMap到底存放在哪里</strong></h3><p>在Java 1.4之前，threadLocals会导致线程之间发生竞争。在新的设计里，每一个线程都有他们自己的ThreadLocalMap(在Thread类中以属性的方式定义, 并以懒加载的方式初始化)，用来提高吞吐量，然而，我们仍然面临内存泄漏的可能性，因为长时间运行线程的ThreadLocalMap中的值不会被清除</p>
+<p>在Java的早期版本中，threadLocals在多个线程进行访问的时候存在竞争问题，使得它们在多核应用程序中几乎无用。在Java 1.4中，引入了一个新的设计，设计者把threadLocals直接存储在Thread中。当我们现在调用ThreadLocal的get方法时，将会返回一个当前线程里的实例ThreadLocalMap（ThreadLocal的一个内部类）</p>
+<p>当一个线程退出时，它会删除它ThreadLocal里的所有值。这发生在exit()方法中，垃圾回收之前，如果我们在使用ThreadLocal后忘记调用remove()方法，那么当线程退出后值还会存在</p>
+<p>ThreadLocalMap包含了对ThreadLocal的弱引用以及值的强引用，但是，它并不会判断ReferenceQueue里面哪些弱引用的值已经被清除，因为Entry不可能立即从ThreadLocalMap中清除</p>
+<p>threadLocal,threadLocalMap,entry之间的关系如下图所示:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/threadLocal%E5%BC%95%E7%94%A8%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="threadLocal引用示意图.png"></p>
+<p>上图中，实线代表强引用，虚线代表的是弱引用</p>
+<p>从线程Thread的角度来看，每个线程内部都会持有一个对ThreadLocalMap实例的引用，ThreadLocalMap实例相当于线程的局部变量空间，存储着线程各自的数据</p>
+<blockquote>
+<br>
+
+<p><strong>综上所述:</strong></p>
+<p><font color="#ff0000"><strong>ThreadLocalMap实例在JDK 1.4之后就存在于Thread类中, ThreadLocalMap的定义在ThreadLocal中以内部类的形式;</strong></font></p>
+<p><font color="#ff0000"><strong>在使用时, ThreadLocal类似于工具类, 通过<code>Thread.currentThread()</code>获取当前线程, 然后获取对应的threadLocals进行操作;</strong></font></p>
+<p><font color="#ff0000"><strong>实际存储线程本地副本的数据结构是ThreadLocalMap中定义的内部类Entry, ThreadLocalMap中定义的Entry[] 动态数组存放实际数据, 通过线性探测法</strong></font></p>
+<p><font color="#ff0000"><strong>Entry[] 动态数组的大小初始化为16, 每次扩容翻倍(总是2的幂)</strong></font></p>
+<p><font color="#ff0000"><strong>扩容的阈值由threshold提供, 通常为table大小的2/3, 但当size &gt;= threshold时，遍历table并删除key为null的元素，此时如果删除后size &gt;= threshold*3/4时，需要对table进行扩容</strong></font></p>
+</blockquote>
+<br>
+
+<h3 id="为什么使用0x61c88647进行Rehash操作"><a href="#为什么使用0x61c88647进行Rehash操作" class="headerlink" title="为什么使用0x61c88647进行Rehash操作"></a><strong>为什么使用0x61c88647进行Rehash操作</strong></h3><p>和通常的线性探测法进行线性的index增加不同, 在ThreadLocal中实际上hashcode每次增加魔数0x61c88647, 用来生成hashcode间隙, 并且官方给出的解释是: <strong>可以让生成出来的值或者说ThreadLocal的ID较为均匀地分布在2的幂大小的数组中</strong></p>
+<pre><code class="java">private static final int HASH_INCREMENT = 0x61c88647;
+
+private static int nextHashCode() {
+   return nextHashCode.getAndAdd(HASH_INCREMENT);
+}</code></pre>
+<p>可以看出，新的hashcode是在上一个被构造出的ThreadLocal的ID/threadLocalHashCode的基础上加上一个魔数0x61c88647的</p>
+<p>实际上, <strong>这个魔数的选取与斐波那契数列(黄金分割数)有关</strong>:</p>
+<p>0x61c88647对应的十进制为1640531527, 斐波那契散列的乘数可以用<code>(long) ((1L &lt;&lt; 31) * (Math.sqrt(5) - 1))</code>可以得到2654435769，如果把这个值给转为带符号的int，则会得到-1640531527</p>
+<p>换句话说<code>(1L &lt;&lt; 32) - (long) ((1L &lt;&lt; 31) * (Math.sqrt(5) - 1))</code>得到的结果就是1640531527也就是0x61c88647</p>
+<p>通过理论与实践，当我们<strong>用0x61c88647作为魔数累加为每个ThreadLocal分配各自的ID也就是threadLocalHashCode再与2的幂-1按位与，得到的结果分布很均匀</strong></p>
+<p>ThreadLocalMap使用的是线性探测法，均匀分布的好处在于很快就能探测到下一个临近的可用slot，从而保证了效率</p>
+<p>下面通过一段代码来校验算法的散列性:</p>
+<pre><code class="java">/**
+ * ThreadLocalMap使用“开放寻址法”中最简单的“线性探测法”解决散列冲突问题
+ *
+ * @author zk
+ */
+public class MagicHashCodeTest {
+
+    /**
+     * ThreadLocal中定义的hash魔数
+     */
+    private static final int HASH_INCREMENT = 0x61c88647;
+
+    public static void main(String[] args) {
+        // 初始化16
+        hashcode(16);
+        // 后续2倍扩容
+        hashcode(32);
+        hashcode(64);
+    }
+
+    private static void hashcode(Integer length) {
+        var hashcode = 0;
+        for (var i = 0; i &lt; length; i++) {
+            // 每次递增HASH_INCREMENT
+            hashcode = i * HASH_INCREMENT + HASH_INCREMENT;
+
+            //求散列下标，算法公式
+            System.out.print(hashcode &amp; (length-1));
+            System.out.print(&quot; &quot;);
+        }
+        System.out.println();
+    }
+}
+------- Output -------
+Entry[]初始化容量为16时，元素完美散列:
+7 14 5 12 3 10 1 8 15 6 13 4 11 2 9 0
+Entry[]容量扩容2倍=32时，元素完美散列:
+7 14 21 28 3 10 17 24 31 6 13 20 27 2 9 16 23 30 5 12 19 26 1 8 15 22 29 4 11 18 25 0
+Entry[]容量扩容2倍=64时，元素完美散列:
+7 14 21 28 35 42 49 56 63 6 13 20 27 34 41 48 55 62 5 12 19 26 33 40 47 54 61 4 11 18 25 32 39 46 53 60 3 10 17 24 31 38 45 52 59 2 9 16 23 30 37 44 51 58 1 8 15 22 29 36 43 50 57 0</code></pre>
+<p>根据运行结果，代表此算法在长度为2的N次方的数组上，确实可以完美散列</p>
+<br>
+
+<h3 id="ThreadLocal源码中为了防止内存泄露做出的努力"><a href="#ThreadLocal源码中为了防止内存泄露做出的努力" class="headerlink" title="ThreadLocal源码中为了防止内存泄露做出的努力"></a><strong>ThreadLocal源码中为了防止内存泄露做出的努力</strong></h3><p>以下文字转自: <a href="https://www.jianshu.com/p/dde92ec37bd1" target="_blank" rel="noopener">一篇文章，从源码深入详解ThreadLocal内存泄漏问题</a></p>
+<p>再看threadLocal,threadLocalMap,entry之间的关系图:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/threadLocal%E5%BC%95%E7%94%A8%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="threadLocal引用示意图.png"></p>
+<p>上图中，实线代表强引用，虚线代表的是弱引用，如果threadLocal外部强引用被置为null(threadLocalInstance=null)的话，threadLocal实例就没有一条引用链路可达，很显然在gc(垃圾回收)的时候势必会被回收, 因此entry就存在key为null的情况，而无法通过一个key为null去访问到该entry的value</p>
+<p>同时，就存在了这样一条引用链：threadRef-&gt;currentThread-&gt;threadLocalMap-&gt;entry-&gt;valueRef-&gt;valueMemory, 导致在垃圾回收的时候进行可达性分析的时候, value可达! 从而不会被回收掉，但是该value永远不能被访问到，这样就存在了<strong>内存泄漏</strong></p>
+<p>当然，如果线程执行结束后，threadLocal，threadRef会断掉，因此threadLocal,threadLocalMap，entry都会被回收掉</p>
+<p>可是，在实际使用中我们都是会<strong>用线程池去维护我们的线程</strong>，比如在Executors.newFixedThreadPool()时创建线程的时候，为了复用线程是不会结束的，所以threadLocal内存泄漏就值得我们关注!</p>
+<br>
+
+<p>实际上，为了解决ThreadLocal潜在的内存泄漏的问题，Josh Bloch and Doug Lea大师已经做了一些改进。在threadLocal的set和get方法中都有相应的处理。下文为了叙述，针对key为null的entry，源码注释为stale entry，直译为不新鲜的entry，这里我就称之为“脏entry”。比如在ThreadLocalMap的set方法中:</p>
+<pre><code class="java">private void set(ThreadLocal&lt;?&gt; key, Object value) {
+    Entry[] tab = table;
+    int len = tab.length;
+    int i = key.threadLocalHashCode &amp; (len-1);
+
+    for (Entry e = tab[i];
+             e != null;
+             e = tab[i = nextIndex(i, len)]) {
+        ThreadLocal&lt;?&gt; k = e.get();
+
+        if (k == key) {
+            e.value = value;
+            return;
+        }
+
+        if (k == null) {
+            replaceStaleEntry(key, value, i);
+            return;
+        }
+     }
+
+    tab[i] = new Entry(key, value);
+    int sz = ++size;
+    if (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)
+        rehash();
+}</code></pre>
+<p>在ThreadLocalMap.set方法中针对脏entry做了这样的处理：</p>
+<p>① 如果当前table[i] != null的话说明hash冲突就需要向后环形查找，若在查找过程中遇到脏entry就通过replaceStaleEntry进行处理；</p>
+<p>② 如果当前table[i] == null的话说明新的entry可以直接插入，但是插入后会调用cleanSomeSlots方法检测并清除脏entry</p>
+<br>
+
+<p><strong>cleanSomeSlots</strong></p>
+<pre><code class="java">private boolean cleanSomeSlots(int i, int n) {
+    boolean removed = false;
+    Entry[] tab = table;
+    int len = tab.length;
+    do {
+        i = nextIndex(i, len);
+        Entry e = tab[i];
+        if (e != null &amp;&amp; e.get() == null) {
+            n = len;
+            removed = true;
+            i = expungeStaleEntry(i);
+        }
+    } while ( (n &gt;&gt;&gt;= 1) != 0);
+    return removed;
+}</code></pre>
+<p><strong>入参：</strong></p>
+<p><strong>① i的意义</strong></p>
+<p>插入entry的位置i，很显然在上述情况(table[i]==null)中，entry刚插入后该位置i很显然不是脏entry;</p>
+<p><strong>② 参数n的用途</strong></p>
+<p>主要用于<strong>扫描控制（scan control），从while中是通过n来进行条件判断的说明n就是用来控制扫描趟数（循环次数）的</strong></p>
+<p>在扫描过程中，如果没有遇到脏entry就整个扫描过程持续log2(n)次，log2(n)的得来是因为<code>n &gt;&gt;&gt;= 1</code>，每次n右移一位相当于n除以2。如果在扫描过程中遇到脏entry的话就会令n为当前hash表的长度（<code>n=len</code>），再扫描log2(n)趟，注意此时n增加无非就是多增加了循环次数从而通过nextIndex往后搜索的范围扩大，示意图如下</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cleanSomeSlots%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="cleanSomeSlots示意图.png"></p>
+<p>按照n的初始值，搜索范围为黑线，当遇到了脏entry，此时n变成了哈希数组的长度（n取值增大），搜索范围log2(n)增大，红线表示。如果在整个搜索过程没遇到脏entry的话，搜索结束，采用这种方式的主要是用于时间效率上的平衡</p>
+<p><strong>③ n的取值</strong></p>
+<p>如果是在set方法插入新的entry后调用，n位当前已经插入的entry个数size；如果是在replaceSateleEntry方法中调用n为哈希表的长度len</p>
+<br>
+
+<p><strong>expungeStaleEntry</strong></p>
+<p>如果对输入参数能够理解的话，那么cleanSomeSlots方法搜索基本上就清除了，但是全部搞定还需要掌握expungeStaleEntry方法，当在搜索过程中遇到了脏entry的话就会调用该方法去清理掉脏entry。源码为:</p>
+<pre><code class="java">private int expungeStaleEntry(int staleSlot) {
+    Entry[] tab = table;
+    int len = tab.length;
+
+    //清除当前脏entry
+    // expunge entry at staleSlot
+    tab[staleSlot].value = null;
+    tab[staleSlot] = null;
+    size--;
+
+    // Rehash until we encounter null
+    Entry e;
+    int i;
+    //2.往后环形继续查找,直到遇到table[i]==null时结束
+    for (i = nextIndex(staleSlot, len);
+         (e = tab[i]) != null;
+         i = nextIndex(i, len)) {
+        ThreadLocal&lt;?&gt; k = e.get();
+        //3. 如果在向后搜索过程中再次遇到脏entry，同样将其清理掉
+        if (k == null) {
+            e.value = null;
+            tab[i] = null;
+            size--;
+        } else {
+            //处理rehash的情况
+            int h = k.threadLocalHashCode &amp; (len - 1);
+            if (h != i) {
+                tab[i] = null;
+
+                // Unlike Knuth 6.4 Algorithm R, we must scan until
+                // null because multiple entries could have been stale.
+                while (tab[h] != null)
+                    h = nextIndex(h, len);
+                tab[h] = e;
+            }
+        }
+    }
+    return i;
+}</code></pre>
+<p>该方法主要做了这么几件事情：</p>
+<p>① 清理当前脏entry，即将其value引用置为null，并且将table[staleSlot]也置为null。value置为null后该value域变为不可达，在下一次gc的时候就会被回收掉，同时table[staleSlot]为null后以便于存放新的entry;</p>
+<p>② 从当前staleSlot位置向后环形（nextIndex）继续搜索，直到遇到哈希桶（tab[i]）为null的时候退出；</p>
+<p>③ 若在搜索过程再次遇到脏entry，继续将其清除。</p>
+<p>也就是说该方法，<strong>清理掉当前脏entry后，并没有闲下来继续向后搜索，若再次遇到脏entry继续将其清理，直到哈希桶（table[i]）为null时退出</strong>。因此方法执行完的结果为 <strong>从当前脏entry（staleSlot）位到返回的i位，这中间所有的entry不是脏entry</strong>。为什么是遇到null退出呢？原因是存在脏entry的前提条件是 <strong>当前哈希桶（table[i]）不为null</strong>,只是该entry的key域为null。如果遇到哈希桶为null,很显然它连成为脏entry的前提条件都不具备。</p>
+<p>现在对cleanSomeSlot方法做一下总结，cleanSomeSlot方法主要有这样几点：</p>
+<p>① 从当前位置i处（位于i处的entry一定不是脏entry）为起点在初始小范围（log2(n)，n为哈希表已插入entry的个数size）开始向后搜索脏entry，若在整个搜索过程没有脏entry，方法结束退出;</p>
+<p>② 如果在搜索过程中遇到脏entryt通过expungeStaleEntry方法清理掉当前脏entry，并且该方法会返回下一个哈希桶(table[i])为null的索引位置为i。这时重新令搜索起点为索引位置i，n为哈希表的长度len，再次扩大搜索范围为log2(n’)继续搜索;</p>
+<p>下面，以一个例子更清晰的来说一下，假设当前table数组的情况如下图:</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/cleanSomeSlots%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="cleanSomeSlots执行情景图.png"></p>
+<p>如图当前n等于hash表的size即n=10，i=1,在第一趟搜索过程中通过nextIndex,i指向了索引为2的位置，此时table[2]为null，说明第一趟未发现脏entry,则第一趟结束进行第二趟的搜索</p>
+<p>第二趟所搜先通过nextIndex方法，索引由2的位置变成了i=3,当前table[3]!=null但是该entry的key为null，说明找到了一个脏entry，<strong>先将n置为哈希表的长度len,然后继续调用expungeStaleEntry方法</strong>，该方法会将当前索引为3的脏entry给清除掉（令value为null，并且table[3]也为null）,但是<strong>该方法可不想偷懒，它会继续往后环形搜索</strong>，往后会发现索引为4,5的位置的entry同样为脏entry，索引为6的位置的entry不是脏entry保持不变，直至i=7的时候此处table[7]位null，该方法就以i=7返回。至此，第二趟搜索结束；</p>
+<p>由于在第二趟搜索中发现脏entry，n增大为数组的长度len，因此扩大搜索范围（增大循环次数）继续向后环形搜索；</p>
+<p>直到在整个搜索范围里都未发现脏entry，cleanSomeSlot方法执行结束退出。</p>
+<br>
+
+<p><strong>replaceStaleEntry</strong></p>
+<pre><code class="java">private void replaceStaleEntry(ThreadLocal&lt;?&gt; key, Object value, int staleSlot) {
+    Entry[] tab = table;
+    int len = tab.length;
+    Entry e;
+
+    //向前找到第一个脏entry
+    int slotToExpunge = staleSlot;
+    for (int i = prevIndex(staleSlot, len);
+         (e = tab[i]) != null;
+         i = prevIndex(i, len))
+        if (e.get() == null)
+1.          slotToExpunge = i;
+
+    for (int i = nextIndex(staleSlot, len);
+         (e = tab[i]) != null;
+         i = nextIndex(i, len)) {
+        ThreadLocal&lt;?&gt; k = e.get();
+
+        if (k == key) {
+
+            //如果在向后环形查找过程中发现key相同的entry就覆盖并且和脏entry进行交换
+2.            e.value = value;
+3.            tab[i] = tab[staleSlot];
+4.            tab[staleSlot] = e;
+
+            // Start expunge at preceding stale entry if it exists
+            //如果在查找过程中还未发现脏entry，那么就以当前位置作为cleanSomeSlots
+            //的起点
+            if (slotToExpunge == staleSlot)
+5.                slotToExpunge = i;
+            //搜索脏entry并进行清理
+6.            cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+            return;
+        }
+
+        // If we didn&#39;t find stale entry on backward scan, the
+        // first stale entry seen while scanning for key is the
+        // first still present in the run.
+        //如果向前未搜索到脏entry，则在查找过程遇到脏entry的话，后面就以此时这个位置
+        //作为起点执行cleanSomeSlots
+        if (k == null &amp;&amp; slotToExpunge == staleSlot)
+7.            slotToExpunge = i;
+    }
+
+    // If key not found, put new entry in stale slot
+    //如果在查找过程中没有找到可以覆盖的entry，则将新的entry插入在脏entry
+8.    tab[staleSlot].value = null;
+9.    tab[staleSlot] = new Entry(key, value);
+
+    // If there are any other stale entries in run, expunge them
+10.    if (slotToExpunge != staleSlot)
+        //执行cleanSomeSlots
+11.        cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
+}</code></pre>
+<p>首先先看这一部分的代码：</p>
+<pre><code class="java">int slotToExpunge = staleSlot;
+for (int i = prevIndex(staleSlot, len);
+     (e = tab[i]) != null;
+     i = prevIndex(i, len))
+    if (e.get() == null)
+        slotToExpunge = i;</code></pre>
+<p>这部分代码通过PreIndex方法实现往前环形搜索脏entry的功能，初始时slotToExpunge和staleSlot相同，若在搜索过程中发现了脏entry，则更新slotToExpunge为当前索引i。另外，说明replaceStaleEntry并不仅仅局限于处理当前已知的脏entry，它认为在出<strong>现脏entry的相邻位置也有很大概率出现脏entry，所以为了一次处理到位，就需要向前环形搜索，找到前面的脏entry</strong>。那么根据在向前搜索中是否还有脏entry以及在for循环后向环形查找中是否找到可覆盖的entry，我们分这四种情况来充分理解这个方法:</p>
+<p><strong>① 前向有脏entry</strong></p>
+<p>1.1 后向环形查找找到可覆盖的entry</p>
+<p>该情形如下图所示。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%90%91%E5%89%8D%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry%EF%BC%8C%E5%90%91%E5%90%8E%E7%8E%AF%E5%BD%A2%E6%9F%A5%E6%89%BE%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry%E7%9A%84%E6%83%85%E5%86%B5.png" alt="向前环形搜索到脏entry，向后环形查找到可覆盖的entry的情况.png"></p>
+<p>如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若查找到了可覆盖的entry，第2,3,4行代码先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换。交换之后脏entry就更换到了i处，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程</p>
+<p>1.2 后向环形查找未找到可覆盖的entry</p>
+<p>该情形如下图所示。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry,%E5%90%91%E5%90%8E%E7%8E%AF%E5%BD%A2%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%8F%AF%E8%A6%86%E7%9B%96entry.png" alt="前向环形搜索到脏entry,向后环形未搜索可覆盖entry.png"></p>
+<p>如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索遇到脏entry时，在第1行代码中slotToExpunge会更新为当前脏entry的索引i，直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束。在接下来的for循环中进行后向环形查找，若没有查找到了可覆盖的entry，哈希桶（table[i]）为null的时候，后向环形查找过程结束。那么接下来在8,9行代码中，将插入的新entry直接放在staleSlot处即可，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程</p>
+<p><strong>② 前向没有脏entry</strong></p>
+<p>2.1 后向环形查找找到可覆盖的entry</p>
+<p>该情形如下图所示。</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry%EF%BC%8C%E5%90%8E%E5%90%91%E7%8E%AF%E5%BD%A2%E6%90%9C%E7%B4%A2%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry.png" alt="前向未搜索到脏entry，后向环形搜索到可覆盖的entry.png"></p>
+<p>如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束，若在整个过程未遇到脏entry，slotToExpunge初始状态依旧和staleSlot相同。在接下来的for循环中进行后向环形查找，若遇到了脏entry，在第7行代码中更新slotToExpunge为位置i。若查找到了可覆盖的entry，第2,3,4行代码先覆盖当前位置的entry，然后再与staleSlot位置上的脏entry进行交换，交换之后脏entry就更换到了i处。如果在整个查找过程中都还没有遇到脏entry的话，会通过第5行代码，将slotToExpunge更新当前i处，最后使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程</p>
+<p>2.2 后向环形查找未找到可覆盖的entry</p>
+<p>该情形如下图所示</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/%E5%89%8D%E5%90%91%E7%8E%AF%E5%BD%A2%E6%9C%AA%E6%90%9C%E7%B4%A2%E5%88%B0%E8%84%8Fentry,%E5%90%8E%E5%90%91%E7%8E%AF%E5%BD%A2%E6%9F%A5%E6%89%BE%E6%9C%AA%E6%9F%A5%E6%89%BE%E5%88%B0%E5%8F%AF%E8%A6%86%E7%9B%96%E7%9A%84entry.png" alt="前向环形未搜索到脏entry,后向环形查找未查找到可覆盖的entry.png"></p>
+<p>如图，slotToExpunge初始状态和staleSlot相同，当前向环形搜索直到遇到哈希桶（table[i]）为null的时候，前向搜索过程结束，若在整个过程未遇到脏entry，slotToExpunge初始状态依旧和staleSlot相同。在接下来的for循环中进行后向环形查找，若遇到了脏entry，在第7行代码中更新slotToExpunge为位置i。若没有查找到了可覆盖的entry，哈希桶（table[i]）为null的时候，后向环形查找过程结束。那么接下来在8,9行代码中，将插入的新entry直接放在staleSlot处即可。另外，如果发现slotToExpunge被重置，则第10行代码if判断为true,就使用cleanSomeSlots方法从slotToExpunge为起点开始进行清理脏entry的过程</p>
+<p>下面用一个实例来有个直观的感受，示例代码就不给出了，代码debug时table状态如下图所示:</p>
+<p><img src alt="1.2情况示意图.png"></p>
+<p>如图所示，当前的staleSolt为i=4，首先先进行前向搜索脏entry，当i=3的时候遇到脏entry，slotToExpung更新为3，当i=2的时候tabel[2]为null，因此前向搜索脏entry的过程结束。然后进行后向环形查找，知道i=7的时候遇到table[7]为null，结束后向查找过程，并且在该过程并没有找到可以覆盖的entry。最后只能在staleSlot（4）处插入新entry，然后从slotToExpunge（3）为起点进行cleanSomeSlots进行脏entry的清理</p>
+<blockquote>
+<br>
+
+<p><strong>补充:</strong></p>
+<p><strong>当我们调用threadLocal的get方法</strong>时，当table[i]不是和所要找的key相同的话，会继续通过threadLocalMap的 getEntryAfterMiss方法向后环形去找</p>
+<p><strong>当我们调用threadLocal.remove方法时候</strong>，实际上会调用threadLocalMap的remove方法</p>
+<p>从以上set,getEntry,remove方法看出，<strong>在threadLocal的生命周期里，针对threadLocal存在的内存泄漏的问题，都会通过expungeStaleEntry，cleanSomeSlots,replaceStaleEntry这三个方法清理掉key为null的脏entry</strong></p>
+</blockquote>
+<br>
+
+<p><strong>使用弱引用</strong></p>
+<p>从文章开头通过threadLocal,threadLocalMap,entry的引用关系看起来threadLocal存在内存泄漏的问题似乎是因为threadLocal是被弱引用修饰的。那为什么要使用弱引用呢？</p>
+<p>假设threadLocal使用的是强引用，在业务代码中执行<code>threadLocalInstance==null</code>操作，以清理掉threadLocal实例的目的，但是因为threadLocalMap的Entry强引用threadLocal，因此在gc的时候进行可达性分析，threadLocal依然可达，对threadLocal并不会进行垃圾回收，这样就无法真正达到业务逻辑的目的，出现逻辑错误</p>
+<p>假设Entry弱引用threadLocal，尽管会出现内存泄漏的问题，但是在threadLocal的生命周期里（set,getEntry,remove）里，都会针对key为null的脏entry进行处理。</p>
+<p>从以上的分析可以看出，使用弱引用的话在threadLocal生命周期里会尽可能的保证不出现内存泄漏的问题，达到安全的状态。</p>
+<br>
+
+<p><strong>Thread.exit()方法</strong></p>
+<p>当线程退出时会执行exit方法:</p>
+<pre><code class="java">private void exit() {
+    if (group != null) {
+        group.threadTerminated(this);
+        group = null;
+    }
+    /* Aggressively null out all reference fields: see bug 4006245 */
+    target = null;
+    /* Speed the release of some of these resources */
+    threadLocals = null;
+    inheritableThreadLocals = null;
+    inheritedAccessControlContext = null;
+    blocker = null;
+    uncaughtExceptionHandler = null;
+}</code></pre>
+<p>从源码可以看出当线程结束时，会令threadLocals=null，也就意味着GC的时候就可以将threadLocalMap进行垃圾回收，换句话说threadLocalMap生命周期实际上thread的生命周期相同</p>
+<br>
+
+<h3 id="在使用ThreadLocal时防止内存泄漏你应该做出的努力"><a href="#在使用ThreadLocal时防止内存泄漏你应该做出的努力" class="headerlink" title="在使用ThreadLocal时防止内存泄漏你应该做出的努力"></a><strong>在使用ThreadLocal时防止内存泄漏你应该做出的努力</strong></h3><p>之所以有关于内存泄露的讨论是因为在有线程复用如线程池的场景中，一个线程的寿命很长，大对象长期不被回收影响系统运行效率与安全。如果线程不会复用，用完即销毁了也不会有ThreadLocal引发内存泄露的问题</p>
+<p>当我们仔细读过ThreadLocalMap的源码，我们可以推断，如果在使用的ThreadLocal的过程中，显式地进行remove是个很好的编码习惯，这样是不会引起内存泄漏</p>
+<p>如果必须使用ThreadLocal，请确保在完成该操作后立即删除该值，并且最好在将线程返回到线程池之前</p>
+<p>最佳做法是使用remove()而不是set(null)，因为使用remove()将会使WeakReference立即被删除，并与值一起被删除</p>
+<p>综上: </p>
+<ul>
+<li><strong>每次使用完ThreadLocal，都调用它的remove()方法，清除数据</strong></li>
+<li><strong>在使用线程池的情况下，没有及时清理ThreadLocal，不仅是内存泄漏的问题，更严重的是可能导致业务逻辑出现问题。所以，使用ThreadLocal就跟加锁完要解锁一样，用完就清理</strong></li>
+</ul>
+<br>
+
+<h2 id="四-ThreadLocal实例"><a href="#四-ThreadLocal实例" class="headerlink" title="四. ThreadLocal实例"></a>四. ThreadLocal实例</h2><h3 id="用ThreadLocal解决SimpleDateFormat的线程不安全的问题"><a href="#用ThreadLocal解决SimpleDateFormat的线程不安全的问题" class="headerlink" title="用ThreadLocal解决SimpleDateFormat的线程不安全的问题"></a><strong>用ThreadLocal解决SimpleDateFormat的线程不安全的问题</strong></h3><p>SimpleDateFormat是一个线程不安全的格式化日期类, 创建一个SimpleDateFormat实例的开销比较昂贵，<strong>解析字符串时间时频繁创建生命周期短暂的实例导致性能低下</strong></p>
+<p>即使将SimpleDateFormat定义为静态类变量，貌似能解决这个问题，但是SimpleDateFormat是非线程安全的，同样存在问题，如果用<code>synchronized</code>线程同步同样面临问题，同步导致性能下降(线程之间序列化的获取SimpleDateFormat实例)</p>
+<p>ThreadLocal解决了此问题，对于每个线程SimpleDateFormat不存在影响他们之间协作的状态，为每个线程创建一个SimpleDateFormat变量的拷贝:</p>
+<pre><code class="java">import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+/**
+ * @author zk
+ */
+public class DateUtil {
+
+    private static final String DATE_FORMAT = &quot;yyyy-MM-dd HH:mm:ss&quot;;
+
+    private static SimpleDateFormat notConcurrentSafeSDF = new SimpleDateFormat(DATE_FORMAT);
+
+    private static ThreadLocal&lt;SimpleDateFormat&gt; concurrentSafeSDF = ThreadLocal.withInitial(() -&gt; new SimpleDateFormat(DATE_FORMAT));
+
+    public static DateFormat getDateFormat() {
+        return concurrentSafeSDF.get();
+    }
+
+    public static Date parse(String textDate) throws ParseException {
+        return getDateFormat().parse(textDate);
+    }
+}</code></pre>
+<br>
+
+<h3 id="使用ThreadLocal实现数字自增"><a href="#使用ThreadLocal实现数字自增" class="headerlink" title="使用ThreadLocal实现数字自增"></a><strong>使用ThreadLocal实现数字自增</strong></h3><pre><code class="java">/**
+ * @author zk
+ */
+public class AutoAddNumber {
+
+    private static ThreadLocal&lt;Integer&gt; seqNum = ThreadLocal.withInitial(() -&gt; 0);
+
+    public static void main(String[] args) {
+        AutoAddNumber number = new AutoAddNumber();
+        for (int i = 0; i &lt; 4; i++) {
+            new ThreadLocalThreadTest(number).start();
+        }
+    }
+
+    public int getNextNum() {
+        seqNum.set(seqNum.get() + 1);
+        return seqNum.get();
+    }
+
+    static class ThreadLocalThreadTest extends Thread {
+
+        private AutoAddNumber number;
+
+        public ThreadLocalThreadTest(AutoAddNumber number) {
+            this.number = number;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i &lt; 5; i++) {
+                System.out.println(&quot;当前线程是：&quot; + Thread.currentThread().getName() + &quot;对应的编号是:&quot; + number.getNextNum());
+            }
+        }
+    }
+}
+------- Output -------
+当前线程是：Thread-0对应的编号是:1
+当前线程是：Thread-0对应的编号是:2
+当前线程是：Thread-0对应的编号是:3
+当前线程是：Thread-0对应的编号是:4
+当前线程是：Thread-0对应的编号是:5
+当前线程是：Thread-1对应的编号是:1
+当前线程是：Thread-3对应的编号是:1
+当前线程是：Thread-3对应的编号是:2
+当前线程是：Thread-1对应的编号是:2
+当前线程是：Thread-3对应的编号是:3
+当前线程是：Thread-1对应的编号是:3
+当前线程是：Thread-1对应的编号是:4
+当前线程是：Thread-1对应的编号是:5
+当前线程是：Thread-3对应的编号是:4
+当前线程是：Thread-3对应的编号是:5
+当前线程是：Thread-2对应的编号是:1
+当前线程是：Thread-2对应的编号是:2
+当前线程是：Thread-2对应的编号是:3
+当前线程是：Thread-2对应的编号是:4
+当前线程是：Thread-2对应的编号是:5</code></pre>
+<p>可以看出每个线程都产生出了5个数字。他们互不影响，线程运行的顺序可能有会不同，但是每个都是独立的，以当前线程作为键，值作为value，每个数字产生器都生成了独立的数字，达到了线程独立的效果</p>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/" title="https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2019/12/26/ThreadLocal源码解析/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725355462"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

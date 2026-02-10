@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>深入理解C++中的move和forward - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="在C++11标准之前，C++中默认的传值类型均为Copy语义，即：不论是指针类型还是值类型，都将会在进行函数调用时被完整的复制一份！对于非指针而言，开销及其巨大！因此在C++11以后，引入了右值和Move语义，极大的提高了效率；本文介绍了在此场景下了两个常用的标准库函数：move和forward；">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解C++中的move和forward">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/05/08/深入理解C++中的move和forward/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="在C++11标准之前，C++中默认的传值类型均为Copy语义，即：不论是指针类型还是值类型，都将会在进行函数调用时被完整的复制一份！对于非指针而言，开销及其巨大！因此在C++11以后，引入了右值和Move语义，极大的提高了效率；本文介绍了在此场景下了两个常用的标准库函数：move和forward；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.764Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解C++中的move和forward">
+<meta name="twitter:description" content="在C++11标准之前，C++中默认的传值类型均为Copy语义，即：不论是指针类型还是值类型，都将会在进行函数调用时被完整的复制一份！对于非指针而言，开销及其巨大！因此在C++11以后，引入了右值和Move语义，极大的提高了效率；本文介绍了在此场景下了两个常用的标准库函数：move和forward；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725319755">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?66">
+    
+    <h1>深入理解C++中的move和forward</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年05月08日</a>
+    <a><i class="nexmoefont icon-areachart"></i>4.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 22 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/C/">C++</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/C/">C++</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-中move和forward的区别"><span class="toc-text">C++中move和forward的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#特性背景"><span class="toc-text">特性背景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Copy语义简述"><span class="toc-text">Copy语义简述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#临时值（右值）简述"><span class="toc-text">临时值（右值）简述</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用-move-函数"><span class="toc-text">使用 move 函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#move函数的基本使用"><span class="toc-text">move函数的基本使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#move-语义下的析构函数"><span class="toc-text">move 语义下的析构函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#使用资源被-move-后的对象"><span class="toc-text">使用资源被 move 后的对象</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#在实现移动构造函数时不赋值为nullptr"><span class="toc-text">在实现移动构造函数时不赋值为nullptr</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#什么又是-forward-函数？"><span class="toc-text">什么又是 forward 函数？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#move-和-forward-函数的区别"><span class="toc-text">move 和 forward 函数的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#move-和-forward-函数的实现"><span class="toc-text">move 和 forward 函数的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#C-11后加入的一些新规则"><span class="toc-text">C++11后加入的一些新规则</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#引用折叠规则"><span class="toc-text">引用折叠规则</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#右值引用的特殊类型推断规则"><span class="toc-text">右值引用的特殊类型推断规则</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#可以通过static-cast显式地将一个左值转换为一个右值"><span class="toc-text">可以通过static_cast显式地将一个左值转换为一个右值</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#move函数解析"><span class="toc-text">move函数解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#forward函数解析"><span class="toc-text">forward函数解析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Appendix"><span class="toc-text">Appendix</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>在C++11标准之前，C++中默认的传值类型均为Copy语义，即：不论是指针类型还是值类型，都将会在进行函数调用时被完整的复制一份！</p>
+<p>对于非指针而言，开销及其巨大！</p>
+<p>因此在C++11以后，引入了右值和Move语义，极大的提高了效率；</p>
+<p>本文介绍了在此场景下了两个常用的标准库函数：move和forward；</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/value" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/value</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="C-中move和forward的区别"><a href="#C-中move和forward的区别" class="headerlink" title="C++中move和forward的区别"></a><strong>C++中move和forward的区别</strong></h1><h2 id="特性背景"><a href="#特性背景" class="headerlink" title="特性背景"></a><strong>特性背景</strong></h2><h3 id="Copy语义简述"><a href="#Copy语义简述" class="headerlink" title="Copy语义简述"></a><strong>Copy语义简述</strong></h3><p>C++中默认为Copy语义，因此存在大量开销；</p>
+<p>以下面的代码为例：</p>
+<p>0_copy_semantics.cc</p>
+<pre><code class="C++">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+class Object {
+public:
+    Object() {
+        std::cout &lt;&lt; &quot;build this object!&quot; &lt;&lt; std::endl;
+    }
+
+    virtual ~Object() {
+        std::cout &lt;&lt; &quot;destruct this object!&quot; &lt;&lt; std::endl;
+    }
+};
+
+void f(const Object obj) {}
+
+int main() {
+    Object obj{};
+
+    // function calling
+    f(obj);
+
+    // vector
+    std::vector&lt;Object&gt; v;
+    v.push_back(obj);
+}
+</code></pre>
+<p>最终的输出结果为：</p>
+<pre><code>build this object!
+destruct this object!
+destruct this object!
+destruct this object!</code></pre><p>第一个为显式调用构造函数创建 obj 时的输出；</p>
+<p>后面的输出说明存在三个对象，因此调用了三次析构函数；</p>
+<p>即：<strong>除了我们显式构造的函数之外，我们在调用函数、将对象加入 vector 的时候，也创建了新的对象！</strong></p>
+<p><strong>并且这个对象不是通过构造函数创建的，事实上是通过<code>复制构造函数</code>创建的！</strong></p>
+<p><strong>当尝试将复制构造函数禁用后，上面的代码将无法编译：</strong></p>
+<pre><code class="c++">Object (const Object&amp; object) = delete;</code></pre>
+<br>
+
+<h3 id="临时值（右值）简述"><a href="#临时值（右值）简述" class="headerlink" title="临时值（右值）简述"></a><strong>临时值（右值）简述</strong></h3><p>Copy 语义虽然用起来很方便，但是很多时候我们并不想将值（尤其是一些临时变量） Copy 一遍再使用！</p>
+<p>例如：</p>
+<pre><code class="C++">func(&quot;some temporary string&quot;); // 尽管直接将一个常量传入函数中, C++还是大概率会创建一个string的复制
+v.push_back(X()); // 初始化了一个临时X, 然后被复制进了vector
+a = b + c; // b+c是一个临时值, 然后被赋值给了a
+x++; // x++操作也有临时变量的产生（++x则不会产生）
+a = b + c + d; //c+d是一个临时变量, b+(c+d)是另一个临时变量</code></pre>
+<p>另外还有函数在返回时：</p>
+<pre><code class="c++">vector&lt;string&gt; str_split(const string&amp; s) {
+  vector&lt;string&gt; v;
+  // ...
+  return v; // v是左值，但优先移动，不支持移动时仍可复制
+}</code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>注意：上面的函数在返回时，实际上编译器会对返回值进行优化，并不会先析构v，再在str_split 函数的调用栈中对整个v进行Copy；</strong></font></p>
+<p>  <font color="#f00"><strong>但是之前的C++的确是这么做的，因此会出现类似于下面的代码：</strong></font></p>
+<pre><code class="c++">  void str_split(const string&amp; s, vector&lt;string&gt;* vec); </code></pre>
+<p>  <font color="#f00"><strong>即：将返回值也作为一个输入参数；</strong></font></p>
+<p>  <strong>上面编译器的优化有一个非常学术的名字：<code>RVO (Return Value Optimization)，返回值优化</code>；</strong></p>
+<p>  感兴趣的可以看看下面的文章：</p>
+<ul>
+<li><a href="https://www.yhspy.com/2019/09/01/C-%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E4%B9%8B-RVO-%E4%B8%8E-NRVO/" target="_blank" rel="noopener">C++ 编译器优化之 RVO 与 NRVO</a></li>
+</ul>
+</blockquote>
+<p>上面的这些临时值，在C++中被统一定义为：<code>右值(rvalue)</code>，因为在编译器的角度，实际上并没有对应的变量名存储这些变量值；</p>
+<p>对面上面提到的一些临时值的场景都有一些共性：</p>
+<ul>
+<li><strong>临时变量的内容先被复制一遍；</strong></li>
+<li><strong>被复制的内容覆盖到成员变量指向的内存；</strong></li>
+<li><strong>临时变量用完了再被回收；</strong></li>
+</ul>
+<p>其实这里是可以优化的：</p>
+<p><strong>临时变量其实最终都是要被回收的，如果能把临时变量的内容直接<code>“移入”</code>成员变量中，此时就不需要调用复制构造函数了！</strong></p>
+<p>即：</p>
+<ul>
+<li><strong>成员变量内部的指针指向”temporary str1”所在的内存；</strong></li>
+<li><strong>临时变量内部的指针指向成员变量以前所指向的内存；</strong></li>
+<li><strong>最后临时变量指向的那块内存再被回收；</strong></li>
+</ul>
+<p>上面的操作即可避免一次对象Copy的发生，实际上它就是所谓的 <code>Move</code>语义；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>对于使用过 Rust 的开发者来说，这里他们是非常熟悉的；</strong></font></p>
+<p>  <font color="#f00"><strong>因为 Rust 丧心病狂的将所有赋值操作都默认定义为了 <code>Move</code> 语义！</strong></font></p>
+</blockquote>
+<br>
+
+<h2 id="使用-move-函数"><a href="#使用-move-函数" class="headerlink" title="使用 move 函数"></a><strong>使用 move 函数</strong></h2><h3 id="move函数的基本使用"><a href="#move函数的基本使用" class="headerlink" title="move函数的基本使用"></a><strong>move函数的基本使用</strong></h3><p>对比之前的例子，这里我们使用 move 语义对其进行优化：</p>
+<p>1_move_semantics.cc</p>
+<pre><code class="c++">#include &lt;iostream&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+class Object {
+public:
+    explicit Object(std::string str) : _str(std::move(str)) {
+        std::cout &lt;&lt; &quot;build this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+    }
+
+    virtual ~Object() {
+        std::cout &lt;&lt; &quot;destruct this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+    }
+
+    Object(const Object &amp;object) : _str(object._str) {
+        std::cout &lt;&lt; &quot;copy this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+    }
+
+    Object(Object &amp;&amp;object) noexcept: _str(std::move(object._str)) {
+        std::cout &lt;&lt; &quot;move this object!&quot; &lt;&lt; std::endl;
+    }
+
+    std::string _str;
+};
+
+void f_copy(Object obj) {
+    std::cout &lt;&lt; &quot;copy function, address: &quot; &lt;&lt; &amp;obj &lt;&lt; std::endl;
+}
+
+void f_move(Object &amp;&amp;obj) {
+    Object a_obj(std::move(obj));
+    std::cout &lt;&lt; &quot;move function, address: &quot; &lt;&lt; &amp;a_obj &lt;&lt; std::endl;
+}
+
+int main() {
+    Object obj{&quot;abc&quot;};
+
+    // function calling
+    f_copy(obj);
+    f_move(std::move(obj));
+
+//    std::cout &lt;&lt; obj._str &lt;&lt; std::endl; // danger!
+
+    std::cout &lt;&lt; &quot;============== end ================&quot; &lt;&lt; std::endl;
+
+    return 0;
+}</code></pre>
+<blockquote>
+<p>  <strong>这里的用法其实是没有意义的，只是为了演示强行使用了 move</strong></p>
+</blockquote>
+<p>为了方便演示，这里给 Object 类增加了一个 string 类型的成员，并且输出了 Object 的内存地址；</p>
+<p>代码输出：</p>
+<pre><code>build this object, address: 000000FD546FF5A8 // Object obj{&quot;abc&quot;}
+copy this object, address: 000000FD546FF620 // f_copy(obj)
+copy function, address: 000000FD546FF620 // Object(const Object &amp;object)
+destruct this object, address: 000000FD546FF620 // f_copy(obj) End
+move this object! // Object a_obj(std::move(obj));
+move function, address: 000000FD546FF508 // f_move(Object &amp;&amp;obj)
+destruct this object, address: 000000FD546FF508 // f_move(Object &amp;&amp;obj) End
+============== end ================
+destruct this object, address: 000000FD546FF5A8 // main End</code></pre><p><strong>可以看到，相比于 Copy，我们直接使用了 move 函数将变量移入了函数中，此时是没有调用复制构造函数的！</strong></p>
+<blockquote>
+<p>  <font color="#f00"><strong>实际上，C++中的 move 函数只是做了类型转换，并不会真正的实现值的移动！</strong></font></p>
+<p>  <font color="#f00"><strong>因此，对于自定义的类来说，如果要实现真正意义上的 “移动”，还是要手动重载移动构造函数和移动复制函数</strong></font></p>
+<p>  <font color="#f00"><strong>即：我们需要在自己的类中实现移动语义，避免深拷贝，充分利用右值引用和std::move的语言特性；</strong></font></p>
+<p>  <font color="#f00"><strong>实际上，通常情况下C++编译器会默认在用户自定义的<code>class</code>和<code>struct</code>中生成移动语义函数；</strong></font></p>
+<p>  <font color="#f00"><strong>但前提是：用户没有主动定义该类的<code>拷贝构造</code>等函数！</strong></font></p>
+</blockquote>
+<blockquote>
+<p>  <strong>同时也要注意到：使用一个已经被 move 过的函数是非常危险的事情！</strong></p>
+</blockquote>
+<br>
+
+<h3 id="move-语义下的析构函数"><a href="#move-语义下的析构函数" class="headerlink" title="move 语义下的析构函数"></a><strong>move 语义下的析构函数</strong></h3><p>在上面的测试在，可能你也注意到了一点就是：</p>
+<pre><code>destruct this object, address: 000000FD546FF508 // f_move(Object &amp;&amp;obj) End
+============== end ================
+destruct this object, address: 000000FD546FF5A8 // main End</code></pre><p><font color="#f00"><strong>对象被move了之后，仍然会在其离开作用域之后调用他的析构函数？</strong></font></p>
+<p>这是因为：</p>
+<ul>
+<li><strong>虽然将 <code>obj</code> 的资源给了 <code>a_obj</code> ，但是<code>obj</code>并没有立刻析构，只有在 <code>obj</code> 离开了自己的作用域的时候才会析构；因此，如果继续使用<code>str2</code>的<code>m_data</code>变量，可能会发生意想不到的错误；</strong></li>
+<li><strong>也正因为如此，在自己实现移动构造函数的时候，需要将原对象中的值手动置为空，以防止同一片内存区域被多次释放！</strong></li>
+</ul>
+<blockquote>
+<p>  此外还需要注意：</p>
+<ul>
+<li><strong>如果我们没有提供移动构造函数，只提供了拷贝构造函数，<code>std::move()</code>会失效但是不会发生错误，因为编译器找不到移动构造函数就去寻找拷贝构造函数，这也是拷贝构造函数的参数是<code>const T&amp;</code>常量左值引用的原因！</strong></li>
+<li><strong><code>c++11</code> 中的所有容器都实现了<code>move</code>语义，<code>move</code>只是转移了资源的控制权，本质上是将左值强制转化为右值使用，以用于移动拷贝或赋值，避免对含有资源的对象发生无谓的拷贝；</strong></li>
+<li><strong><code>move</code> 对于拥有如内存、文件句柄等资源的成员的对象有效，如果是一些基本类型，如int和char[10]数组等，如果使用move，仍会发生拷贝（因为没有对应的移动构造函数），所以说<code>move</code>对含有资源的对象说更有意义；</strong></li>
+</ul>
+</blockquote>
+<p>上面的例子只是对 move 语义的简单介绍，下面给出了一个真正需要自己手动管理资源（内存地址）的例子：</p>
+<p>1_move_and_destructor.cc</p>
+<pre><code class="c++">#include &lt;iostream&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+
+class MyString {
+public:
+    // Constructor
+    explicit MyString(const char *data) {
+        if (data != nullptr) {
+            _data = new char[strlen(data) + 1];
+            strcpy(_data, data);
+        } else {
+            _data = new char[1];
+            *_data = &#39;\0&#39;;
+        }
+
+        std::cout &lt;&lt; &quot;built this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+    }
+
+    // Destructor
+    virtual ~MyString() {
+        std::cout &lt;&lt; &quot;destruct this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+        delete[] _data;
+    }
+
+    // Copy constructor
+    MyString(const MyString &amp;str) {
+        std::cout &lt;&lt; &quot;copy this object, address: &quot; &lt;&lt; this &lt;&lt; std::endl;
+        _data = new char[strlen(str._data) + 1];
+        strcpy(_data, str._data);
+    }
+
+    // Move constructor
+    MyString(MyString &amp;&amp;str) noexcept
+            : _data(str._data) {
+        std::cout &lt;&lt; &quot;move this object&quot; &lt;&lt; std::endl;
+        str._data = nullptr; // Very important!
+    }
+
+    // Copy assignment
+    MyString&amp; operator=(const MyString&amp; str){
+        if (this == &amp;str) // 避免自我赋值!!
+            return *this;
+
+        delete[] _data;
+        _data = new char[ strlen(str._data) + 1 ];
+        strcpy(_data, str._data);
+        return *this;
+    }
+
+    // Move assignment
+    MyString&amp; operator=(MyString&amp;&amp; str) noexcept{
+        if (this == &amp;str) // 避免自我赋值!!
+            return *this;
+
+        delete[] _data;
+        _data = str._data;
+        str._data = nullptr; // 不再指向之前的资源了
+        return *this;
+    }
+
+public:
+    char *_data;
+};
+
+void f_move(MyString &amp;&amp;obj) {
+    MyString a_obj(std::move(obj));
+    std::cout &lt;&lt; &quot;move function, address: &quot; &lt;&lt; &amp;a_obj &lt;&lt; std::endl;
+}
+
+int main() {
+    MyString obj{&quot;abc&quot;};
+
+    f_move(std::move(obj));
+
+//    std::cout &lt;&lt; obj._data &lt;&lt; std::endl; // danger!
+
+    std::cout &lt;&lt; &quot;============== end ================&quot; &lt;&lt; std::endl;
+
+    return 0;
+}</code></pre>
+<p>最终输出：</p>
+<pre><code>built this object, address: 000000843D0FFD78
+move this object
+move function, address: 000000843D0FFD08
+destruct this object, address: 000000843D0FFD08
+============== end ================
+destruct this object, address: 000000843D0FFD78</code></pre><p><font color="#f00"><strong>这里需要注意，在移动构造函数和移动赋值函数中，我们将当前待移动对象的资源赋值为了空（<code>str._data = nullptr</code>），这里就是我们手动实现了 <code>资源的移动</code>！</strong></font></p>
+<p>下面我们尝试修改两个地方，来导致报错：</p>
+<ul>
+<li><strong>使用资源被 move 后的对象；</strong></li>
+<li><strong>在实现移动构造函数时不赋值为nullptr；</strong></li>
+</ul>
+<br>
+
+<h4 id="使用资源被-move-后的对象"><a href="#使用资源被-move-后的对象" class="headerlink" title="使用资源被 move 后的对象"></a><strong>使用资源被 move 后的对象</strong></h4><p>将注释打开：</p>
+<pre><code class="c++">//    std::cout &lt;&lt; obj._data &lt;&lt; std::endl; // danger!</code></pre>
+<p>此时执行代码会疯狂报错：</p>
+<pre><code>Exception: Exception 0xc0000005 encountered at address 0x7ff62a4f245a: Access violation reading location 0x00000000</code></pre><p>因为此时obj中的内容已经为空了！</p>
+<br>
+
+<h4 id="在实现移动构造函数时不赋值为nullptr"><a href="#在实现移动构造函数时不赋值为nullptr" class="headerlink" title="在实现移动构造函数时不赋值为nullptr"></a><strong>在实现移动构造函数时不赋值为nullptr</strong></h4><p>将这里注释掉：</p>
+<pre><code class="c++">MyString(MyString &amp;&amp;str) noexcept
+    : _data(str._data) {
+        std::cout &lt;&lt; &quot;move this object&quot; &lt;&lt; std::endl;
+        // str._data = nullptr; // Very important!
+    }</code></pre>
+<p>此时再执行代码，整个程序会直接崩溃，因为：<strong>我们未将已经move掉的资源设置为空值，最终会导致这里的资源被释放两次！</strong></p>
+<br>
+
+<h2 id="什么又是-forward-函数？"><a href="#什么又是-forward-函数？" class="headerlink" title="什么又是 forward 函数？"></a><strong>什么又是 forward 函数？</strong></h2><p>有了 move 函数之后，我们又遇到了一个新的问题：</p>
+<p>按照上面的写法，处理临时变量用右值引用<code>T &amp;&amp;</code>，处理普通变量用const引用<code>const T &amp;</code>，我们需要分别建立两个函数，然后入参使用不同的类型，每个函数都要写两遍；</p>
+<p>那么能不能避免重复，将 <code>T &amp;&amp;</code> 类型和 <code>const T &amp;</code> 类型合二为一呢？</p>
+<p>答案就是：<code>forward</code> 函数，<code>std::forward</code> 也被称为<strong>完美转发</strong>，即：<strong>保持原来的 值 属性不变：</strong></p>
+<ul>
+<li>如果原来的值是左值，经std::<strong>forward</strong>处理后该值还是左值；</li>
+<li>如果原来的值是右值，经std::<strong>forward</strong>处理后它还是右值；</li>
+</ul>
+<p>这样一来，我们就可以使用 forward 函数对入参进行封装，从而保证了入参的统一性，从而可以实现一个方法处理两种类型！</p>
+<blockquote>
+<p>  <strong>正因为如此，forward 函数被大量用在了入参值类型情况不确定的C++模板中！</strong></p>
+</blockquote>
+<p>2_forward.cc</p>
+<pre><code class="c++">template&lt;typename T&gt;
+void f_forward(T &amp;&amp;t) {
+
+    Object a = std::forward&lt;T&gt;(t);
+
+    std::cout &lt;&lt; &quot;forward this object, address: &quot; &lt;&lt; &amp;a &lt;&lt; std::endl;
+}
+
+int main() {
+    Object obj{&quot;abc&quot;};
+    f_forward(obj);
+
+    f_forward(Object(&quot;def&quot;));
+
+    return 0;
+}</code></pre>
+<p>紧接着上面的例子，我们构建了一个模板函数 <code>f_forward</code>；</p>
+<p>在里面我们调用了 <code>std::forward&lt;T&gt;(t)</code> 来创建一个新的对象；</p>
+<p>在 main 函数中，我们分别使用一个左值和一个右值调用了该模板函数；</p>
+<p>结果如下：</p>
+<pre><code class="c++">build this object, address: 000000CFAE8FFC78
+copy this object, address: 000000CFAE8FFBD8
+forward this object, address: 000000CFAE8FFBD8
+destruct this object, address: 000000CFAE8FFBD8
+build this object, address: 000000CFAE8FFCB8
+move this object!
+forward this object, address: 000000CFAE8FFBD8
+destruct this object, address: 000000CFAE8FFBD8
+destruct this object, address: 000000CFAE8FFCB8
+destruct this object, address: 000000CFAE8FFC78</code></pre>
+<p>一个调用了 复制构造函数，另一个调用了移动构造函数；</p>
+<p>forward 函数成功的识别到了我们的入参，并完成了转发，即：</p>
+<ul>
+<li><strong>如果外面传来了右值临时变量，它就转发右值并且启用move语义；</strong></li>
+<li><strong>如果外面传来了左值，它就转发左值并且启用copy，同时它也还能保留const；</strong></li>
+</ul>
+<br>
+
+<h2 id="move-和-forward-函数的区别"><a href="#move-和-forward-函数的区别" class="headerlink" title="move 和 forward 函数的区别"></a><strong>move 和 forward 函数的区别</strong></h2><p>从上面的分析我们可以看出，基本上 forward 可以 cover 所有的需要 move 的场景，毕竟 forward 函数左右值通吃；</p>
+<p>那为什么还要使用 move 呢？原因主要有两点：</p>
+<ul>
+<li>首先，forward函数常用于模板函数这种入参情况不确定的场景中，在使用的时候必须要多带一个模板参数<code>forward&lt;T&gt;</code>，代码略复杂；</li>
+<li>此外，明确只需要 move 临时值的情况下如果使用了 forward，会导致代码意图不清晰，其他人看着理解起来比较费劲；</li>
+</ul>
+<p>实际上从实现的角度上来说，他们都可以被 <code>static_cast</code> 替代；</p>
+<blockquote>
+<p>  <strong>为什么不用 static_cast 呢？也是为了阅读和使用起来更方便；</strong></p>
+</blockquote>
+<br>
+
+<h2 id="move-和-forward-函数的实现"><a href="#move-和-forward-函数的实现" class="headerlink" title="move 和 forward 函数的实现"></a><strong>move 和 forward 函数的实现</strong></h2><h3 id="C-11后加入的一些新规则"><a href="#C-11后加入的一些新规则" class="headerlink" title="C++11后加入的一些新规则"></a><strong>C++11后加入的一些新规则</strong></h3><h4 id="引用折叠规则"><a href="#引用折叠规则" class="headerlink" title="引用折叠规则"></a><strong>引用折叠规则</strong></h4><p><strong>如果间接的创建一个引用的引用，则这些引用就会“折叠”，在所有情况下（除了一个例外），引用折叠成一个普通的左值引用类型；</strong></p>
+<p><strong>一种特殊情况下，引用会折叠成右值引用，即右值引用的右值引用：<code>T&amp;&amp; &amp;&amp;</code>；</strong></p>
+<p>即：</p>
+<ul>
+<li><code>X&amp; &amp;</code>、<code>X&amp; &amp;&amp;</code>、<code>X&amp;&amp; &amp;</code>都折叠成<code>X&amp;</code>；</li>
+<li><code>X&amp;&amp; &amp;&amp;</code>折叠为<code>X&amp;&amp;</code>；</li>
+</ul>
+<h4 id="右值引用的特殊类型推断规则"><a href="#右值引用的特殊类型推断规则" class="headerlink" title="右值引用的特殊类型推断规则"></a><strong>右值引用的特殊类型推断规则</strong></h4><p>当将一个左值传递给一个参数是右值引用的函数，且此右值引用指向<strong>模板类型参数(<code>T&amp;&amp;</code>)</strong>时，编译器推断模板参数类型为实参的左值引用，如：</p>
+<pre><code class="C++">template&lt;typename T&gt; 
+void f(T&amp;&amp;);
+
+int i = 42;
+f(i)</code></pre>
+<p>上述的模板参数类型<code>T&amp;&amp;</code>最终将被推断为<code>int&amp;</code>类型，而非 int！</p>
+<blockquote>
+<p>  <font color="#f00"><strong>若将这两个规则结合起来，则意味着可以传递一个左值 <code>int i</code> 给f，编译器将推断出T的类型为int&amp;；</strong></font></p>
+<p>  <font color="#f00"><strong>再根据引用折叠规则 void f(int&amp; &amp;&amp;)将推断为void f(int&amp;)，因此，f将被实例化为: void f&lt;int&amp;&gt;(int&amp;)；</strong></font></p>
+</blockquote>
+<p>从上述两个规则可以得出结论：<strong>如果一个函数形参是一个指向模板类型的右值引用，则该参数可以被绑定到一个左值上；</strong></p>
+<p>即类似下面的定义：</p>
+<pre><code class="c++">template&lt;typename T&gt; 
+void f(T&amp;&amp;);</code></pre>
+<h4 id="可以通过static-cast显式地将一个左值转换为一个右值"><a href="#可以通过static-cast显式地将一个左值转换为一个右值" class="headerlink" title="可以通过static_cast显式地将一个左值转换为一个右值"></a><strong>可以通过static_cast显式地将一个左值转换为一个右值</strong></h4><p>虽然不能隐式的将一个左值转换为右值引用，但是可以通过static_cast显式地将一个左值转换为一个右值；</p>
+<blockquote>
+<p>  C++11中为static_cast新增的转换功能；</p>
+</blockquote>
+<br>
+
+<h3 id="move函数解析"><a href="#move函数解析" class="headerlink" title="move函数解析"></a><strong>move函数解析</strong></h3><p>标准库中move的定义如下：</p>
+<pre><code class="cpp">template &lt;class _Ty&gt;
+_NODISCARD constexpr remove_reference_t&lt;_Ty&gt;&amp;&amp; move(_Ty&amp;&amp; _Arg) noexcept { // forward _Arg as movable
+    return static_cast&lt;remove_reference_t&lt;_Ty&gt;&amp;&amp;&gt;(_Arg);
+}</code></pre>
+<p>move 函数的参数<code>T&amp;&amp;</code>是一个指向模板类型参数的右值引用（见上方新规则），通过引用折叠，此参数可以和任何类型的实参匹配！</p>
+<p>因此 move 函数的入参既可以传递一个左值，也可以传递一个右值！</p>
+<p>右值情况，<code>std::move(string(&quot;hello&quot;))</code>调用解析：</p>
+<ul>
+<li>首先，根据模板推断规则，确地T的类型为string，<code>typename remove_reference_t&lt;_Ty&gt;&amp;&amp;</code> 的结果为 <code>string &amp;&amp;</code>，因此，move 函数的返回值参数类型为<code>string&amp;&amp;</code>；</li>
+<li>同时，对于 <code>static_cast&lt;string &amp;&amp;&gt;(_Arg)</code>来说，<code>_Arg</code> 已经是 <code>string&amp;&amp;</code>，于是类型转换什么都不做，直接返回<code>string &amp;&amp;</code>；</li>
+</ul>
+<p>左值情况，<code>string s1(&quot;hello&quot;); std::move(s1);</code> 调用解析：</p>
+<ul>
+<li>首先，根据模板推断规则，确定T的类型为<code>string&amp;</code>，<code>typename remove_reference_t&lt;_Ty&gt;&amp;&amp;</code> 的结果为 <code>string&amp;</code>，因此 move 函数的参数类型为 <code>string&amp; &amp;&amp;</code>，<strong>引用折叠之后为<code>string&amp;</code>；</strong></li>
+<li>同时，对于 <code>static_cast&lt;string &amp;&amp;&gt;(_Arg)</code>来说，<code>_Arg</code> 是 <code>string&amp;</code>，经过<code>static_cast</code>之后转换为<code>string&amp;&amp;</code>，返回<code>string &amp;&amp;</code>；</li>
+</ul>
+<blockquote>
+<p>  <strong>因此，从 move 函数的实现可以看出，move 自身除了做一些参数的推断之外，返回右值引用本质上还是靠<code>static_cast&lt;T&amp;&amp;&gt;</code>完成的；</strong></p>
+</blockquote>
+<p>因此<strong>下面两个调用是等价的</strong>，std::move就是个语法糖；</p>
+<pre><code class="cpp">void func(int&amp;&amp; a) {
+    cout &lt;&lt; a &lt;&lt; endl;
+}
+
+int a = 6;
+func(std::move(a));
+
+int b = 10;
+func(static_cast&lt;int&amp;&amp;&gt;(b)); </code></pre>
+<p><strong>需要注意的是：<code>std::move</code> 函数仅仅执行到右值类型的无条件转换；就其本身而言，它没有“move”任何东西；</strong></p>
+<br>
+
+<h3 id="forward函数解析"><a href="#forward函数解析" class="headerlink" title="forward函数解析"></a><strong>forward函数解析</strong></h3><p>标准库中 forward 函数的定义如下：</p>
+<pre><code class="cpp">template &lt;class _Ty&gt;
+_NODISCARD constexpr remove_reference_t&lt;_Ty&gt;&amp;&amp; move(_Ty&amp;&amp; _Arg) noexcept { // forward _Arg as movable
+    return static_cast&lt;remove_reference_t&lt;_Ty&gt;&amp;&amp;&gt;(_Arg);
+}</code></pre>
+<p>当传递一个 <code>lvalue</code> 或者 <code>const lvaue</code> 时：</p>
+<ul>
+<li>传递一个lvalue，模板推导之后 <code>_Ty = _Ty&amp;</code>；</li>
+<li>传递一个const lvaue, 模板推导之后<code>_Ty = const _Ty&amp;</code>；</li>
+<li>随后，<code>_Ty&amp; &amp;&amp;</code> 将折叠为<code>_Ty&amp;</code>，即<code>_Ty&amp; &amp;&amp; 折叠为 _Ty&amp;</code>，即最终返回 <code>_Ty&amp;</code>类型；</li>
+<li><code>std::forward&lt;_Ty&amp;&gt;(_Arg)</code>将返回一个左值，最终调用拷贝构造函数；</li>
+</ul>
+<p>类似的，当传递一个<code>rvalue</code>时：</p>
+<ul>
+<li><code>remove_reference_t&lt;_Ty&gt;&amp;&amp; move(_Ty&amp;&amp; _Arg)</code> 将返回一个右值，最终调用移动构造函数；</li>
+</ul>
+<br>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><p>首先，<code>std::move</code>和<code>std::forward</code>本质都是转换：</p>
+<ul>
+<li><font color="#f00"><strong><code>std::move</code>执行强制到右值的无条件转换；</strong></font></li>
+<li><font color="#f00"><strong><code>std::forward</code>只有在它的参数绑定到一个右值上的时候，才转换它的参数到一个右值；</strong></font></li>
+</ul>
+<p><font color="#f00"><strong><code>std::move</code> 没有move任何东西，std::forward没有转发任何东西；</strong></font></p>
+<p><font color="#f00"><strong>整个类型转变的实现是在编译期完成的，在运行期，它们没有做任何事情；</strong></font></p>
+<p><font color="#f00"><strong>它们没有为<code>移动</code>或者<code>复制</code>产生需要执行的代码，一byte都没有；（换言之，我们需要通过重载移动相关操作函数来自己处理move语义）</strong></font></p>
+<p>在使用场景方面：</p>
+<ul>
+<li><strong>一般在模板元编程里面，由于入参的值类型不确定，因此对于forward使用比较多；</strong></li>
+<li><strong>在一般的函数中，如果可以确定传入的一定是右值（临时值），可以直接使用 move 函数，强调使用场景；</strong></li>
+</ul>
+<br>
+
+<h1 id="Appendix"><a href="#Appendix" class="headerlink" title="Appendix"></a><strong>Appendix</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/cpp-learn/tree/value" target="_blank" rel="noopener">https://github.com/JasonkayZK/cpp-learn/tree/value</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://wendeng.github.io/2019/05/14/c++%E5%9F%BA%E7%A1%80/c++11move%E5%92%8Cforword/" target="_blank" rel="noopener">https://wendeng.github.io/2019/05/14/c++%E5%9F%BA%E7%A1%80/c++11move%E5%92%8Cforword/</a></li>
+<li><a href="https://www.jianshu.com/p/b90d1091a4ff" target="_blank" rel="noopener">https://www.jianshu.com/p/b90d1091a4ff</a></li>
+<li><a href="https://www.cnblogs.com/chenny7/p/11984699.html" target="_blank" rel="noopener">C++ 右值引用与move</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/05/08/深入理解C++中的move和forward/" title="https://jasonkayzk.github.io/2022/05/08/深入理解C++中的move和forward/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/05/08/深入理解C++中的move和forward/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725319894"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

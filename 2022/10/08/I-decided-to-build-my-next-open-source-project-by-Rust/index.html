@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>我决定用 Rust 构建我的下一个开源项目 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="前一段时间我萌生出了一个想要复刻 Mark Zuckerberg 在 2003年实现的 Facemash 的想法；并且我学习 Rust 也已经有一段时间了，所以打算使用 Rust 来构建这个项目！">
+<meta name="keywords" content="Rust">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我决定用 Rust 构建我的下一个开源项目">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/10/08/I-decided-to-build-my-next-open-source-project-by-Rust/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="前一段时间我萌生出了一个想要复刻 Mark Zuckerberg 在 2003年实现的 Facemash 的想法；并且我学习 Rust 也已经有一段时间了，所以打算使用 Rust 来构建这个项目！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/elo_1.jpg">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.736Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="我决定用 Rust 构建我的下一个开源项目">
+<meta name="twitter:description" content="前一段时间我萌生出了一个想要复刻 Mark Zuckerberg 在 2003年实现的 Facemash 的想法；并且我学习 Rust 也已经有一段时间了，所以打算使用 Rust 来构建这个项目！">
+<meta name="twitter:image" content="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/elo_1.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725317041">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?22">
+    
+    <h1>我决定用 Rust 构建我的下一个开源项目</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年10月08日</a>
+    <a><i class="nexmoefont icon-areachart"></i>7.6k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 41 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Rust/">Rust</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Rust/">Rust</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#我决定用-Rust-构建我的下一个开源项目！"><span class="toc-text">我决定用 Rust 构建我的下一个开源项目！</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码实现"><span class="toc-text">代码实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#代码目录结构"><span class="toc-text">代码目录结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务入口"><span class="toc-text">服务入口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置与日志"><span class="toc-text">配置与日志</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取环境配置"><span class="toc-text">获取环境配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化Logger"><span class="toc-text">初始化Logger</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#初始化资源"><span class="toc-text">初始化资源</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ELO算法模块"><span class="toc-text">ELO算法模块</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#ELO算法介绍"><span class="toc-text">ELO算法介绍</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#实现ELO算法"><span class="toc-text">实现ELO算法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#构建服务"><span class="toc-text">构建服务</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Entity层"><span class="toc-text">Entity层</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#DAO层"><span class="toc-text">DAO层</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Service层"><span class="toc-text">Service层</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Controller层"><span class="toc-text">Controller层</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CI-amp-CD"><span class="toc-text">CI&amp;CD</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Pre-Commit"><span class="toc-text">Pre-Commit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Github-Actions"><span class="toc-text">Github Actions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Docker镜像"><span class="toc-text">Docker镜像</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后记"><span class="toc-text">后记</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>前一段时间我萌生出了一个想要复刻 Mark Zuckerberg 在 2003年实现的 Facemash 的想法；</p>
+<p>并且我学习 Rust 也已经有一段时间了，所以打算使用 Rust 来构建这个项目！</p>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/orgs/FacemashHub/repositories" target="_blank" rel="noopener">https://github.com/orgs/FacemashHub/repositories</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="我决定用-Rust-构建我的下一个开源项目！"><a href="#我决定用-Rust-构建我的下一个开源项目！" class="headerlink" title="我决定用 Rust 构建我的下一个开源项目！"></a><strong>我决定用 Rust 构建我的下一个开源项目！</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p>本后端项目用到的技术栈主要包括：</p>
+<ul>
+<li>Actix Web框架；</li>
+<li>Log 日志库；</li>
+<li>Serde 序列化；</li>
+<li>SnowFlake Id生成；</li>
+<li>dotenv 获取环境配置；</li>
+<li>MongoDB 存取；</li>
+<li>lazy_static 全局静态初始化；</li>
+<li>ELO 算法；</li>
+<li>使用 Pre-Commit 在 Git Commit 前进行校验；</li>
+<li>使用 Github Action 进行 CI；</li>
+<li>使用中间镜像对代码进行编译并创建部署镜像；</li>
+<li>……</li>
+</ul>
+<p>阅读了本文，你应该也能够学会上面这些库的用法；</p>
+<p>那么废话不多说，直接开始！</p>
+<br>
+
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a><strong>代码实现</strong></h2><h3 id="代码目录结构"><a href="#代码目录结构" class="headerlink" title="代码目录结构"></a><strong>代码目录结构</strong></h3><p>整个项目的目录结构如下（已去掉无关文件）：</p>
+<pre><code class="bash">$ tree         
+.
+├── .env
+├── .github
+│   └── workflows
+│       └── ci.yaml
+├── .pre-commit-config.yaml
+├── Cargo.toml
+├── Dockerfile
+├── Makefile
+├── build-image.sh
+└── src
+    ├── algorithm
+    │   ├── elo_rating.rs
+    │   ├── k_factor.rs
+    │   └── mod.rs
+    ├── config
+    │   └── mod.rs
+    ├── controller
+    │   ├── face_info_controller.rs
+    │   ├── file_controller.rs
+    │   └── mod.rs
+    ├── dao
+    │   ├── face_info_dao.rs
+    │   ├── file_resource_dao.rs
+    │   ├── mod.rs
+    │   └── rating_log_dao.rs
+    ├── entity
+    │   ├── face_info.rs
+    │   ├── file_resource.rs
+    │   ├── mod.rs
+    │   └── rating_log.rs
+    ├── logger
+    │   └── mod.rs
+    ├── main.rs
+    ├── resource
+    │   ├── id_generator.rs
+    │   ├── mod.rs
+    │   └── mongo.rs
+    ├── service
+    │   ├── face_info_service.rs
+    │   ├── file_resource_service.rs
+    │   └── mod.rs
+    └── utils
+        ├── md5.rs
+        └── mod.rs</code></pre>
+<p>下面来说明：</p>
+<ul>
+<li><code>.github</code> 目录：Github Actions 相关配置；</li>
+<li><code>src</code> 目录：项目源代码目录；</li>
+<li><code>.pre-commit-config.yaml</code>：Pre-Commit 配置；</li>
+<li><code>.env</code>：项目环境变量配置；</li>
+<li><code>Cargo.toml</code>：Cargo 项目配置；</li>
+<li><code>Makefile</code>：项目编译脚本；</li>
+<li><code>Dockerfile</code>：项目Docker镜像配置；</li>
+<li><code>build-image.sh</code>：打包镜像脚本；</li>
+</ul>
+<p>对于 src 目录下的各个子目录，见名知意，基本上很好理解了！</p>
+<br>
+
+<h3 id="服务入口"><a href="#服务入口" class="headerlink" title="服务入口"></a><strong>服务入口</strong></h3><p>Cargo 项目约定程序的入口都是：<code>src/main.rs</code> 下；</p>
+<p>我们从 main 函数来看做了些什么：</p>
+<p>src/main.rs</p>
+<pre><code class="rust">#[macro_use]
+extern crate log;
+
+use actix_web::{middleware, App, HttpServer};
+use dotenv::dotenv;
+use mongodb::bson::doc;
+
+use crate::controller::{face_info_controller, file_controller};
+use crate::resource::mongo;
+
+mod algorithm;
+mod config;
+mod controller;
+mod dao;
+mod entity;
+mod logger;
+mod resource;
+mod service;
+mod utils;
+
+#[actix_web::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    dotenv().ok();
+    logger::init();
+
+    resource::check_resources().await;
+    service::init_file_service().await;
+
+    HttpServer::new(|| {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .service(face_info_controller::get_face_info_randomly)
+            .service(face_info_controller::get_face_info_by_id)
+            .service(face_info_controller::add_face_info)
+            .service(face_info_controller::vote_face_info)
+            .service(file_controller::create_file_resource_by_stream)
+            .service(file_controller::create_file_resource)
+            .service(file_controller::download_local_file)
+    })
+    .bind((&quot;0.0.0.0&quot;, 8080))?
+    .run()
+    .await
+}</code></pre>
+<p>在入口文件中，首先启用了一些库的宏（Macro），并声明了 Actix-Web 框架的 main 函数；</p>
+<p>在 main 函数中，做了一般后端服务都会做的事情：</p>
+<ul>
+<li>获取环境配置；</li>
+<li>初始化项目日志；</li>
+<li>初始化资源：数据库、Id生成器等；</li>
+<li>注册并启动服务；</li>
+</ul>
+<p>下面我们分别来看</p>
+<br>
+
+<h3 id="配置与日志"><a href="#配置与日志" class="headerlink" title="配置与日志"></a><strong>配置与日志</strong></h3><h4 id="获取环境配置"><a href="#获取环境配置" class="headerlink" title="获取环境配置"></a><strong>获取环境配置</strong></h4><p>我们可以通过 <code>dotenv</code> 库解析位于项目下、以及系统环境变量中的配置；</p>
+<p>只需要下面一句话即可：</p>
+<pre><code class="rust">dotenv().ok();</code></pre>
+<p>配置文件如下：</p>
+<p>.env</p>
+<pre><code>MONGODB_URI=mongodb://admin:123456@localhost:27017/?retryWrites=true&amp;w=majority
+LOG_LEVEL=INFO
+SNOWFLAKE_MACHINE_ID=1
+SNOWFLAKE_NODE_ID=1</code></pre><p>主要是配置了 MongoDB 的连接地址、日志级别、SnowFlake 的配置；</p>
+<p>上面的语句会将这些配置解析；</p>
+<br>
+
+<h4 id="初始化Logger"><a href="#初始化Logger" class="headerlink" title="初始化Logger"></a><strong>初始化Logger</strong></h4><p>main 函数中的这条语句初始化了 Logger：</p>
+<pre><code class="rust">logger::init();</code></pre>
+<p>这个是 logger 模块封装的一个函数：</p>
+<p>logger/mod.rs</p>
+<pre><code class="rust">use std::env;
+
+use crate::config::LOG_LEVEL;
+use log::{Level, LevelFilter, Metadata, Record};
+
+struct Logger;
+
+pub fn init() {
+    static LOGGER: Logger = Logger;
+    log::set_logger(&amp;LOGGER).unwrap();
+
+    let log_level: String = env::var(LOG_LEVEL).unwrap_or_else(|_| String::from(&quot;INFO&quot;));
+    log::set_max_level(match log_level.as_str() {
+        &quot;ERROR&quot; =&gt; LevelFilter::Error,
+        &quot;WARN&quot; =&gt; LevelFilter::Warn,
+        &quot;INFO&quot; =&gt; LevelFilter::Info,
+        &quot;DEBUG&quot; =&gt; LevelFilter::Debug,
+        &quot;TRACE&quot; =&gt; LevelFilter::Trace,
+        _ =&gt; LevelFilter::Info,
+    });
+}
+
+impl log::Log for Logger {
+    fn enabled(&amp;self, _metadata: &amp;Metadata) -&gt; bool {
+        true
+    }
+
+    fn log(&amp;self, record: &amp;Record) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
+
+        let color = match record.level() {
+            Level::Error =&gt; 31, // Red
+            Level::Warn =&gt; 93,  // BrightYellow
+            Level::Info =&gt; 34,  // Blue
+            Level::Debug =&gt; 32, // Green
+            Level::Trace =&gt; 90, // BrightBlack
+        };
+
+        println!(
+            &quot;\u{1B}[{}m[{:&gt;5}]:{} - {}\u{1B}[0m&quot;,
+            color,
+            record.level(),
+            record.target(),
+            record.args(),
+        );
+    }
+
+    fn flush(&amp;self) {}
+}</code></pre>
+<p>上面的代码首先定义了一个全局日志类型 Logger；</p>
+<p>并在 init 函数中初始化了全局静态变量：LOGGER，并使用 <code>log::set_logger</code> 进行了设置；</p>
+<p>同时，我们我们从环境变量中获取 <code>LOG_LEVEL</code> 日志级别配置（如果未设置，则默认为 <code>INFO</code> 级别），随后进行了设置；</p>
+<p><strong>我们为我们的 Logger 实现了<code>log::Log</code> Trait，这也是为什么我们能将该类型的变量设置为Logger的原因！</strong></p>
+<p>在 <code>log::Log</code> Trait 的实现中，我们简单定义了日志的输出格式以及输出颜色；</p>
+<blockquote>
+<p>  <strong>可以看到有了很多第三方库的支持，rust 还是非常好用的！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="初始化资源"><a href="#初始化资源" class="headerlink" title="初始化资源"></a><strong>初始化资源</strong></h4><p>接下来我们调用：</p>
+<pre><code class="rust">resource::check_resources().await;
+service::init_file_service().await;</code></pre>
+<p>来等待资源初始化完成；</p>
+<p>下面初始化文件服务的逻辑非常简单，只是创建了一个临时文件：</p>
+<pre><code class="rust">pub async fn init_file_service() {
+    init_local_directory().await;
+}
+
+pub async fn init_local_directory() {
+    fs::create_dir_all(SAVE_DIR).unwrap()
+}</code></pre>
+<p>我们重点来看 <code>check_resources()</code> 函数，在其中初始化并校验了 MongoDB 连接以及 SnowFlake Id生成器；</p>
+<p>资源相关的初始化都是在 resource 模块中完成的；</p>
+<p>resource 模块的入口 mod.rs 中定义了资源的校验函数：</p>
+<p>resource/mod.rs</p>
+<pre><code class="rust">use crate::doc;
+
+pub mod id_generator;
+pub mod mongo;
+
+pub async fn check_resources() {
+    check_mongo().await;
+    check_id_generator().await;
+}
+
+async fn check_mongo() {
+    mongo::MONGO_CLIENT
+        .get()
+        .await
+        .database(&quot;admin&quot;)
+        .run_command(doc! {&quot;ping&quot;: 1}, None)
+        .await
+        .unwrap();
+    info!(&quot;Mongo connected successfully.&quot;);
+}
+
+async fn check_id_generator() {
+    info!(&quot;Id generate success: {}.&quot;, id_generator::get_id().await)
+}
+</code></pre>
+<p>MongoDB 通过 Ping 校验了数据库连接，而 SnowFlake 通过创建了一个 Id 校验了正确性；</p>
+<p>那么这些资源是在哪里初始化的呢？</p>
+<p>主要是通过 <code>lazy_static</code> 在首次使用的时候初始化的！</p>
+<blockquote>
+<p>  <strong><code>lazy_static</code> 的一个特性是：在首次使用这个变量的时候，才会进行静态初始化；</strong></p>
+</blockquote>
+<p>下面分别来看：</p>
+<p>src/resource/mongo.rs</p>
+<pre><code class="rust">use std::env;
+
+use async_once::AsyncOnce;
+use lazy_static::lazy_static;
+use mongodb::Client;
+
+use crate::config::MONGODB_URI;
+
+lazy_static! {
+    pub static ref MONGO_CLIENT: AsyncOnce&lt;Client&gt; = AsyncOnce::new(async {
+        let uri = env::var(MONGODB_URI).expect(&quot;You must set the MONGODB_URI environment var!&quot;);
+        Client::with_uri_str(&amp;uri).await.unwrap()
+    });
+}</code></pre>
+<p>上面的代码在 <code>lazy_static!</code> 宏中，异步初始化了 MongoDB 的连接：</p>
+<p>首先，从环境变量中获取配置 <code>MONGODB_URI</code>，随后进行了初始化，并保存至变量：<code>MONGO_CLIENT</code> 中；</p>
+<p>src/resource/id_generator.rs</p>
+<pre><code class="rust">use std::env;
+use std::sync::Mutex;
+
+use lazy_static::lazy_static;
+use snowflake::SnowflakeIdBucket;
+
+use crate::config;
+
+lazy_static! {
+    static ref ID_GENERATOR_BUCKET: Mutex&lt;SnowflakeIdBucket&gt; = Mutex::new({
+        let machine_id: i32 = env::var(config::SNOWFLAKE_MACHINE_ID)
+            .expect(&quot;You must set the SNOWFLAKE_MACHINE_ID environment var!&quot;)
+            .parse::&lt;i32&gt;()
+            .unwrap();
+        let node_id: i32 = env::var(config::SNOWFLAKE_NODE_ID)
+            .expect(&quot;You must set the SNOWFLAKE_NODE_ID environment var!&quot;)
+            .parse::&lt;i32&gt;()
+            .unwrap();
+
+        SnowflakeIdBucket::new(machine_id, node_id)
+    });
+}
+
+pub async fn get_id() -&gt; String {
+    ID_GENERATOR_BUCKET.lock().unwrap().get_id().to_string()
+}
+
+#[actix_rt::test]
+async fn generate_id_test() {
+    use dotenv::dotenv;
+
+    dotenv().ok();
+    println!(&quot;{}&quot;, get_id().await)
+}</code></pre>
+<p>与上面的初始化类似，这里从环境变量中获取：<code>SNOWFLAKE_MACHINE_ID</code> 和 <code>SNOWFLAKE_NODE_ID</code>，随后使用 <code>SnowflakeIdBucket::new</code> 进行了初始化；</p>
+<p><strong>同时，和 MongoDB 不同的是，这里需要使用 <code>Mutex</code> 进行封装，因为极有可能多个出现多个线程并发获取Id；</strong></p>
+<p><strong>而 MongoDB 的 Client 已经是：<code>Arc&lt;ClientInner&gt;</code> 类型了！</strong></p>
+<p><strong>我们也封装了 get_id 函数，直接供外部调用，而无需暴露 <code>ID_GENERATOR_BUCKET</code> 变量！</strong></p>
+<p>最下面是一个单测，用于测试我们的 Id 生成器；</p>
+<p>至此，我们的资源初始化完成；</p>
+<br>
+
+<h3 id="ELO算法模块"><a href="#ELO算法模块" class="headerlink" title="ELO算法模块"></a><strong>ELO算法模块</strong></h3><h4 id="ELO算法介绍"><a href="#ELO算法介绍" class="headerlink" title="ELO算法介绍"></a><strong>ELO算法介绍</strong></h4><p>ELO 算法是 Facemash 的核心，他主要用来计算两个玩家在对局结束之后各自的得分；</p>
+<p>这个算法被用在了国际象棋分数计算，以及一些游戏 Rank 分数的计算中；</p>
+<blockquote>
+<p>  Wikipedia：</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Elo_rating_system" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Elo_rating_system</a></li>
+</ul>
+</blockquote>
+<p>这个算法的公式如下所示：</p>
+<p><img src="https://raw.gitmirror.com/JasonkayZK/blog_static/master/images/elo_1.jpg" alt="elo_1.jpg"></p>
+<ul>
+<li>Ea 就是玩家 <code>a</code>的期望胜率；</li>
+<li>Rb、Ra是玩家<code>b</code>与玩家<code>a</code>的<code>Rank</code>分数；</li>
+<li>当Ra、Rb都相同时，他们的<code>期望胜率</code>都为<code>0.5</code>；</li>
+</ul>
+<p>上述排名公式并非扎克伯格等人原创，而是出自匈牙利裔美国物理学家Arpad Elo，因此算法叫作：<a href="http://en.wikipedia.org/wiki/Elo_rating" target="_blank" rel="noopener">Elo Rating</a></p>
+<p>Arpad Elo认为：</p>
+<ul>
+<li>参赛选手在每次比赛中的表现成正态分布；后来普遍认为<a href="http://en.wikipedia.org/wiki/Logistic_function" target="_blank" rel="noopener">Logistic</a>（<a href="http://wiki.mbalib.com/wiki/逻辑斯蒂方程" target="_blank" rel="noopener">逻辑斯蒂</a>）分布更为合理；</li>
+<li>在一局比赛中，赢的一方被认为表现较好，输的一方被认为表现较差；若平局，则双方表现大致相当；</li>
+<li>如果选手的表现比期望要好，那么此选手的排名应该上升。相反，若表现不如期望，则排名会下降；</li>
+</ul>
+<p>同时，算法还给出了计算新的<code>Rank</code>分数的算法，公式如下：</p>
+<pre><code>Rn = Ro + K(W-E)</code></pre><p>其中：</p>
+<ul>
+<li>Rn 代表新的<code>Rank</code>值，Ro 表示旧的<code>Rank</code>值；</li>
+<li>参数<code>K</code> 代表一个变化系数，可以设为常量，如<code>10</code>（在大师级象棋赛中通常取16），也可以根据玩家场次、玩家当前 Rank 数动态变化；</li>
+<li><code>W</code>是<code>胜负值</code>，胜者为<code>1</code>、败者为<code>0</code>；<code>E</code> 就是我们上面计算的<code>期望胜率</code>；</li>
+</ul>
+<p>算法还是非常简单的，让我们在 Rust 中实现这个算法；</p>
+<br>
+
+<h4 id="实现ELO算法"><a href="#实现ELO算法" class="headerlink" title="实现ELO算法"></a><strong>实现ELO算法</strong></h4><p>在本项目中，ELO 算法是在 algorithm 模块中实现的：</p>
+<p>src/algorithm/mod.rs</p>
+<pre><code class="rust">pub mod elo_rating;
+mod k_factor;</code></pre>
+<p>在 elo_rating 中定义并暴露了几个函数：</p>
+<p>src/algorithm/elo_rating.rs</p>
+<pre><code class="rust">//! # ELO rating
+//!
+//! This module contains all of the standard methods that would be used to calculate elo.
+//! The module provides the constants WIN, LOSE and DRAW.
+#![allow(dead_code)]
+
+use crate::algorithm::k_factor::{fide_k, icc_k, uscf_k};
+
+/// The EloScore type
+pub type EloScore = i64;
+
+pub type EloCompeteResult = f64;
+
+/// The score for a won game
+pub const WIN: EloCompeteResult = 1_f64;
+/// The score for a drawn game
+pub const DRAW: EloCompeteResult = 0.5;
+/// The score for a lost game
+pub const LOSS: EloCompeteResult = 0_f64;
+
+fn rating_change(k: u64, score: EloCompeteResult, exp_score: EloCompeteResult) -&gt; EloScore {
+    (k as f64 * (score - exp_score)) as i64
+}
+
+/// Calculates the expected outcome of a match between two players.
+/// This will always be a number between 0 and 1.
+/// The closer to 1 the more favored the match is for player a.
+pub fn expected_score(r_a: EloScore, r_b: EloScore) -&gt; f64 {
+    1_f64 / (1_f64 + 10_f64.powf(((r_b - r_a) as f64) / 400_f64))
+}
+
+/// Convenience function for a game played with FIDE k_factor.
+pub fn compete_fide(
+    r_a: EloScore,
+    game_count_a: u64,
+    r_b: EloScore,
+    game_count_b: u64,
+    s_a: EloCompeteResult,
+) -&gt; (EloScore, EloScore) {
+    let k_a = fide_k(r_a, game_count_a);
+    let k_b = fide_k(r_b, game_count_b);
+
+    compete(r_a, r_b, s_a, k_a, k_b)
+}
+
+/// Convenience function for a game played with USCF k_factor.
+pub fn compete_uscf(r_a: EloScore, r_b: EloScore, s_a: EloCompeteResult) -&gt; (EloScore, EloScore) {
+    let k_a = uscf_k(r_a);
+    let k_b = uscf_k(r_b);
+
+    compete(r_a, r_b, s_a, k_a, k_b)
+}
+
+/// Convenience function for a game played with ICC k_factor.
+pub fn compete_icc(r_a: EloScore, r_b: EloScore, s_a: EloCompeteResult) -&gt; (EloScore, EloScore) {
+    let k_a = icc_k();
+    let k_b = icc_k();
+
+    compete(r_a, r_b, s_a, k_a, k_b)
+}
+
+/// Calculates the updated elo ratings of both players after a match.
+/// The k_a and k_b are the K factors used to determine the updated rating,
+/// If you just want a default behavior set these to 32, or use game_icc() instead.
+pub fn compete(
+    r_a: EloScore,
+    r_b: EloScore,
+    s_a: EloCompeteResult,
+    k_a: u64,
+    k_b: u64,
+) -&gt; (EloScore, EloScore) {
+    let s_b = 1_f64 - s_a;
+
+    let e_a = expected_score(r_a, r_b);
+    let e_b = 1_f64 - e_a;
+
+    let new_a = r_a + rating_change(k_a, s_a, e_a);
+    let new_b = r_b + rating_change(k_b, s_b, e_b);
+
+    (new_a, new_b)
+}
+
+/// Calculates the updated elo of a player, after a series of games.
+/// This might be used to calculate the rating of a player after a tournament.
+pub fn serial_compete(
+    r_a: EloScore,
+    games: &amp;[(EloScore, EloCompeteResult)],
+    k_factor: u64,
+) -&gt; EloScore {
+    let mut score = 0_f64;
+    let mut exp_score = 0_f64;
+
+    for game in games {
+        score += game.1;
+        exp_score = expected_score(r_a, game.0);
+    }
+
+    r_a + rating_change(k_factor, score, exp_score)
+}
+
+#[cfg(test)]
+mod tests {
+   ...
+}</code></pre>
+<p>其中定义了两个类型：</p>
+<ul>
+<li>EloScore：ELO 比赛 Rank 分数；</li>
+<li>EloCompeteResult：对应上文公式中的参数 <code>K</code>，当平局时取 <code>0.5</code>；</li>
+</ul>
+<p>以及几个常用的函数：</p>
+<ul>
+<li>expected_score：计算玩家A对玩家B的胜率期望；</li>
+<li>compete_fide、compete_uscf、compete_icc：分别计算 K 取值在 FIDE、USCF、ICC 模式下的分数；</li>
+<li>compete：自定义玩家A、B的 K 取值的比赛；</li>
+<li>serial_compete：多场自定义 K 值的比赛；</li>
+</ul>
+<p>对于 FIDE、USCF、ICC 模式下 K 的取值计算，在 k_factor.rs 中：</p>
+<p>src/algorithm/k_factor.rs</p>
+<pre><code class="rust">//! Convenience functions for various popular rating systems using elo.
+#![allow(dead_code)]
+
+use crate::algorithm::elo_rating::EloScore;
+
+/// FIDE calculates their k_factor depending on how many games you have played,
+/// and what you elo rating is.
+///
+/// They also sometimes use age. But this is left out.
+pub fn fide_k(rating: EloScore, game_counts: u64) -&gt; u64 {
+    if game_counts &lt; 30 {
+        40
+    } else if rating &lt; 2400 {
+        20
+    } else {
+        10
+    }
+}
+
+/// The USCF uses three different k_factors depending on you rating.
+pub fn uscf_k(rating: EloScore) -&gt; u64 {
+    if rating &lt; 2100 {
+        32
+    } else if rating &lt; 2400 {
+        24
+    } else {
+        16
+    }
+}
+
+/// The ICC uses a global k_factor.
+pub fn icc_k() -&gt; u64 {
+    32
+}</code></pre>
+<p>可以看出：</p>
+<ul>
+<li>FIDE 是和玩家比赛场数相关的取值；</li>
+<li>USCF 是和玩家当前分数相关的取值；</li>
+<li>ICC 为固定取值；</li>
+</ul>
+<p>下面的一些单测帮助你了解了上面的函数是如何使用的：</p>
+<p>src/algorithm/elo_rating.rs</p>
+<pre><code class="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_expected_score() {
+        let john = 1700;
+        let paul = 1800;
+
+        // calculate johns chance to win against paul
+        let chance = expected_score(john, paul);
+        assert!(chance &gt;= 0.0 &amp;&amp; chance &lt;= 1.0);
+        println!(&quot;johns chance to win against paul: {}&quot;, chance)
+    }
+
+    #[test]
+    fn test_compete() {
+        let john = 1700;
+        let paul = 1800;
+
+        println!(&quot;before compete: john: {}, paul: {}&quot;, john, paul);
+        let (john, paul) = compete(john, paul, LOSS, 32, 32);
+        println!(&quot;after compete(paul win): john: {}, paul: {}&quot;, john, paul);
+    }
+
+    #[test]
+    fn test_serial_compete() {
+        let john = 1700;
+        println!(&quot;before serial competes: john: {}&quot;, john);
+
+        // An array containing the results of johns games in the tournament
+        let games = [(1600, WIN), (1800, DRAW), (2000, LOSS)];
+
+        let john = serial_compete(john, &amp;games, 32);
+        println!(&quot;after serial competes: john: {}&quot;, john);
+    }
+
+    #[test]
+    fn test_compete_uscf() {
+        let john = 1400;
+        let paul = 1800;
+
+        println!(&quot;before compete uscf: john: {}, paul: {}&quot;, john, paul);
+        let (john, paul) = compete_uscf(john, paul, WIN);
+        println!(
+            &quot;after compete uscf(paul win): john: {}, paul: {}&quot;,
+            john, paul
+        );
+    }
+}</code></pre>
+<br>
+
+<h3 id="构建服务"><a href="#构建服务" class="headerlink" title="构建服务"></a><strong>构建服务</strong></h3><p>熟悉 Java 的小伙伴都知道，通常在 Spring Boot 项目中，基本上都会分成 entity(POJO)、dao(Mapper)、service、controller 层；</p>
+<p>在这里，我也分了这么几层（实际上没什么必要）；</p>
+<h4 id="Entity层"><a href="#Entity层" class="headerlink" title="Entity层"></a><strong>Entity层</strong></h4><p>Entity 层主要存放和数据库表相关的基本结构体定义；</p>
+<p>在这个项目，我主要是三个结构体：</p>
+<ul>
+<li>FaceInfo：存放参与评比的选手的信息；</li>
+<li>RatingLog：存放评比选择的日志；</li>
+<li>FileResource：存放选手的图像等信息；</li>
+</ul>
+<p>下面是定义：</p>
+<p>src/entity/face_info.rs</p>
+<pre><code class="rust">use serde::{Deserialize, Serialize};
+
+pub const DEFAULT_SCORE: f64 = 1400.0;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FaceInfo {
+    pub id: String,
+    pub star_name: String,
+    pub file_id: String,
+    pub upvote_count: u64,
+    pub downvote_count: u64,
+    pub score: f64,
+    pub creator: String,
+    pub updater: String,
+    pub created_on: i64,
+    pub updated_on: i64,
+    pub deleted_on: i64,
+    pub is_deleted: i64,
+}
+
+impl Default for FaceInfo {
+    fn default() -&gt; Self {
+        FaceInfo {
+            id: &quot;&quot;.to_string(),
+            file_id: &quot;&quot;.to_string(),
+            star_name: &quot;&quot;.to_string(),
+            upvote_count: 0,
+            downvote_count: 0,
+            score: DEFAULT_SCORE,
+            creator: &quot;&quot;.to_string(),
+            updater: &quot;&quot;.to_string(),
+            created_on: 0,
+            updated_on: 0,
+            deleted_on: 0,
+            is_deleted: 0,
+        }
+    }
+}
+
+impl FaceInfo {
+    pub fn db_name() -&gt; &amp;&#39;static str {
+        &quot;facemash&quot;
+    }
+
+    pub fn coll_name() -&gt; &amp;&#39;static str {
+        &quot;face_info&quot;
+    }
+}</code></pre>
+<p>src/entity/file_resource.rs</p>
+<pre><code class="rust">use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum UriType {
+    Local,
+    Url,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FileResource {
+    pub id: String,
+    pub file_name: String,
+    pub file_uri: String,
+    pub uri_type: UriType,
+    pub md5: String,
+    pub thumb_uri: String,
+    pub thumb_type: UriType,
+    pub creator: String,
+    pub updater: String,
+    pub created_on: i64,
+    pub updated_on: i64,
+    pub deleted_on: i64,
+    pub is_deleted: i64,
+}
+
+impl Default for FileResource {
+    fn default() -&gt; Self {
+        FileResource {
+            id: &quot;&quot;.to_string(),
+            file_name: &quot;&quot;.to_string(),
+            file_uri: &quot;&quot;.to_string(),
+            uri_type: UriType::Local,
+            md5: &quot;&quot;.to_string(),
+            thumb_uri: &quot;&quot;.to_string(),
+            thumb_type: UriType::Local,
+            creator: &quot;&quot;.to_string(),
+            updater: &quot;&quot;.to_string(),
+            created_on: 0,
+            updated_on: 0,
+            deleted_on: 0,
+            is_deleted: 0,
+        }
+    }
+}
+
+impl FileResource {
+    pub fn db_name() -&gt; &amp;&#39;static str {
+        &quot;facemash&quot;
+    }
+
+    pub fn coll_name() -&gt; &amp;&#39;static str {
+        &quot;file_resource&quot;
+    }
+}</code></pre>
+<p>src/entity/rating_log.rs</p>
+<pre><code class="rust">use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct RatingLog {
+    pub id: String,
+    pub win_face_id: String,
+    pub loss_face_id: String,
+    pub creator: String,
+    pub updater: String,
+    pub created_on: i64,
+    pub updated_on: i64,
+    pub deleted_on: i64,
+    pub is_deleted: i64,
+}
+
+impl Default for RatingLog {
+    fn default() -&gt; Self {
+        RatingLog {
+            id: &quot;&quot;.to_string(),
+            win_face_id: &quot;&quot;.to_string(),
+            loss_face_id: &quot;&quot;.to_string(),
+            creator: &quot;&quot;.to_string(),
+            updater: &quot;&quot;.to_string(),
+            created_on: 0,
+            updated_on: 0,
+            deleted_on: 0,
+            is_deleted: 0,
+        }
+    }
+}
+
+impl RatingLog {
+    pub fn db_name() -&gt; &amp;&#39;static str {
+        &quot;facemash&quot;
+    }
+
+    pub fn coll_name() -&gt; &amp;&#39;static str {
+        &quot;rating_log&quot;
+    }
+}</code></pre>
+<p>上面的代码都非常相似；</p>
+<p>在 struct 上的过程宏可以为对应的结构体创建相应的 Trait 实现：</p>
+<ul>
+<li><strong><code>#[derive(Debug, Clone, Serialize, Deserialize)]</code>：Debug 打印、Clone、序列化、反序列化；</strong></li>
+<li><strong><code>#[serde(default)]</code>：由 serde 库提供的，在序列化、反序列化基础之上，提供 JSON 格式的序列化！</strong></li>
+</ul>
+<p>仅仅加了上面两个宏，我们就可以完成类型的 JSON 序列化了！</p>
+<p>同时，为我们的类型实现了 Default Trait；</p>
+<p><strong>这是因为在 Rust 中，创建一个对象需要为他的所有字段都赋值；其中一个方法是创建不同的构造函数来满足；</strong></p>
+<p><strong>但是这样比较麻烦，我们可以实现 Default Trait，然后在创建对象的时候，指定某些熟悉，然后其他的熟悉通过调用 default 函数来完成；</strong></p>
+<p>例如：</p>
+<pre><code class="rust">RatingLog {
+  id: resource::id_generator::get_id().await,
+  win_face_id: win_face_info.id.clone(),
+  loss_face_id: lose_face_info.id.clone(),
+  creator: req.voter.clone(),
+  created_on: now,
+  ..RatingLog::default()
+}</code></pre>
+<p>我们为某些字段赋值，而其他字段使用默认值；</p>
+<p>此外，我们为每个类型都实现了：db_name 和 coll_name 方法，用于返回对应 MongoDB 中的数据库的名称以及集合名称；</p>
+<br>
+
+<h4 id="DAO层"><a href="#DAO层" class="headerlink" title="DAO层"></a><strong>DAO层</strong></h4><p>DAO 层主要是为上层屏蔽数据库操作；</p>
+<p><strong>由于我们使用了 MongoDB，其与 serde 序列化、反序列化的良好结合，使得我们甚至无需使用任何 ORM 框架，而达到比 ORM 更方便的效果！</strong></p>
+<p>下面是各个类型数据库操作的实现：</p>
+<p>src/dao/file_resource_dao.rs</p>
+<pre><code class="rust">use mongodb::results::InsertManyResult;
+use mongodb::Collection;
+
+use crate::entity::rating_log::RatingLog;
+use crate::mongo;
+
+/// Adds new rating_logs to the &quot;rating_log&quot; collection in the database.
+pub async fn add_rating_logs(
+    rating_log: Vec&lt;RatingLog&gt;,
+) -&gt; mongodb::error::Result&lt;InsertManyResult&gt; {
+    let collection: Collection&lt;RatingLog&gt; = mongo::MONGO_CLIENT
+        .get()
+        .await
+        .database(RatingLog::db_name())
+        .collection(RatingLog::coll_name());
+    collection.insert_many(rating_log, None).await
+}</code></pre>
+<p>src/dao/rating_log_dao.rs</p>
+<pre><code class="rust">use mongodb::results::InsertManyResult;
+use mongodb::Collection;
+
+use crate::entity::rating_log::RatingLog;
+use crate::mongo;
+
+/// Adds new rating_logs to the &quot;rating_log&quot; collection in the database.
+pub async fn add_rating_logs(
+    rating_log: Vec&lt;RatingLog&gt;,
+) -&gt; mongodb::error::Result&lt;InsertManyResult&gt; {
+    let collection: Collection&lt;RatingLog&gt; = mongo::MONGO_CLIENT
+        .get()
+        .await
+        .database(RatingLog::db_name())
+        .collection(RatingLog::coll_name());
+    collection.insert_many(rating_log, None).await
+}</code></pre>
+<p>src/dao/face_info_dao.rs</p>
+<pre><code class="rust">use futures_util::StreamExt;
+use mongodb::bson::{doc, Document};
+use mongodb::results::{InsertOneResult, UpdateResult};
+use mongodb::{bson, Collection};
+
+use crate::entity::face_info::FaceInfo;
+use crate::mongo;
+use crate::resource::mongo::MONGO_CLIENT;
+
+/// Adds a new face_info to the &quot;face_info&quot; collection in the database.
+pub async fn add_one_face_info(face_info: &amp;FaceInfo) -&gt; mongodb::error::Result&lt;InsertOneResult&gt; {
+    let collection: Collection&lt;FaceInfo&gt; = mongo::MONGO_CLIENT
+        .get()
+        .await
+        .database(FaceInfo::db_name())
+        .collection(FaceInfo::coll_name());
+    collection.insert_one(face_info, None).await
+}
+
+/// Gets the face_info by doc filter.
+pub async fn get_one_face_info_by_doc_filter(
+    doc_filter: Document,
+) -&gt; mongodb::error::Result&lt;Option&lt;FaceInfo&gt;&gt; {
+    let collection = MONGO_CLIENT
+        .get()
+        .await
+        .database(FaceInfo::db_name())
+        .collection(FaceInfo::coll_name());
+    collection.find_one(doc_filter, None).await
+}
+
+/// Get multiple face_info by doc filter.
+pub async fn get_face_infos_by_doc_filter(
+    doc_filter: Document,
+) -&gt; Result&lt;Vec&lt;FaceInfo&gt;, mongodb::error::Error&gt; {
+    let collection = MONGO_CLIENT
+        .get()
+        .await
+        .database(FaceInfo::db_name())
+        .collection(FaceInfo::coll_name());
+
+    let mut ret_face_infos: Vec&lt;FaceInfo&gt; = Vec::new();
+    let mut results = collection.find(doc_filter, None).await?;
+
+    while let Some(result) = results.next().await {
+        // Use serde to deserialize into the MovieSummary struct:
+        let face_info: FaceInfo = bson::from_document(result?)?;
+        ret_face_infos.push(face_info);
+    }
+    Ok(ret_face_infos)
+}
+
+/// Update the face_info by id.
+pub async fn update_face_info_by_doc_filter(
+    doc_filter: Document,
+    update_info: Document,
+) -&gt; mongodb::error::Result&lt;UpdateResult&gt; {
+    let collection: Collection&lt;FaceInfo&gt; = MONGO_CLIENT
+        .get()
+        .await
+        .database(FaceInfo::db_name())
+        .collection(FaceInfo::coll_name());
+
+    collection.update_one(doc_filter, update_info, None).await
+}
+
+/// Get face_info randomly
+pub async fn get_face_info_sample(size: i64) -&gt; Result&lt;Vec&lt;FaceInfo&gt;, mongodb::error::Error&gt; {
+    let collection: Collection&lt;FaceInfo&gt; = MONGO_CLIENT
+        .get()
+        .await
+        .database(FaceInfo::db_name())
+        .collection(FaceInfo::coll_name());
+
+    let pipeline = vec![doc! {&quot;$sample&quot;: {&quot;size&quot;: size}}];
+
+    let mut ret_face_infos: Vec&lt;FaceInfo&gt; = Vec::new();
+    let mut results = collection.aggregate(pipeline, None).await?;
+    while let Some(result) = results.next().await {
+        // Use serde to deserialize into the FaceInfo struct:
+        let face_info: FaceInfo = bson::from_document(result?)?;
+        ret_face_infos.push(face_info);
+    }
+    Ok(ret_face_infos)
+}</code></pre>
+<p>可以看到，都是直接通过：<code>mongo::MONGO_CLIENT.get().await.database(XXX::db_name()).collection(XXX::coll_name());</code> 获取对应数据库连接；</p>
+<p>并且调用：insert_one、find_one、insert_many 等函数，直接完成了 CRUD！</p>
+<p>而对于查询条件，我们可以直接在外面使用 <code>doc!</code> 宏拼好对应的过滤条件，直接完成查询！</p>
+<br>
+
+<h4 id="Service层"><a href="#Service层" class="headerlink" title="Service层"></a><strong>Service层</strong></h4><p>Service 层主要是调用 DAO 层，完成业务逻辑；</p>
+<p>对于 FaceInfo 我们有：</p>
+<p>src/service/face_info_service.rs</p>
+<pre><code class="rust">use mongodb::bson::Document;
+use mongodb::results::{InsertOneResult, UpdateResult};
+
+use crate::dao::face_info_dao;
+use crate::doc;
+use crate::entity::face_info::FaceInfo;
+
+pub async fn get_face_info_randomly(size: i64) -&gt; Result&lt;Vec&lt;FaceInfo&gt;, mongodb::error::Error&gt; {
+    face_info_dao::get_face_info_sample(size).await
+}
+
+pub async fn get_one_face_info_by_doc_filter(
+    doc_filter: Document,
+) -&gt; mongodb::error::Result&lt;Option&lt;FaceInfo&gt;&gt; {
+    face_info_dao::get_one_face_info_by_doc_filter(doc_filter).await
+}
+
+pub async fn get_face_infos_by_doc_filter(
+    doc_filter: Document,
+) -&gt; Result&lt;Vec&lt;FaceInfo&gt;, mongodb::error::Error&gt; {
+    face_info_dao::get_face_infos_by_doc_filter(doc_filter).await
+}
+
+pub async fn add_face_info(face_info: &amp;FaceInfo) -&gt; mongodb::error::Result&lt;InsertOneResult&gt; {
+    face_info_dao::add_one_face_info(face_info).await
+}
+
+pub async fn update_face_info_rating(
+    face_info_id: &amp;str,
+    rating: f64,
+    upvote: bool,
+    voter: &amp;str,
+    now: i64,
+) -&gt; mongodb::error::Result&lt;UpdateResult&gt; {
+    let filter_doc = doc! {&quot;id&quot;: face_info_id};
+
+    let update_doc = if upvote {
+        doc! {
+            &quot;$set&quot;: {&quot;score&quot;: rating, &quot;updater&quot;: voter, &quot;updated_on&quot;: now},
+            &quot;$inc&quot;: {&quot;upvote_count&quot;: 1},
+        }
+    } else {
+        doc! {
+            &quot;$set&quot;: {&quot;score&quot;: rating, &quot;updater&quot;: voter, &quot;updated_on&quot;: now},
+            &quot;$inc&quot;: {&quot;downvote_count&quot;: 1},
+        }
+    };
+
+    face_info_dao::update_face_info_by_doc_filter(filter_doc, update_doc).await
+}</code></pre>
+<p>主要包括下面几个函数：</p>
+<ul>
+<li>get_face_info_randomly：获取随机的 size 个对手；</li>
+<li>get_one_face_info_by_doc_filter：根据过滤条件获取单个选手信息；</li>
+<li>get_face_infos_by_doc_filter：根据过滤条件获取多个选手信息；</li>
+<li>add_face_info：添加一名选手；</li>
+<li>update_face_info_rating：更新选手的得分；</li>
+</ul>
+<p>下面再来看文件资源：</p>
+<p>src/service/file_resource_service.rs</p>
+<pre><code class="rust">use std::fs;
+use std::fs::File;
+use std::io::Write;
+
+use actix_multipart::Multipart;
+use actix_web::{error, web, Error};
+use futures_util::TryStreamExt as _;
+use mongodb::bson::Document;
+use mongodb::results::InsertOneResult;
+
+use crate::dao::file_resource_dao;
+use crate::entity::file_resource::FileResource;
+
+const SAVE_DIR: &amp;str = &quot;./tmp&quot;;
+
+pub async fn init_local_directory() {
+    fs::create_dir_all(SAVE_DIR).unwrap()
+}
+
+pub async fn create_file_resource_with_stream(
+    mut payload: Multipart,
+    file_prefix_id: &amp;str,
+) -&gt; Result&lt;String, Error&gt; {
+    let mut filename: String = &quot;&quot;.to_string();
+
+    // iterate over multipart stream
+    while let Some(mut field) = payload.try_next().await? {
+        // A multipart/form-data stream has to contain `content_disposition`
+        let content_disposition = field.content_disposition();
+
+        filename = match content_disposition.get_filename() {
+            None =&gt; {
+                return Err(error::ErrorInternalServerError(
+                    &quot;Couldn&#39;t read the filename.&quot;,
+                ));
+            }
+            Some(f_name) =&gt; {
+                info!(&quot;{}&quot;, f_name);
+                f_name.replace(&#39; &#39;, &quot;_&quot;).to_string()
+            }
+        };
+
+        let filepath = get_local_filepath(file_prefix_id, &amp;filename);
+
+        // File::create is blocking operation, use threadpool
+        let mut f = web::block(|| File::create(filepath)).await??;
+
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.try_next().await? {
+            // filesystem operations are blocking, we have to use threadpool
+            f = web::block(move || f.write_all(&amp;chunk).map(|_| f)).await??;
+        }
+    }
+
+    Ok(filename)
+}
+
+pub async fn create_file_resource(
+    file_resource: &amp;FileResource,
+) -&gt; mongodb::error::Result&lt;InsertOneResult&gt; {
+    file_resource_dao::add_one_file_resource(file_resource).await
+}
+
+pub async fn get_one_file_resource_by_doc_filter(
+    doc_filter: Document,
+) -&gt; mongodb::error::Result&lt;Option&lt;FileResource&gt;&gt; {
+    file_resource_dao::get_one_file_resource_by_doc_filter(doc_filter).await
+}
+
+pub async fn delete_file(filepath: &amp;str) {
+    match fs::remove_file(filepath) {
+        Ok(_) =&gt; {}
+        Err(err) =&gt; {
+            error!(&quot;Failed to remove file: {:?}, error: {:?}&quot;, filepath, err)
+        }
+    };
+}
+
+pub fn get_local_filepath(face_info_id: &amp;str, filename: &amp;str) -&gt; String {
+    format!(&quot;{SAVE_DIR}/{face_info_id}-{filename}&quot;)
+}</code></pre>
+<p>主要是下面几个功能：</p>
+<ul>
+<li>create_file_resource_with_stream：通过流上传文件；</li>
+<li>create_file_resource：创建文件资源；</li>
+<li>get_one_file_resource_by_doc_filter：根据过滤条件查询资源信息；</li>
+<li>delete_file：删除资源信息；</li>
+<li>get_local_filepath：获取某个选手本地保存的资源路径（用于本地保存）；</li>
+</ul>
+<br>
+
+<h4 id="Controller层"><a href="#Controller层" class="headerlink" title="Controller层"></a><strong>Controller层</strong></h4><p>Controller层用于统一处理用户请求；</p>
+<p>src/controller/face_info_controller.rs</p>
+<pre><code class="rust">use crate::algorithm::elo_rating::{compete_uscf, EloScore, WIN};
+use actix_web::error::{ErrorBadRequest, ErrorInternalServerError, ErrorNotFound};
+use actix_web::{post, web, Error, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use crate::dao::rating_log_dao::add_rating_logs;
+use crate::entity::face_info::FaceInfo;
+use crate::entity::file_resource::FileResource;
+use crate::entity::rating_log::RatingLog;
+use crate::resource;
+use crate::service::face_info_service::update_face_info_rating;
+use crate::service::{face_info_service, file_resource_service};
+use crate::{doc, entity};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FaceAndFileResourceInfo {
+    face_info: FaceInfo,
+    file_resource: FileResource,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetRandomFaceInfoRandomlyReq {
+    face_info_cnt: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetRandomFaceInfoRandomlyResp {
+    face_and_file_infos: Vec&lt;FaceAndFileResourceInfo&gt;,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetFaceInfoByIdReq {
+    id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetFaceInfoByIdResp {
+    face_and_file_info: FaceAndFileResourceInfo,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddFaceInfoReq {
+    face_info: FaceInfo,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddFaceInfoResp {
+    face_info_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VoteFaceInfoReq {
+    win_face_info_id: String,
+    lose_face_info_id: String,
+    voter: String,
+}
+
+#[post(&quot;/get_face_info_randomly&quot;)]
+pub async fn get_face_info_randomly(
+    mut req: web::Json&lt;GetRandomFaceInfoRandomlyReq&gt;,
+) -&gt; Result&lt;impl Responder, Error&gt; {
+    log::debug!(&quot;req: {:?}&quot;, &amp;req);
+
+    if req.face_info_cnt &lt;= 0 {
+        req.face_info_cnt = 2
+    }
+
+    let face_infos = face_info_service::get_face_info_randomly(req.face_info_cnt)
+        .await
+        .unwrap_or_default();
+
+    let mut face_and_file_infos = vec![];
+    for face_info in face_infos {
+        face_and_file_infos.push(FaceAndFileResourceInfo {
+            file_resource: match file_resource_service::get_one_file_resource_by_doc_filter(
+                doc! {&quot;id&quot;: &amp;face_info.file_id},
+            )
+            .await
+            {
+                Ok(file_info) =&gt; match file_info {
+                    None =&gt; FileResource::default(),
+                    Some(file_info) =&gt; file_info,
+                },
+                Err(err) =&gt; {
+                    log::error!(&quot;Error: {:?}&quot;, err);
+                    return HttpResponse::InternalServerError().await;
+                }
+            },
+            face_info,
+        });
+    }
+
+    Ok(HttpResponse::Ok().json(GetRandomFaceInfoRandomlyResp {
+        face_and_file_infos,
+    }))
+}
+
+#[post(&quot;/get_face_info_by_id&quot;)]
+pub async fn get_face_info_by_id(
+    req: web::Json&lt;GetFaceInfoByIdReq&gt;,
+) -&gt; Result&lt;impl Responder, Error&gt; {
+    info!(&quot;req: {:?}&quot;, &amp;req);
+
+    let face_info_id = &amp;req.id;
+    if face_info_id.is_empty() {
+        return HttpResponse::NotFound().await;
+    }
+
+    let face_info =
+        match face_info_service::get_one_face_info_by_doc_filter(doc! {&quot;id&quot;: face_info_id}).await {
+            Ok(face_info) =&gt; match face_info {
+                None =&gt; {
+                    return HttpResponse::NotFound().await;
+                }
+                Some(face_info) =&gt; face_info,
+            },
+            Err(err) =&gt; {
+                log::error!(&quot;Error: {:?}&quot;, err);
+                return HttpResponse::InternalServerError().await;
+            }
+        };
+
+    let file_resource = match file_resource_service::get_one_file_resource_by_doc_filter(
+        doc! {&quot;id&quot;: &amp;face_info.file_id},
+    )
+    .await
+    {
+        Ok(file_info) =&gt; match file_info {
+            None =&gt; FileResource::default(),
+            Some(file_info) =&gt; file_info,
+        },
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+
+    Ok(HttpResponse::Ok().json(GetFaceInfoByIdResp {
+        face_and_file_info: FaceAndFileResourceInfo {
+            face_info,
+            file_resource,
+        },
+    }))
+}
+
+#[post(&quot;/add_face_info&quot;)]
+pub async fn add_face_info(mut req: web::Json&lt;AddFaceInfoReq&gt;) -&gt; Result&lt;impl Responder, Error&gt; {
+    info!(&quot;req: {:?}&quot;, &amp;req);
+
+    let face_info_id = resource::id_generator::get_id().await;
+    req.face_info.id = face_info_id;
+    req.face_info.created_on = chrono::Utc::now().timestamp();
+    req.face_info.score = entity::face_info::DEFAULT_SCORE;
+
+    check_add_face_info_param(&amp;req.face_info).await?;
+
+    match face_info_service::add_face_info(&amp;req.face_info).await {
+        Ok(_) =&gt; Ok(HttpResponse::Ok().json(AddFaceInfoResp {
+            face_info_id: req.face_info.id.clone(),
+        })),
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            HttpResponse::InternalServerError().await
+        }
+    }
+}
+
+#[post(&quot;/vote_face_info&quot;)]
+pub async fn vote_face_info(req: web::Json&lt;VoteFaceInfoReq&gt;) -&gt; Result&lt;impl Responder, Error&gt; {
+    info!(&quot;req: {:?}&quot;, &amp;req);
+
+    if req.win_face_info_id.is_empty() || req.lose_face_info_id.is_empty() {
+        return Err(ErrorBadRequest(&quot;face_info_id is required!&quot;));
+    };
+
+    // Step 1: find corresponding face_info
+    let filter_doc = doc! {
+        &quot;id&quot; :{&quot;$in&quot;: [req.win_face_info_id.as_str(), req.lose_face_info_id.as_str()]}
+    };
+    let face_info_map: HashMap&lt;String, FaceInfo&gt; =
+        match face_info_service::get_face_infos_by_doc_filter(filter_doc).await {
+            Ok(res) =&gt; {
+                if res.len() &lt; 2 {
+                    return Err(ErrorNotFound(&quot;FaceInfo not found!&quot;));
+                }
+
+                let mut ret_map = HashMap::new();
+                for x in res {
+                    ret_map.insert(x.id.clone(), x);
+                }
+                ret_map
+            }
+            Err(err) =&gt; {
+                log::error!(&quot;Error: {:?}&quot;, err);
+                return HttpResponse::InternalServerError().await;
+            }
+        };
+
+    // Step 2：Calculate Score
+    let win_face_info = match face_info_map.get(req.win_face_info_id.as_str()) {
+        None =&gt; {
+            return Err(ErrorNotFound(&quot;Winner FaceInfo not found!&quot;));
+        }
+        Some(win_face_info) =&gt; win_face_info,
+    };
+    let lose_face_info = match face_info_map.get(req.lose_face_info_id.as_str()) {
+        None =&gt; {
+            return Err(ErrorNotFound(&quot;Loser FaceInfo not found!&quot;));
+        }
+        Some(lose_face_info) =&gt; lose_face_info,
+    };
+
+    let (win_score, lose_score) = compete_uscf(
+        win_face_info.score as EloScore,
+        lose_face_info.score as EloScore,
+        WIN,
+    );
+
+    // Step 3：Update Score
+    let now = chrono::Utc::now().timestamp();
+    if let Err(err) = update_face_info_rating(
+        &amp;win_face_info.id,
+        win_score as f64,
+        true,
+        req.voter.as_str(),
+        now,
+    )
+    .await
+    {
+        log::error!(&quot;Error: {:?}&quot;, err);
+        return HttpResponse::InternalServerError().await;
+    }
+    if let Err(err) = update_face_info_rating(
+        &amp;lose_face_info.id,
+        lose_score as f64,
+        false,
+        req.voter.as_str(),
+        now,
+    )
+    .await
+    {
+        log::error!(&quot;Error: {:?}&quot;, err);
+        return HttpResponse::InternalServerError().await;
+    }
+
+    // Step 4: Add vote logs
+    if let Err(err) = add_rating_logs(vec![RatingLog {
+        id: resource::id_generator::get_id().await,
+        win_face_id: win_face_info.id.clone(),
+        loss_face_id: lose_face_info.id.clone(),
+        creator: req.voter.clone(),
+        created_on: now,
+        ..RatingLog::default()
+    }])
+    .await
+    {
+        log::error!(&quot;Error: {:?}&quot;, err);
+    }
+
+    Ok(HttpResponse::Ok().json(()))
+}
+
+async fn check_add_face_info_param(face_info: &amp;FaceInfo) -&gt; Result&lt;(), Error&gt; {
+    if face_info.id.is_empty() {
+        return Err(ErrorInternalServerError(&quot;generate id failed&quot;));
+    }
+
+    if face_info.file_id.is_empty() {
+        return Err(ErrorBadRequest(&quot;file id is empty&quot;));
+    }
+
+    if face_info.star_name.is_empty() {
+        return Err(ErrorBadRequest(&quot;start name is empty&quot;));
+    }
+
+    Ok(())
+}</code></pre>
+<p>src/controller/file_controller.rs</p>
+<pre><code class="rust">use actix_multipart::Multipart;
+use actix_web::{get, post, web, Error, HttpResponse, Responder};
+use mongodb::bson::doc;
+use serde::{Deserialize, Serialize};
+
+use service::{face_info_service, file_resource_service};
+
+use crate::entity::file_resource::{FileResource, UriType};
+use crate::{resource, service, utils};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateFileResourceByStreamResp {
+    file_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateFileResourceReq {
+    file_resource: FileResource,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateFileResourceResp {
+    file_resource_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DownloadFileReq {
+    face_info_id: String,
+}
+
+#[post(&quot;/create_file_resource_by_stream&quot;)]
+pub async fn create_file_resource_by_stream(payload: Multipart) -&gt; Result&lt;HttpResponse, Error&gt; {
+    info!(&quot;create_file_resource_by_stream start&quot;);
+
+    // Step 0: Generate id
+    let file_resource_id = resource::id_generator::get_id().await;
+
+    // Step 1: Save the file &amp; calculate md5 hash
+    let file_name = match service::file_resource_service::create_file_resource_with_stream(
+        payload,
+        &amp;file_resource_id,
+    )
+    .await
+    {
+        Ok(file_name) =&gt; file_name,
+        Err(err) =&gt; {
+            error!(&quot;Failed to save_file, error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+    let file_uri = file_resource_service::get_local_filepath(&amp;file_resource_id, &amp;file_name);
+    let file_md5 = match utils::md5::get_file_md5(&amp;file_uri).await {
+        Ok(file_md5) =&gt; file_md5,
+        Err(err) =&gt; {
+            error!(&quot;Failed to get_file_md5, error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+
+    info!(
+        &quot;Saving file success, file_name: {:?}, md5: {:?}&quot;,
+        file_name, file_md5
+    );
+
+    // Step 2: Check file md5 is repeated
+    match face_info_service::get_one_face_info_by_doc_filter(doc! {&quot;md5&quot;: &amp;file_md5}).await {
+        Ok(res) =&gt; match res {
+            None =&gt; {
+                info!(&quot;Saving file success, file_uri: {:?}&quot;, file_uri);
+            }
+            Some(_) =&gt; {
+                error!(&quot;File has already been saved!&quot;);
+
+                file_resource_service::delete_file(&amp;file_uri).await;
+                info!(
+                    &quot;Delete file success, file_name: {:?}, md5: {:?}&quot;,
+                    file_name, file_md5
+                );
+
+                return HttpResponse::Forbidden().await;
+            }
+        },
+        Err(err) =&gt; {
+            error!(&quot;Failed to get_one_face_info_by_doc, error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+
+    // Step 3：Save file_resource
+    match file_resource_service::create_file_resource(&amp;FileResource {
+        id: file_resource_id.clone(),
+        md5: file_md5,
+        created_on: chrono::Utc::now().timestamp(),
+        file_name,
+        file_uri,
+        ..FileResource::default()
+    })
+    .await
+    {
+        Ok(_) =&gt; Ok(HttpResponse::Ok().json(CreateFileResourceByStreamResp {
+            file_id: file_resource_id,
+        })),
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            HttpResponse::InternalServerError().await
+        }
+    }
+}
+
+#[post(&quot;/create_file_resource&quot;)]
+pub async fn create_file_resource(
+    mut req: web::Json&lt;CreateFileResourceReq&gt;,
+) -&gt; Result&lt;impl Responder, Error&gt; {
+    info!(&quot;req: {:?}&quot;, &amp;req);
+
+    let file_resource_id = resource::id_generator::get_id().await;
+    req.file_resource.id = file_resource_id;
+    req.file_resource.created_on = chrono::Utc::now().timestamp();
+
+    check_create_file_resource_req(&amp;req.file_resource).await?;
+
+    match file_resource_service::create_file_resource(&amp;req.file_resource).await {
+        Ok(_) =&gt; Ok(HttpResponse::Ok().json(CreateFileResourceResp {
+            file_resource_id: req.file_resource.id.clone(),
+        })),
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            HttpResponse::InternalServerError().await
+        }
+    }
+}
+
+async fn check_create_file_resource_req(file_resource: &amp;FileResource) -&gt; Result&lt;(), Error&gt; {
+    match file_resource.uri_type {
+        UriType::Local =&gt; {}
+        UriType::Url =&gt; {}
+    };
+
+    Ok(())
+}
+
+#[get(&quot;/download_local_file/{face_info_id}&quot;)]
+pub async fn download_local_file(
+    req: actix_web::HttpRequest,
+    face_info_id: web::Path&lt;String&gt;,
+) -&gt; Result&lt;HttpResponse, actix_web::Error&gt; {
+    info!(&quot;req: {:?}&quot;, &amp;req);
+
+    let face_info_id = face_info_id.into_inner();
+
+    if face_info_id.is_empty() {
+        info!(&quot;not found face_info, face_info_id is empty&quot;);
+        return HttpResponse::NotFound().await;
+    }
+
+    // Step 1: Find face info
+    let face_info = match face_info_service::get_one_face_info_by_doc_filter(
+        doc! {&quot;id&quot;: &amp;face_info_id},
+    )
+    .await
+    {
+        Ok(face_info) =&gt; match face_info {
+            None =&gt; {
+                info!(&quot;face_info not found, face_info_id: {:?}&quot;, face_info_id);
+                return HttpResponse::NotFound().await;
+            }
+            Some(face_info) =&gt; face_info,
+        },
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+
+    // Step 2: Get file
+    let file_resource_info = match file_resource_service::get_one_file_resource_by_doc_filter(
+        doc! {&quot;id&quot;: &amp;face_info.file_id},
+    )
+    .await
+    {
+        Ok(file_resource_info) =&gt; match file_resource_info {
+            None =&gt; {
+                info!(
+                    &quot;file_resource_info not found, file_id: {:?}&quot;,
+                    face_info.file_id
+                );
+                return HttpResponse::NotFound().await;
+            }
+            Some(file_resource_info) =&gt; file_resource_info,
+        },
+        Err(err) =&gt; {
+            log::error!(&quot;Error: {:?}&quot;, err);
+            return HttpResponse::InternalServerError().await;
+        }
+    };
+
+    let file = actix_files::NamedFile::open_async(file_resource_info.file_uri)
+        .await
+        .unwrap();
+    Ok(file.into_response(&amp;req))
+}</code></pre>
+<p>都是一些看代码就能看懂的简单业务逻辑，这里不再赘述；</p>
+<p>至此，我们的服务自底向上已经完全实现了！</p>
+<br>
+
+<h2 id="CI-amp-CD"><a href="#CI-amp-CD" class="headerlink" title="CI&amp;CD"></a><strong>CI&amp;CD</strong></h2><h3 id="Pre-Commit"><a href="#Pre-Commit" class="headerlink" title="Pre-Commit"></a><strong>Pre-Commit</strong></h3><p><code>pre-commit</code> 是 <code>git hooks</code> 的一个子集，实现在提交代码审查之前，Git Hooks 脚本可用于处理简单问题；</p>
+<p>我们在每次提交时运行我们的钩子，以自动指出代码中的问题，例如：缺少分号，尾随空格和调试语句等；</p>
+<p>可以使用 <code>pip</code> 安装：</p>
+<pre><code class="bash">pip install pre-commit</code></pre>
+<p>Mac 用户也可以使用 <code>brew</code> 安装：</p>
+<pre><code class="bash">brew install pre-commit</code></pre>
+<p>在项目中，我们可以创建一个 <code>.pre-commit-config.yaml</code> 来设置配置，例如：</p>
+<p>.pre-commit-config.yaml</p>
+<pre><code class="yaml">repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: trailing-whitespace
+        args: [ --markdown-linebreak-ext=md ]
+
+  - repo: local
+    hooks:
+      - id: make-fmt
+        name: make fmt
+        entry: make fmt
+        language: system
+</code></pre>
+<p>然后使用 <code>pre-commit install</code> 来安装这些 Hooks；</p>
+<p>那么当我们 Commit 的时候，会先执行这些脚本，校验通过后才会 Commit 成功；</p>
+<p>例如：</p>
+<pre><code class="bash">$ git commit -m &quot;fix: typo&quot;
+[INFO] Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+git push
+Check for merge conflicts................................................Passed
+Check Toml...........................................(no files to check)Skipped
+Check Yaml...........................................(no files to check)Skipped
+Trim Trailing Whitespace.................................................Passed
+make fmt.................................................................Passed
+[dev 812dbe1] fix: typo
+ 2 files changed, 1 insertion(+), 2 deletions(-)</code></pre>
+<br>
+
+<h3 id="Github-Actions"><a href="#Github-Actions" class="headerlink" title="Github Actions"></a><strong>Github Actions</strong></h3><p>我们可以在 <code>.github/workflows/</code> 目录下创建 YAML 配置，来集成 Github Actions 帮助我们完成 CI、甚至 CD 的工作！</p>
+<p>例如：可以执行 <code>cargo clippy</code>、<code>cargo test</code> 来校验我们的代码、单测等；</p>
+<p>下面是我的一些配置供你参考：</p>
+<p>.github/workflows/ci.yaml</p>
+<pre><code class="yaml">name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - &#39;**.md&#39;
+    branches-ignore:
+      - jupyter
+  pull_request:
+    paths-ignore:
+      - &#39;**.md&#39;
+    branches-ignore:
+      - jupyter
+
+env:
+  RUST_TOOLCHAIN: nightly
+  TOOLCHAIN_PROFILE: minimal
+
+jobs:
+  lints:
+    name: Run cargo fmt and cargo clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: ${{ env.TOOLCHAIN_PROFILE }}
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          override: true
+          components: rustfmt, clippy
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+  test:
+    name: Run cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: ${{ env.TOOLCHAIN_PROFILE }}
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          override: true
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+      #      - name: Run cargo test --no-run
+      #        uses: actions-rs/cargo@v1
+      #        with:
+      #          command: test --no-run
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        env:
+          RUST_TEST_THREADS: 8
+        with:
+          command: test</code></pre>
+<p>主要是完成 clippy、test 的工作；</p>
+<blockquote>
+<p>  <strong>得益于 Cargo 强大的工具链，我们可以很轻松的完成这些功能！</strong></p>
+</blockquote>
+<p>下面是本项目的 CI：</p>
+<ul>
+<li><a href="https://github.com/FacemashHub/facemash-backend/actions" target="_blank" rel="noopener">https://github.com/FacemashHub/facemash-backend/actions</a></li>
+</ul>
+<br>
+
+<h3 id="Docker镜像"><a href="#Docker镜像" class="headerlink" title="Docker镜像"></a><strong>Docker镜像</strong></h3><p>说到部署，我们当然是要打包为镜像进行部署；</p>
+<p><strong>Docker 在 17.05 版本之后主持了分多阶段构建，也就是说，我们可以使用一个统一的编译镜像对我们的代码进行测试、编译；</strong></p>
+<p><strong>并将编译后的产物拉取到另一个纯净的镜像中，减小镜像体积并提供统一的编译环境！</strong></p>
+<p>通常情况下 Rust 编译选择的是这个镜像：<code>ekidd/rust-musl-builder:latest</code>；</p>
+<p>然后部署的时候可以选择一个非常小的镜像，例如：<a href="https://hub.docker.com/_/scratch" target="_blank" rel="noopener">scratch</a></p>
+<p>下面是本项目中的 Dockerfile：</p>
+<pre><code class="dockerfile">FROM ekidd/rust-musl-builder:latest AS builder
+COPY --chown=rust:rust . ./
+RUN cargo build --release
+
+FROM scratch
+WORKDIR /facemash-backend
+COPY --from=builder /home/rust/src/target/x86_64-unknown-linux-musl/release/facemash-backend ./
+COPY .env ./.env
+EXPOSE 8080
+CMD [&quot;./facemash-backend&quot;]</code></pre>
+<p><strong>上面第一部分用于编译，下面的部分使用上面编译的结果，生成最终的镜像！</strong></p>
+<blockquote>
+<p>  <strong>这个项目用这种方法构建完的最终镜像大小只有 20M！可以说是非常小了！</strong></p>
+</blockquote>
+<br>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a><strong>后记</strong></h2><p>上面简要介绍了一个完整的 Rust 服务端项目的开发过程，相信你能够学到不少的东西；</p>
+<p>得益于 Rust 超级稳定的性能，目前这个服务已经在我的服务器上跑了将近 2 个月的时间，而内存占用也只有 1.8M，可以说非常的小！</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>源代码：</p>
+<ul>
+<li><a href="https://github.com/orgs/FacemashHub/repositories" target="_blank" rel="noopener">https://github.com/orgs/FacemashHub/repositories</a></li>
+</ul>
+<p>文章参考：</p>
+<ul>
+<li><a href="https://sylvanassun.github.io/2017/07/19/2017-07-19-FaceMash/" target="_blank" rel="noopener">https://sylvanassun.github.io/2017/07/19/2017-07-19-FaceMash/</a></li>
+<li><a href="https://zho.tidewaterschool.org/657344-facemash-algorithm-FVWCMC" target="_blank" rel="noopener">https://zho.tidewaterschool.org/657344-facemash-algorithm-FVWCMC</a></li>
+<li><a href="https://www.361shipin.com/blog/1514328900220485632" target="_blank" rel="noopener">https://www.361shipin.com/blog/1514328900220485632</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/10/08/I-decided-to-build-my-next-open-source-project-by-Rust/" title="https://jasonkayzk.github.io/2022/10/08/I-decided-to-build-my-next-open-source-project-by-Rust/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/10/08/I-decided-to-build-my-next-open-source-project-by-Rust/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725317180"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

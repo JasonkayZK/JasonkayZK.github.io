@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>Docker原理实战-4：容器Container - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="前三篇分别讲解了Linux内核所以提供的功能：Namespace、Cgroups和UnionFS，本篇使用这些技术，真正的实现一个类似于Docker运行环境下的容器；">
+<meta name="keywords" content="Docker,Linux,Container,容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker原理实战-4：容器Container">
+<meta property="og:url" content="https://jasonkayzk.github.io/2021/09/05/Docker原理实战-4：容器Container/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="前三篇分别讲解了Linux内核所以提供的功能：Namespace、Cgroups和UnionFS，本篇使用这些技术，真正的实现一个类似于Docker运行环境下的容器；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.733Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Docker原理实战-4：容器Container">
+<meta name="twitter:description" content="前三篇分别讲解了Linux内核所以提供的功能：Namespace、Cgroups和UnionFS，本篇使用这些技术，真正的实现一个类似于Docker运行环境下的容器；">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725322512">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?4">
+    
+    <h1>Docker原理实战-4：容器Container</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2021年09月05日</a>
+    <a><i class="nexmoefont icon-areachart"></i>9.8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 49 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/Docker/">Docker</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/Container/">Container</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Docker/">Docker</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/Linux/">Linux</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/容器/">容器</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Docker原理实战-4：容器Container"><span class="toc-text">Docker原理实战-4：容器Container</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言：proc文件系统"><span class="toc-text">前言：proc文件系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一、使用Cgroups限制容器资源组件"><span class="toc-text">一、使用Cgroups限制容器资源组件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、Subsystem接口抽象"><span class="toc-text">1、Subsystem接口抽象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、一些辅助函数"><span class="toc-text">2、一些辅助函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-FindCgroupMountPoint函数"><span class="toc-text">① FindCgroupMountPoint函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-GetCgroupPath函数"><span class="toc-text">② GetCgroupPath函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3、具体Subsystem接口实现"><span class="toc-text">3、具体Subsystem接口实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-Name方法"><span class="toc-text">① Name方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-Set方法"><span class="toc-text">② Set方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-Apply方法"><span class="toc-text">③ Apply方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#④-Remove方法"><span class="toc-text">④ Remove方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4、其他Subsystem实现"><span class="toc-text">4、其他Subsystem实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-CPU核心数"><span class="toc-text">① CPU核心数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-CPU时间片"><span class="toc-text">② CPU时间片</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5、Cgroup整体管理者：CgroupManager"><span class="toc-text">5、Cgroup整体管理者：CgroupManager</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二、构建命令行工具"><span class="toc-text">二、构建命令行工具</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1、命令行预期功能实现"><span class="toc-text">1、命令行预期功能实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2、命令行入口"><span class="toc-text">2、命令行入口</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三、具体命令行参数实现"><span class="toc-text">三、具体命令行参数实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、进程间通信方式管道：Pipe概述"><span class="toc-text">1、进程间通信方式管道：Pipe概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、具体命令实现"><span class="toc-text">2、具体命令实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-声明命令变量"><span class="toc-text">① 声明命令变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-开启新的容器进程：NewParentProcess"><span class="toc-text">② 开启新的容器进程：NewParentProcess</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#③-初始化容器：InitCommand"><span class="toc-text">③ 初始化容器：InitCommand</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#④-挂载Cgroup进行资源限制"><span class="toc-text">④ 挂载Cgroup进行资源限制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#⑤-宿主进程向容器进程发送初始化命令：sendInitCommand"><span class="toc-text">⑤ 宿主进程向容器进程发送初始化命令：sendInitCommand</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四、命令测试"><span class="toc-text">四、命令测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、无资源限制测试"><span class="toc-text">1、无资源限制测试</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#①-ls命令测试"><span class="toc-text">① ls命令测试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#②-sh命令测试"><span class="toc-text">② sh命令测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、资源限制测试"><span class="toc-text">2、资源限制测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他内容"><span class="toc-text">其他内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#本篇小结"><span class="toc-text">本篇小结</span></a></li></ol><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li>
+      </ul>
+    </div>
+    
+    <p>前三篇分别讲解了Linux内核所以提供的功能：Namespace、Cgroups和UnionFS，本篇使用这些技术，真正的实现一个类似于Docker运行环境下的容器；</p>
+<p>系列文章：</p>
+<ul>
+<li><a href="/2021/08/29/Docker原理实战-1：Namespace/">Docker原理实战-1：Namespace</a></li>
+<li><a href="/2021/08/29/Docker原理实战-2：Cgroups/">Docker原理实战-2：Cgroups</a></li>
+<li><a href="/2021/08/29/Docker原理实战-3：UnionFS/">Docker原理实战-3：UnionFS</a></li>
+<li><a href="/2021/09/05/Docker原理实战-4：容器Container/">Docker原理实战-4：容器Container</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/my_docker" target="_blank" rel="noopener">https://github.com/JasonkayZK/my_docker</a></li>
+</ul>
+<br>
+
+<a id="more"></a>
+
+<h1 id="Docker原理实战-4：容器Container"><a href="#Docker原理实战-4：容器Container" class="headerlink" title="Docker原理实战-4：容器Container"></a><strong>Docker原理实战-4：容器Container</strong></h1><h2 id="前言：proc文件系统"><a href="#前言：proc文件系统" class="headerlink" title="前言：proc文件系统"></a><strong>前言：proc文件系统</strong></h2><p>在手写我们的Container之前，先简单介绍一下Linux中的<code>/proc</code>；</p>
+<p>众所周知，在Linux中，一切皆文件；而<code>/proc</code>文件系统是由内核提供的，它<strong>并非真正的文件系统，而是存在于内存中的、包含了整个系统运行时的信息（硬件配置、系统mount设备等）；</strong></p>
+<p><code>/proc</code>以文件的形式存在，为访问内核数据的操作提供了接口；</p>
+<blockquote>
+<p>  <strong>实际上，很多系统工具就是简单读取<code>/proc</code>下的某个文件内容实现的；</strong></p>
+<p>  <strong>如：<code>lsmod</code>命令，实际上就是<code>cat /proc/modules</code></strong></p>
+</blockquote>
+<p>下面是关于<code>/proc</code>下的一些目录的总结：</p>
+<table>
+<thead>
+<tr>
+<th align="left">路径</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">/proc/N</td>
+<td>PID为Ν的进程信息</td>
+</tr>
+<tr>
+<td align="left">/proc/N/cmdline</td>
+<td>进程启动命令</td>
+</tr>
+<tr>
+<td align="left">/proc/N/cwd</td>
+<td>链接到进程当前工作目录</td>
+</tr>
+<tr>
+<td align="left">/proc/N/environ</td>
+<td>进程环境变量列表</td>
+</tr>
+<tr>
+<td align="left">/proc/N/exe</td>
+<td>链接到进程的执行命令文件</td>
+</tr>
+<tr>
+<td align="left">/proc/N/fd</td>
+<td>包含进程相关的所有文件描述符</td>
+</tr>
+<tr>
+<td align="left">/proc/N/maps</td>
+<td>与进程相关的内存映射信息</td>
+</tr>
+<tr>
+<td align="left">/proc/N/mem</td>
+<td>指代进程持有的内存，不可读</td>
+</tr>
+<tr>
+<td align="left">/proc/N/root</td>
+<td>链接到进程的根目录</td>
+</tr>
+<tr>
+<td align="left">/proc/N/stat</td>
+<td>进程的状态</td>
+</tr>
+<tr>
+<td align="left">/proc/N/statm</td>
+<td>进程使用的内存状态</td>
+</tr>
+<tr>
+<td align="left">/proc/N/status</td>
+<td>进程状态信息，比 stat/statm更具可读性</td>
+</tr>
+<tr>
+<td align="left">/proc/self/</td>
+<td>链接到当前正在运行的进程</td>
+</tr>
+</tbody></table>
+<p>对于<code>/proc/N</code>下的各个目录，基本上完整的描述了一个进程在操作系统中的内容；</p>
+<blockquote>
+<p>  <strong>尤其要注意的是：<code>/proc/self/</code>；</strong></p>
+<p>  <strong>看似比较鸡肋，但是是后面我们构造容器时具有终于作用！</strong></p>
+</blockquote>
+<p>了解了<code>/proc</code>之后，我们开始真正的构建一个容器吧！</p>
+<p>为了简单起见，我们先按照自底向上的顺序，介绍容器内资源限制的组件，然后再自顶向下地构建命令行工具；</p>
+<br>
+
+<h2 id="一、使用Cgroups限制容器资源组件"><a href="#一、使用Cgroups限制容器资源组件" class="headerlink" title="一、使用Cgroups限制容器资源组件"></a><strong>一、使用Cgroups限制容器资源组件</strong></h2><p>本小节从定义Subsystem接口开始，自底向上地介绍如何使用Cgroups限制进程资源；</p>
+<p>首先，为了简单起见，我们仅仅对下面三种资源进行限制，其他资源也是完全类似的实现方式：</p>
+<ul>
+<li>内存限制；</li>
+<li>CPU核心数；</li>
+<li>CPU时间片权重；</li>
+</ul>
+<h3 id="1、Subsystem接口抽象"><a href="#1、Subsystem接口抽象" class="headerlink" title="1、Subsystem接口抽象"></a><strong>1、Subsystem接口抽象</strong></h3><p>根据上面的资源限制类型，抽象出对应的Subsystem接口：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/subsystems/subsystems.go</p>
+<pre><code class="go">package subsystems
+
+var (
+    SubsystemIns = []Subsystem{
+        &amp;CpuSetSubSystem{},
+        &amp;MemorySubSystem{},
+        &amp;CpuSubSystem{},
+    }
+
+    CgroupConfigPath = &quot;tasks&quot;
+)
+
+// ResourceConfig 用于传递资源限制的结构体
+type ResourceConfig struct {
+    MemoryLimit string // 内存限制
+    CpuShare    string // CPU时间片权重
+    CpuSet      string // CPU核心数
+}
+
+// Subsystem Subsystem接口
+// 这里将 cgroups 抽象为了 path，因为 cgroups 在 hierarchy 的路径就是虚拟文件系统中的路径！
+type Subsystem interface {
+    // Name 返回subsystem的名称，如：cpu、memory等
+    Name() string
+
+    // Set 设置某个cgroup在这个subsystem中的资源限制
+    Set(path string, res *ResourceConfig) error
+
+    // Apply 将指定pid对应的进程添加至某个cgroup中
+    Apply(path string, pid int) error
+
+    // Remove 移除某个cgroup
+    Remove(path string) error
+}</code></pre>
+<p>Subsystem接口共包含了四个方法：</p>
+<ul>
+<li><code>Name()</code>：返回对应subsystem的名称，如：<code>memory</code>、<code>cpuset</code>等；</li>
+<li><code>Set(path string, res *ResourceConfig)</code>：用于设置某个cgroup在这个subsystem中的资源限制；</li>
+<li><code>Apply(path string, pid int)</code>：将指定pid对应的进程添加至某个cgroup中；</li>
+<li><code>Remove(path string)</code>：移除某个cgroup；</li>
+</ul>
+<p>这样，我们就<strong>可以使用<code>Set</code>方法设置一个对应的硬件资源，并使用<code>Apply</code>方法让其对某个PID生效！</strong></p>
+<br>
+
+<h3 id="2、一些辅助函数"><a href="#2、一些辅助函数" class="headerlink" title="2、一些辅助函数"></a><strong>2、一些辅助函数</strong></h3><p>在之前第二篇对于Cgroups的讲解中，我们知道：</p>
+<p><font color="#f00"><strong>Cgroups是目录型的结构，而如果我们想要限制进程资源，只需要在Cgroups的根路径下创建新的目录，并修改该目录下的配置，并将进程的PID移至这个新目录下的<code>tasks</code>文件中即可；</strong></font></p>
+<p>为了实现这个目的，我创建了两个工具函数，如下：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/utils/utils.go</p>
+<pre><code class="go">package utils
+
+var (
+    DefaultCgroupFilePerm os.FileMode = 0755
+
+    DefaultCgroupConfigFilePerm os.FileMode = 0755
+)
+
+// FindCgroupMountPoint 查询对应subsystem在当前进程中的挂载点路径
+// /proc/self/mountinfo 文件格式：
+// 43 35 0:37 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:18 - cgroup cgroup rw,memory
+// 查找最后一部分的逗号分隔字段，如：memory
+func FindCgroupMountPoint(subsystem string) string {
+    // 打开当前进程挂载文件（后面会查询信息）
+    f, err := os.Open(&quot;/proc/self/mountinfo&quot;)
+    if err != nil {
+        return &quot;&quot;
+    }
+    defer func(f *os.File) {
+        err := f.Close()
+        if err != nil {
+            log.Error(err)
+        }
+    }(f)
+
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+        content := scanner.Text()
+        fields := strings.Split(content, &quot; &quot;)
+        for _, opt := range strings.Split(fields[len(fields)-1], &quot;,&quot;) {
+            if opt == subsystem {
+                return fields[4]
+            }
+        }
+    }
+    if err := scanner.Err(); err != nil {
+        log.Error(err)
+        return &quot;&quot;
+    }
+    return &quot;&quot;
+}
+
+// GetCgroupPath 获取当前进程中指定cgroup对应的路径
+func GetCgroupPath(subsystem string, cgroupPath string) (string, error) {
+    cgroupRoot := FindCgroupMountPoint(subsystem)
+
+    // 查询文件是否已经存在
+    _, err := os.Stat(path.Join(cgroupRoot, cgroupPath))
+    if err != nil {
+        // 非文件不存在错误，返回错误
+        if !os.IsNotExist(err) {
+            return &quot;&quot;, fmt.Errorf(&quot;cgroup path error %v&quot;, err)
+        } else { // 如果是文件不存在错误，创建
+            if err := os.Mkdir(path.Join(cgroupRoot, cgroupPath), DefaultCgroupFilePerm); err != nil {
+                return &quot;&quot;, fmt.Errorf(&quot;error create cgroup %v&quot;, err)
+            }
+        }
+    }
+
+    return path.Join(cgroupRoot, cgroupPath), nil
+}</code></pre>
+<p>上面定义了两个辅助工具函数：</p>
+<ul>
+<li><code>FindCgroupMountPoint</code>：查询对应subsystem在当前进程中的挂载点路径；</li>
+<li><code>GetCgroupPath</code>：获取当前进程中指定子cgroup对应的路径（如不存在，则创建）；</li>
+</ul>
+<blockquote>
+<p>  <strong>由于不同的subsystem所在的系统Cgroups配置根路径是不同的，因此：</strong></p>
+<p>  <font color="#f00"><strong>我们需要一个函数来帮助我们寻找对应Cgroups下的subsystem在<code>/proc</code>中的路径，即<code>GetCgroupPath</code>函数</strong></font></p>
+<p>  <font color="#f00"><strong>需要注意的是：对于不同的进程，其所挂载的文件系统也是不同的！</strong></font></p>
+<p>  <font color="#f00"><strong>我们可以在当前进程中通过查看<code>/proc/self/mountinfo</code>文件，获取当前进程所对应subsystem的挂载点根路径！</strong></font></p>
+<p>  文件格式如下：</p>
+<p>  <code>43 35 0:37 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:18 - cgroup cgroup rw,memory</code></p>
+<p>  可以看到最后一部分的逗号分隔字段，如：memory；</p>
+<p>  则当前进程的cgroup根路径为：<code>/sys/fs/cgroup/memory</code>；</p>
+</blockquote>
+<h4 id="①-FindCgroupMountPoint函数"><a href="#①-FindCgroupMountPoint函数" class="headerlink" title="① FindCgroupMountPoint函数"></a><strong>① <code>FindCgroupMountPoint</code>函数</strong></h4><p><code>FindCgroupMountPoint</code>主要是用在<code>GetCgroupPath</code>函数中的，因此我们先来看<code>FindCgroupMountPoint</code>函数；</p>
+<pre><code class="go">// FindCgroupMountPoint 查询对应subsystem在当前进程中的挂载点路径
+// /proc/self/mountinfo 文件格式：
+// 43 35 0:37 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime shared:18 - cgroup cgroup rw,memory
+// 查找最后一部分的逗号分隔字段，如：memory
+func FindCgroupMountPoint(subsystem string) string {
+    // 打开当前进程挂载文件（后面会查询信息）
+    f, err := os.Open(&quot;/proc/self/mountinfo&quot;)
+    if err != nil {
+        return &quot;&quot;
+    }
+    defer func(f *os.File) {
+        err := f.Close()
+        if err != nil {
+            log.Error(err)
+        }
+    }(f)
+
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+        content := scanner.Text()
+        fields := strings.Split(content, &quot; &quot;)
+        for _, opt := range strings.Split(fields[len(fields)-1], &quot;,&quot;) {
+            if opt == subsystem {
+                return fields[4]
+            }
+        }
+    }
+    if err := scanner.Err(); err != nil {
+        log.Error(err)
+        return &quot;&quot;
+    }
+    return &quot;&quot;
+}</code></pre>
+<p>根据上文所述，<code>FindCgroupMountPoint</code>函数首先打开当前进程挂载文件：<code>/proc/self/mountinfo</code>；</p>
+<p>并在文件中按行查找函数入参中指定的<code>subsystem</code>名称的配置，如果找到则返回第五项，即：<code>/sys/fs/cgroup/memory</code>；</p>
+<br>
+
+<h4 id="②-GetCgroupPath函数"><a href="#②-GetCgroupPath函数" class="headerlink" title="② GetCgroupPath函数"></a><strong>② <code>GetCgroupPath</code>函数</strong></h4><p>再来看函数<code>GetCgroupPath</code>：</p>
+<pre><code class="go">// GetCgroupPath 获取当前进程中指定cgroup对应的路径
+func GetCgroupPath(subsystem string, cgroupPath string) (string, error) {
+    cgroupRoot := FindCgroupMountPoint(subsystem)
+
+    // 查询文件是否已经存在
+    _, err := os.Stat(path.Join(cgroupRoot, cgroupPath))
+    if err != nil {
+        // 非文件不存在错误，返回错误
+        if !os.IsNotExist(err) {
+            return &quot;&quot;, fmt.Errorf(&quot;cgroup path error %v&quot;, err)
+        } else { // 如果是文件不存在错误，创建
+            if err := os.Mkdir(path.Join(cgroupRoot, cgroupPath), DefaultCgroupFilePerm); err != nil {
+                return &quot;&quot;, fmt.Errorf(&quot;error create cgroup %v&quot;, err)
+            }
+        }
+    }
+
+    return path.Join(cgroupRoot, cgroupPath), nil
+}</code></pre>
+<p>在函数<code>GetCgroupPath</code>中，首先通过<code>FindCgroupMountPoint(subsystem)</code>获取到了对于指定Subsystem对应Cgroup的根路径；</p>
+<p>随后，判断在Cgroup的根路径下是否存在子cgroupPath，如果不存在则创建；</p>
+<p>最后，返回这个子Cgroup的路径；</p>
+<br>
+
+<h3 id="3、具体Subsystem接口实现"><a href="#3、具体Subsystem接口实现" class="headerlink" title="3、具体Subsystem接口实现"></a><strong>3、具体Subsystem接口实现</strong></h3><p>下面以内存为例，来看一下如何实现Subsystem接口；</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/subsystems/memory.go</p>
+<pre><code class="go">package subsystems
+
+import (
+    &quot;fmt&quot;
+    log &quot;github.com/sirupsen/logrus&quot;
+    &quot;io/ioutil&quot;
+    &quot;my_docker/cgroups/utils&quot;
+    &quot;os&quot;
+    &quot;path&quot;
+    &quot;strconv&quot;
+)
+
+var (
+    MemoryName = `memory`
+
+    MemoryNameCgroupConfig = &quot;memory.limit_in_bytes&quot;
+)
+
+type MemorySubSystem struct {
+}
+
+func (m *MemorySubSystem) Name() string {
+    return MemoryName
+}
+
+func (m *MemorySubSystem) Set(cgroupPath string, res *ResourceConfig) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return err
+    }
+
+    configPath := path.Join(subsystemCgroupPath, MemoryNameCgroupConfig)
+    // 如果存在内存限制的配置
+    if res.MemoryLimit != &quot;&quot; {
+        err = ioutil.WriteFile(configPath,
+            []byte(res.MemoryLimit), utils.DefaultCgroupConfigFilePerm)
+        if err != nil {
+            return fmt.Errorf(&quot;set cgroup cpuset fail %v&quot;, err)
+        }
+    }
+
+    log.Infof(&quot;set memory success, file: %s, size: %s&quot;,
+        configPath,
+        res.MemoryLimit,
+    )
+    return nil
+}
+
+func (m *MemorySubSystem) Apply(cgroupPath string, pid int) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+
+    configPath := path.Join(subsystemCgroupPath, CgroupConfigPath)
+    err = ioutil.WriteFile(configPath,
+        []byte(strconv.Itoa(pid)), utils.DefaultCgroupConfigFilePerm)
+    if err != nil {
+        return fmt.Errorf(&quot;set cgroup proc fail %v&quot;, err)
+    }
+
+    log.Infof(&quot;apply memory success, file: %s, pid: %d&quot;,
+        path.Join(subsystemCgroupPath, CgroupConfigPath),
+        pid,
+    )
+    return nil
+}
+
+func (m *MemorySubSystem) Remove(cgroupPath string) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+    return os.RemoveAll(subsystemCgroupPath)
+}</code></pre>
+<h4 id="①-Name方法"><a href="#①-Name方法" class="headerlink" title="① Name方法"></a><strong>① Name方法</strong></h4><p>首先，Name方法返回了内存限制subsystem的名称：<code>MemoryName = &quot;memory&quot;</code>；</p>
+<h4 id="②-Set方法"><a href="#②-Set方法" class="headerlink" title="② Set方法"></a><strong>② Set方法</strong></h4><p>Set方法的实现如下：</p>
+<pre><code class="go">func (m *MemorySubSystem) Set(cgroupPath string, res *ResourceConfig) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return err
+    }
+
+    configPath := path.Join(subsystemCgroupPath, MemoryNameCgroupConfig)
+    // 如果存在内存限制的配置
+    if res.MemoryLimit != &quot;&quot; {
+        err = ioutil.WriteFile(configPath,
+            []byte(res.MemoryLimit), utils.DefaultCgroupConfigFilePerm)
+        if err != nil {
+            return fmt.Errorf(&quot;set cgroup cpuset fail %v&quot;, err)
+        }
+    }
+
+    log.Infof(&quot;set memory success, file: %s, size: %s&quot;,
+        configPath,
+        res.MemoryLimit,
+    )
+    return nil
+}</code></pre>
+<p>Set方法首先通过工具函数GetCgroupPath获取到了子Cgroup的路径；</p>
+<p>随后，通过<code>path.Join</code>拼接出了具体内存限制所对应的子Cgroup的配置文件路径，如：</p>
+<p><code>/sys/fs/cgroup/memory/testmemlimit/memory.limit_in_bytes</code></p>
+<p>可以看到：</p>
+<ul>
+<li>内存限制的根Cgroup配置路径为：<code>/sys/fs/cgroup/memory</code>;</li>
+<li>子Cgroup为：<code>testmemlimit</code>；</li>
+<li>内存限制文件为：<code>MemoryNameCgroupConfig = &quot;memory.limit_in_bytes&quot;</code>，是一个固定的值！</li>
+</ul>
+<p>然后，如果传入的配置中存在关于内存限制的配置，则将配置大小写入文件中，如：<code>1000m</code>；</p>
+<p>同时，如果不存在此文件，则创建文件后再写入；</p>
+<h4 id="③-Apply方法"><a href="#③-Apply方法" class="headerlink" title="③ Apply方法"></a><strong>③ Apply方法</strong></h4><p>Apply方法的实现也是非常简单，代码如下：</p>
+<pre><code class="go">func (m *MemorySubSystem) Apply(cgroupPath string, pid int) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+
+    configPath := path.Join(subsystemCgroupPath, CgroupConfigPath)
+    err = ioutil.WriteFile(configPath,
+        []byte(strconv.Itoa(pid)), utils.DefaultCgroupConfigFilePerm)
+    if err != nil {
+        return fmt.Errorf(&quot;set cgroup proc fail %v&quot;, err)
+    }
+
+    log.Infof(&quot;apply memory success, file: %s, pid: %d&quot;,
+        path.Join(subsystemCgroupPath, CgroupConfigPath),
+        pid,
+    )
+    return nil
+}</code></pre>
+<p>首先也是通过<code>utils.GetCgroupPath(m.Name(), cgroupPath)</code>找到内存对应的子Cgroup路径（和Set方法相同）；</p>
+<p>随后，向路径下的<code>tasks</code>文件写入指定的PID号即可！</p>
+<blockquote>
+<p>  <strong>在Linux中对于资源的限制就是这么简单！</strong></p>
+</blockquote>
+<h4 id="④-Remove方法"><a href="#④-Remove方法" class="headerlink" title="④ Remove方法"></a><strong>④ Remove方法</strong></h4><p>Remove方法就更简单了，代码如下：</p>
+<pre><code class="go">func (m *MemorySubSystem) Remove(cgroupPath string) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(m.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+    return os.RemoveAll(subsystemCgroupPath)
+}</code></pre>
+<p>直接获取当前配置路径，并删除整个配置目录即可！</p>
+<br>
+
+<h3 id="4、其他Subsystem实现"><a href="#4、其他Subsystem实现" class="headerlink" title="4、其他Subsystem实现"></a><strong>4、其他Subsystem实现</strong></h3><p>下面是CPU核心数和CPU时间片限制对应Subsystem接口实现的代码，和内存限制完全类似，这里不再赘述！</p>
+<h4 id="①-CPU核心数"><a href="#①-CPU核心数" class="headerlink" title="① CPU核心数"></a><strong>① CPU核心数</strong></h4><p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/subsystems/cpuset.go</p>
+<pre><code class="go">package subsystems
+
+import (
+    &quot;fmt&quot;
+    log &quot;github.com/sirupsen/logrus&quot;
+    &quot;io/ioutil&quot;
+    &quot;my_docker/cgroups/utils&quot;
+    &quot;os&quot;
+    &quot;path&quot;
+    &quot;strconv&quot;
+)
+
+var (
+    CpuSetName = `cpuset`
+
+    CpuSetCgroupConfig = &quot;cpuset.cpus&quot;
+)
+
+type CpuSetSubSystem struct {
+}
+
+func (c *CpuSetSubSystem) Name() string {
+    return CpuSetName
+}
+
+func (c *CpuSetSubSystem) Set(cgroupPath string, res *ResourceConfig) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return err
+    }
+
+    // 如果存在CPU核心数的配置
+    configPath := path.Join(subsystemCgroupPath, CpuSetCgroupConfig)
+    if res.CpuSet != &quot;&quot; {
+        err = ioutil.WriteFile(configPath,
+            []byte(res.CpuSet), utils.DefaultCgroupConfigFilePerm)
+        if err != nil {
+            return fmt.Errorf(&quot;set cgroup cpuset fail %v&quot;, err)
+        }
+    }
+
+    log.Infof(&quot;set cpu-set success, file: %s, cpu-set num: %s&quot;,
+        configPath,
+        res.CpuSet,
+    )
+    return nil
+}
+
+func (c *CpuSetSubSystem) Apply(cgroupPath string, pid int) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+
+    configPath := path.Join(subsystemCgroupPath, CgroupConfigPath)
+    err = ioutil.WriteFile(configPath,
+        []byte(strconv.Itoa(pid)), utils.DefaultCgroupConfigFilePerm)
+    if err != nil {
+        return fmt.Errorf(&quot;set cpuset cgroup proc fail %v&quot;, err)
+    }
+
+    log.Infof(&quot;apply cpu-set success, file: %s, pid: %d&quot;,
+        path.Join(subsystemCgroupPath, CgroupConfigPath),
+        pid,
+    )
+    return nil
+}
+
+func (c *CpuSetSubSystem) Remove(cgroupPath string) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+    return os.RemoveAll(subsystemCgroupPath)
+}</code></pre>
+<h4 id="②-CPU时间片"><a href="#②-CPU时间片" class="headerlink" title="② CPU时间片"></a><strong>② CPU时间片</strong></h4><p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/subsystems/cpu.go</p>
+<pre><code class="go">package subsystems
+
+import (
+    &quot;fmt&quot;
+    log &quot;github.com/sirupsen/logrus&quot;
+    &quot;io/ioutil&quot;
+    &quot;my_docker/cgroups/utils&quot;
+    &quot;os&quot;
+    &quot;path&quot;
+    &quot;strconv&quot;
+)
+
+var (
+    CpuName = `cpu`
+
+    CpuCgroupConfig = &quot;cpu.shares&quot;
+)
+
+type CpuSubSystem struct {
+}
+
+func (c *CpuSubSystem) Name() string {
+    return CpuName
+}
+
+func (c *CpuSubSystem) Set(cgroupPath string, res *ResourceConfig) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return err
+    }
+
+    configPath := path.Join(subsystemCgroupPath, CpuCgroupConfig)
+    // 如果存在CPU时间片的配置
+    if res.CpuShare != &quot;&quot; {
+        err = ioutil.WriteFile(configPath,
+            []byte(res.CpuShare), utils.DefaultCgroupConfigFilePerm)
+        if err != nil {
+            return fmt.Errorf(&quot;set cgroup cpu share fail %v&quot;, err)
+        }
+    }
+
+    log.Infof(&quot;set cpu-share success, file: %s, cpu-share: %s&quot;,
+        configPath,
+        res.CpuShare,
+    )
+    return nil
+}
+
+func (c *CpuSubSystem) Apply(cgroupPath string, pid int) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+
+    configPath := path.Join(subsystemCgroupPath, CgroupConfigPath)
+    err = ioutil.WriteFile(configPath,
+        []byte(strconv.Itoa(pid)), utils.DefaultCgroupConfigFilePerm)
+    if err != nil {
+        return fmt.Errorf(&quot;set cgroup proc fail %v&quot;, err)
+    }
+
+    log.Infof(&quot;apply cpu-share success, file: %s, pid: %d&quot;,
+        path.Join(subsystemCgroupPath, CgroupConfigPath),
+        pid,
+    )
+    return nil
+}
+
+func (c *CpuSubSystem) Remove(cgroupPath string) error {
+    subsystemCgroupPath, err := utils.GetCgroupPath(c.Name(), cgroupPath)
+    if err != nil {
+        return fmt.Errorf(&quot;get cgroup %s error: %v&quot;, cgroupPath, err)
+    }
+    return os.RemoveAll(subsystemCgroupPath)
+}</code></pre>
+<br>
+
+<h3 id="5、Cgroup整体管理者：CgroupManager"><a href="#5、Cgroup整体管理者：CgroupManager" class="headerlink" title="5、Cgroup整体管理者：CgroupManager"></a><strong>5、Cgroup整体管理者：CgroupManager</strong></h3><p>为了方便使用，在所有的Subsystem之上封装一个CgroupManager，通过传入ResourceConfig配置直接对资源进行限制；</p>
+<p>代码如下：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cgroups/cgroups_manager.go</p>
+<pre><code class="go">package cgroups
+
+import (
+    &quot;github.com/sirupsen/logrus&quot;
+    &quot;my_docker/cgroups/subsystems&quot;
+)
+
+// CgroupManager cgroups的整体管理者(同时管理多种类型的cgroup)
+type CgroupManager struct {
+    // cgroup在hierarchy中的路径 相当于创建的cgroup目录相对于root cgroup目录的路径
+    Path string
+    // 资源配置
+    Resource *subsystems.ResourceConfig
+}
+
+func NewCgroupManager(path string) *CgroupManager {
+    return &amp;CgroupManager{
+        Path: path,
+    }
+}
+
+// Apply 将进程pid加入到这个cgroup中
+func (c *CgroupManager) Apply(pid int) error {
+    for _, subSysIns := range subsystems.SubsystemIns {
+        err := subSysIns.Apply(c.Path, pid)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// Set 设置cgroup资源限制
+func (c *CgroupManager) Set(res *subsystems.ResourceConfig) error {
+    for _, subSysIns := range subsystems.SubsystemIns {
+        err := subSysIns.Set(c.Path, res)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// Destroy 释放cgroup
+func (c *CgroupManager) Destroy() error {
+    for _, subSysIns := range subsystems.SubsystemIns {
+        if err := subSysIns.Remove(c.Path); err != nil {
+            logrus.Warnf(&quot;remove cgroup fail %v&quot;, err)
+        }
+    }
+    return nil
+}</code></pre>
+<p>CgroupManager包括两个配置信息：</p>
+<ul>
+<li>Path：子cgroup在hierarchy中的路径，即所创建的子cgroup目录相对于根Cgroup目录的路径；</li>
+<li>Resource：即各个Subsystem所对应的资源限制；</li>
+</ul>
+<p>同时，CgroupManager包括了三个方法：Set、Apply和Destroy；</p>
+<p>实现非常简单，就是通过调用具体Subsystem数组中各个Subsystem的方法实现；</p>
+<br>
+
+<h2 id="二、构建命令行工具"><a href="#二、构建命令行工具" class="headerlink" title="二、构建命令行工具"></a><strong>二、构建命令行工具</strong></h2><p>有了资源限制器之后，接下来我们开始创建我们的命令行工具（众所周知，Docker就是一个命令行工具）；</p>
+<blockquote>
+<p>  构建命令行工具时我们使用了著名的<code>cli</code>工具库：</p>
+<ul>
+<li>github.com/urfave/cli</li>
+</ul>
+</blockquote>
+<h4 id="1、命令行预期功能实现"><a href="#1、命令行预期功能实现" class="headerlink" title="1、命令行预期功能实现"></a><strong>1、命令行预期功能实现</strong></h4><p>在本篇实现的命令行中，我们会实现：</p>
+<ul>
+<li>使用类似于<code>docker run -it [command]</code>的命令创建一个容器；</li>
+<li>使用<code>-m 100m -cpuset 1 -cpushare 512</code>等Flag对容器内资源进行限制；</li>
+</ul>
+<h4 id="2、命令行入口"><a href="#2、命令行入口" class="headerlink" title="2、命令行入口"></a><strong>2、命令行入口</strong></h4><p>在构建命令行工具时，我将采用自上而下的方式进行构建：从函数的入口开始，然后是每一个命令行Flag的实现；</p>
+<p>首先来看main函数：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/main.go</p>
+<pre><code class="go">package main
+
+import (
+    log &quot;github.com/sirupsen/logrus&quot;
+    &quot;github.com/urfave/cli&quot;
+    &quot;my_docker/cmd&quot;
+    &quot;os&quot;
+)
+
+const usage = `my-docker is a simple container runtime implementation.
+               The purpose of this project is to learn how docker works and how to write a docker by ourselves
+               Enjoy it, just for fun.`
+
+func main() {
+    app := cli.NewApp()
+    app.Name = &quot;my-docker&quot;
+    app.Usage = usage
+
+    app.Commands = []cli.Command{
+        cmd.InitCommand,
+        cmd.RunCommand,
+    }
+
+    app.Before = func(context *cli.Context) error {
+        // Log as JSON instead of the default ASCII formatter.
+        log.SetFormatter(&amp;log.JSONFormatter{})
+        log.SetOutput(os.Stdout)
+        return nil
+    }
+
+    if err := app.Run(os.Args); err != nil {
+        log.Fatal(err)
+    }
+}</code></pre>
+<p>代码非常简单：</p>
+<p>首先，使用<code>cli.NewApp()</code>创建了一个命令行应用，并指定了应用的名称和说明；</p>
+<p>随后，加入了两个命令：</p>
+<ul>
+<li><code>InitCommand</code>；</li>
+<li><code>RunCommand</code>；</li>
+</ul>
+<p><font color="#f00"><strong>注：上面这两个命令非常的重要，是实现整个容器的核心！</strong></font></p>
+<p>最后，在<code>app.Before</code>中，配置了日志输出格式和地址（标准输出流），并使用<code>app.Run(os.Args)</code>启动了应用；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>在Run方法中会匹配用户指定的命令，进入到对应的<code>XxxCommand</code>函数中！</strong></font></p>
+</blockquote>
+<br>
+
+<h2 id="三、具体命令行参数实现"><a href="#三、具体命令行参数实现" class="headerlink" title="三、具体命令行参数实现"></a><strong>三、具体命令行参数实现</strong></h2><h3 id="1、进程间通信方式管道：Pipe概述"><a href="#1、进程间通信方式管道：Pipe概述" class="headerlink" title="1、进程间通信方式管道：Pipe概述"></a><strong>1、进程间通信方式管道：Pipe概述</strong></h3><p>上面我们实现了命令行工具的入口方法，在接下来继续进行命令行命令的具体实现前，还需要补充一些关于Linix进程间通信管道（Pipe）的知识；</p>
+<blockquote>
+<p>  <font color="#f00"><strong>因为我们所创建的容器是在一个新的进程中，因此需要通过管道进行进程间通信！</strong></font></p>
+</blockquote>
+<p>进程间通信包括了很多种方式，管道只是其中一种；</p>
+<p>所谓管道（Pipe），就是一个连接两个进程的通道，他是Linux支持IPC的一种方式；</p>
+<p>通常，管道都是半双工的：一端进行写操作，而另一端进行读操作！</p>
+<p>同时，管道可以分为两种类型：</p>
+<ul>
+<li><strong>无名管道</strong>：通常用于具有亲缘关系的进程之间直接进行通信；</li>
+<li><strong>有名管道（FIFO管道）</strong>：它是一种存在于文件系统中的管道，可以被两个没有任何亲缘关系的进程进行访问；有名管道可以通过<code>mkfifo()</code>函数来创建；</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>本质上来说：管道也是文件的一种！</strong></font></p>
+<p>  但是它和文件通信的区别在于：</p>
+<p>  <font color="#f00"><strong>管道有一个固定大小的缓冲区（大小一般是4KB）：</strong></font></p>
+<ul>
+<li><font color="#f00"><strong>当管道被写满时，写进程就会被阻塞，直到有读进程把管道的内容读出来；</strong></font></li>
+<li><font color="#f00"><strong>同样地，当读进程从管道内拿数据的时候，如果这时管道的内容是空的，那么读进程同样会被阻塞，一直等到有写进程向管道内写数据！</strong></font></li>
+</ul>
+</blockquote>
+<p>在Go中，可以使用<code>os.Pipe()</code>创建一个匿名管道：</p>
+<ul>
+<li><code>func Pipe() (r *File, w *File, err error)</code>；</li>
+</ul>
+<p>函数返回两个变量，一个是读、一个是写，其类型都是文件类型；</p>
+<p><strong>在后文中，我们会使用这个函数创建宿主进程和容器进程之间的通道，将初始化命令通过宿主进程传递给容器进程中！</strong></p>
+<p>接下来进行命令的具体实现！</p>
+<br>
+
+<h3 id="2、具体命令实现"><a href="#2、具体命令实现" class="headerlink" title="2、具体命令实现"></a><strong>2、具体命令实现</strong></h3><p>对于InitCommand而言，是在容器中进行初始化时，由我们的命令行工具调用的，而非用户调用的；</p>
+<p>因此我们直接来看RunCommand命令的实现：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cmd/run_command.go</p>
+<pre><code class="go">package cmd
+
+import (
+    &quot;fmt&quot;
+    log &quot;github.com/sirupsen/logrus&quot;
+    &quot;github.com/urfave/cli&quot;
+    &quot;my_docker/cgroups&quot;
+    &quot;my_docker/cgroups/subsystems&quot;
+    &quot;my_docker/container&quot;
+    &quot;os&quot;
+    &quot;strings&quot;
+)
+
+var (
+    defaultCgroupPath = &quot;mydocker-cgroup&quot;
+)
+
+var RunCommand = cli.Command{
+    Name: &quot;run&quot;,
+    Usage: `Create a container with namespace and cgroups limit
+            my-docker run -ti [command]`,
+    Flags: []cli.Flag{
+        cli.BoolFlag{
+            Name:  &quot;ti&quot;,
+            Usage: &quot;enable tty&quot;,
+        },
+        cli.BoolFlag{
+            Name:  &quot;it&quot;,
+            Usage: &quot;enable tty&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;m&quot;,
+            Usage: &quot;memory limit&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;cpushare&quot;,
+            Usage: &quot;cpushare limit&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;cpuset&quot;,
+            Usage: &quot;cpuset limit&quot;,
+        },
+    },
+    Action: func(context *cli.Context) error {
+        // Step 1：用户初始化命令校验
+        if len(context.Args()) &lt; 1 {
+            return fmt.Errorf(&quot;missing container command&quot;)
+        }
+
+        // Step 2：获取用户命令行命令
+        // Step 2.1：从Context中获取容器内初始化命令
+        var cmdArray []string
+        for _, arg := range context.Args() {
+            cmdArray = append(cmdArray, arg)
+        }
+
+        // Step 2.2：从Context中获取容器配置相关命令
+        tty := context.Bool(&quot;ti&quot;) || context.Bool(&quot;it&quot;) // tty参数
+        resourceConfig := getResourceConfig(context)    // 容器资源限制参数
+
+        run(tty, cmdArray, resourceConfig)
+        return nil
+    },
+}
+
+func run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
+    parent, writePipe := container.NewParentProcess(tty)
+    if parent == nil {
+        log.Errorf(&quot;New parent process error&quot;)
+        return
+    }
+    err := parent.Start()
+    if err != nil {
+        log.Error(err)
+    }
+
+    cgroupManager := cgroups.NewCgroupManager(defaultCgroupPath)
+    defer func(cgroupManager *cgroups.CgroupManager) {
+        err := cgroupManager.Destroy()
+        if err != nil {
+            log.Error(err)
+        }
+    }(cgroupManager)
+
+    err = cgroupManager.Set(res)
+    if err != nil {
+        goto FASTEND
+    }
+    err = cgroupManager.Apply(parent.Process.Pid)
+    if err != nil {
+        goto FASTEND
+    }
+
+    sendInitCommand(comArray, writePipe)
+    err = parent.Wait()
+
+FASTEND:
+    if err != nil {
+        log.Error(err)
+    }
+
+    os.Exit(0)
+}
+
+func getResourceConfig(context *cli.Context) *subsystems.ResourceConfig {
+    var (
+        memoryLimit = `256m`
+        cpuset      = `1`
+        cpuShare    = `512`
+    )
+
+    if context.String(&quot;m&quot;) != &quot;&quot; {
+        memoryLimit = context.String(&quot;m&quot;)
+    }
+    if context.String(&quot;cpuset&quot;) != &quot;&quot; {
+        cpuset = context.String(&quot;cpuset&quot;)
+    }
+    if context.String(&quot;cpushare&quot;) != &quot;&quot; {
+        cpuShare = context.String(&quot;cpushare&quot;)
+    }
+
+    return &amp;subsystems.ResourceConfig{
+        MemoryLimit: memoryLimit,
+        CpuSet:      cpuset,
+        CpuShare:    cpuShare,
+    }
+}
+
+// sendInitCommand 向管道中写入用户自定义初始化命令参数
+func sendInitCommand(comArray []string, writePipe *os.File) {
+    defer func(writePipe *os.File) {
+        err := writePipe.Close()
+        if err != nil {
+            log.Errorf(&quot;close write pipe err: %v&quot;, err)
+        }
+    }(writePipe)
+
+    command := strings.Join(comArray, &quot; &quot;)
+    log.Infof(&quot;command all is %s&quot;, command)
+    _, err := writePipe.WriteString(command)
+    if err != nil {
+        log.Errorf(&quot;write pipe err: %v&quot;, err)
+        return
+    }
+}</code></pre>
+<h4 id="①-声明命令变量"><a href="#①-声明命令变量" class="headerlink" title="① 声明命令变量"></a><strong>① 声明命令变量</strong></h4><p>首先，我们声明了一个命令变量：<code>RunCommand</code>；</p>
+<pre><code class="go">var RunCommand = cli.Command{
+    Name: &quot;run&quot;,
+    Usage: `Create a container with namespace and cgroups limit
+            my-docker run -ti [command]`,
+    Flags: []cli.Flag{
+        cli.BoolFlag{
+            Name:  &quot;ti&quot;,
+            Usage: &quot;enable tty&quot;,
+        },
+        cli.BoolFlag{
+            Name:  &quot;it&quot;,
+            Usage: &quot;enable tty&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;m&quot;,
+            Usage: &quot;memory limit&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;cpushare&quot;,
+            Usage: &quot;cpushare limit&quot;,
+        },
+        cli.StringFlag{
+            Name:  &quot;cpuset&quot;,
+            Usage: &quot;cpuset limit&quot;,
+        },
+    },
+    Action: func(context *cli.Context) error {
+        // Step 1：用户初始化命令校验
+        if len(context.Args()) &lt; 1 {
+            return fmt.Errorf(&quot;missing container command&quot;)
+        }
+
+        // Step 2：获取用户命令行命令
+        // Step 2.1：从Context中获取容器内初始化命令
+        var cmdArray []string
+        for _, arg := range context.Args() {
+            cmdArray = append(cmdArray, arg)
+        }
+
+        // Step 2.2：从Context中获取容器配置相关命令
+        tty := context.Bool(&quot;ti&quot;) || context.Bool(&quot;it&quot;) // tty参数
+        resourceConfig := getResourceConfig(context)    // 容器资源限制参数
+
+        run(tty, cmdArray, resourceConfig)
+        return nil
+    },
+}</code></pre>
+<p>在变量中，我们声明了子命令的一些内容：</p>
+<ul>
+<li>Name：命令名称；</li>
+<li>Usage：命令说明；</li>
+<li>Flags：命令占位符：<ul>
+<li><code>ti &amp; it</code>：启用tty交互；</li>
+<li><code>m &amp; cpushare &amp; cpuset</code>：内存、CPU时间片以及CPU核心数资源限制；</li>
+</ul>
+</li>
+<li>Action：命令具体执行的函数，其中：<font color="#f00"><strong>Action函数的入参context中包含了用户所指定的上述所声明的Flags参数以及其他参数（用于指定容器创建后的初始化命令）</strong></font></li>
+</ul>
+<blockquote>
+<p>  这里补充说明一点：</p>
+<p>  <strong>在Action函数的入参context中：</strong></p>
+<ul>
+<li><p><strong>Flags对应的参数使用例如：<code>context.Bool(&quot;it&quot;)</code>进行取值；</strong></p>
+</li>
+<li><p><strong>用户定义的其他参数通过<code>context.Args()</code>进行取值；</strong></p>
+<p>例如命令：<code>./my_docker run -ti -m 100m -- stress --vm-bytes 200m --vm-keep -m 1</code></p>
+</li>
+<li><p><code>context.String(&quot;m&quot;)</code>会取到：<code>100m</code>；</p>
+</li>
+<li><p><code>context.Args()</code>会取到：<code>stress --vm-bytes 200m --vm-keep -m 1</code>；</p>
+</li>
+</ul>
+</blockquote>
+<p>Action函数也是非常简单：</p>
+<ul>
+<li>使用<code>context.Args()</code>获取用户初始化命令；</li>
+<li>使用<code>getResourceConfig(context)</code>获取用户所定义的容器限制命令；</li>
+<li>调用<code>run(tty, cmdArray, resourceConfig)</code>函数，开启新的进程，启动容器！</li>
+</ul>
+<p>在<code>run(tty, cmdArray, resourceConfig)</code>函数中实现了整个容器的核心内容，下面我们来看这个函数；</p>
+<br>
+
+<h4 id="②-开启新的容器进程：NewParentProcess"><a href="#②-开启新的容器进程：NewParentProcess" class="headerlink" title="② 开启新的容器进程：NewParentProcess"></a><strong>② 开启新的容器进程：NewParentProcess</strong></h4><p>run函数的整体实现如下：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cmd/run_command.go</p>
+<pre><code class="go">func run(tty bool, comArray []string, res *subsystems.ResourceConfig) {
+    parent, writePipe := container.NewParentProcess(tty)
+    if parent == nil {
+        log.Errorf(&quot;New parent process error&quot;)
+        return
+    }
+    err := parent.Start()
+    if err != nil {
+        log.Error(err)
+    }
+
+    cgroupManager := cgroups.NewCgroupManager(defaultCgroupPath)
+    defer func(cgroupManager *cgroups.CgroupManager) {
+        err := cgroupManager.Destroy()
+        if err != nil {
+            log.Error(err)
+        }
+    }(cgroupManager)
+
+    err = cgroupManager.Set(res)
+    if err != nil {
+        goto FASTEND
+    }
+    err = cgroupManager.Apply(parent.Process.Pid)
+    if err != nil {
+        goto FASTEND
+    }
+
+    sendInitCommand(comArray, writePipe)
+    err = parent.Wait()
+
+FASTEND:
+    if err != nil {
+        log.Error(err)
+    }
+    os.Exit(0)
+}</code></pre>
+<p>在run函数中，首先我们调用了container包中的<code>NewParentProcess(tty)</code>函数创建了一个子进程：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/container/container.go</p>
+<pre><code class="go">func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
+    readPipe, writePipe, err := utils.NewPipe()
+    if err != nil {
+        log.Errorf(&quot;New pipe error %v&quot;, err)
+        return nil, nil
+    }
+
+    // 子进程中调用自己，并发送init参数，在子进程中初始化容器资源（自己的init命令！）
+    cmd := exec.Command(&quot;/proc/self/exe&quot;, &quot;init&quot;)
+    cmd.SysProcAttr = &amp;syscall.SysProcAttr{
+        Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC |
+            syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWNET,
+    }
+    // 如果支持tty
+    if tty {
+        cmd.Stdin = os.Stdin
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+    }
+
+    cmd.ExtraFiles = []*os.File{readPipe}
+    return cmd, writePipe
+}</code></pre>
+<p>在<code>NewParentProcess</code>函数中，首先创建了一个前文中所提到的管道；</p>
+<p>随后，创建了一个命令行：</p>
+<ul>
+<li><code>/proc/self/exe init</code>；</li>
+</ul>
+<p><font color="#f00"><strong>注：上面的这个命令行可以说是整个容器实现中最为巧妙的地方！（Docker也是使用这个方式进行容器内资源初始化的！）</strong></font></p>
+<blockquote>
+<p>  <font color="#f00"><strong>这里重点介绍一下上面创建的命令的含义：</strong></font></p>
+<p>  <font color="#f00"><strong>由本篇最开始的<code>/proc</code>介绍可知：<code>/proc/self/exe</code>链接到了当前进程的执行命令文件；</strong></font></p>
+<p>  <font color="#f00"><strong>因此：<code>/proc/self/exe init</code>命令将会再次调用docker命令本身，即：<code>docker init</code>，从而执行到我们所声明的<code>InitCommand</code>函数中（注：此时已经进入到了容器进程中！）并完成初始化！</strong></font></p>
+</blockquote>
+<p>随后，对命令进行了Namespace绑定：</p>
+<pre><code class="go">cmd.SysProcAttr = &amp;syscall.SysProcAttr{
+    Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC |
+        syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWNET,
+}</code></pre>
+<p>同时，如果支持tty，还会将子进程中的标准流和当前进程中的流进行绑定：</p>
+<pre><code class="go">if tty {
+    cmd.Stdin = os.Stdin
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+}</code></pre>
+<p>最后，将所创建的管道对应的<code>readPipe</code>传递给命令<strong>（之后会传入容器进程中，用于接收宿主进程发送的初始化消息）</strong>，并返回创建的命令和<code>writePipe</code><strong>（用于宿主进程向容器进程发送消息）；</strong></p>
+<br>
+
+<p>接着，我们回到<code>run</code>函数中：</p>
+<pre><code class="go">err := parent.Start()
+if err != nil {
+    log.Error(err)
+}</code></pre>
+<p><font color="#f00"><strong><code>run</code>函数调用返回的命令的<code>Start</code>函数<code>parent.Start()</code>创建新的进程，即：容器进程！</strong></font></p>
+<p>这时就会调用我们的<code>InitCommand</code>函数；</p>
+<p>让我们看一下<code>init</code>命令的实现；</p>
+<br>
+
+<h4 id="③-初始化容器：InitCommand"><a href="#③-初始化容器：InitCommand" class="headerlink" title="③ 初始化容器：InitCommand"></a><strong>③ 初始化容器：InitCommand</strong></h4><p>下面是InitCommand的声明：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/cmd/init_command.go</p>
+<pre><code class="go">var InitCommand = cli.Command{
+    Name:  &quot;init&quot;,
+    Usage: &quot;Init container process run user&#39;s process in container. Do not call it outside&quot;,
+    Action: func(context *cli.Context) error {
+        log.Infof(&quot;init come on&quot;)
+        err := container.RunContainerInitProcess()
+        return err
+    },
+}</code></pre>
+<p>可以看到，InitCommand调用了container包中的<code>RunContainerInitProcess</code>函数：</p>
+<p>chapter3_container/3_3_container_with_limit_and_pipe/container/container.go</p>
+<pre><code class="go">// RunContainerInitProcess 在容器中创建初始化进程！（本函数在容器内部，作为第一个进程被执行）
+func RunContainerInitProcess() error {
+    // systemd 加入linux之后, mount namespace 就变成 shared by default, 所以你必须显式声明你要这个新的mount namespace独立！
+    // Issue：https://github.com/xianlubird/mydocker/issues/41
+    err := syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)
+    if err != nil {
+        return err
+    }
+
+    // 从无名管道中获取用户的参数（从WritePipe过来！）
+    cmdArray := readUserCommand()
+    if cmdArray == nil || len(cmdArray) == 0 {
+        return fmt.Errorf(&quot;run container get user command error, cmdArray is nil&quot;)
+    }
+
+    // 使用 mount 挂载 proc 文件系统（以便后面通过 ps 命令查看当前进程资源）
+    // MS_NOEXEC：本文件系统不允许运行其他程序
+    // MS_NOSUID：本系统运行程序时，不允许 set-user-id, set-group-id
+    // MS_NODEV：mount系统的默认参数
+    defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
+    err = syscall.Mount(&quot;proc&quot;, &quot;/proc&quot;, &quot;proc&quot;, uintptr(defaultMountFlags), &quot;&quot;)
+    if err != nil {
+        return err
+    }
+
+    // 查询命令的绝对路径，此时用户可以不再输入绝对路径！
+    absPath, err := exec.LookPath(cmdArray[0])
+    if err != nil {
+        log.Errorf(&quot;Exec loop path error %v&quot;, err)
+        return err
+    }
+    log.Infof(&quot;find cmd absolute path %s&quot;, absPath)
+
+    // 完成容器内初始化，并将用户进程运行起来！
+    // syscall.Exec 最终调用 execve 系统函数，执行当前 filename 对应程序
+    // 并”覆盖“当前进程的镜像、数据和堆栈等信息，包括PID，因此将容器最开始的 init 进程替换掉！
+    if err := syscall.Exec(absPath, cmdArray, os.Environ()); err != nil {
+        log.Errorf(&quot;init container err: %v&quot;, err.Error())
+    }
+    return nil
+}</code></pre>
+<p>在<code>RunContainerInitProcess</code>函数中：</p>
+<p>首先，<strong>我们重新挂载了<code>/</code>，这是为了解决在 <code>systemd</code> 加入linux之后, mount namespace 默认就变成了 shared by default，因此需要显式声明新的mount namespace独立！</strong></p>
+<p>随后，调用了<code>readUserCommand()</code>从无名管道中获取用户的容器初始化参数，代码如下：</p>
+<pre><code class="go">// 从无名管道中获取输入
+func readUserCommand() []string {
+    // 这里用3号文件描述符是因为，我们只创建了一个管道流，而默认是0、1、2（标准输入+输出，错误输出）
+    pipe := os.NewFile(uintptr(3), &quot;pipe&quot;)
+    msg, err := ioutil.ReadAll(pipe)
+    if err != nil {
+        log.Errorf(&quot;init read pipe error %v&quot;, err)
+        return nil
+    }
+    msgStr := string(msg)
+    return strings.Split(msgStr, &quot; &quot;)
+}</code></pre>
+<p>这里通过3号文件描述符<strong>（这里用3号文件描述符是因为，我们只创建了一个管道流，而默认是0、1、2【标准输入+输出，错误输出】）</strong>取出了我们的父进程输入流，</p>
+<p><font color="#f00"><strong>注：此时父进程（宿主进程）还没有向管道中写入数据！因此，此时<code>容器进程</code>会在此阻塞（<code>ioutil.ReadAll(pipe)</code>）！</strong></font></p>
+<p><font color="#f00"><strong>直到宿主进程向子进程中发送了初始化命令后，容器进程才会继续执行！</strong></font></p>
+<p>当宿主进程通过管道向子进程发送了初始化命令后，<code>readUserCommand</code>函数获取用户的初始化命令数组，并返回；</p>
+<p>随后，容器进程重新挂载 proc 文件系统，并从<code>$PATH</code>中获取用户初始化命令的绝对路径<code>absPath</code>；</p>
+<p>最终，调用<code>syscall.Exec(absPath, cmdArray, os.Environ())</code>，使用用户传输的命令进行容器的初始化！</p>
+<blockquote>
+<p>  <font color="#f00"><strong>注：Go语言中的 <code>syscall.Exec</code> 函数最终会调用 <code>execve</code> 系统函数，执行当前 filename 对应程序，并<code>覆盖</code>当前进程的镜像、数据和堆栈等信息，包括PID，因此会将将容器最开始的 init 进程替换掉！</strong></font></p>
+<p>  <font color="#f00"><strong>即：PID为1的进程不再是init，而是用户指定的初始化命令所对应的进程！</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="④-挂载Cgroup进行资源限制"><a href="#④-挂载Cgroup进行资源限制" class="headerlink" title="④ 挂载Cgroup进行资源限制"></a><strong>④ 挂载Cgroup进行资源限制</strong></h4><p>让我们把视线再转移回 <code>run</code>函数！</p>
+<p>当调用了<code>parent.Start()</code>后，容器进程被创建，并等待宿主进程中的初始化命令，随后完成容器初始化；</p>
+<p>此时正是我们对容器进程进行资源限制的最好时机！</p>
+<p>因此，在 <code>run</code> 函数中，接下来进行了Cgroup和PID之间的绑定，进行资源的限制：</p>
+<pre><code class="go">cgroupManager := cgroups.NewCgroupManager(defaultCgroupPath)
+defer func(cgroupManager *cgroups.CgroupManager) {
+    err := cgroupManager.Destroy()
+    if err != nil {
+        log.Error(err)
+    }
+}(cgroupManager)
+
+err = cgroupManager.Set(res)
+if err != nil {
+    goto FASTEND
+}
+err = cgroupManager.Apply(parent.Process.Pid)
+if err != nil {
+    goto FASTEND
+}</code></pre>
+<blockquote>
+<p>  <font color="#f00"><strong>注1：如果先初始化，后绑定，则不会对初始化命令的资源进行限制！</strong></font></p>
+<p>  <font color="#f00"><strong>注2：直接使用<code>parent.Process.Pid</code>获取容器进程的PID即可！</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="⑤-宿主进程向容器进程发送初始化命令：sendInitCommand"><a href="#⑤-宿主进程向容器进程发送初始化命令：sendInitCommand" class="headerlink" title="⑤ 宿主进程向容器进程发送初始化命令：sendInitCommand"></a><strong>⑤ 宿主进程向容器进程发送初始化命令：sendInitCommand</strong></h4><p>在对容进程进行了资源限制之后，宿主进程可以向容器进程发送初始化命令，完成容器的初始化；</p>
+<p>发送命令主要是通过<code>sendInitCommand</code>函数完成的：</p>
+<pre><code class="go">// sendInitCommand 向管道中写入用户自定义初始化命令参数
+func sendInitCommand(comArray []string, writePipe *os.File) {
+    defer func(writePipe *os.File) {
+        err := writePipe.Close()
+        if err != nil {
+            log.Errorf(&quot;close write pipe err: %v&quot;, err)
+        }
+    }(writePipe)
+
+    command := strings.Join(comArray, &quot; &quot;)
+    log.Infof(&quot;command all is %s&quot;, command)
+    _, err := writePipe.WriteString(command)
+    if err != nil {
+        log.Errorf(&quot;write pipe err: %v&quot;, err)
+        return
+    }
+}</code></pre>
+<p><code>sendInitCommand</code>函数很简单：就是通过<code>writePipe</code>向容器进程发送了用户初始化命令；</p>
+<p>当发送完成后，容器进程便开始进行初始化；</p>
+<p>同时，宿主进程等待容器进程完成：</p>
+<pre><code class="go">err = parent.Wait()</code></pre>
+<p>此时，我们的容器进程初始化完毕，可以使用！</p>
+<p>至此，我们的容器创建完毕！</p>
+<br>
+
+<h2 id="四、命令测试"><a href="#四、命令测试" class="headerlink" title="四、命令测试"></a><strong>四、命令测试</strong></h2><p>我们的容器已经写完了，那么效果如何呢？是骡子是马，拉出来溜溜吧！</p>
+<p>首先使用<code>go build</code>编译我们的Docker：</p>
+<pre><code class="bash">root@jasonkay:~/workspace/my_docker/chapter3_container/3_3_container_with_limit_and_pipe# go build
+root@jasonkay:~/workspace/my_docker/chapter3_container/3_3_container_with_limit_and_pipe# ll
+total 4684
+drwxr-xr-x 6 root root    4096 Sep  5 20:04 ./
+drwxr-xr-x 5 root root    4096 Aug 28 18:54 ../
+drwxr-xr-x 4 root root    4096 Aug 28 18:54 cgroups/
+drwxr-xr-x 2 root root    4096 Aug 28 19:16 cmd/
+drwxr-xr-x 2 root root    4096 Aug 28 19:18 container/
+-rw-r--r-- 1 root root     105 Aug 27 19:53 go.mod
+-rw-r--r-- 1 root root    1965 Aug 27 16:19 go.sum
+-rw-r--r-- 1 root root     719 Aug 27 19:54 main.go
+-rwxr-xr-x 1 root root 4747218 Sep  5 20:04 my_docker*
+-rw-r--r-- 1 root root     136 Aug 28 19:25 README.md
+-rw-r--r-- 1 root root    1540 Aug 28 19:27 test-ls.sh
+-rw-r--r-- 1 root root    2117 Aug 28 19:29 test-memory.sh
+drwxr-xr-x 2 root root    4096 Aug 28 18:59 utils/</code></pre>
+<h3 id="1、无资源限制测试"><a href="#1、无资源限制测试" class="headerlink" title="1、无资源限制测试"></a><strong>1、无资源限制测试</strong></h3><h4 id="①-ls命令测试"><a href="#①-ls命令测试" class="headerlink" title="① ls命令测试"></a><strong>① ls命令测试</strong></h4><p>直接执行下面的命令进行测试：</p>
+<pre><code class="bash">./my_docker run -ti /bin/ls</code></pre>
+<p>输出如下：</p>
+<pre><code class="bash">{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;init come on&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/cpuset.cpus, cpu-set num: 1&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/memory.limit_in_bytes, size: 256m&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/cpu.shares, cpu-share: 512&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/tasks, pid: 355195&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/tasks, pid: 355195&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/tasks, pid: 355195&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;command all is /bin/ls&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;find cmd absolute path /bin/ls&quot;,&quot;time&quot;:&quot;2021-09-05T20:05:20Z&quot;}
+
+cgroups  cmd  container  go.mod  go.sum  main.go  my_docker  README.md  test-ls.sh  test-memory.sh  utils</code></pre>
+<p>容器执行<code>ls</code>命令完成后退出，这和 Docker 中：<strong>无前台进程启动时容器自动退出的逻辑完全一致！</strong></p>
+<p>同时，可以看到整个Docker执行的日志，以及执行顺序：</p>
+<ul>
+<li>初始化；</li>
+<li>设置资源限制<strong>（这里命令行并未给定资源限制，使用的是资源限制的默认值！）；</strong></li>
+<li>子进程查找<code>ls</code>命令的绝对路径（<strong>这里能够看到子进程的日志是因为我们指定了<code>tty</code>将标准流和当前进程绑定）</strong>；</li>
+<li>执行命令<code>/bin/ls</code>，打印出结果！</li>
+</ul>
+<blockquote>
+<p>  <font color="#f00"><strong>注意到：我们并未挂载新的目录，因此容器进程可以打印出宿主进程中当前目录下的文件！</strong></font></p>
+</blockquote>
+<br>
+
+<h4 id="②-sh命令测试"><a href="#②-sh命令测试" class="headerlink" title="② sh命令测试"></a><strong>② sh命令测试</strong></h4><p>除了<code>ls</code>命令外，我们还可以直接执行<code>sh</code>命令进入容器环境！</p>
+<p>执行下面的命令：</p>
+<pre><code class="bash">./my_docker run -ti /bin/sh</code></pre>
+<p>此时输出日志，并进入容器进程中：</p>
+<pre><code class="bash">root@jasonkay:~/workspace/my_docker/chapter3_container/3_3_container_with_limit_and_pipe# ./my_docker run -ti /bin/sh
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;init come on&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:02Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/cpuset.cpus, cpu-set num: 1&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/memory.limit_in_bytes, size: 256m&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/cpu.shares, cpu-share: 512&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/tasks, pid: 355424&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/tasks, pid: 355424&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/tasks, pid: 355424&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;command all is /bin/sh&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;find cmd absolute path /bin/sh&quot;,&quot;time&quot;:&quot;2021-09-05T20:12:03Z&quot;}
+# </code></pre>
+<p>查看容器中的进程列表：</p>
+<pre><code class="bash"># ps -ef
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 20:12 pts/0    00:00:00 /bin/sh
+root           6       1  0 20:12 pts/0    00:00:00 ps -ef</code></pre>
+<p>可以看到，容器中PID为1的进程就是我们所指定的进程：<code>sh</code>！</p>
+<p>接下来对资源限制功能进行测试！</p>
+<br>
+
+<h3 id="2、资源限制测试"><a href="#2、资源限制测试" class="headerlink" title="2、资源限制测试"></a><strong>2、资源限制测试</strong></h3><p>执行下面的命令，在容器中执行<code>stress</code>命令模拟系统负载较高时的场景；</p>
+<pre><code class="bash"># ./my_docker run -ti -m 100m -- stress --vm-bytes 200m --vm-keep -m 1
+
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;init come on&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/cpuset.cpus, cpu-set num: 1&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/memory.limit_in_bytes, size: 100m&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;set cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/cpu.shares, cpu-share: 512&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-set success, file: /sys/fs/cgroup/cpuset/mydocker-cgroup/tasks, pid: 355573&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply memory success, file: /sys/fs/cgroup/memory/mydocker-cgroup/tasks, pid: 355573&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;apply cpu-share success, file: /sys/fs/cgroup/cpu,cpuacct/mydocker-cgroup/tasks, pid: 355573&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;command all is stress --vm-bytes 200m --vm-keep -m 1&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;find cmd absolute path /usr/bin/stress&quot;,&quot;time&quot;:&quot;2021-09-05T20:15:30Z&quot;}
+stress: info: [1] dispatching hogs: 0 cpu, 0 io, 1 vm, 0 hdd</code></pre>
+<p>我们<code>stress</code>命令指定的内存占用为<code>200m</code>，而对容器进程的资源占用限制为<code>100m</code>；</p>
+<p>可以在宿主机中查看资源占用情况：</p>
+<pre><code class="bash"># top
+
+top - 20:16:37 up 8 days,  4:01,  2 users,  load average: 0.79, 0.27, 0.08
+Tasks: 267 total,   2 running, 265 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.4 us,  9.7 sy,  0.0 ni, 87.2 id,  2.6 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :  15985.9 total,   9795.9 free,   2824.4 used,   3365.6 buff/cache
+MiB Swap:  12288.0 total,  12184.2 free,    103.8 used.  12832.9 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                             
+ 355578 root      20   0  208660 101456    272 R  73.3   0.6   0:50.78 stress  </code></pre>
+<p>可以看到，仅仅占用了 <code>15985.9 * 0.6% = 95.9154 ≈ 100M</code> 内存，我们成功限制了容器进程的内存占用！</p>
+<p>其他的资源限制也是可以生效的，这里由于篇幅的原因，不再赘述了！</p>
+<br>
+
+<h2 id="其他内容"><a href="#其他内容" class="headerlink" title="其他内容"></a><strong>其他内容</strong></h2><p>在执行命令时可能会报错：<code>cgroup：no space left on device</code>，即：<code>cpuset中tasks无法加入新的pid</code>！</p>
+<p>这是由于默认的Cgroups的mems文件是空的，我们只需要写入一个值，分配内存即可，如：</p>
+<pre><code class="bash">echo 0 &gt; /sys/fs/cgroup/cpuset/mydocker-cgroup/cpuset.mems</code></pre>
+<blockquote>
+<p>  对应Issue：<a href="https://github.com/xianlubird/mydocker/issues/74" target="_blank" rel="noopener">https://github.com/xianlubird/mydocker/issues/74</a></p>
+<p>  相关文章：<a href="https://blog.csdn.net/xftony/article/details/80536562" target="_blank" rel="noopener">https://blog.csdn.net/xftony/article/details/80536562</a></p>
+</blockquote>
+<br>
+
+<h2 id="本篇小结"><a href="#本篇小结" class="headerlink" title="本篇小结"></a><strong>本篇小结</strong></h2><p>本篇主要在前面Namespace、Cgroups等概念的基础之上，手动实现了一个能够进行资源占用的类Docker容器！</p>
+<p>期间主要穿插讲解了，如：</p>
+<ul>
+<li><code>/proc</code>文件系统；</li>
+<li>进程间通信管道；</li>
+<li>……</li>
+</ul>
+<p>等内容；</p>
+<p>可以注意到，在执行时容器环境和宿主环境还并未完全隔离；</p>
+<p>当然，这也是下一篇文章的内容，下一篇文章将会构建一个资源完全隔离的Docker镜像，尽请期待！</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>系列文章：</p>
+<ul>
+<li><a href="/2021/08/29/Docker原理实战-1：Namespace/">Docker原理实战-1：Namespace</a></li>
+<li><a href="/2021/08/29/Docker原理实战-2：Cgroups/">Docker原理实战-2：Cgroups</a></li>
+<li><a href="/2021/08/29/Docker原理实战-3：UnionFS/">Docker原理实战-3：UnionFS</a></li>
+<li><a href="/2021/09/05/Docker原理实战-4：容器Container/">Docker原理实战-4：容器Container</a></li>
+</ul>
+<p>源代码：</p>
+<ul>
+<li><a href="https://github.com/JasonkayZK/my_docker" target="_blank" rel="noopener">https://github.com/JasonkayZK/my_docker</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2021/09/05/Docker原理实战-4：容器Container/" title="https://jasonkayzk.github.io/2021/09/05/Docker原理实战-4：容器Container/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2021/09/05/Docker原理实战-4：容器Container/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725322653"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

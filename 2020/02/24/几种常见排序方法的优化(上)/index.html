@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>几种常见排序方法的优化(上) - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="最近花了几天重温了一下《算法(第四版)》, 重新把书中的算法实现了一下, 并且思索了一下, 把常见的比较排序算法都给优化了一下. 也算是复习了一下排序算法吧.">
+<meta name="keywords" content="算法,排序">
+<meta property="og:type" content="article">
+<meta property="og:title" content="几种常见排序方法的优化(上)">
+<meta property="og:url" content="https://jasonkayzk.github.io/2020/02/24/几种常见排序方法的优化(上)/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="最近花了几天重温了一下《算法(第四版)》, 重新把书中的算法实现了一下, 并且思索了一下, 把常见的比较排序算法都给优化了一下. 也算是复习了一下排序算法吧.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015223238449-2146169197.gif">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015224719590-1433219824.gif">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015225645277-1151100000.gif">
+<meta property="og:image" content="https://images2018.cnblogs.com/blog/849589/201803/849589-20180331170017421-364506073.gif">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.757Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="几种常见排序方法的优化(上)">
+<meta name="twitter:description" content="最近花了几天重温了一下《算法(第四版)》, 重新把书中的算法实现了一下, 并且思索了一下, 把常见的比较排序算法都给优化了一下. 也算是复习了一下排序算法吧.">
+<meta name="twitter:image" content="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015223238449-2146169197.gif">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725350765">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?31">
+    
+    <h1>几种常见排序方法的优化(上)</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2020年02月24日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 39 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/算法/">算法</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/排序/">排序</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/算法/">算法</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#零-排序通用方法的抽象"><span class="toc-text">零.排序通用方法的抽象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一-冒泡排序优化及性能测试"><span class="toc-text">一.冒泡排序优化及性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-算法描述"><span class="toc-text">1.算法描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-动图演示"><span class="toc-text">2.动图演示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-代码实现"><span class="toc-text">3.代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-优化方法"><span class="toc-text">4.优化方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-性能测试"><span class="toc-text">5.性能测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-性能测试总结"><span class="toc-text">6.性能测试总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-选择排序优化及性能测试"><span class="toc-text">二.选择排序优化及性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-算法描述-1"><span class="toc-text">1.算法描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-动图演示-1"><span class="toc-text">2.动图演示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-代码实现-1"><span class="toc-text">3.代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-优化方法-1"><span class="toc-text">4.优化方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-性能测试-1"><span class="toc-text">5.性能测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-性能测试总结-1"><span class="toc-text">6.性能测试总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-插入排序优化及性能测试"><span class="toc-text">三.插入排序优化及性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-算法描述-2"><span class="toc-text">1.算法描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-动图演示-2"><span class="toc-text">2.动图演示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-代码实现-2"><span class="toc-text">3.代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-优化方法-2"><span class="toc-text">4.优化方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-性能测试-2"><span class="toc-text">5.性能测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-性能测试总结-2"><span class="toc-text">6.性能测试总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-希尔排序以及不同递增序列的性能测试"><span class="toc-text">四.希尔排序以及不同递增序列的性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-算法描述-3"><span class="toc-text">1.算法描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-动图演示-3"><span class="toc-text">2.动图演示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-代码实现-3"><span class="toc-text">3.代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-优化方法-3"><span class="toc-text">4.优化方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-性能测试-3"><span class="toc-text">5.性能测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-性能测试总结-3"><span class="toc-text">6.性能测试总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>最近花了几天重温了一下《算法(第四版)》, 重新把书中的算法实现了一下, 并且思索了一下, 把常见的比较排序算法都给优化了一下, 然后进行了性能测试. 也算是复习了一下排序算法吧.</p>
+<p>阅读本篇之前最好有常见几种基于的比较排序算法的基础</p>
+<p>本文内容包括:</p>
+<ul>
+<li>排序算法的一些通用方法抽象类(父类BaseSort)</li>
+<li>冒泡排序优化及性能测试</li>
+<li>选择排序优化及性能测试</li>
+<li>插入排序优化及性能测试</li>
+<li>希尔排序以及不同递增序列的性能测试</li>
+</ul>
+<p>源代码: </p>
+<ul>
+<li>排序类: <a href="https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/sort" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/sort</a></li>
+<li>排序测试: <a href="https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/test/java/algorithm/sort" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/test/java/algorithm/sort</a></li>
+</ul>
+<p>如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯</p>
+<p>内容和博客同步更新~</p>
+<br>
+
+<a id="more"></a>
+
+<h2 id="零-排序通用方法的抽象"><a href="#零-排序通用方法的抽象" class="headerlink" title="零.排序通用方法的抽象"></a>零.排序通用方法的抽象</h2><p>对于一般的排序方法, 都会包括大量的数组访问操作、比较操作(less)以及交换操作(exch)</p>
+<p>此外还需要一些用来检验是否已经有序的方法, 如:</p>
+<ul>
+<li>isSorted: 遍历数组, 判断数组是否已经有序</li>
+<li>show: 将结果展示</li>
+<li>……</li>
+</ul>
+<p>为了实现代码的复用性, 本文创建了一个基本的排序抽象类BaseSort, 其中实现了排序类都应具有的一些方法</p>
+<p>BaseSort.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+
+import java.util.Arrays;
+
+/**
+ * 排序类的例子
+ *
+ * 主要实现了比较less()方法, 交换exch()方法
+ *
+ * 以及输出数组show(), 排序验证isSorted()方法
+ *
+ * @author zk
+ */
+public abstract class BaseSort {
+
+    /**
+     * 排序类应当实现的具体排序方法
+     *
+     */
+    private static void sort() {}
+
+    /**
+     * 比较v和w, 返回v是否比w小
+     *
+     * @param v 比较值v
+     * @param w 比较值w
+     * @return v &lt; w返回true, v &gt;= w返回false
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; boolean less(K v, K w) {
+        return v.compareTo(w) &lt; 0;
+    }
+
+    /**
+     * 在数组a中交换索引i, j对应元素
+     *
+     * @param a 数组a
+     * @param i 索引i
+     * @param j 索引j
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void exch(K[] a, int i, int j) {
+        K t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void show(K[] a) {
+        Arrays.stream(a).forEach(x -&gt; System.out.print(x + &quot; &quot;));
+        StdOut.println();
+    }
+
+    /**
+     * 判断数组a是否有序
+     *
+     * @param a 数组
+     * @return a有序?
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; boolean isSorted(K[] a) {
+        return isSorted(a, 0, a.length - 1);
+    }
+
+    public static boolean isSorted(int[] a) {
+        return isSorted(a, 0, a.length - 1);
+    }
+
+    public static boolean isSorted(double[] a) {
+        return isSorted(a, 0, a.length - 1);
+    }
+
+    /**
+     * 判断数组a[lo...hi]区间是否有序
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; boolean isSorted(K[] a, int lo, int hi) {
+        for (int i = lo + 1; i &lt;= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
+
+    public static boolean isSorted(int[] a, int lo, int hi) {
+        for (int i = lo + 1; i &lt;= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
+
+    public static boolean isSorted(double[] a, int lo, int hi) {
+        for (int i = lo + 1; i &lt;= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
+
+}</code></pre>
+<blockquote>
+<br>
+
+<p><strong>说明:</strong></p>
+<p>为了更好的复用排序算法, 本文<strong>尽量使用实现了Comparable接口的泛型</strong>来实现算法, 并通过less代替比较运算符进行比较</p>
+</blockquote>
+<br>
+
+<h2 id="一-冒泡排序优化及性能测试"><a href="#一-冒泡排序优化及性能测试" class="headerlink" title="一.冒泡排序优化及性能测试"></a>一.冒泡排序优化及性能测试</h2><p>冒泡排序是一种简单的排序算法。它重复地走访过要排序的数列，一次比较两个元素，如果它们的顺序错误就把它们交换过来。走访数列的工作是重复地进行直到没有再需要交换，也就是说该数列已经排序完成</p>
+<p>这个算法的名字由来是因为越小的元素会经由交换慢慢“浮”到数列的顶端</p>
+<h3 id="1-算法描述"><a href="#1-算法描述" class="headerlink" title="1.算法描述"></a><strong>1.算法描述</strong></h3><ul>
+<li>比较相邻的元素。如果第一个比第二个大，就交换它们两个；</li>
+<li>对每一对相邻元素作同样的工作，从开始第一对到结尾的最后一对，这样在最后的元素应该会是最大的数；</li>
+<li>针对所有的元素重复以上的步骤，除了最后一个；</li>
+<li>重复步骤1~3，直到排序完成</li>
+</ul>
+<h3 id="2-动图演示"><a href="#2-动图演示" class="headerlink" title="2.动图演示"></a><strong>2.动图演示</strong></h3><p><img src="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015223238449-2146169197.gif" alt="BubbleSort.gif"></p>
+<h3 id="3-代码实现"><a href="#3-代码实现" class="headerlink" title="3.代码实现"></a><strong>3.代码实现</strong></h3><p>BubbleSort.java</p>
+<pre><code class="java">/**
+ * 冒泡排序
+ * 
+ * 每一轮遍历将最大的元素放在当前排序序列末尾, 并且当前数组个数从末端减一
+ * 
+ * 相比于选择排序, 冒泡排序使用了更多的交换!
+ * 
+ * 平均时间: O(N^2)
+ * 
+ * 最好时间: O(N^2)
+ * 
+ * 最坏时间: O(N^2)
+ * 
+ * 空间: O(1)
+ *
+ * @author zk
+ */
+public class BubbleSort extends BaseSort {
+
+    /**
+     * 冒泡排序最基本实现
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void sort(K[] a) {
+        // 确定排序趟数
+        // 最后一次循环仅有一个元素, 所以可以i &lt; len - 1
+        for (int i = 0, len = a.length; i &lt; len - 1; i++) {
+            // 确定每趟比较次数
+            for (int j = 0; j &lt; len - i - 1; j++) {
+                if (less(a[j + 1], a[j])) {
+                    exch(a, j, j + 1);
+                }
+            }
+        }
+    }
+
+}
+</code></pre>
+<h3 id="4-优化方法"><a href="#4-优化方法" class="headerlink" title="4.优化方法"></a><strong>4.优化方法</strong></h3><p><strong>① 增加排序结束标记</strong></p>
+<p>在交换的地方加一个标记，如果那一趟排序没有交换元素，说明这组数据已经有序，不用再继续下去</p>
+<blockquote>
+  <br>
+
+<p>  <strong>注: 这里用到了冒泡每次都要交换的特点, 而选择排序仅仅交换一次!</strong></p>
+</blockquote>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void sortWithFlag(K[] a) {
+    for (int i = 0, len = a.length; i &lt; len - 1; i++) {
+        boolean finished = true; // 在此加入一个标志位, 每次循环开始则更新
+        for (int j = 0; j &lt; len - 1 - i; j++) {
+            if (less(a[j + 1], a[j])) {
+                exch(a, j, j + 1);
+                finished = false; // 出现交换则改为false
+            }
+        }
+        if (finished) {
+            return;
+        }
+    }
+}</code></pre>
+<hr>
+<p><strong>② 修改末尾有序子数组边界</strong></p>
+<p>对于前面大部分是无序而后边小半部分有序的数据, 如: (1，2，5，7，4，3，6，8，9)</p>
+<p>排序效率也不可观, 对于这种类型数据，我们可以继续优化: </p>
+<p>可以<strong>记下最后一次交换的位置，后边没有交换，必然是有序的;</strong> 然后下一次排序从第一个比较到上次记录的位置结束即可</p>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void sortWithCheckBound(K[] a) {
+    // k作为最后一次交换的位置循环边界
+    int len = a.length;
+    // pos用来记录最后一次交换的位置
+    // k作为循环终止条件(因为需要在循环内部改动pos!)
+    int pos = 0, k = len - 1;
+    for (int i = 0; i &lt; len - 1; i++) {
+        boolean finished = true;
+        for (int j = 0; j &lt; k; j++) {
+            if (less(a[j + 1], a[j])) {
+                exch(a, j, j + 1);
+                finished = false;
+                // 交换元素，记录最后一次交换的位置
+                pos = j;
+            }
+        }
+        if (finished) break;
+        // 下一次比较到记录位置即可
+        k = pos;
+    }
+}</code></pre>
+<hr>
+<p><strong>③ 双边排序</strong></p>
+<p>一次排序可以确定两个值，正向扫描找到最大值交换到最后，反向扫描找到最小值交换到最前面</p>
+<p>同时, 可以记录左右两边均有序时的bound(后面选择排序的优化也进行了类似的操作)</p>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void sortBilaterally(K[] a) {
+    // k作为最后一次交换的位置循环边界
+    int len = a.length;
+
+    // leftBound, rightBound记录左右冒泡最后一次交换的位置
+    // leftVar, rightVar作为循环终止条件(因为需要在循环内部改动pos)
+    int leftBound = 0, leftVar = 0, rightBound = len - 1, rightVar = len - 1;
+
+    // 同时找最大值的最小需要两个下标遍历
+    int n = 0;
+
+    for (int i = 0; i &lt; len - 1; i++) {
+        boolean finished = true;
+        // 正向寻找最大值
+        for (int j = leftVar; j &lt; rightVar; j++) {
+            if (less(a[j + 1], a[j])) {
+                exch(a, j, j + 1);
+                // 加入标记
+                finished = false;
+                // 交换元素，记录正向冒泡最后一次交换的位置
+                rightBound = j;
+            }
+        }
+        // 如果没有交换过元素，则已经有序,直接结束
+        if (finished) return;
+        // 下一次正向冒泡比较到记录位置即可
+        rightVar = rightBound;
+
+        // 反向寻找最小值
+        for (int j = rightVar; j &gt; leftVar; j--) {
+            if (less(a[j], a[j - 1])) {
+                exch(a, j, j - 1);
+                finished = false;
+                leftBound = j;
+            }
+        }
+        leftVar = leftBound;
+    }
+}</code></pre>
+<h3 id="5-性能测试"><a href="#5-性能测试" class="headerlink" title="5.性能测试"></a><strong>5.性能测试</strong></h3><blockquote>
+<br>
+
+<p><strong>性能测试代码说明:</strong></p>
+<p>性能测试每次会创建两组数组, 分别为含有大量离散元素的随机数组和大量重复元素的随机数组, 分别排序</p>
+<p><strong>① 随机数数组</strong></p>
+<p>RandomArrayUtil.getRandomBoxedIntArray(Int floor, int ceil, int len)方法:</p>
+<p>创建一个len大小的元素在[floor, ceil)区间的随机数数组</p>
+<hr>
+<p><strong>② 定时器Stopwatch</strong></p>
+<p>每次new定时器时, 内部记录一个System.currentTimeMillis, 调用elapsedTime()方法, 返回一个经过的秒数</p>
+<hr>
+<p><strong>③ 保证有序</strong></p>
+<p>简单使用assert isSorted(arr)保证排序算法逻辑是正确的!</p>
+<hr>
+<p><strong>④ 输出为总时间</strong></p>
+<p>第二次输出的时间为random + duplicate, 即<strong>排序两类数组所需要的总时间</strong></p>
+<p>具体工具类代码见: <a href="https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/util" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/util</a></p>
+</blockquote>
+<p>针对冒泡排序中各种优化方法的优化效果, 通过下面的代码进行性能测试</p>
+<p>BubbleSortTest.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+import algorithm.util.random.RandomArrayUtil;
+import algorithm.util.watch.Stopwatch;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+import static algorithm.sort.BaseSort.isSorted;
+import static algorithm.sort.BaseSort.show;
+import static algorithm.sort.BubbleSort.sort;
+import static algorithm.sort.BubbleSort.sortBilaterally;
+import static algorithm.sort.BubbleSort.sortWithCheckBound;
+import static algorithm.sort.BubbleSort.sortWithFlag;
+
+public class BubbleSortTest {
+
+    /**
+     * 对冒泡排序的各种方法进行性能测试
+     */
+    @Test
+    public void sortCompare() {
+        // 正常随机数组
+        Integer[] a11 = RandomArrayUtil.getRandomBoxedIntArray(0, 1000000, 50000);
+        Integer[] a12 = Arrays.copyOf(a11, a11.length);
+        Integer[] a13 = Arrays.copyOf(a11, a11.length);
+        Integer[] a14 = Arrays.copyOf(a11, a11.length);
+
+        // 大量重复数组
+        Integer[] a21 = RandomArrayUtil.getRandomBoxedIntArray(0, 100, 50000);
+        Integer[] a22 = Arrays.copyOf(a21, a21.length);
+        Integer[] a23 = Arrays.copyOf(a21, a21.length);
+        Integer[] a24 = Arrays.copyOf(a21, a21.length);
+        System.out.println(&quot;Array created!&quot;);
+
+        Stopwatch stopwatch = new Stopwatch();
+        sort(a11);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort method[random]:&quot;, stopwatch.elapsedTime());
+        sort(a21);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort method[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a11);
+        assert isSorted(a21);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortWithFlag(a12);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithFlag method[random]:&quot;, stopwatch.elapsedTime());
+        sortWithFlag(a22);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithFlag method[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a12);
+        assert isSorted(a22);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortWithCheckBound(a13);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithCheckBound method[random]:&quot;, stopwatch.elapsedTime());
+        sortWithCheckBound(a23);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithCheckBound method[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a13);
+        assert isSorted(a23);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortBilaterally(a14);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortBilaterally method[random]:&quot;, stopwatch.elapsedTime());
+        sortBilaterally(a24);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortBilaterally method[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a14);
+        assert isSorted(a24);
+    }
+
+}</code></pre>
+<p>分别对五万个随机数组和随机重复数组排序, 结果如下:</p>
+<pre><code>sort method[random]: (9.04 seconds)
+sort method[random + duplicate]: (15.53 seconds)
+
+sortWithFlag method[random]: (8.02 seconds)
+sortWithFlag method[random + duplicate]: (14.17 seconds)
+
+sortWithCheckBound method[random]: (8.42 seconds)
+sortWithCheckBound method[random + duplicate]: (15.16 seconds)
+
+sortBilaterally method[random]: (6.47 seconds)
+sortBilaterally method[random + duplicate]: (11.73 seconds)</code></pre><h3 id="6-性能测试总结"><a href="#6-性能测试总结" class="headerlink" title="6.性能测试总结"></a><strong>6.性能测试总结</strong></h3><p>从结果可见, 通过将最简单的冒泡排序进行逐步优化, 排序性能有了部分提高</p>
+<p><strong>冒泡排序性能冠军:</strong> sortBilaterally</p>
+<p><strong>性能提高原因:</strong> 因为使用了双向排序, 一次遍历排序出两个元素</p>
+<br>
+
+<h2 id="二-选择排序优化及性能测试"><a href="#二-选择排序优化及性能测试" class="headerlink" title="二.选择排序优化及性能测试"></a>二.选择排序优化及性能测试</h2><p>选择排序(Selection-sort)的工作原理:</p>
+<p>首先在未排序序列中找到最小（大）元素，存放到排序序列的起始位置，然后，再从剩余未排序元素中继续寻找最小（大）元素，然后放到已排序序列的末尾</p>
+<p>以此类推，直到所有元素均排序完毕</p>
+<h3 id="1-算法描述-1"><a href="#1-算法描述-1" class="headerlink" title="1.算法描述"></a><strong>1.算法描述</strong></h3><p>n个记录的直接选择排序可经过n-1趟直接选择排序得到有序结果。具体算法描述如下：</p>
+<ul>
+<li>初始状态：无序区为R[1..n]，有序区为空；</li>
+<li>第i趟排序(i=1,2,3…n-1)开始时，当前有序区和无序区分别为R[1..i-1]和R(i..n）。该趟排序从当前无序区中-选出关键字最小的记录 R[k]，将它与无序区的第1个记录R交换，使R[1..i]和R[i+1..n)分别变为记录个数增加1个的新有序区和记录个数减少1个的新无序区；</li>
+<li>n-1趟结束，数组有序化了</li>
+</ul>
+<h3 id="2-动图演示-1"><a href="#2-动图演示-1" class="headerlink" title="2.动图演示"></a><strong>2.动图演示</strong></h3><p><img src="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015224719590-1433219824.gif" alt="SelectionSort.gif"></p>
+<h3 id="3-代码实现-1"><a href="#3-代码实现-1" class="headerlink" title="3.代码实现"></a><strong>3.代码实现</strong></h3><p>SelectSort.java</p>
+<pre><code class="java">package algorithm.sort;
+
+/**
+ * 选择排序
+ *
+ * 每一轮遍历选择最小的的元素放在当前排序序列开头, 并且当前数组个数减一
+ *
+ * 平均时间: O(N^2) N^2/4比较 + N^2/4交换
+ *
+ * 最好时间: O(N^2) N-1比较 + 0交换
+ *
+ * 最坏时间: O(N^2) N^2/2比较 + N^2/2交换
+ *
+ * 空间: O(1)
+ *
+ * @author zk
+ */
+public class SelectSort extends BaseSort {
+
+    private SelectSort() {
+    }
+
+    /**
+     * 选择排序最简单实现
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void sort(K[] a) {
+        for (int i = 0, len = a.length; i &lt; len; i++) {
+            int min = i;
+            for (int j = i + 1; j &lt; len; j++) {
+                if (less(a[j], a[min])) {
+                    min = j;
+                }
+            }
+            exch(a, i, min);
+        }
+    }
+}
+</code></pre>
+<h3 id="4-优化方法-1"><a href="#4-优化方法-1" class="headerlink" title="4.优化方法"></a><strong>4.优化方法</strong></h3><p><strong>双边排序</strong></p>
+<p>每次排序可以选择两个: 最大和最小分别和左右位置进行交换</p>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void sortBilaterally(K[] a) {
+    int left = 0, right = a.length - 1;
+
+    while (left &lt; right) {
+        // 记录无序区最大元素和最小元素下标
+        int max = left, min = left;
+
+        for (int j = left + 1; j &lt;= right; ++j) {
+            // 找最大元素下标
+            if (less(a[j], a[min])) {
+                min = j;
+            }
+            // 找最小元素下标
+            if (less(a[max], a[j])) {
+                max = j;
+            }
+        }
+
+        // 最小值如果是第一个则没有必要交换
+        if (min != left) {
+            exch(a, min, left);
+        }
+
+        // 这里很重要
+        // 如果最大元素下标是left,前面已经和最小元素交换了，此时最大元素下标应该是min
+        if (max == left) {
+            max = min;
+        }
+
+        // 最大值如果是最后一个则没必要交换
+        if (max != right) {
+            exch(a, max, right);
+        }
+
+        left++;
+        right--;
+    }
+}</code></pre>
+<h3 id="5-性能测试-1"><a href="#5-性能测试-1" class="headerlink" title="5.性能测试"></a><strong>5.性能测试</strong></h3><p>针对选择排序中各种优化方法的优化效果, 通过下面的代码进行性能测试</p>
+<p>SelectSortTest.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+import algorithm.util.random.RandomArrayUtil;
+import algorithm.util.watch.Stopwatch;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+import static algorithm.sort.BaseSort.isSorted;
+import static algorithm.sort.BaseSort.show;
+import static algorithm.sort.SelectSort.sort;
+import static algorithm.sort.SelectSort.sortBilaterally;
+
+public class SelectSortTest {
+    /**
+     * 对选择排序的各种方法进行性能测试
+     */
+    @Test
+    public void compareTest() {
+        // 正常随机数组
+        Integer[] arr1 = RandomArrayUtil.getRandomBoxedIntArray(0, 1000000, 50000);
+        Integer[] a1 = Arrays.copyOf(arr1, arr1.length);
+
+        // 大量重复数组
+        Integer[] arr2 = RandomArrayUtil.getRandomBoxedIntArray(0, 100, 50000);
+        Integer[] a2 = Arrays.copyOf(arr2, arr2.length);
+
+        System.out.println(&quot;Array created!&quot;);
+
+        Stopwatch stopwatch = new Stopwatch();
+        sort(a1);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random]:&quot;, stopwatch.elapsedTime());
+        sort(a2);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a1);
+        assert isSorted(a2);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortBilaterally(arr1);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortBilaterally [random]:&quot;, stopwatch.elapsedTime());
+        sortBilaterally(arr2);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortBilaterally [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(arr1);
+        assert isSorted(arr2);
+    }
+}</code></pre>
+<p>分别对五万个随机数组和随机重复数组排序, 结果如下:</p>
+<pre><code>sort [random]: (2.76 seconds)
+sort [random + duplicate]: (4.45 seconds)
+
+sortBilaterally [random]: (2.36 seconds)
+sortBilaterally [random + duplicate]: (4.16 seconds)</code></pre><h3 id="6-性能测试总结-1"><a href="#6-性能测试总结-1" class="headerlink" title="6.性能测试总结"></a><strong>6.性能测试总结</strong></h3><p>从结果可见, 选择排序经过了优化, 性能略微提高</p>
+<p><strong>选择排序性能冠军:</strong> sortBilaterally</p>
+<p><strong>性能提高原因:</strong> 因为使用了双向排序, 一次遍历排序出两个元素</p>
+<br>
+
+<h2 id="三-插入排序优化及性能测试"><a href="#三-插入排序优化及性能测试" class="headerlink" title="三.插入排序优化及性能测试"></a>三.插入排序优化及性能测试</h2><p>它的工作原理是:</p>
+<p>通过构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入(类似于排序手中的扑克牌)</p>
+<h3 id="1-算法描述-2"><a href="#1-算法描述-2" class="headerlink" title="1.算法描述"></a><strong>1.算法描述</strong></h3><p>一般来说，插入排序都采用原地(in-place)在数组上实现</p>
+<p>具体算法描述如下：</p>
+<ul>
+<li>从第一个元素开始，该元素可以认为已经被排序；</li>
+<li>取出下一个元素，在已经排序的元素序列中从后向前扫描；</li>
+<li>如果该元素（已排序）大于新元素，将该元素移到下一位置；</li>
+<li>重复步骤3，直到找到已排序的元素小于或者等于新元素的位置；</li>
+<li>将新元素插入到该位置后；</li>
+<li>重复步骤2~5</li>
+</ul>
+<h3 id="2-动图演示-2"><a href="#2-动图演示-2" class="headerlink" title="2.动图演示"></a><strong>2.动图演示</strong></h3><p><img src="https://images2017.cnblogs.com/blog/849589/201710/849589-20171015225645277-1151100000.gif" alt="InsertionSort.gif"></p>
+<h3 id="3-代码实现-2"><a href="#3-代码实现-2" class="headerlink" title="3.代码实现"></a><strong>3.代码实现</strong></h3><pre><code class="java">package algorithm.sort;
+
+/**
+ * 插入排序
+ *
+ * 类似于将手中的扑克牌排序: 每次将一张牌插入到其他已经有序的牌中适当的位置
+ *
+ * 适用于小数组、已经近似有序的数组或者链表排序
+ *
+ * 平均时间: O(N^2) N^2/4比较 + N^2/4交换
+ *
+ * 最坏时间: O(N^2) N^2/2比较 + N^2/2交换
+ *
+ * 最好时间: O(N) N-1次比较 + 0次交换
+ *
+ * 空间: O(1)
+ *
+ * @author zk
+ */
+public class InsertionSort extends BaseSort {
+  /**
+     * 最基本的插入排序
+     */
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void sort(K[] a) {
+        // i可以从1开始, 当i = 0时, 内循环是没有意义的
+        for (int i = 1, len = a.length; i &lt; len; ++i) {
+            // 将a[j]插入到a[j - 1], a[j - 2], ..., a[0]中
+            // 仅当a[j] &lt; a[j - 1]时交换
+            // 否则因为前面是有序的, 所以一定有a[j] &gt;= a[j - 1]而不需要再交换
+            for (int j = i; j &gt; 0 &amp;&amp; less(a[j], a[j - 1]); --j) {
+                exch(a, j, j - 1);
+            }
+        }
+    }
+
+}</code></pre>
+<p>插入排序空间复杂度为O(1)且对于基本有序的序列可以很快完成排序, 因此适用于小数组、已经近似有序的数组或者链表排序</p>
+<p>此外, 在堆排序, 快排, 桶排序等算法的优化中也经常使用插入排序</p>
+<h3 id="4-优化方法-2"><a href="#4-优化方法-2" class="headerlink" title="4.优化方法"></a><strong>4.优化方法</strong></h3><p><strong>① 交换变为覆盖</strong></p>
+<p>由于最基本的插入排序中, 只要存在逆序就要交换, 所以可以将交换变为覆盖:</p>
+<p>把当前待插入的元素取出，让当前元素与之前的所有元素进行一一比较</p>
+<p>前一个元素大于当前元素直接覆盖，而到了最后当找到当前元素的合适位置时只需要一次交换即可</p>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void sortWithOverride(K[] a) {
+    for (int i = 0, len = a.length; i &lt; len; i++) {
+        // 将当前位置的元素取出
+        var cur = a[i];
+        int j = i;
+        // 如果这个元素比temp大就覆盖，否则就证明该元素之前已经有序就退出循环
+        for (; j &gt; 0 &amp;&amp; less(cur, a[j - 1]); j--) {
+            // 直接用前一个元素进行覆盖
+            a[j] = a[j - 1];
+        }
+        // 将temp中的元素插入合适位置
+        a[j] = cur;
+    }
+}</code></pre>
+<hr>
+<p><strong>② 折半插入排序</strong></p>
+<p>折半插入排序（Binary Insertion Sort）的排序算法过程:</p>
+<p>不断的依次将元素插入<strong>前面已排好序的序列中，在寻找插入点时采用了二分查找</strong></p>
+<pre><code class="java">public static &lt;K extends Comparable&lt;K&gt;&gt; void binaryInsertSort(K[] a) {
+    for (int i = 1, len = a.length; i &lt; len; i++) {
+        // 将当前位置的元素取出(暂存)
+        var temp = a[i];
+        // 二分查找插入index
+        int index = getInsertIndex(a, i, temp);
+
+        // 覆盖式的插入
+        int j = i - 1;
+        for (; j &gt;= index + 1; j--) {
+            a[j + 1] = a[j];
+        }
+        a[j + 1] = temp;
+    }
+}
+
+/**
+    * 二分法查找插入位置
+    *
+    * @param a     数组
+    * @param end   结束区域
+    * @param temp  寻找的键
+    * @return 插入index
+    */
+private static &lt;K extends Comparable&lt;K&gt;&gt; int getInsertIndex(K[] a, int end, K temp) {
+    int low = 0, high = end - 1;
+    while (low &lt;= high) {
+        var m = low + (high - low) / 2;
+        if (less(temp, a[m])) high = m - 1;
+        else low = m + 1;
+    }
+    return high;
+}</code></pre>
+<hr>
+<p><strong>③ 二路插入排序算法</strong></p>
+<p>二路插入排序算法是在折半插入的基础上进行改进</p>
+<p>折半插入在原先直接插入的基础上改进，通过折半查找，以较少的比较次数就找到了要插入的位置</p>
+<p>但是在插入的过程中仍然没有减少移动次数，所以2路插入在此基础上改进，减少了移动次数，<strong>但是仍然并没有避免移动记录（如果要避免的话还是得改变存储结构）</strong></p>
+<p>因此我们设定一个辅助数组b，大小是原来数组相同的大小</p>
+<p>将b[0]设为第一个原数组第一个数，通过设置head和tail指向整个有序序列的最小值和最大值</p>
+<p>即为序列的尾部和头部，并且将其设置位一个循环数组，这样就可以进行双端插入</p>
+<p>(之所以能减少移动次数的原因在于可以往2个方向移动记录，故称为2路插入)</p>
+<p>具体操作思路：</p>
+<ol>
+<li>将原数组第一个元素赋值给b[0],作为标志元素</li>
+<li>按顺序依次插入剩下的原数组的元素<ul>
+<li>将带插入元素与第一个进行比较，偌大于b[0],则插入b[0]前面的有序序列，否则插入后面的有序序列</li>
+<li>对前面的有序序列或后面的有序序列进行折半查找</li>
+<li>查找到插入位置后进行记录的移动，分别往head方向前移和往tail方向移动</li>
+<li>插入记录</li>
+</ul>
+</li>
+<li>将排序好的b数组的数据从head到tail，按次序赋值回原数组</li>
+</ol>
+<pre><code class="java">@SuppressWarnings(&quot;unchecked&quot;)
+public static &lt;K extends Comparable&lt;K&gt;&gt; void twoPathInsertSort(K[] a) {
+    int len = a.length;
+    K[] b = (K[]) new Comparable[len];
+    b[0] = a[0];
+
+    // 分别记录temp数组中最大值和最小值的位置
+    int i, first, tail, k;
+    first = tail = 0;
+
+    for (i = 1; i &lt; len; i++) {
+        // 待插入元素比最小的元素小
+        if (less(a[i], b[first])) {
+            first = (first - 1 + len) % len;
+            b[first] = a[i];
+        }
+        // 待插入元素比最大元素大
+        else if (less(b[tail], a[i])) {
+            tail = (tail + 1 + len) % len;
+            b[tail] = a[i];
+        }
+        // 插入元素比最小大，比最大小
+        else {
+            k = (tail + 1 + len) % len;
+            // 当插入值比当前值小时，需要移动当前值的位置
+            while (less(a[i], b[((k - 1) + len) % len])) {
+                b[(k + len) % len] = b[(k - 1 + len) % len];
+                k = (k - 1 + len) % len;
+            }
+            // 插入该值
+            b[(k + len) % len] = a[i];
+            // 因为最大值的位置改变，所以需要实时更新tail的位置
+            tail = (tail + 1 + len) % len;
+        }
+    }
+    // 将排序记录复制到原来的顺序表里
+    for (k = 0; k &lt; len; k++) {
+        a[k] = b[(first + k) % len];
+    }
+}</code></pre>
+<hr>
+<p><strong>④ 希尔排序法</strong></p>
+<p>见下希尔排序</p>
+<h3 id="5-性能测试-2"><a href="#5-性能测试-2" class="headerlink" title="5.性能测试"></a><strong>5.性能测试</strong></h3><p>对插入排序的各种方法进行性能测试</p>
+<p>各种插入排序算法对十万个随机数组和随机重复数组排序</p>
+<p>InsertionSortTest.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+import algorithm.util.random.RandomArrayUtil;
+import algorithm.util.watch.Stopwatch;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+import static algorithm.sort.BaseSort.isSorted;
+import static algorithm.sort.BaseSort.show;
+import static algorithm.sort.InsertionSort.binaryInsertSort;
+import static algorithm.sort.InsertionSort.shellSort;
+import static algorithm.sort.InsertionSort.sort;
+import static algorithm.sort.InsertionSort.sortWithOverride;
+import static algorithm.sort.InsertionSort.twoPathInsertSort;
+
+public class InsertionSortTest {
+    /**
+     * 对插入排序的各种方法进行性能测试
+     *
+     * 分别对十万个随机数组和随机重复数组排序, 结果如下:
+     */
+    @Test
+    public void compareSort() {
+        // 正常随机数组
+        Integer[] a11 = RandomArrayUtil.getRandomBoxedIntArray(0, 1000000, 100000);
+        Integer[] a12 = Arrays.copyOf(a11, a11.length);
+        Integer[] a13 = Arrays.copyOf(a11, a11.length);
+        Integer[] a14 = Arrays.copyOf(a11, a11.length);
+        Integer[] a15 = Arrays.copyOf(a11, a11.length);
+
+        // 大量重复数组
+        Integer[] a21 = RandomArrayUtil.getRandomBoxedIntArray(0, 100, 100000);
+        Integer[] a22 = Arrays.copyOf(a21, a21.length);
+        Integer[] a23 = Arrays.copyOf(a21, a21.length);
+        Integer[] a24 = Arrays.copyOf(a21, a21.length);
+        Integer[] a25 = Arrays.copyOf(a21, a21.length);
+
+        System.out.println(&quot;Array created!&quot;);
+
+        Stopwatch stopwatch = new Stopwatch();
+        sort(a11);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random]:&quot;, stopwatch.elapsedTime());
+        sort(a21);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a11);
+        assert isSorted(a21);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortWithOverride(a12);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithOverride [random]:&quot;, stopwatch.elapsedTime());
+        sortWithOverride(a22);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithOverride [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a12);
+        assert isSorted(a22);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        binaryInsertSort(a13);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;binaryInsertSort [random]:&quot;, stopwatch.elapsedTime());
+        binaryInsertSort(a23);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;binaryInsertSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a13);
+        assert isSorted(a23);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        twoPathInsertSort(a14);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;twoPathInsertSort [random]:&quot;, stopwatch.elapsedTime());
+        twoPathInsertSort(a24);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;twoPathInsertSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a14);
+        assert isSorted(a24);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        shellSort(a15);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;shellSort [random]:&quot;, stopwatch.elapsedTime());
+        shellSort(a25);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;shellSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a15);
+        assert isSorted(a25);
+        System.out.println();
+    }
+}</code></pre>
+<p>结果如下:</p>
+<p>对插入排序的各种方法进行性能测试</p>
+<p>各种插入排序算法对十万个随机数组和随机重复数组排序</p>
+<p>InsertionSortTest.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+import algorithm.util.random.RandomArrayUtil;
+import algorithm.util.watch.Stopwatch;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+import static algorithm.sort.BaseSort.isSorted;
+import static algorithm.sort.BaseSort.show;
+import static algorithm.sort.InsertionSort.binaryInsertSort;
+import static algorithm.sort.InsertionSort.shellSort;
+import static algorithm.sort.InsertionSort.sort;
+import static algorithm.sort.InsertionSort.sortWithOverride;
+import static algorithm.sort.InsertionSort.twoPathInsertSort;
+
+public class InsertionSortTest {
+    /**
+     * 对插入排序的各种方法进行性能测试
+     *
+     * 分别对十万个随机数组和随机重复数组排序, 结果如下:
+     */
+    @Test
+    public void compareSort() {
+        // 正常随机数组
+        Integer[] a11 = RandomArrayUtil.getRandomBoxedIntArray(0, 1000000, 100000);
+        Integer[] a12 = Arrays.copyOf(a11, a11.length);
+        Integer[] a13 = Arrays.copyOf(a11, a11.length);
+        Integer[] a14 = Arrays.copyOf(a11, a11.length);
+        Integer[] a15 = Arrays.copyOf(a11, a11.length);
+
+        // 大量重复数组
+        Integer[] a21 = RandomArrayUtil.getRandomBoxedIntArray(0, 100, 100000);
+        Integer[] a22 = Arrays.copyOf(a21, a21.length);
+        Integer[] a23 = Arrays.copyOf(a21, a21.length);
+        Integer[] a24 = Arrays.copyOf(a21, a21.length);
+        Integer[] a25 = Arrays.copyOf(a21, a21.length);
+
+        System.out.println(&quot;Array created!&quot;);
+
+        Stopwatch stopwatch = new Stopwatch();
+        sort(a11);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random]:&quot;, stopwatch.elapsedTime());
+        sort(a21);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a11);
+        assert isSorted(a21);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        sortWithOverride(a12);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithOverride [random]:&quot;, stopwatch.elapsedTime());
+        sortWithOverride(a22);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;sortWithOverride [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a12);
+        assert isSorted(a22);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        binaryInsertSort(a13);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;binaryInsertSort [random]:&quot;, stopwatch.elapsedTime());
+        binaryInsertSort(a23);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;binaryInsertSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a13);
+        assert isSorted(a23);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        twoPathInsertSort(a14);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;twoPathInsertSort [random]:&quot;, stopwatch.elapsedTime());
+        twoPathInsertSort(a24);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;twoPathInsertSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a14);
+        assert isSorted(a24);
+        System.out.println();
+
+        stopwatch = new Stopwatch();
+        shellSort(a15);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;shellSort [random]:&quot;, stopwatch.elapsedTime());
+        shellSort(a25);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;shellSort [random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a15);
+        assert isSorted(a25);
+        System.out.println();
+    }
+}</code></pre>
+<p>结果如下:</p>
+<pre><code>sort [random]: (20.17 seconds)
+sort [random + duplicate]: (32.51 seconds)
+
+sortWithOverride [random]: (13.37 seconds)
+sortWithOverride [random + duplicate]: (20.18 seconds)
+
+binaryInsertSort [random]: (10.65 seconds)
+binaryInsertSort [random + duplicate]: (16.19 seconds)
+
+twoPathInsertSort [random]: (17.17 seconds)
+twoPathInsertSort [random + duplicate]: (33.55 seconds)
+
+Array length: 100000, Shell sort max step: 88573
+shellSort [random]: (0.05 seconds)
+Array length: 100000, Shell sort max step: 88573
+shellSort [random + duplicate]: (0.06 seconds)</code></pre><h3 id="6-性能测试总结-2"><a href="#6-性能测试总结-2" class="headerlink" title="6.性能测试总结"></a><strong>6.性能测试总结</strong></h3><p>从结果可知, 对于选择了合适的递增序列的希尔排序, 和普通的插入排序的差别提升了N个数量级!</p>
+<p><strong>插入排序冠军:</strong> shellSort(使用了3为系数的递增序列: 1, 4, 13, 40, 121, 364, 1093, …)</p>
+<br>
+
+<h2 id="四-希尔排序以及不同递增序列的性能测试"><a href="#四-希尔排序以及不同递增序列的性能测试" class="headerlink" title="四.希尔排序以及不同递增序列的性能测试"></a>四.希尔排序以及不同递增序列的性能测试</h2><p>希尔排序与插入排序的不同之处在于，它会优先比较距离较远的元素</p>
+<h3 id="1-算法描述-3"><a href="#1-算法描述-3" class="headerlink" title="1.算法描述"></a><strong>1.算法描述</strong></h3><p>先将整个待排序的记录序列分割成为若干子序列分别进行直接插入排序，具体算法描述：</p>
+<ul>
+<li>选择一个增量序列t1，t2，…，tk，其中ti&gt;tj，tk=1；</li>
+<li>按增量序列个数k，对序列进行k趟排序；</li>
+<li>每趟排序，根据对应的增量ti，将待排序列分割成若干长度为m 的子序列，分别对各子表进行直接插入排序。仅增量因子为1 时，整个序列作为一个表来处理，表长度即为整个序列的长度</li>
+</ul>
+<h3 id="2-动图演示-3"><a href="#2-动图演示-3" class="headerlink" title="2.动图演示"></a><strong>2.动图演示</strong></h3><p><img src="https://images2018.cnblogs.com/blog/849589/201803/849589-20180331170017421-364506073.gif" alt="ShellSort.gif"></p>
+<h3 id="3-代码实现-3"><a href="#3-代码实现-3" class="headerlink" title="3.代码实现"></a><strong>3.代码实现</strong></h3><p>ShellSort.java</p>
+<pre><code class="java">package algorithm.sort;
+
+/**
+ * 希尔排序法又叫“缩小增量排序法”, 是对直接插入排序法的优化:
+ *
+ * 通过设置一个增量，对原始序列进行分组，对每组用直接插入排序法排序再整合，再缩小增量，周而复始直至增量为1，完成排序
+ *
+ * 其实到希尔算法进行到最后，n的值变为1（即增量或者称跳跃数变为1）的时候，它就是直接插入排序
+ *
+ * 只不过这时候，整个序列基本上是有序的，需要交换的数据已经非常少了，提高效率
+ *
+ * @author zk
+ */
+public class ShellSort extends BaseSort {
+
+    /**
+     * 构建希尔排序递增序列的步长系数
+     */
+    public static int step = 3;
+
+    public static &lt;K extends Comparable&lt;K&gt;&gt; void sort(K[] a) {
+        int h = 1, len = a.length;
+
+        // 构建插排的步长h
+        // 1, 4, 13, 40, 121, 364, 1093, ...
+        while (h &lt; len / step) h = step * h + 1;
+        System.out.println(String.format(&quot;Array length: %s, Shell sort max step: %s&quot;, len, h));
+
+        while (h &gt;= 1) {
+            // 根据h序列自: ... -&gt; 121 -&gt; 40 -&gt; 13 -&gt; 4 -&gt; 1 进行插排
+            for (int i = h; i &lt; len; ++i) {
+                for (int j = i; j &gt;= h &amp;&amp; less(a[j], a[j - h]); j -= h) {
+                    exch(a, j, j - h);
+                }
+            }
+            h /= step;
+        }
+    }
+}</code></pre>
+<p>希尔排序的核心在于间隔序列的设定。既可以提前设定好间隔序列，也可以动态的定义间隔序列</p>
+<p>动态定义间隔序列的算法是《算法(第4版)》的合著者Robert Sedgewick提出的</p>
+<h3 id="4-优化方法-3"><a href="#4-优化方法-3" class="headerlink" title="4.优化方法"></a><strong>4.优化方法</strong></h3><p>选择合适的递增序列, 但是这种优化没有定性的理论基础</p>
+<h3 id="5-性能测试-3"><a href="#5-性能测试-3" class="headerlink" title="5.性能测试"></a><strong>5.性能测试</strong></h3><p>将不同step值的希尔排序进行比较, 并与插入排序进行比较</p>
+<p>选取的step有: 3, 7, 19, 97, 10000000</p>
+<p>分别对十万个随机数组和随机重复数组进行排序</p>
+<p>ShellSortTest.java</p>
+<pre><code class="java">package algorithm.sort;
+
+import algorithm.util.iostream.StdOut;
+import algorithm.util.random.RandomArrayUtil;
+import algorithm.util.watch.Stopwatch;
+import org.junit.Test;
+
+import java.util.Arrays;
+
+import static algorithm.sort.BaseSort.isSorted;
+import static algorithm.sort.ShellSort.sort;
+
+public class ShellSortTest {
+
+    /**
+     * 将不同step值的希尔排序进行比较, 并与插入排序进行比较
+     */
+    @Test
+    public void compareStep() {
+        // 正常随机数组
+        Integer[] a11 = RandomArrayUtil.getRandomBoxedIntArray(0, 1000000, 100000);
+        Integer[] a12 = Arrays.copyOf(a11, a11.length);
+        Integer[] a13 = Arrays.copyOf(a11, a11.length);
+        Integer[] a14 = Arrays.copyOf(a11, a11.length);
+        Integer[] a15 = Arrays.copyOf(a11, a11.length);
+        Integer[] a16 = Arrays.copyOf(a11, a11.length);
+
+        // 大量重复数组
+        Integer[] a21 = RandomArrayUtil.getRandomBoxedIntArray(0, 100, 100000);
+        Integer[] a22 = Arrays.copyOf(a21, a21.length);
+        Integer[] a23 = Arrays.copyOf(a21, a21.length);
+        Integer[] a24 = Arrays.copyOf(a21, a21.length);
+        Integer[] a25 = Arrays.copyOf(a21, a21.length);
+        Integer[] a26 = Arrays.copyOf(a21, a21.length);
+
+        System.out.println(&quot;Array created!&quot;);
+
+        ShellSort.step = 3;
+        System.out.println(&quot;Step: &quot; + ShellSort.step);
+        Stopwatch stopwatch = new Stopwatch();
+        sort(a11);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        sort(a21);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a11);
+        assert isSorted(a21);
+        System.out.println();
+
+        ShellSort.step = 7;
+        System.out.println(&quot;Step: &quot; + ShellSort.step);
+        stopwatch = new Stopwatch();
+        sort(a12);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        sort(a22);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a12);
+        assert isSorted(a22);
+        System.out.println();
+
+        ShellSort.step = 19;
+        System.out.println(&quot;Step: &quot; + ShellSort.step);
+        stopwatch = new Stopwatch();
+        sort(a13);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        sort(a23);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a13);
+        assert isSorted(a23);
+        System.out.println();
+
+        ShellSort.step = 97;
+        System.out.println(&quot;Step: &quot; + ShellSort.step);
+        stopwatch = new Stopwatch();
+        sort(a14);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        sort(a24);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a14);
+        assert isSorted(a24);
+        System.out.println();
+
+        ShellSort.step = 10000000;
+        System.out.println(&quot;Step: &quot; + ShellSort.step);
+        stopwatch = new Stopwatch();
+        sort(a15);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        sort(a25);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a15);
+        assert isSorted(a25);
+        System.out.println();
+
+        System.out.println(&quot;Insertion Sort:&quot;);
+        stopwatch = new Stopwatch();
+        InsertionSort.sort(a16);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random]:&quot;, stopwatch.elapsedTime());
+        InsertionSort.sort(a26);
+        StdOut.printf(&quot;%s (%.2f seconds)\n&quot;, &quot;[random + duplicate]:&quot;, stopwatch.elapsedTime());
+        assert isSorted(a16);
+        assert isSorted(a26);
+    }
+}</code></pre>
+<p>结果如下:</p>
+<pre><code>Step: 3
+Array length: 100000, Shell sort max step: 88573
+[random]: (0.06 seconds)
+Array length: 100000, Shell sort max step: 88573
+[random + duplicate]: (0.07 seconds)
+
+Step: 7
+Array length: 100000, Shell sort max step: 19608
+[random]: (0.04 seconds)
+Array length: 100000, Shell sort max step: 19608
+[random + duplicate]: (0.07 seconds)
+
+Step: 19
+Array length: 100000, Shell sort max step: 7240
+[random]: (0.08 seconds)
+Array length: 100000, Shell sort max step: 7240
+[random + duplicate]: (0.13 seconds)
+
+Step: 97
+Array length: 100000, Shell sort max step: 9507
+[random]: (0.31 seconds)
+Array length: 100000, Shell sort max step: 9507
+[random + duplicate]: (0.60 seconds)
+
+Step: 10000000
+Array length: 100000, Shell sort max step: 1
+[random]: (16.98 seconds)
+Array length: 100000, Shell sort max step: 1
+[random + duplicate]: (28.00 seconds)
+
+Insertion Sort:
+[random]: (22.34 seconds)
+[random + duplicate]: (33.75 seconds)</code></pre><h3 id="6-性能测试总结-3"><a href="#6-性能测试总结-3" class="headerlink" title="6.性能测试总结"></a><strong>6.性能测试总结</strong></h3><p>实验证明, 对于递增系数巨大的希尔排序, 性能会恶化到与插入排序性能相似!</p>
+<p>所以对于希尔排序优化的关键就是选择合适的递增序列!</p>
+<br>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>下篇见: <a href="https://jasonkayzk.github.io/2020/02/24/几种常见排序方法的优化-下/">几种常见排序方法的优化(下)</a></p>
+<br>
+
+<p>文中部分说明内容转自: <a href="https://www.cnblogs.com/onepixel/p/7674659.html" target="_blank" rel="noopener">十大经典排序算法（动图演示）</a></p>
+<p>源代码: </p>
+<ul>
+<li>排序类: <a href="https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/sort" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/main/java/algorithm/sort</a></li>
+<li>排序测试: <a href="https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/test/java/algorithm/sort" target="_blank" rel="noopener">https://github.com/JasonkayZK/Java_Algorithm/tree/master/src/test/java/algorithm/sort</a></li>
+</ul>
+<p>如果觉得文章写的不错, 可以关注微信公众号: Coder张小凯</p>
+<p>内容和博客同步更新~</p>
+<br>
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2020/02/24/几种常见排序方法的优化(上)/" title="https://jasonkayzk.github.io/2020/02/24/几种常见排序方法的优化(上)/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2020/02/24/几种常见排序方法的优化(上)/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725350904"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>

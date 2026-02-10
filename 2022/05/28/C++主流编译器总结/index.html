@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html>
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.goup.min.js" defer></script>
+  
+  <title>C++主流编译器总结 - 张小凯的博客</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="謙虚は人を進歩させ、ごうまんは人を落後させる。社会の初心者から、よろしくお願いします！">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+
+  <link rel="shortcut icon" href="/favicon.ico" type="image/png">
+  <meta name="description" content="由于历史原因，C++存在多个厂商的编译器，主流的包括GCC、G++、MSVC、clang等，本文介绍了这几个编译器之间的关系，以及各个编译器常用的命令参数；">
+<meta name="keywords" content="C++,编译器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++主流编译器总结">
+<meta property="og:url" content="https://jasonkayzk.github.io/2022/05/28/C++主流编译器总结/index.html">
+<meta property="og:site_name" content="张小凯的博客">
+<meta property="og:description" content="由于历史原因，C++存在多个厂商的编译器，主流的包括GCC、G++、MSVC、clang等，本文介绍了这几个编译器之间的关系，以及各个编译器常用的命令参数；">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static/images/llvm.png">
+<meta property="og:updated_time" content="2026-02-10T12:07:45.732Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++主流编译器总结">
+<meta name="twitter:description" content="由于历史原因，C++存在多个厂商的编译器，主流的包括GCC、G++、MSVC、clang等，本文介绍了这几个编译器之间的关系，以及各个编译器常用的命令参数；">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static/images/llvm.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.16.2/styles/atom-one-dark.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1038733_0xvrvpg9c0r.css">
+  <link rel="stylesheet" href="/css/style.css?v=1770725319044">
+
+  <!-- 进度条加载: nprogress -->
+  <link href="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6617852905105366" crossorigin="anonymous"></script>
+  <!-- Cloudflare Web Analytics -->
+   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{"token": "73d46a730654451bac205cdc12bea918"}"></script>
+  <!-- umami Web Analytics -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="23fadd4b-d559-4ae0-a4f6-f90680c3d4c0"></script>
+
+  <!-- 本地搜索js -->
+  <script type="text/javascript" src="/js/search.js"></script>
+
+  <!-- 百度站点管理 -->
+  <meta name="baidu-site-verification" content="code-SKIvb4A1Qx">
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1NWK4EEKDF');
+  </script>
+
+  <!-- 站内通知 -->
+  <link href="https://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/css/default.css">
+  <link rel="stylesheet" href="/css/animate.min.css">
+  <link rel="stylesheet" href="/css/notification.css">
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="alternate" href="/atom.xml" title="张小凯的博客" type="application/atom+xml">
+</head>
+
+<!-- 文章阅读进度条样式 -->
+<style>
+  #content_progress {
+      /* Positioning */
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      color: #ffaa73;
+}
+
+#content_progress::-webkit-progress-bar {
+      background-color: transparent;
+}
+
+#content_progress::-webkit-progress-value {
+      background-color: #ffaa73;
+}
+
+#content_progress::-moz-progress-bar {
+      background-color:#ffaa73;
+}
+</style>
+<!-- 文章阅读进度条JS -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      var winHeight = window.innerHeight,
+            docHeight = document.documentElement.scrollHeight,
+            progressBar = document.querySelector('#content_progress');
+      progressBar.max = docHeight - winHeight;
+      progressBar.value = window.scrollY;
+
+      document.addEventListener('scroll', function () {
+            progressBar.max = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.value = window.scrollY;
+      });
+});
+</script>
+
+<body class="mdui-drawer-body-left">
+  <!-- 文章阅读进度条 -->
+  <progress id="content_progress" value="0"></progress>
+
+  <!-- 音频播放 -->
+  <!-- <link rel="stylesheet" href="/dist/APlayer.min.css">
+  <div id="aplayer"></div>
+  <script type="text/javascript" src="/dist/APlayer.min.js"></script>
+  <script type="text/javascript" src="/dist/music.js"></script> -->
+
+  
+  <div id="nexmoe-background">
+    <div class="nexmoe-bg" style="background-image: url(/images/bg.jpg)"></div>
+    <div class="mdui-appbar mdui-shadow-0">
+      <div class="mdui-toolbar">
+        <a mdui-drawer="{target: '#drawer', swipe: true}" title="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="/" title="Jasonkay" class="mdui-btn mdui-btn-icon"><img src="/images/avatar4.jpg"></a>
+      </div>
+    </div>
+  </div>
+  <div id="nexmoe-header">
+    <div class="nexmoe-drawer mdui-drawer" id="drawer">
+    <div class="nexmoe-avatar mdui-ripple">
+        <a href="/" title="Jasonkay">
+            <img src="/images/avatar4.jpg" alt="Jasonkay">
+        </a>
+    </div>
+
+    <!-- 黑白切换css -->
+    <!-- <style>
+        .light-dark-checkbox {
+            margin: 0 auto;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch .theme-switcher {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "🌞";
+            height: 0px;
+            width: 0px;
+            left: -10px;
+            top: 16px;
+            line-height: 0px;
+            transition: 0.4s;
+        }
+
+        .theme-switcher:checked+.slider:before {
+            left: 35px;
+            content: "🌑";
+        }
+
+        .theme-switcher:checked+.slider:before {
+            transform: translateX(45px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 40px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 暗黑样式 */
+        body.night {
+            background-color: #263238;
+            color: #aaa;
+        }
+        body.night img {
+            filter: brightness(30%);
+        }
+        article.night {
+            background-color: black;
+            color: white;
+        }
+    </style> -->
+
+    <!-- 黑白开关 -->
+    <!-- <div class="nexmoe-list-item mdui-list-item">
+        <div class="light-dark-checkbox">
+            <div>
+                黑白模式切换(Beta)
+            </div>
+            <label class="switch">
+                <input id="light-dark-input" type="checkbox" onclick="switchTheme();" class="theme-switcher">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div> -->
+
+    <!-- 黑白切换js -->
+    <!-- <script>
+        // get hours of the day in 24Hr format (0-23)
+        var hr = (new Date()).getHours();
+
+        $(document).ready(function () {
+            var theme = sessionStorage.getItem("theme");
+            if (theme == "dark") {
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else if (theme == "light") {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else {
+                setDefaultTheme(hr);
+            }
+        });
+
+        function switchTheme() {
+            if (sessionStorage.getItem("theme") == "dark") {
+                sessionStorage.setItem("theme", "light");
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+            } else if (sessionStorage.getItem("theme") == "light") {
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+            } else {
+                setDefaultTheme(hr);
+            }
+        };
+
+        function setDefaultTheme(curHr) {
+            // 6:00-18:00 light
+            if (curHr >= 6 && curHr <= 18) {
+                document.body.classList.remove('night');
+                console.log('夜间模式关闭');
+                sessionStorage.setItem("theme", "light");
+                $("#light-dark-input").attr("checked", false);
+            } else {
+                // 0:00-6:00 & 18:00-00:00 night
+                sessionStorage.setItem("theme", "dark");
+                document.body.classList.add('night');
+                console.log('夜间模式开启');
+                $("#light-dark-input").attr("checked", true);
+            }
+        }
+    </script> -->
+
+    <div class="nexmoe-count">
+        <div><span>文章</span>522</div>
+        <div><span>标签</span>277</div>
+        <div><span>分类</span>67</div>
+    </div>
+    <ul class="nexmoe-list mdui-list" mdui-collapse="{accordion: true}">
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/" title="回到首页">
+            <i class="mdui-list-item-icon nexmoefont icon-home"></i>
+            <div class="mdui-list-item-content">
+                回到首页
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/jp/" title="日语分站">
+            <i class="mdui-list-item-icon nexmoefont icon-calendar-fill"></i>
+            <div class="mdui-list-item-content">
+                日语分站
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/about/" title="关于博客">
+            <i class="mdui-list-item-icon nexmoefont icon-eye-fill"></i>
+            <div class="mdui-list-item-content">
+                关于博客
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/archive" title="文章归档">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                文章归档
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/anki/" title="Anki笔记">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                Anki笔记
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/study/" title="学习进度">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                学习进度
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/running/" title="跑步健身">
+            <i class="mdui-list-item-icon nexmoefont icon-dribbble"></i>
+            <div class="mdui-list-item-content">
+                跑步健身
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/interview/" title="面试相关">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                面试相关
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/algorithm/" title="算法总结">
+            <i class="mdui-list-item-icon nexmoefont icon-areachart"></i>
+            <div class="mdui-list-item-content">
+                算法总结
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/installing/" title="软件安装">
+            <i class="mdui-list-item-icon nexmoefont icon-unorderedlist"></i>
+            <div class="mdui-list-item-content">
+                软件安装
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/board/" title="创意白板">
+            <i class="mdui-list-item-icon nexmoefont icon-tag-fill"></i>
+            <div class="mdui-list-item-content">
+                创意白板
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="http://159.75.131.252:32352/" title="摄影分享">
+            <i class="mdui-list-item-icon nexmoefont icon-telegram"></i>
+            <div class="mdui-list-item-content">
+                摄影分享
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/chat/" title="畅所欲言">
+            <i class="mdui-list-item-icon nexmoefont icon-ellipsis"></i>
+            <div class="mdui-list-item-content">
+                畅所欲言
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/realtime/" title="实时数据统计">
+            <i class="mdui-list-item-icon nexmoefont icon-time-circle-fill"></i>
+            <div class="mdui-list-item-content">
+                实时数据统计
+            </div>
+        </a>
+        
+        <a class="nexmoe-list-item mdui-list-item mdui-ripple" href="/py/" title="友情链接">
+            <i class="mdui-list-item-icon nexmoefont icon-container"></i>
+            <div class="mdui-list-item-content">
+                友情链接
+            </div>
+        </a>
+        
+    </ul>
+    <aside id="nexmoe-sidebar">
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">社交按钮</h3>
+    <div class="nexmoe-widget nexmoe-social">
+        <a class="mdui-ripple" href="https://space.bilibili.com/23364338" target="_blank" mdui-tooltip="{content: '哔哩哔哩'}" style="color: rgb(231, 106, 141);background-color: rgba(231, 106, 141, .15);">
+            <i class="nexmoefont icon-bilibili"></i>
+        </a><a class="mdui-ripple" href="https://github.com/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'GitHub'}" style="color: rgb(25, 23, 23);background-color: rgba(25, 23, 23, .15);">
+            <i class="nexmoefont icon-github"></i>
+        </a><a class="mdui-ripple" href="https://steamcommunity.com/id/jasonkayzk/" target="_blank" mdui-tooltip="{content: 'Steam'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-steam"></i>
+        </a><a class="mdui-ripple" href="https://twitter.com/Jasonkay_ZK/" target="_blank" mdui-tooltip="{content: 'Twitter'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-twitter"></i>
+        </a><a class="mdui-ripple" href="mailto:jasonkayzk@gmail.com" target="_blank" mdui-tooltip="{content: 'Mail'}" style="color: rgb(29, 161, 242);background-color: rgba(29, 161, 242, .1);">
+            <i class="nexmoefont icon-mail-fill"></i>
+        </a>
+    </div>
+</div>
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">站内搜索</h3>
+    <div class="nexmoe-widget nexmoe-search">
+        <form class="site-search-form">
+            <input type="text" id="local-search-input" class="st-search-input">
+        </form>
+        <div id="local-search-result" class="local-search-result-cls">
+        </div>
+    </div>
+</div>
+
+<!-- 执行本地搜索脚本 -->
+<script type="text/javascript">
+    var path = "https://cdn.jsdelivr.net/gh/jasonkayzk/JasonkayZK.github.io@master/search.xml";
+    searchFunc(path, 'local-search-input', 'local-search-result');
+</script>
+
+<style type="text/css">
+/* 搜索条 */
+.site-search-form {
+    text-align: center;
+}
+#local-search-input {
+    width: 100%;
+}
+
+/* 搜索结果关闭 */
+#local-search-close {
+    font-size: 22.5px;
+    cursor: pointer;
+    color: #ff4e6a;
+}
+
+.search-result-list > li {
+    line-height: 0.75;
+    margin-top: -5px;
+}
+
+</style>
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">标签云</h3>
+    <div id="randomtagcloud" class="nexmoe-widget tagcloud">
+      <a href="/tags/2048/" style="font-size: 10px;">2048</a> <a href="/tags/ACM/" style="font-size: 10px;">ACM</a> <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/AUFS/" style="font-size: 10px;">AUFS</a> <a href="/tags/Android/" style="font-size: 10.91px;">Android</a> <a href="/tags/AppStore/" style="font-size: 10px;">AppStore</a> <a href="/tags/AppleScript/" style="font-size: 10px;">AppleScript</a> <a href="/tags/Aria2/" style="font-size: 10.91px;">Aria2</a> <a href="/tags/Async/" style="font-size: 10px;">Async</a> <a href="/tags/BFS/" style="font-size: 10.45px;">BFS</a> <a href="/tags/Bash/" style="font-size: 10.45px;">Bash</a> <a href="/tags/BitTorrent/" style="font-size: 10px;">BitTorrent</a> <a href="/tags/BloomFilter/" style="font-size: 10px;">BloomFilter</a> <a href="/tags/Bytebase/" style="font-size: 10px;">Bytebase</a> <a href="/tags/C/" style="font-size: 15.91px;">C++</a> <a href="/tags/CAP/" style="font-size: 10px;">CAP</a> <a href="/tags/CDN/" style="font-size: 10.45px;">CDN</a> <a href="/tags/CGLib动态代理/" style="font-size: 10px;">CGLib动态代理</a> <a href="/tags/CUDA/" style="font-size: 10px;">CUDA</a> <a href="/tags/Cache/" style="font-size: 10px;">Cache</a> <a href="/tags/Caffeine/" style="font-size: 10px;">Caffeine</a> <a href="/tags/Cargo/" style="font-size: 11.82px;">Cargo</a> <a href="/tags/CentOS/" style="font-size: 12.27px;">CentOS</a> <a href="/tags/Cgroups/" style="font-size: 10px;">Cgroups</a> <a href="/tags/Chrome扩展/" style="font-size: 10px;">Chrome扩展</a> <a href="/tags/Cli/" style="font-size: 10.45px;">Cli</a> <a href="/tags/ClickHouse/" style="font-size: 10px;">ClickHouse</a> <a href="/tags/Cling/" style="font-size: 10px;">Cling</a> <a href="/tags/Clion/" style="font-size: 10px;">Clion</a> <a href="/tags/Colima/" style="font-size: 10px;">Colima</a> <a href="/tags/Container/" style="font-size: 10px;">Container</a> <a href="/tags/DFS/" style="font-size: 10.45px;">DFS</a> <a href="/tags/DLL/" style="font-size: 10.45px;">DLL</a> <a href="/tags/Debian/" style="font-size: 10px;">Debian</a> <a href="/tags/Docker/" style="font-size: 18.64px;">Docker</a> <a href="/tags/Docker-Compose/" style="font-size: 10.45px;">Docker-Compose</a> <a href="/tags/DockerHub/" style="font-size: 10px;">DockerHub</a> <a href="/tags/Dolt/" style="font-size: 10px;">Dolt</a> <a href="/tags/Dubbo/" style="font-size: 10.91px;">Dubbo</a> <a href="/tags/Easegress/" style="font-size: 10px;">Easegress</a> <a href="/tags/ElasticSearch/" style="font-size: 14.09px;">ElasticSearch</a> <a href="/tags/Electron/" style="font-size: 10.45px;">Electron</a> <a href="/tags/English/" style="font-size: 10px;">English</a> <a href="/tags/Excel/" style="font-size: 10px;">Excel</a> <a href="/tags/Express/" style="font-size: 10px;">Express</a> <a href="/tags/FFmpeg/" style="font-size: 10px;">FFmpeg</a> <a href="/tags/FTP/" style="font-size: 10.45px;">FTP</a> <a href="/tags/FaaS/" style="font-size: 10px;">FaaS</a> <a href="/tags/Future/" style="font-size: 10px;">Future</a> <a href="/tags/GC/" style="font-size: 10px;">GC</a> <a href="/tags/GPU/" style="font-size: 10px;">GPU</a> <a href="/tags/GRPC/" style="font-size: 10px;">GRPC</a> <a href="/tags/Gin/" style="font-size: 10px;">Gin</a> <a href="/tags/Git/" style="font-size: 13.64px;">Git</a> <a href="/tags/Gitee/" style="font-size: 10px;">Gitee</a> <a href="/tags/Github/" style="font-size: 14.55px;">Github</a> <a href="/tags/Github-Actions/" style="font-size: 10px;">Github-Actions</a> <a href="/tags/Golang/" style="font-size: 18.18px;">Golang</a> <a href="/tags/Gomod/" style="font-size: 10px;">Gomod</a> <a href="/tags/Goroutine/" style="font-size: 10.91px;">Goroutine</a> <a href="/tags/GraalVM/" style="font-size: 10px;">GraalVM</a> <a href="/tags/Gradle/" style="font-size: 10px;">Gradle</a> <a href="/tags/GraphQL/" style="font-size: 10px;">GraphQL</a> <a href="/tags/HAProxy/" style="font-size: 10px;">HAProxy</a> <a href="/tags/Hadoop/" style="font-size: 10px;">Hadoop</a> <a href="/tags/IDEA配置/" style="font-size: 10px;">IDEA配置</a> <a href="/tags/ID生成器/" style="font-size: 10.45px;">ID生成器</a> <a href="/tags/IO模型/" style="font-size: 10px;">IO模型</a> <a href="/tags/Ingress/" style="font-size: 10.45px;">Ingress</a> <a href="/tags/JDK动态代理/" style="font-size: 10.45px;">JDK动态代理</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Java/" style="font-size: 12.27px;">Java</a> <a href="/tags/JavaWeb/" style="font-size: 10px;">JavaWeb</a> <a href="/tags/Java基础/" style="font-size: 16.82px;">Java基础</a> <a href="/tags/Java注解/" style="font-size: 10px;">Java注解</a> <a href="/tags/Java源码/" style="font-size: 12.27px;">Java源码</a> <a href="/tags/Java面试/" style="font-size: 11.36px;">Java面试</a> <a href="/tags/JuiceFS/" style="font-size: 10px;">JuiceFS</a> <a href="/tags/JupyterLab/" style="font-size: 10px;">JupyterLab</a> <a href="/tags/Kafka/" style="font-size: 10.45px;">Kafka</a> <a href="/tags/Kubernetes/" style="font-size: 15.45px;">Kubernetes</a> <a href="/tags/LVS/" style="font-size: 10.91px;">LVS</a> <a href="/tags/Lambda表达式/" style="font-size: 10.91px;">Lambda表达式</a> <a href="/tags/LevelDB/" style="font-size: 10px;">LevelDB</a> <a href="/tags/Library/" style="font-size: 10.45px;">Library</a> <a href="/tags/Life/" style="font-size: 10px;">Life</a> <a href="/tags/Linux/" style="font-size: 16.36px;">Linux</a> <a href="/tags/LruCache/" style="font-size: 10px;">LruCache</a> <a href="/tags/MacOS/" style="font-size: 10.45px;">MacOS</a> <a href="/tags/Maven/" style="font-size: 12.27px;">Maven</a> <a href="/tags/MongoDB/" style="font-size: 11.82px;">MongoDB</a> <a href="/tags/MySQL/" style="font-size: 13.64px;">MySQL</a> <a href="/tags/Mybatis/" style="font-size: 10.91px;">Mybatis</a> <a href="/tags/NFS/" style="font-size: 10px;">NFS</a> <a href="/tags/NIO/" style="font-size: 10.91px;">NIO</a> <a href="/tags/NPM/" style="font-size: 10px;">NPM</a> <a href="/tags/Namespace/" style="font-size: 10px;">Namespace</a> <a href="/tags/Netty/" style="font-size: 10px;">Netty</a> <a href="/tags/Newman/" style="font-size: 10px;">Newman</a> <a href="/tags/Nginx/" style="font-size: 12.27px;">Nginx</a> <a href="/tags/Node-js/" style="font-size: 11.36px;">Node.js</a> <a href="/tags/Okular/" style="font-size: 10px;">Okular</a> <a href="/tags/P2P/" style="font-size: 10px;">P2P</a> <a href="/tags/POML/" style="font-size: 10px;">POML</a> <a href="/tags/Panic/" style="font-size: 10px;">Panic</a> <a href="/tags/PipelineDB/" style="font-size: 10px;">PipelineDB</a> <a href="/tags/PostgreSQL/" style="font-size: 10.45px;">PostgreSQL</a> <a href="/tags/Postman/" style="font-size: 10.45px;">Postman</a> <a href="/tags/Promise/" style="font-size: 10px;">Promise</a> <a href="/tags/Protobuf/" style="font-size: 10.91px;">Protobuf</a> <a href="/tags/Python/" style="font-size: 11.36px;">Python</a> <a href="/tags/RAII/" style="font-size: 10px;">RAII</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/RSS/" style="font-size: 10.91px;">RSS</a> <a href="/tags/React/" style="font-size: 10px;">React</a> <a href="/tags/Redash/" style="font-size: 10px;">Redash</a> <a href="/tags/Redis/" style="font-size: 14.55px;">Redis</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/Rust/" style="font-size: 18.64px;">Rust</a> <a href="/tags/SPA/" style="font-size: 10px;">SPA</a> <a href="/tags/SQLite/" style="font-size: 10px;">SQLite</a> <a href="/tags/SSE/" style="font-size: 10px;">SSE</a> <a href="/tags/SSH/" style="font-size: 10.45px;">SSH</a> <a href="/tags/Serverless/" style="font-size: 10px;">Serverless</a> <a href="/tags/Shadowsocks/" style="font-size: 10.91px;">Shadowsocks</a> <a href="/tags/Skiplist/" style="font-size: 10px;">Skiplist</a> <a href="/tags/Slice/" style="font-size: 10px;">Slice</a> <a href="/tags/Socket/" style="font-size: 10px;">Socket</a> <a href="/tags/Spring/" style="font-size: 11.82px;">Spring</a> <a href="/tags/Spring-Boot/" style="font-size: 10px;">Spring Boot</a> <a href="/tags/Spring源码/" style="font-size: 10px;">Spring源码</a> <a href="/tags/String/" style="font-size: 10px;">String</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/TOML/" style="font-size: 10px;">TOML</a> <a href="/tags/Telegraf/" style="font-size: 10px;">Telegraf</a> <a href="/tags/Telegram/" style="font-size: 10px;">Telegram</a> <a href="/tags/Tomcat/" style="font-size: 10.45px;">Tomcat</a> <a href="/tags/TypeScript/" style="font-size: 10px;">TypeScript</a> <a href="/tags/Typora/" style="font-size: 10px;">Typora</a> <a href="/tags/UUID/" style="font-size: 10px;">UUID</a> <a href="/tags/UnionFS/" style="font-size: 10px;">UnionFS</a> <a href="/tags/VMWare/" style="font-size: 13.18px;">VMWare</a> <a href="/tags/VPN/" style="font-size: 10px;">VPN</a> <a href="/tags/WebAssembly/" style="font-size: 10.45px;">WebAssembly</a> <a href="/tags/Websocket/" style="font-size: 10px;">Websocket</a> <a href="/tags/XML/" style="font-size: 10.91px;">XML</a> <a href="/tags/YAML/" style="font-size: 10px;">YAML</a> <a href="/tags/Zookeeper/" style="font-size: 10.91px;">Zookeeper</a> <a href="/tags/apt/" style="font-size: 10px;">apt</a> <a href="/tags/autok3s/" style="font-size: 10px;">autok3s</a> <a href="/tags/cURL/" style="font-size: 10px;">cURL</a> <a href="/tags/chroot/" style="font-size: 10px;">chroot</a> <a href="/tags/cmder/" style="font-size: 10px;">cmder</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hash冲突/" style="font-size: 10px;">hash冲突</a> <a href="/tags/inoreader/" style="font-size: 10px;">inoreader</a> <a href="/tags/k3s/" style="font-size: 10.45px;">k3s</a> <a href="/tags/kafka/" style="font-size: 10px;">kafka</a> <a href="/tags/keepalived/" style="font-size: 10px;">keepalived</a> <a href="/tags/libp2p/" style="font-size: 10px;">libp2p</a> <a href="/tags/minikube/" style="font-size: 10.45px;">minikube</a> <a href="/tags/ntfy/" style="font-size: 10px;">ntfy</a> <a href="/tags/picocli/" style="font-size: 10px;">picocli</a> <a href="/tags/telnet/" style="font-size: 10px;">telnet</a> <a href="/tags/uv/" style="font-size: 10px;">uv</a> <a href="/tags/vcpkg/" style="font-size: 10px;">vcpkg</a> <a href="/tags/xorm/" style="font-size: 10px;">xorm</a> <a href="/tags/二分法/" style="font-size: 10px;">二分法</a> <a href="/tags/二叉树/" style="font-size: 15.45px;">二叉树</a> <a href="/tags/二维码/" style="font-size: 10px;">二维码</a> <a href="/tags/交叉编译/" style="font-size: 10px;">交叉编译</a> <a href="/tags/人工智能/" style="font-size: 10.91px;">人工智能</a> <a href="/tags/人生日记/" style="font-size: 17.73px;">人生日记</a> <a href="/tags/代理模式/" style="font-size: 10px;">代理模式</a> <a href="/tags/位运算/" style="font-size: 10.45px;">位运算</a> <a href="/tags/信号/" style="font-size: 10px;">信号</a> <a href="/tags/信息聚合/" style="font-size: 10px;">信息聚合</a> <a href="/tags/内存管理/" style="font-size: 10.45px;">内存管理</a> <a href="/tags/内网穿透/" style="font-size: 10px;">内网穿透</a> <a href="/tags/函数式接口/" style="font-size: 10px;">函数式接口</a> <a href="/tags/分布式/" style="font-size: 15.91px;">分布式</a> <a href="/tags/办公/" style="font-size: 10px;">办公</a> <a href="/tags/动态规划/" style="font-size: 11.36px;">动态规划</a> <a href="/tags/协程池/" style="font-size: 10px;">协程池</a> <a href="/tags/博客管理/" style="font-size: 13.18px;">博客管理</a> <a href="/tags/博客美化/" style="font-size: 11.82px;">博客美化</a> <a href="/tags/双指针/" style="font-size: 10.45px;">双指针</a> <a href="/tags/反射/" style="font-size: 12.27px;">反射</a> <a href="/tags/口才/" style="font-size: 10px;">口才</a> <a href="/tags/哈希表/" style="font-size: 10.45px;">哈希表</a> <a href="/tags/回溯/" style="font-size: 10.45px;">回溯</a> <a href="/tags/回溯法/" style="font-size: 10px;">回溯法</a> <a href="/tags/堆/" style="font-size: 10.45px;">堆</a> <a href="/tags/多线程下载/" style="font-size: 10.45px;">多线程下载</a> <a href="/tags/大数据/" style="font-size: 10px;">大数据</a> <a href="/tags/字符串/" style="font-size: 13.18px;">字符串</a> <a href="/tags/字符串处理/" style="font-size: 10px;">字符串处理</a> <a href="/tags/学习案例/" style="font-size: 10.45px;">学习案例</a> <a href="/tags/容器/" style="font-size: 10px;">容器</a> <a href="/tags/工具分享/" style="font-size: 19.09px;">工具分享</a> <a href="/tags/并发编程/" style="font-size: 15.45px;">并发编程</a> <a href="/tags/并行计算/" style="font-size: 10px;">并行计算</a> <a href="/tags/序列化/" style="font-size: 10px;">序列化</a> <a href="/tags/建筑/" style="font-size: 10px;">建筑</a> <a href="/tags/开发规范/" style="font-size: 10.45px;">开发规范</a> <a href="/tags/开源协议/" style="font-size: 10px;">开源协议</a> <a href="/tags/性能指标/" style="font-size: 10px;">性能指标</a> <a href="/tags/技术杂谈/" style="font-size: 20px;">技术杂谈</a> <a href="/tags/排序/" style="font-size: 11.82px;">排序</a> <a href="/tags/推送/" style="font-size: 10px;">推送</a> <a href="/tags/搜索/" style="font-size: 10px;">搜索</a> <a href="/tags/操作系统/" style="font-size: 10.91px;">操作系统</a> <a href="/tags/教师/" style="font-size: 10.45px;">教师</a> <a href="/tags/教案/" style="font-size: 10.45px;">教案</a> <a href="/tags/数学/" style="font-size: 12.73px;">数学</a> <a href="/tags/数据库/" style="font-size: 15px;">数据库</a> <a href="/tags/数组/" style="font-size: 13.64px;">数组</a> <a href="/tags/文字隐藏/" style="font-size: 10px;">文字隐藏</a> <a href="/tags/断点续传/" style="font-size: 10px;">断点续传</a> <a href="/tags/新浪微博/" style="font-size: 10px;">新浪微博</a> <a href="/tags/日志/" style="font-size: 10px;">日志</a> <a href="/tags/日本語/" style="font-size: 14.55px;">日本語</a> <a href="/tags/日記/" style="font-size: 10.45px;">日記</a> <a href="/tags/服务自建/" style="font-size: 10.91px;">服务自建</a> <a href="/tags/查找/" style="font-size: 10.91px;">查找</a> <a href="/tags/栈/" style="font-size: 10.91px;">栈</a> <a href="/tags/歌詞/" style="font-size: 10px;">歌詞</a> <a href="/tags/正则表达式/" style="font-size: 10.91px;">正则表达式</a> <a href="/tags/汇编语言/" style="font-size: 10px;">汇编语言</a> <a href="/tags/测试/" style="font-size: 10px;">测试</a> <a href="/tags/滑窗/" style="font-size: 10px;">滑窗</a> <a href="/tags/版本控制/" style="font-size: 10px;">版本控制</a> <a href="/tags/生活总结/" style="font-size: 10px;">生活总结</a> <a href="/tags/福利分享/" style="font-size: 10px;">福利分享</a> <a href="/tags/算法/" style="font-size: 12.73px;">算法</a> <a href="/tags/算法题目/" style="font-size: 19.55px;">算法题目</a> <a href="/tags/类加载器/" style="font-size: 10.45px;">类加载器</a> <a href="/tags/素数/" style="font-size: 10px;">素数</a> <a href="/tags/线性探测法/" style="font-size: 10px;">线性探测法</a> <a href="/tags/线程池/" style="font-size: 10.91px;">线程池</a> <a href="/tags/编译优化/" style="font-size: 10px;">编译优化</a> <a href="/tags/编译器/" style="font-size: 10px;">编译器</a> <a href="/tags/网盘/" style="font-size: 10px;">网盘</a> <a href="/tags/网络线路/" style="font-size: 10px;">网络线路</a> <a href="/tags/翻訳/" style="font-size: 10.45px;">翻訳</a> <a href="/tags/自启动/" style="font-size: 10px;">自启动</a> <a href="/tags/蒙特卡罗方法/" style="font-size: 10px;">蒙特卡罗方法</a> <a href="/tags/虚拟机/" style="font-size: 10.45px;">虚拟机</a> <a href="/tags/街景/" style="font-size: 10px;">街景</a> <a href="/tags/装饰器模式/" style="font-size: 10px;">装饰器模式</a> <a href="/tags/计算机网络/" style="font-size: 10px;">计算机网络</a> <a href="/tags/设计模式/" style="font-size: 10px;">设计模式</a> <a href="/tags/课程/" style="font-size: 10px;">课程</a> <a href="/tags/负载均衡/" style="font-size: 12.27px;">负载均衡</a> <a href="/tags/贪心/" style="font-size: 10px;">贪心</a> <a href="/tags/跳跳蛙日语读库/" style="font-size: 10.45px;">跳跳蛙日语读库</a> <a href="/tags/软件安装与配置/" style="font-size: 17.27px;">软件安装与配置</a> <a href="/tags/软件推荐/" style="font-size: 15px;">软件推荐</a> <a href="/tags/软件测试/" style="font-size: 10.45px;">软件测试</a> <a href="/tags/软考/" style="font-size: 10px;">软考</a> <a href="/tags/进度条/" style="font-size: 10.45px;">进度条</a> <a href="/tags/进程通信/" style="font-size: 10px;">进程通信</a> <a href="/tags/逆向工程/" style="font-size: 10px;">逆向工程</a> <a href="/tags/递归/" style="font-size: 10.45px;">递归</a> <a href="/tags/重定向/" style="font-size: 10px;">重定向</a> <a href="/tags/重装系统/" style="font-size: 10px;">重装系统</a> <a href="/tags/链表/" style="font-size: 13.64px;">链表</a> <a href="/tags/队列/" style="font-size: 10px;">队列</a> <a href="/tags/随机图片/" style="font-size: 10px;">随机图片</a> <a href="/tags/集合/" style="font-size: 14.09px;">集合</a> <a href="/tags/零宽字符/" style="font-size: 10px;">零宽字符</a> <a href="/tags/静态代理/" style="font-size: 10px;">静态代理</a> <a href="/tags/面试总结/" style="font-size: 15px;">面试总结</a> <a href="/tags/项目总结/" style="font-size: 10.91px;">项目总结</a> <a href="/tags/项目构建/" style="font-size: 10.91px;">项目构建</a> <a href="/tags/项目部署/" style="font-size: 11.36px;">项目部署</a> <a href="/tags/黑苹果/" style="font-size: 10px;">黑苹果</a>
+    </div>
+    
+  </div>
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">文章分类</h3>
+    <div class="nexmoe-widget">
+
+      <ul class="category-list">
+
+        
+
+
+        
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ACM/">ACM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Android/">Android</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/C/">C++</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/CUDA/">CUDA</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Chrome扩展/">Chrome扩展</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ClickHouse/">ClickHouse</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/">Docker</a>
+          <span class="category-list-count">25</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dolt/">Dolt</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Dubbo/">Dubbo</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Electron/">Electron</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Git/">Git</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Github/">Github</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Golang/">Golang</a>
+          <span class="category-list-count">31</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/GraalVM/">GraalVM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/IO基础/">IO基础</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java/">Java</a>
+          <span class="category-list-count">4</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Java源码/">Java源码</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/JuiceFS/">JuiceFS</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Kubernetes/">Kubernetes</a>
+          <span class="category-list-count">12</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Life/">Life</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Linux/">Linux</a>
+          <span class="category-list-count">16</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Maven/">Maven</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MongoDB/">MongoDB</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/MySQL/">MySQL</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/">Mybatis</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/NPM/">NPM</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Netty/">Netty</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Nginx/">Nginx</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Node-js/">Node.js</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/PostgreSQL/">PostgreSQL</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Protobuf/">Protobuf</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Python/">Python</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redash/">Redash</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Docker/Redis/">Redis</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Ruby/">Ruby</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Rust/">Rust</a>
+          <span class="category-list-count">35</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Spring/">Spring</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TOML/">TOML</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/TypeScript/">TypeScript</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Websocket/">Websocket</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人工智能/">人工智能</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/人生日记/">人生日记</a>
+          <span class="category-list-count">27</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/分布式/">分布式</a>
+          <span class="category-list-count">10</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/办公/">办公</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/博客管理/">博客管理</a>
+          <span class="category-list-count">6</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/学习案例/">学习案例</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/工具分享/">工具分享</a>
+          <span class="category-list-count">41</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/并发编程/">并发编程</a>
+          <span class="category-list-count">13</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Mybatis/技术杂谈/">技术杂谈</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/教师/">教师</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/数据库/">数据库</a>
+          <span class="category-list-count">8</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/日本語/">日本語</a>
+          <span class="category-list-count">11</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/服务自建/">服务自建</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/汇编语言/">汇编语言</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法/">算法</a>
+          <span class="category-list-count">5</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/算法题目/">算法题目</a>
+          <span class="category-list-count">60</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/课程/">课程</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/Redis/软件安装与配置/">软件安装与配置</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软件测试/">软件测试</a>
+          <span class="category-list-count">2</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/软考/">软考</a>
+          <span class="category-list-count">1</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/面试总结/">面试总结</a>
+          <span class="category-list-count">15</span>
+        </li>
+
+        
+
+        <li class="category-list-item">
+          <a class="category-list-link" href="/categories/项目总结/">项目总结</a>
+          <span class="category-list-count">3</span>
+        </li>
+
+        
+      </ul>
+
+    </div>
+  </div>
+
+
+  
+  
+  <div class="nexmoe-widget-wrap">
+    <h3 class="nexmoe-widget-title">最新文章</h3>
+    <div class="nexmoe-widget">
+      <ul>
+        
+          <li>
+            <a href="/2026/02/10/再见2025，你好2026！/">再见2025，你好2026！</a>
+          </li>
+        
+          <li>
+            <a href="/2025/08/20/下一代提示词工程语言POML简明教程/">下一代提示词工程语言POML简明教程</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/30/开了一个新的专门学习日语的博客/">开了一个新的专门学习日语的博客</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/29/一、并行编程导论与CUDA入门/">一、并行编程导论与CUDA入门</a>
+          </li>
+        
+          <li>
+            <a href="/2025/07/24/一些免费的GPU资源/">一些免费的GPU资源</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+    <div class="nexmoe-copyright">
+        <span style="color:#707070;font-size: 14px;">
+            本站总访问量<span id="busuanzi_value_site_pv"></span>次 <br>
+            本站访客数<span id="busuanzi_value_site_uv"></span>人次 <br>
+        </span>
+        <span id="showsectime" style="color:#707070;font-size: 14px;">
+            本站已运行0天0小时0分0秒
+        </span>
+        <i class="fa fa-heart throb" style="color:#d43f57">❤</i><br>
+
+        &copy; 2026 Jasonkay
+        Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+        & <a href="https://nexmoe.com/hexo-theme-nexmoe.html" target="_blank">Nexmoe</a>
+    </div>
+
+    <div id="footer-info">
+
+    </div>
+
+    <script type="text/javascript">
+        function NewDate(str) {
+            str = str.split('-');
+            var date = new Date();
+            date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+            date.setUTCHours(0, 0, 0, 0);
+            return date;
+        }
+        function showsectime() {
+            var birthDay = NewDate("2019-09-01");
+            var today = new Date();
+            var timeold = today.getTime() - birthDay.getTime();
+            var sectimeold = timeold / 1000
+            var secondsold = Math.floor(sectimeold);
+            var msPerDay = 24 * 60 * 60 * 1000; var e_daysold = timeold / msPerDay;
+            var daysold = Math.floor(e_daysold);
+            var e_hrsold = (daysold - e_daysold) * -24;
+            var hrsold = Math.floor(e_hrsold);
+            var e_minsold = (hrsold - e_hrsold) * -60;
+            var minsold = Math.floor((hrsold - e_hrsold) * -60); var seconds = Math.floor((minsold - e_minsold) * -60).toString();
+            document.getElementById("showsectime").innerHTML = "本站已运行" + daysold + "天" + hrsold + "小时" + minsold + "分" + seconds + "秒";
+            setTimeout(showsectime, 1000);
+        }
+        showsectime();
+    </script>
+
+</div><!-- .nexmoe-drawer -->
+  </div>
+  <div id="nexmoe-content">
+    <div class="nexmoe-primary">
+      <div class="nexmoe-post">
+  <div class="nexmoe-post-cover">
+    
+    <img src="https://img.paulzzh.com/touhou/random?44">
+    
+    <h1>C++主流编译器总结</h1>
+  </div>
+  <div class="nexmoe-post-meta">
+    <a><i class="nexmoefont icon-calendar-fill"></i>2022年05月29日</a>
+    <a><i class="nexmoefont icon-areachart"></i>8.9k 字</a>
+    <a><i class="nexmoefont icon-areachart"></i><span class="archive-article-date">阅读量<span id="busuanzi_value_page_pv"></span>
+      </span></a>
+    <a><i class="nexmoefont icon-time-circle-fill"></i>大概 41 分钟</a>
+
+    
+    <a class="nexmoefont icon-appstore-fill -link" href="/categories/C/">C++</a>
+    
+    
+    <a class="nexmoefont icon-tag-fill -link" href="/tags/C/">C++</a> <a class="nexmoefont icon-tag-fill -link" href="/tags/编译器/">编译器</a>
+    
+  </div>
+  <article>
+    
+    <div id="toc" class="toc-article">
+      <ul class="markdownIt-TOC">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-主流编译器总结"><span class="toc-text">C++主流编译器总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MSVC"><span class="toc-text">MSVC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MSVC简要介绍"><span class="toc-text">MSVC简要介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MSVC优化级别"><span class="toc-text">MSVC优化级别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MSVC编译参数"><span class="toc-text">MSVC编译参数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GCC-G"><span class="toc-text">GCC/G++</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GCC和G-的区别？"><span class="toc-text">GCC和G++的区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#G-基本使用"><span class="toc-text">G++基本使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GCC编译过程"><span class="toc-text">GCC编译过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#预处理"><span class="toc-text">预处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#编译阶段"><span class="toc-text">编译阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#汇编阶段"><span class="toc-text">汇编阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#链接阶段"><span class="toc-text">链接阶段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GCC优化级别"><span class="toc-text">GCC优化级别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#G-常用命令参数"><span class="toc-text">G++常用命令参数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#指定编译输出的名字-o"><span class="toc-text">指定编译输出的名字-o</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#通过-Wall参数启用所有警告"><span class="toc-text">通过-Wall参数启用所有警告</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-g参数产生调试信息"><span class="toc-text">使用-g参数产生调试信息</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-E参数只产生预处理输出"><span class="toc-text">使用-E参数只产生预处理输出</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-S参数只产生汇编代码"><span class="toc-text">使用-S参数只产生汇编代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-c-参数只产生编译的代码"><span class="toc-text">使用 -c 参数只产生编译的代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-save-temps参数产生所有的中间步骤的文件"><span class="toc-text">使用-save-temps参数产生所有的中间步骤的文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-l参数链接共享库"><span class="toc-text">使用-l参数链接共享库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-fPIC产生位置无关的代码"><span class="toc-text">使用-fPIC产生位置无关的代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-v打印所有的执行命令"><span class="toc-text">使用-v打印所有的执行命令</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-funsigned-char将char解释为符号的char"><span class="toc-text">使用-funsigned-char将char解释为符号的char</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-fsigned-char将char解释为有符号的char"><span class="toc-text">使用-fsigned-char将char解释为有符号的char</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-D参数可以使用编译时的宏"><span class="toc-text">使用-D参数可以使用编译时的宏</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-Werror将警告升级为错误"><span class="toc-text">使用-Werror将警告升级为错误</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-参数从文件中读取参数"><span class="toc-text">使用@参数从文件中读取参数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用参数-I指定头文件的文件夹"><span class="toc-text">使用参数-I指定头文件的文件夹</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用参数-std指定支持的c-c的标准"><span class="toc-text">使用参数-std指定支持的c++/c的标准</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-L指定链接库的搜索路径"><span class="toc-text">使用-L指定链接库的搜索路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-static生成静态链接的文件"><span class="toc-text">使用-static生成静态链接的文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-static-libstdc-静态链接libstdc"><span class="toc-text">使用-static-libstdc++静态链接libstdc++</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-M生成文件关联的信息"><span class="toc-text">使用-M生成文件关联的信息</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Clang"><span class="toc-text">Clang</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#LLVM工具介绍"><span class="toc-text">LLVM工具介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#opt"><span class="toc-text">opt</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#llc"><span class="toc-text">llc</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm-mc"><span class="toc-text">llvm-mc</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#lli"><span class="toc-text">lli</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm-link"><span class="toc-text">llvm-link</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm-as"><span class="toc-text">llvm-as</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm-dis"><span class="toc-text">llvm-dis</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Clang-1"><span class="toc-text">Clang</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Clang基本使用"><span class="toc-text">Clang基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#前言-1"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用Clang生成中间代码和可执行文件"><span class="toc-text">使用Clang生成中间代码和可执行文件</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Clang工具链编译完整步骤"><span class="toc-text">Clang工具链编译完整步骤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Clang常用命令"><span class="toc-text">Clang常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#基本命令"><span class="toc-text">基本命令</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#其他常用命令"><span class="toc-text">其他常用命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#尾声"><span class="toc-text">尾声</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a></li></ol>
+      </ul>
+    </div>
+    
+    <p>由于历史原因，C++存在多个厂商的编译器，主流的包括GCC、G++、MSVC、clang等；</p>
+<p>本文介绍了这几个编译器之间的关系，以及各个编译器常用的命令参数；</p>
+<br>
+
+<a id="more"></a>
+
+<h1 id="C-主流编译器总结"><a href="#C-主流编译器总结" class="headerlink" title="C++主流编译器总结"></a><strong>C++主流编译器总结</strong></h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h2><p>C++ 作为一门历史包袱极重的 PL，其对应的编译器也是数不胜数，如：Borland C++、TCC、Dev C++等；</p>
+<p>甚至历史上一度出现了关于 C++ 编译器圣战；</p>
+<blockquote>
+<p>  关于这段历史可以参考：</p>
+<ul>
+<li><a href="https://book.douban.com/subject/1106304/" target="_blank" rel="noopener">《Borland传奇》</a></li>
+</ul>
+</blockquote>
+<p>本文总结了一些主流编译器的用法：</p>
+<ul>
+<li>MSVC</li>
+<li>GCC/G++</li>
+<li>Clang</li>
+</ul>
+<br>
+
+<h2 id="MSVC"><a href="#MSVC" class="headerlink" title="MSVC"></a><strong>MSVC</strong></h2><h3 id="MSVC简要介绍"><a href="#MSVC简要介绍" class="headerlink" title="MSVC简要介绍"></a><strong>MSVC简要介绍</strong></h3><p>先贴一下关于 MSVC 的优点吧：</p>
+<ul>
+<li>巨硬家的编译器；</li>
+<li>C++ 编译器圣战中的胜者（是的 Borland 败了！）；</li>
+<li>C++ 规范支持最快的编译器，没有之一；</li>
+<li>唯一一个同时支持增量编译和增量链接的编译器；</li>
+</ul>
+<blockquote>
+<p>  <strong>是的，你没看错，MSVC 居然是对C++ 规范支持最好的编译器；</strong></p>
+<p>  <strong>隔壁 GCC 和 clang 甚至在 2022 年了，C++20 都没完全支持？！</strong></p>
+</blockquote>
+<p>再来点缺点：</p>
+<ul>
+<li><strong>闭源；</strong></li>
+<li>一般大家都是在win平台用（是的，结合宇宙第一IDE VS）；</li>
+<li>大项目编译速度最快；</li>
+<li>优化方面没有 GCC 和clang那么激进；</li>
+</ul>
+<p>另外，MSVC 支持了许多在 GCC、clang 中不支持的“骚操作”，例如它独特的嵌入汇编的片段…；</p>
+<br>
+
+<h3 id="MSVC优化级别"><a href="#MSVC优化级别" class="headerlink" title="MSVC优化级别"></a><strong>MSVC优化级别</strong></h3><p>对于 C++ 的代码，性能优化当然是我们非常关心的一个内容了！</p>
+<p>下面的表格列出了 MSVC 编译器提供的一些编译选项：</p>
+<table>
+<thead>
+<tr>
+<th align="left">选项</th>
+<th align="left">目标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/favor-optimize-for-architecture-specifics?view=msvc-170" target="_blank" rel="noopener"><code>/favor:</code></a></td>
+<td align="left">生成针对一个指定体系结构或一系列体系结构进行优化的代码。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/o1-o2-minimize-size-maximize-speed?view=msvc-170" target="_blank" rel="noopener"><code>/O1</code></a></td>
+<td align="left">创建小代码。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/o1-o2-minimize-size-maximize-speed?view=msvc-170" target="_blank" rel="noopener"><code>/O2</code></a></td>
+<td align="left">创建快速代码。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/ob-inline-function-expansion?view=msvc-170" target="_blank" rel="noopener"><code>/Ob</code></a></td>
+<td align="left">控制内联展开。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/od-disable-debug?view=msvc-170" target="_blank" rel="noopener"><code>/Od</code></a></td>
+<td align="left">禁用优化。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/og-global-optimizations?view=msvc-170" target="_blank" rel="noopener"><code>/Og</code></a></td>
+<td align="left">已弃用。 使用全局优化。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/oi-generate-intrinsic-functions?view=msvc-170" target="_blank" rel="noopener"><code>/Oi[-\]</code></a></td>
+<td align="left">生成内部函数。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/os-ot-favor-small-code-favor-fast-code?view=msvc-170" target="_blank" rel="noopener"><code>/Os</code></a></td>
+<td align="left">代码大小优先。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/os-ot-favor-small-code-favor-fast-code?view=msvc-170" target="_blank" rel="noopener"><code>/Ot</code></a></td>
+<td align="left">代码速度优先。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/ox-full-optimization?view=msvc-170" target="_blank" rel="noopener"><code>/Ox</code></a></td>
+<td align="left">不包含 /GF 或 /Gy 的 /O2 子集。</td>
+</tr>
+<tr>
+<td align="left"><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/oy-frame-pointer-omission?view=msvc-170" target="_blank" rel="noopener"><code>/Oy</code></a></td>
+<td align="left">省略帧指针。 (仅限 x86)</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>  详见：</p>
+<ul>
+<li><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#optimization" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#optimization</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="MSVC编译参数"><a href="#MSVC编译参数" class="headerlink" title="MSVC编译参数"></a><strong>MSVC编译参数</strong></h3><p>关于 MSVC 的编译参数，这里不再详细给出了，原因有几点：</p>
+<ul>
+<li>MS 的中文文档其实已经非常全面了（是的，中文文档！）：<ul>
+<li><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/compiling-a-c-cpp-program?view=msvc-170" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/cpp/build/reference/compiling-a-c-cpp-program?view=msvc-170</a></li>
+</ul>
+</li>
+<li>此外，大部分使用 MSVC 的也是使用的微软那一套自己的工具链，这些大部分都已经集成在了IDE里面，毕竟微软还是倾向于做界面的！</li>
+<li>另外，大部分人还是倾向于使用 Linux/Unix 的，所以这一套工具链大多数还是在 win 平台自己玩；</li>
+</ul>
+<blockquote>
+<p>  关于编译器参数：</p>
+<ul>
+<li><a href="https://docs.microsoft.com/zh-cn/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="GCC-G"><a href="#GCC-G" class="headerlink" title="GCC/G++"></a><strong>GCC/G++</strong></h2><p>提到 Linux，你一定会想到：GCC、GNU、libc；</p>
+<p>是的，这是一个伴随着 Linux 一同产生的超级远古的编译器，并且它遵循 GPL 这个“病毒式”扩散的开源协议；</p>
+<p>那 GCC 和 G++ 又是什么关系呢？</p>
+<br>
+
+<h3 id="GCC和G-的区别？"><a href="#GCC和G-的区别？" class="headerlink" title="GCC和G++的区别？"></a><strong>GCC和G++的区别？</strong></h3><p>这里首先要说一下，GCC 和 G++ 都是 GCC:GNU Compiler Collection(GUN 编译器集合) 中的套件；</p>
+<blockquote>
+<p>  GCC 既是项目的名字，也是一个程序（项目产物）的名字，而 G++ 是这个项目的产物（程序）之一；</p>
+</blockquote>
+<p>实际上，无论是 GCC 还是 G++, 他们的定位都仅仅是 Driver，最终他们都是仅仅负责调用真正的编译器，来把源码编译到汇编代码；</p>
+<p>比如 C 语言的编译器是 <code>cc1</code>，而 C++ 语言的编译器是 <code>cc1plus</code>，随后，Driver 再调用 <code>as</code>，把汇编代码变成二进制代码；</p>
+<p>最后，调用 <code>ld</code>把二进制代码拼在一起；</p>
+<p>而，GCC 和 G++ 之间的区别无非就是：<strong>调用的编译器不同，并且传递给链接器的参数不同；</strong></p>
+<blockquote>
+<p>  具体而言：</p>
+<ul>
+<li><p><strong>G++</strong> 会把 <code>.c</code> 文件当做是 C++ 语言 (在 <code>.c</code> 文件前后分别加上 <code>-xc++</code> 和 <code>-xnone</code>, 强行变成 C++)，从而调用 <code>cc1plus</code> 进行编译；</p>
+</li>
+<li><p><strong>G++</strong> 遇到 <code>.cpp</code> 文件也会当做是 C++，调用 <code>cc1plus</code> 进行编译；</p>
+</li>
+<li><p><strong>G++</strong> 还会默认告诉链接器，让它链接上 C++ 标准库；</p>
+</li>
+<li><p><strong>GCC</strong> 会把 <code>.c</code> 文件当做是 C 语言，从而调用 <code>cc1</code> 进行编译；</p>
+</li>
+<li><p><strong>GCC</strong> 遇到 <code>.cpp</code> 文件，会处理成 C++ 语言，调用 <code>cc1plus</code> 进行编译；</p>
+</li>
+<li><p><strong>GCC</strong> 默认不会链接上 C++ 标准库；</p>
+</li>
+<li><p><strong>GCC</strong> 不会定义 <strong>__cplusplus</strong> 宏，而 <strong>G++</strong> 会；</p>
+<p>二者的源码基本是一样的，只相差一个文件：</p>
+</li>
+<li><p><a href="https://GCC.gnu.org/git/?p=GCC.git;a=summary" target="_blank" rel="noopener">https://GCC.gnu.org/git/?p=GCC.git;a=summary</a></p>
+</li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="G-基本使用"><a href="#G-基本使用" class="headerlink" title="G++基本使用"></a><strong>G++基本使用</strong></h3><p>基本上学习过 C++ 的同学都知道下面的命令：</p>
+<pre><code class="bash">g++ main.cpp -o main</code></pre>
+<p>对于单个 C++ 文件，上面的命令会直接编译 <code>main.cpp</code> 文件，并生成二进制文件 main；</p>
+<p>如下面这个文件：</p>
+<p>main.cpp</p>
+<pre><code class="c++">#include&lt;iostream&gt;
+
+int main(int arg, char **args) {
+    printf(&quot;arg number: %d\n&quot;, arg);
+}</code></pre>
+<p>编译后执行：</p>
+<pre><code class="bash">$ ./main 
+arg number: 1</code></pre>
+<p>如果对于多个文件，则需要首先编译为 <code>.obj</code> 文件，随后进行链接；</p>
+<blockquote>
+<p>  想要理解GCC编译器的完整的编译过程，可以阅读：</p>
+<ul>
+<li><a href="https://www.thegeekstuff.com/2011/10/c-program-to-an-executable/" target="_blank" rel="noopener">Journey of a C Program to Linux Executable in 4 Stages</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="GCC编译过程"><a href="#GCC编译过程" class="headerlink" title="GCC编译过程"></a><strong>GCC编译过程</strong></h3><p><font color="#f00"><strong>GCC/G++ 在执行编译工作的时候，总共需要4步：</strong></font></p>
+<ul>
+<li><font color="#f00"><strong>预处理，生成 <code>.i</code> 的文件（预处理器cpp），此时对应的参数是 <code>-E</code>；</strong></font></li>
+<li><font color="#f00"><strong>将预处理后的文件转换成汇编语言，生成文件<code>.s</code>（编译器egcs），对应的参数是 <code>-S</code>；</strong></font></li>
+<li><font color="#f00"><strong>由汇编代码变为目标代码（机器代码）生成 <code>.o</code> 的文件（汇编器as），对应的参数是 <code>-c</code>；</strong></font></li>
+<li><font color="#f00"><strong>连接目标代码，分配实际的内存地址并生成可执行程序（链接器ld），无参数；</strong></font></li>
+</ul>
+<p>即：一个C/C++文件要经过预处理(preprocessing)、编译(compilation)、汇编(assembly)、和连接(linking)才能变成可执行文件；</p>
+<p>下面分别来看；</p>
+<h4 id="预处理"><a href="#预处理" class="headerlink" title="预处理"></a><strong>预处理</strong></h4><p>只生成预处理代码的命令如下：</p>
+<pre><code class="bash">g++ -E main.cpp -o main.i</code></pre>
+<p><code>-E</code> 的作用是让 GCC 在预处理结束后停止编译；</p>
+<p><font color="#f00"><strong>预处理阶段主要处理 <code>include和define</code> 等；</strong></font></p>
+<p><font color="#f00"><strong>它把 <code>#include</code> 包含进来的 <code>.h文件</code> 插入到 <code>#include</code> 所在的位置，把源程序中使用到的用 <code>#define</code> 定义的宏用实际的字符串代替；</strong></font></p>
+<blockquote>
+<p>  <strong>只是做简单的字符串替换，这么看来这一步还是很简单的；</strong></p>
+<p>  <strong>想必了解了这些，你也知道为什么需要避免同一个头文件 include 两次了吧！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="编译阶段"><a href="#编译阶段" class="headerlink" title="编译阶段"></a><strong>编译阶段</strong></h4><p>编译阶段命令如下：</p>
+<pre><code class="bash">g++ -S main.i -o main.s</code></pre>
+<p><code>-S</code> 的作用是编译后结束，编译生成了汇编文件；</p>
+<p><font color="#f00"><strong>在这个阶段中，GCC 首先要检查代码的规范性、是否有语法错误等；</strong></font></p>
+<p><font color="#f00"><strong>以确定代码的实际要做的工作，在检查无误后，GCC 把代码翻译成汇编语言；</strong></font></p>
+<br>
+
+<h4 id="汇编阶段"><a href="#汇编阶段" class="headerlink" title="汇编阶段"></a><strong>汇编阶段</strong></h4><p>汇编阶段命令如下：</p>
+<pre><code class="bash">g++ -c main.s -o main.o</code></pre>
+<p><font color="#f00"><strong>汇编阶段把 <code>.s</code>文件翻译成二进制机器指令文件<code>.o</code>，这个阶段接收 <code>.c</code> 、<code>.i</code>、<code>.s</code> 的文件都没有问题；</strong></font></p>
+<br>
+
+<h4 id="链接阶段"><a href="#链接阶段" class="headerlink" title="链接阶段"></a><strong>链接阶段</strong></h4><p>链接阶段命令如下：</p>
+<pre><code class="bash">g++ -o main main.s</code></pre>
+<p><strong>链接阶段，链接的是函数库；</strong></p>
+<p>在 <code>main.cpp</code> 中并没有定义 <code>printf</code> 的函数实现，且在预编译中包含进的 <code>stdio.h</code> 中也只有该函数的声明；</p>
+<p>而系统把这些函数实现都被做到名为<code>libc.so</code>的动态库；</p>
+<p><strong>函数库一般分为静态库和动态库两种：</strong></p>
+<ul>
+<li><font color="#f00"><strong>静态库是指编译链接时，把库文件的代码全部加入到可执行文件中，因此生成的文件比较大，但在运行时也就不再需要库文件了；Linux中后缀名为 <code>.a</code>；</strong></font></li>
+<li><font color="#f00"><strong>动态库与之相反，在编译链接时并没有把库文件的代码加入到可执行文件中，而是在程序执行时由运行时链接文件加载库；Linux中后缀名为 <code>.so</code>，如前面所述的 <code>libc.so</code> 就是动态库；</strong></font></li>
+<li><font color="#f00"><strong>GCC 在编译时默认使用动态库；</strong></font></li>
+</ul>
+<p><strong>静态库节省时间：不需要再进行动态链接，需要调用的代码直接就在代码内部；</strong></p>
+<p><strong>动态库节省空间：如果一个动态库被两个程序调用，那么这个动态库只需要一份在内存中；</strong></p>
+<br>
+
+<h3 id="GCC优化级别"><a href="#GCC优化级别" class="headerlink" title="GCC优化级别"></a><strong>GCC优化级别</strong></h3><p>GCC 编译器也有自己的一套优化级别，在编译时指定优化级别是由 <code>-O</code> 参数指定的；</p>
+<blockquote>
+<p>  <strong>这个选项控制所有的优化等级；</strong></p>
+<p>  <strong>使用优化选项会使编译过程耗费更多的时间，并且占用更多的内存，尤其是在提高优化等级的时候；</strong></p>
+</blockquote>
+<p>例如：</p>
+<pre><code class="bash">g++ -O3 main.cpp -o main</code></pre>
+<p>下面来看优化等级：</p>
+<p>GCC 中指定优化级别的参数有：</p>
+<table>
+<thead>
+<tr>
+<th><strong>优化级别</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-O0</code></td>
+<td>关闭所有优化选项，也是CFLAGS 或 CXXFLAGS中没有设置-O等级时的默认等级；<br>这样就不会优化代码；</td>
+</tr>
+<tr>
+<td><code>-O1</code></td>
+<td>最基本的优化等级；编译器会在不花费太多编译时间、同时也会试图生成更快更小的代码；<br>这些优化是非常基础的，但一般这些任务肯定能顺利完成。</td>
+</tr>
+<tr>
+<td><code>-O2</code></td>
+<td><code>-O1</code> 的进阶；这是推荐的优化等级，除非你有特殊的需求；<code>-O2</code> 会比 <code>-O1</code> 启用多一些标记；<br>设置了<code>-O2</code>后，编译器会试图提高代码性能而不会增大体积和大量占用的编译时间；</td>
+</tr>
+<tr>
+<td><code>-O3</code></td>
+<td><strong>最高最危险的优化等级</strong>；用这个选项会延长编译代码的时间，并且在使用 <code>GCC4.x</code> 的系统里不应全局启用！<br>自从3.x版本以来GCC的行为已经有了极大地改变：在3.x，<code>-O3</code>生成的代码也只是比<code>-O2</code>快一点点而已，而<code>GCC4.x</code>中还未必更快；<br>用<code>-O3</code>来编译所有的软件包将产生更大体积更耗内存的二进制文件，大大增加编译失败的机会或不可预知的程序行为（包括错误），这样做将得不偿失；<strong>在gcc 4.x.中使用-O3是不推荐的；</strong></td>
+</tr>
+<tr>
+<td><code>-Og</code></td>
+<td>参数 <code>-Og</code> 是在 <code>-O1</code> 的基础上，去掉了那些影响调试的优化，所以如果最终是为了调试程序，可以使用这个参数；<br>不过光有这个参数也是不行的，这个参数只是告诉编译器，编译后的代码不要影响调试，但调试信息的生成还是靠 <code>-g</code> 参数的；</td>
+</tr>
+<tr>
+<td><code>-Os</code></td>
+<td>参数 <code>-Os</code> 是在 <code>-O2</code> 的基础上，去掉了那些会导致最终可执行程序增大的优化，如果想要更小的可执行程序，可选择这个参数；</td>
+</tr>
+<tr>
+<td><code>-Ofast</code></td>
+<td><strong>参数 <code>-Ofast</code> 是在 <code>-O3</code> 的基础上，添加了一些非常规优化，这些优化是通过打破一些国际标准（比如一些数学函数的实现标准）来实现的，所以一般不推荐使用该参数；</strong></td>
+</tr>
+</tbody></table>
+<p>其他一些需要注意的是：</p>
+<ul>
+<li><strong>在编译时，如果没有指定上面的任何优化参数，则默认为 <code>-O0</code>，即没有优化；</strong></li>
+<li><strong>参数 <code>-O1</code>、<code>-O2</code>、<code>-O3</code> 中，随着数字变大，代码的优化程度也越高，不过这在某种意义上来说，也是以牺牲程序的编译速度、编译内存占用以及可调试性为代价的；</strong></li>
+</ul>
+<blockquote>
+<p>  如果想知道上面的优化参数具体做了哪些优化，可以使用 <code>gcc -Q --help=optimizers</code> 命令来查询，比如下面是查询 -O3 参数开启了哪些优化：</p>
+<pre><code class="bash">  $ g++ -Q --help=optimizers -O3
+    ...
+    -fassociative-math              [disabled]
+    -fassume-phsa                   [enabled]
+    ...</code></pre>
+</blockquote>
+<blockquote>
+<p>  <strong>相关扩展：是否优化程度越高，生成的代码就越好？</strong></p>
+<p>  答案是：否；</p>
+<p>  <strong>要记住一句话：过犹不及；</strong></p>
+<p>  <strong>更高级别的优化是使用了大量的编译器 track 实现的，这些优化可能有些是不符合标准的，从而会造成一些奇奇怪怪的问题；</strong></p>
+<p>  <strong>通常情况下我们使用 <code>-O2</code> 级别已经可以了；</strong></p>
+</blockquote>
+<blockquote>
+<p>  GCC优化文档：</p>
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#Optimize-Options" target="_blank" rel="noopener">https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#Optimize-Options</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h3 id="G-常用命令参数"><a href="#G-常用命令参数" class="headerlink" title="G++常用命令参数"></a><strong>G++常用命令参数</strong></h3><h4 id="指定编译输出的名字-o"><a href="#指定编译输出的名字-o" class="headerlink" title="指定编译输出的名字-o"></a><strong>指定编译输出的名字<code>-o</code></strong></h4><p>G++ 编译器最常用的使用格式是：</p>
+<pre><code class="bash">g++ main.cpp</code></pre>
+<p>上面的命令执行完整的编译过程，并且生成一个<code>a.out</code>文件；</p>
+<p>使用参数<code>-o</code>, 可以指定输出的文件名：</p>
+<pre><code class="bash">g++ main.cpp -o main</code></pre>
+<p>上面的命令会产生输出文件<code>main</code>；</p>
+<br>
+
+<h4 id="通过-Wall参数启用所有警告"><a href="#通过-Wall参数启用所有警告" class="headerlink" title="通过-Wall参数启用所有警告"></a><strong>通过<code>-Wall</code>参数启用所有警告</strong></h4><p>这个参数可以启用所有警告：</p>
+<p>main.cpp</p>
+<pre><code class="c++">#include&lt;stdio.h&gt;
+
+int main(void) {
+   int i;
+   printf(&quot;\n The Geek Stuff [%d]\n&quot;, i);
+   return 0;
+}</code></pre>
+<p>上面的代码编译时，会出现 <code>未初始化的i</code> 类似的警告；</p>
+<pre><code class="bash">$ g++ -Wall main.cpp -o main
+main.c: In function ‘main’:
+main.c:6:10: warning: ‘i’ is used uninitialized in this function [-Wuninitialized]</code></pre>
+<blockquote>
+<p>  <strong><code>-w</code> 则是不产生任何告警！</strong></p>
+</blockquote>
+<br>
+
+<h4 id="使用-g参数产生调试信息"><a href="#使用-g参数产生调试信息" class="headerlink" title="使用-g参数产生调试信息"></a><strong>使用<code>-g</code>参数产生调试信息</strong></h4><p>在开发阶段，必要的调试信息是必须的：</p>
+<pre><code class="bash">$ g++ -g main.cpp -o main</code></pre>
+<br>
+
+<h4 id="使用-E参数只产生预处理输出"><a href="#使用-E参数只产生预处理输出" class="headerlink" title="使用-E参数只产生预处理输出"></a><strong>使用<code>-E</code>参数只产生预处理输出</strong></h4><p><code>-E</code> 参数是产生预处理阶段的输出：</p>
+<pre><code class="bash">$ g++ -E main.cpp &gt; main.i</code></pre>
+<p>G++ 命令将结果输出在<code>stdout</code>中，所以你可以把它重定向到任意的文件中；</p>
+<p>在上面的例子中，重定向到<code>main.i</code>文件中；</p>
+<br>
+
+<h4 id="使用-S参数只产生汇编代码"><a href="#使用-S参数只产生汇编代码" class="headerlink" title="使用-S参数只产生汇编代码"></a><strong>使用<code>-S</code>参数只产生汇编代码</strong></h4><p><code>-S</code> 参数产生汇编级别的代码；</p>
+<pre><code class="bash">g++ -S main.cpp &gt; main.s</code></pre>
+<p>文件<code>main.s</code>包含汇编代码；</p>
+<br>
+
+<h4 id="使用-c-参数只产生编译的代码"><a href="#使用-c-参数只产生编译的代码" class="headerlink" title="使用 -c 参数只产生编译的代码"></a><strong>使用 <code>-c</code> 参数只产生编译的代码</strong></h4><p><code>-C</code>参数只产生编译的代码(没有链接link)。</p>
+<pre><code>g++ -c main.cpp</code></pre><p>上面的代码产生<code>main.o</code>，包含机器级别的代码或者编译的代码；</p>
+<br>
+
+<h4 id="使用-save-temps参数产生所有的中间步骤的文件"><a href="#使用-save-temps参数产生所有的中间步骤的文件" class="headerlink" title="使用-save-temps参数产生所有的中间步骤的文件"></a><strong>使用<code>-save-temps</code>参数产生所有的中间步骤的文件</strong></h4><p>通过 <code>-save-temps</code> 这个参数，所有中间阶段的文件都会存储在当前文件夹中，注意它也会产生可执行文件；</p>
+<pre><code class="bash">$ g++ -save-temps main.cpp
+
+$ ls
+a.out  main.c  main.i  main.o  main.s</code></pre>
+<p>从例子中我们可以看到各个中间文件以及可执行文件；</p>
+<br>
+
+<h4 id="使用-l参数链接共享库"><a href="#使用-l参数链接共享库" class="headerlink" title="使用-l参数链接共享库"></a><strong>使用<code>-l</code>参数链接共享库</strong></h4><p><code>-l</code>可以用作链接共享库，例如：</p>
+<pre><code class="bash">g++ -Wall main.cpp -o main -lCPPfile</code></pre>
+<p>上面的代码会链接 <code>libCPPfile.so</code>，产生可执行文件 <code>main</code>；</p>
+<blockquote>
+<p>  <strong>需要注意的是：</strong></p>
+<p>  <font color="#f00"><strong>链接库文件名称是：去掉 <code>lib前缀</code> 和 <code>.so后缀</code> 的部分；</strong></font></p>
+<p>  如：</p>
+<ul>
+<li><code>libev.so</code> 就是 <code>-lev</code>；</li>
+<li><code>libace.so</code> 就是 <code>-lace</code>；</li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="使用-fPIC产生位置无关的代码"><a href="#使用-fPIC产生位置无关的代码" class="headerlink" title="使用-fPIC产生位置无关的代码"></a><strong>使用<code>-fPIC</code>产生位置无关的代码</strong></h4><p><font color="#f00"><strong>当产生共享库的时候，应该创建位置无关的代码，这会让共享库使用任意的地址而不是固定的地址，要实现这个功能，需要使用<code>-fPIC</code>参数；</strong></font></p>
+<p>下面的例子产生<code>libMain.so</code>动态库：</p>
+<pre><code class="bash">$ g++ -c -Wall -Werror -fPIC main.cpp
+$ g++ -shared -o libMain.so main.o</code></pre>
+<p>注意：</p>
+<ul>
+<li>产生共享库的时候使用了<code>-fPIC</code>参数；</li>
+<li><code>-shared</code>产生共享库；</li>
+</ul>
+<br>
+
+<h4 id="使用-v打印所有的执行命令"><a href="#使用-v打印所有的执行命令" class="headerlink" title="使用-v打印所有的执行命令"></a><strong>使用<code>-v</code>打印所有的执行命令</strong></h4><p>参数<code>-v</code>提供详细的信息，打印出G++编译一个文件的时候所有的步骤；</p>
+<p>例如：</p>
+<pre><code class="bash">$ g++ -Wall -v main.cpp -o main
+
+Using built-in specs.
+COLLECT_GCC=gcc
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/i686-linux-gnu/4.6/lto-wrapper
+Target: i686-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion=&#39;Ubuntu/Linaro 4.6.3-1ubuntu5&#39; --with-bugurl=file:///usr/share/doc/gcc-4.6/README.Bugs --enable-languages=c,c++,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.6 --enable-shared --enable-linker-build-id --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.6 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --enable-plugin --enable-objc-gc --enable-targets=all --disable-werror --with-arch-32=i686 --with-tune=generic --enable-checking=release --build=i686-linux-gnu --host=i686-linux-gnu --target=i686-linux-gnu
+Thread model: posix
+gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)
+...
+...
+...</code></pre>
+<p>这样我们可以看到所有的细节；</p>
+<br>
+
+<h4 id="使用-funsigned-char将char解释为符号的char"><a href="#使用-funsigned-char将char解释为符号的char" class="headerlink" title="使用-funsigned-char将char解释为符号的char"></a><strong>使用<code>-funsigned-char</code>将char解释为符号的char</strong></h4><p>通过这个参数， <code>char</code> 类型被看作为 <code>unsigned char</code> 类型；</p>
+<p>例如：</p>
+<pre><code class="c++">#include&lt;stdio.h&gt;
+
+int main() {
+  char c = -10;
+  // Print the string
+   printf(&quot;\n The Geek Stuff [%d]\n&quot;, c);
+   return 0;
+}</code></pre>
+<p>上面的代码通过这个参数编译后，输出结果为：</p>
+<pre><code class="bash">$ g++ -Wall -funsigned-char main.cpp -o main
+$ ./main
+
+ The Geek Stuff [246]</code></pre>
+<p>可以看到char是无符号的字节；</p>
+<br>
+
+<h4 id="使用-fsigned-char将char解释为有符号的char"><a href="#使用-fsigned-char将char解释为有符号的char" class="headerlink" title="使用-fsigned-char将char解释为有符号的char"></a><strong>使用<code>-fsigned-char</code>将char解释为有符号的char</strong></h4><p>和上面的功能相反， 使用这个参数， char类型被看作是有符号的：</p>
+<pre><code class="bash">$ g++ -Wall -fsigned-char main.cpp -o main
+$ ./main
+
+ The Geek Stuff [-10]</code></pre>
+<p>结果输出为负数；</p>
+<br>
+
+<h4 id="使用-D参数可以使用编译时的宏"><a href="#使用-D参数可以使用编译时的宏" class="headerlink" title="使用-D参数可以使用编译时的宏"></a><strong>使用<code>-D</code>参数可以使用编译时的宏</strong></h4><p>参数<code>D</code>可以用作定义编译时的宏，例如：</p>
+<pre><code class="c++">#include&lt;stdio.h&gt;
+
+int main(void) {
+#ifdef MY_MACRO
+  printf(&quot;\n Macro defined \n&quot;);
+#endif
+  char c = -10;
+  printf(&quot;\n The Geek Stuff [%d]\n&quot;, c);
+  return 0;
+}</code></pre>
+<p><code>-D</code> 可以用作从命令行定义宏<code>MY_MACRO</code>：</p>
+<pre><code class="bash">$ g++ -Wall -DMY_MACRO main.cpp -o main
+$ ./main
+
+ Macro defined 
+
+ The Geek Stuff [-10]</code></pre>
+<p>可以看到宏被定义了，并打印出了结果；</p>
+<br>
+
+<h4 id="使用-Werror将警告升级为错误"><a href="#使用-Werror将警告升级为错误" class="headerlink" title="使用-Werror将警告升级为错误"></a><strong>使用<code>-Werror</code>将警告升级为错误</strong></h4><p>通过这个参数，GCC 会将所有的警告转换成错误，例如：</p>
+<pre><code class="c++">#include&lt;stdio.h&gt;
+
+int main() {
+  char c;
+  printf(&quot;\n The Geek Stuff [%d]\n&quot;, c);
+  return 0;
+}</code></pre>
+<p>上面的代码编译的时候会有一个 <code>uninitialized</code> 警告， <code>-Werror</code>会把这个警告升级成错误：</p>
+<pre><code class="bash">main.cpp: In function ‘int main()’:
+main.cpp:5:9: error: ‘c’ is used uninitialized in this function [-Werror=uninitialized]
+   printf(&quot;\n The Geek Stuff [%d]\n&quot;, c);
+   ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1plus: all warnings being treated as errors</code></pre>
+<br>
+
+<h4 id="使用-参数从文件中读取参数"><a href="#使用-参数从文件中读取参数" class="headerlink" title="使用@参数从文件中读取参数"></a><strong>使用<code>@</code>参数从文件中读取参数</strong></h4><p>GCC 参数可以从文件中读取，通过<code>@</code>后跟文件名的方式提供， 多个参数可以使用空格区隔，例如：</p>
+<p>文件 <code>opt_file</code> 包含编译参数：</p>
+<pre><code class="bash">$ cat opt_file 
+-Wall -omain</code></pre>
+<p>使用<code>@</code>参数：</p>
+<pre><code class="bash">$ g++ main.cpp @opt_file
+main.c: In function ‘main’:
+main.c:6:11: warning: ‘i’ is used uninitialized in this function [-Wuninitialized]
+
+$ ls main
+main</code></pre>
+<p>输出结果表明参数的确从文件中读取了，并且正确的应用到编译过程中；</p>
+<br>
+
+<h4 id="使用参数-I指定头文件的文件夹"><a href="#使用参数-I指定头文件的文件夹" class="headerlink" title="使用参数-I指定头文件的文件夹"></a><strong>使用参数<code>-I</code>指定头文件的文件夹</strong></h4><p><code>-I</code> 参数指定了 Include 头文件的搜索路径；</p>
+<p>当有此选项时，优先搜索此路径下的头文件，然后按照 <code>#include</code> 后面是 <code>&quot;&quot;</code> 还是 <code>&lt;&gt;</code> 来决定是优先在当前目录搜索还是优先在系统目录搜索；</p>
+<blockquote>
+<p>  默认头文件的路径为：<code>当前目录./</code> 和 <code>系统目录：/usr/include 和/usr/local/include</code>；</p>
+</blockquote>
+<pre><code class="bash">$ g++ -I /home/jasonkayzk/include input-file.cpp</code></pre>
+<p><code>-I-</code> 参数则是取消前一个参数功能，一般用在<code>-Idir</code>之后；</p>
+<br>
+
+<h4 id="使用参数-std指定支持的c-c的标准"><a href="#使用参数-std指定支持的c-c的标准" class="headerlink" title="使用参数-std指定支持的c++/c的标准"></a><strong>使用参数<code>-std</code>指定支持的c++/c的标准</strong></h4><pre><code class="bash">$ g++ -std=c++14 main.cpp</code></pre>
+<p>标准如 <code>c++11, c++14, c90, c89</code>等；</p>
+<br>
+
+<h4 id="使用-L指定链接库的搜索路径"><a href="#使用-L指定链接库的搜索路径" class="headerlink" title="使用-L指定链接库的搜索路径"></a><strong>使用<code>-L</code>指定链接库的搜索路径</strong></h4><p><code>-L</code> 参数用来指定链接库文件的搜索路径；</p>
+<blockquote>
+<p>  <strong>默认链接库的搜索路径为<code>/lib</code>和<code>/usr/lib</code>；</strong></p>
+</blockquote>
+<br>
+
+<h4 id="使用-static生成静态链接的文件"><a href="#使用-static生成静态链接的文件" class="headerlink" title="使用-static生成静态链接的文件"></a><strong>使用<code>-static</code>生成静态链接的文件</strong></h4><p>静态编译文件是指，把动态库的函数和其它依赖都编译进最终文件；</p>
+<p>例如：</p>
+<pre><code class="bash">$ g++ main.cpp -static -o main -lpthread</code></pre>
+<blockquote>
+<p>  此选项将禁止使用动态库；</p>
+<p>  所以，编译出来的东西，一般都很大，但是不需要什么动态连接库，就可以运行；</p>
+</blockquote>
+<br>
+
+<h4 id="使用-static-libstdc-静态链接libstdc"><a href="#使用-static-libstdc-静态链接libstdc" class="headerlink" title="使用-static-libstdc++静态链接libstdc++"></a><strong>使用<code>-static-libstdc++</code>静态链接libstdc++</strong></h4><p>如果没有使用<code>-static</code>，默认使用 <code>libstdc++</code> 共享库，而 <code>-static-libstdc++</code> 可以指定使用 <code>libstdc++</code> 静态库；</p>
+<br>
+
+<h4 id="使用-M生成文件关联的信息"><a href="#使用-M生成文件关联的信息" class="headerlink" title="使用-M生成文件关联的信息"></a><strong>使用<code>-M</code>生成文件关联的信息</strong></h4><pre><code class="bash">$ g++ -M main.cpp
+
+main.o: main.cpp /usr/include/stdc-predef.h /usr/include/stdio.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h \
+ /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h</code></pre>
+<blockquote>
+<p>  全部参数文档：</p>
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html" target="_blank" rel="noopener">https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h2 id="Clang"><a href="#Clang" class="headerlink" title="Clang"></a><strong>Clang</strong></h2><p>大厂 Apple 背书，开源的编译器，最早是为了处理 Apple 自己那一套 （ios sdk，XCode，Objective-C，Swift）；</p>
+<blockquote>
+<p>  说到 Clang，就不得不提另一个编译器了 LLVM；</p>
+<p>  LLVM提供了一套适合编译器系统的<a href="https://zh.m.wikipedia.org/wiki/中間語言" target="_blank" rel="noopener">中间语言</a>（Intermediate Representation，IR），有大量变换和优化都围绕其实现；经过变换和优化后的中间语言，可以转换为目标平台相关的<a href="https://zh.m.wikipedia.org/wiki/汇编语言" target="_blank" rel="noopener">汇编语言</a>代码；</p>
+<p>  简而言之，最开始的时候，各个编译器都是自己生成汇编代码，各个编译器有自己对代码优化的骚操作；</p>
+<p>  <strong>后来大家发现，其实可以把这些骚操作统一起来搞一个后端编译器，不论什么编程语言，你只要符合我 IR 中间代码的规范，我这个后端编译器都能给你编译成对应平台的、优化极好的汇编，而这个后端编译器就是 LLVM；</strong></p>
+<p>  <strong>甚至 Clang 之前都只是 LLVM 的一个子项目：<a href="https://clang.llvm.org/" target="_blank" rel="noopener">Clang</a></strong></p>
+</blockquote>
+<p>下面是一些 Clang 的优点（相比于GCC）：</p>
+<ul>
+<li>编译速度更快：在某些平台上，Clang的编译速度要明显快于 GCC；</li>
+<li>占用内存更小：Clang生成的AST所占用的内存通常是GCC的五分之一左右；</li>
+<li><strong>模块化的设计：Clang采用基于库的模块化设计，更易于IDE的集成及其他用途的重用；</strong></li>
+<li><strong>诊断信息可读性强</strong>：在编译过程中，Clang会创建并保留大量详细的元数据 (metadata)，这将更有利于调试和错误报告（<strong>想一想GCC非人类的报错提示？</strong>）；</li>
+<li>设计更清晰简单，容易理解，易于扩展加强；</li>
+<li>与代码基础较为古老的GCC相比，学习曲线会显得更为平缓；</li>
+<li><strong>Clang 开源协议不是 GPLv3；</strong></li>
+<li><strong>大部分命令都兼容G++</strong></li>
+</ul>
+<blockquote>
+<p>  说个题外话，Clang 和 LLVM 的工具模块化的确不错：</p>
+<pre><code class="bash">  $ clang-
+  clang-5.0 clang-check clang-cl clang-cpp clang-format clang-import-test clang-offload-bundler clang-rename clang-tblgen
+
+  $ llvm-
+  llvm-ar          llvm-bcanalyzer  llvm-diff        llvm-dwarfdump   llvm-link        llvm-mcmarkup    llvm-objdump     llvm-readobj     llvm-size        llvm-symbolizer  
+  llvm-as          llvm-cov         llvm-dis         llvm-extract     llvm-mc          llvm-nm          llvm-ranlib      llvm-rtdyld      llvm-stress      llvm-tblgen</code></pre>
+</blockquote>
+<p>Clang的一些不足：</p>
+<ul>
+<li>需要支持更多语言：GCC 除了支持 C/C++/Objective-C，还支持Fortran/Pascal/Java/Ada/Go等其他语言；Clang目前基本上只支持C/C++/Objective-C/Objective-C++这四种语言；</li>
+<li>需要加强对C++的支持：Clang对C++标准的支持依然落后于 GCC，Clang还需要加强对C++ 提供全方位支持；</li>
+<li>需要支持更多平台：由于GCC流行的时间比较长，已经被广泛使用，对各种平台的支持也很完备，Clang目前支持的平台有Linux/Windows/Mac OS；</li>
+</ul>
+<blockquote>
+<p>  <strong>除了Clang ，这里也有一个 Clang++；</strong></p>
+<p>  <strong>这两者的区别和 GCC 和 G++ 的区别类似，一个使用的是C的库，另一个使用的是C++的库；</strong></p>
+</blockquote>
+<br>
+
+<h3 id="LLVM工具介绍"><a href="#LLVM工具介绍" class="headerlink" title="LLVM工具介绍"></a><strong>LLVM工具介绍</strong></h3><h4 id="opt"><a href="#opt" class="headerlink" title="opt"></a><strong>opt</strong></h4><p>这是一个在IR级别做程序优化的工具，输入和输出都是同一类型的LLVM IR，很好理解，做优化不必要修改文件格式；设计编译器的同学会经常性的调用这个工具来验证自己的优化是否正确；</p>
+<p>反过来，优化不一定作用于LLVM IR，比如作用于后端的MI，这时opt是不能使用的；</p>
+<br>
+
+<h4 id="llc"><a href="#llc" class="headerlink" title="llc"></a><strong>llc</strong></h4><p>这是微观意义上的LLVM编译器，不同于GCC的编译器，它的输入是LLVM IR，输出是汇编文件或者是目标文件；</p>
+<p>通过 <code>-filetype=asm</code> 或者 <code>-filetype=obj</code> 来指定输出是汇编文件还是目标文件，若生成是目标文件，llc会调用LLVM中的汇编输出的代码库来工作（注意这个汇编器和gcc的汇编器也不同，它输入的是MI，是一种后端的中间表示）；</p>
+<p>除此之外，还可以用<code>-On</code>来指定优化级别（llc默认优化级别是<code>-O2</code>），或者其他一些参数；</p>
+<pre><code class="bash">llc -filetype=asm main.bc -O0 -o main.s
+llc -filetype=obj main.bc -O0 -o main.o</code></pre>
+<blockquote>
+<p>  <strong><code>.bc</code>文件换成<code>.ll</code>文件也可以</strong></p>
+</blockquote>
+<br>
+
+<h4 id="llvm-mc"><a href="#llvm-mc" class="headerlink" title="llvm-mc"></a><strong>llvm-mc</strong></h4><p>这是微观意义上的LLVM汇编器，它输入汇编文件，输出目标文件；</p>
+<p>同时，它也可以反汇编，指定特殊参数（–disassemble）就行；可以发现，llc和llvm-mc都会调用到输出目标文件的库，也就是<code>MCObjectStreamer</code>；</p>
+<blockquote>
+<p>  关于这个工具，可以查看这个比较老旧的文档来学习：</p>
+<ul>
+<li><a href="https://link.zhihu.com/?target=http%3A//blog.llvm.org/2010/04/intro-to-llvm-mc-project.html" target="_blank" rel="noopener">Intro to the LLVM MC Project</a></li>
+</ul>
+</blockquote>
+<br>
+
+<h4 id="lli"><a href="#lli" class="headerlink" title="lli"></a><strong>lli</strong></h4><p>这个工具是LLVM IR的解释器，也是一个JIT编译器；</p>
+<p>LLVM可以把C语言翻译成LLVM IR，然后解释执行，与Java的那一套类似，这也是最初LLVM编写时的实现（一个虚拟机运行IR）；</p>
+<br>
+
+<h4 id="llvm-link"><a href="#llvm-link" class="headerlink" title="llvm-link"></a><strong>llvm-link</strong></h4><p>它是IR级别的链接器，链接的是IR文件；</p>
+<p>这里简单说一下LLVM针对多个源文件编译时的两种目标码输出方式：</p>
+<ol>
+<li>第一种是LLVM先通过前端把每个源文件单独翻译成IR级别，然后用llvm-link链接成一个IR，然后再经过优化、后端等步骤生成目标文件，使用llvm-link的同时，可以使用链接时优化（不过需要注意，这种方式同样需要最终调用链接器，将这个目标文件链接成可执行文件）；</li>
+<li>第二种是LLVM通过前端把每个源文件单独翻译后，再单独经过优化、后端等工作，将每个源文件生成目标文件，之后再调用链接器，将所有目标文件链接成可执行文件；</li>
+</ol>
+<p>即如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/jasonkayzk/blog_static/images/llvm.png" alt="llvm"></p>
+<br>
+
+<h4 id="llvm-as"><a href="#llvm-as" class="headerlink" title="llvm-as"></a><strong>llvm-as</strong></h4><p>这是针对LLVM IR的汇编器，虽然名字里带as，实际上不是gcc那个as，它的功能是将<code>.ll</code>文件翻译为<code>.bc</code>文件，LLVM项目里，<code>.ll</code>称为LLVM汇编码，所以llvm-as也就是IR的汇编器了；</p>
+<p>例如：</p>
+<pre><code class="bash">$ llvm-as main.ll -o test.bc</code></pre>
+<br>
+
+<h4 id="llvm-dis"><a href="#llvm-dis" class="headerlink" title="llvm-dis"></a><strong>llvm-dis</strong></h4><p><code>llvm-dis</code> 命令与 <code>llvm-as</code> 刚好相反，IR的反汇编器，用来将<code>.bc</code>文件翻译为<code>.ll</code>文件；</p>
+<p>例如：</p>
+<pre><code class="bash">$ llvm-dis test.bc -o test.ll</code></pre>
+<br>
+
+<h4 id="Clang-1"><a href="#Clang-1" class="headerlink" title="Clang"></a><strong>Clang</strong></h4><p>最后，就是我们的Clang了，它是现在 LLVM 项目中一个很重要的前端工具；</p>
+<p>Clang能够调用起来整个编译器的流程，即在编译时它会调用上边其他工具调用的库；</p>
+<p>Clang通过指定 <code>-emit-llvm</code> 参数，可以配合<code>-S</code>或<code>-c</code>生成<code>.ll</code>或<code>.bc</code>文件，这样我们就能把Clang的部分和LLVM的后端分离开来独立运行：</p>
+<pre><code class="bash">$ clang -emit-llvm -c main.c -o main.bc
+$ clang -emit-llvm -S main.c -o main.ll</code></pre>
+<p>LLVM还有一些其他工具，就不举例了，可以查看LLVM项目路径下<code>/src/tools/</code>中查看。</p>
+<br>
+
+<h3 id="Clang基本使用"><a href="#Clang基本使用" class="headerlink" title="Clang基本使用"></a><strong>Clang基本使用</strong></h3><h4 id="前言-1"><a href="#前言-1" class="headerlink" title="前言"></a><strong>前言</strong></h4><p>首先要说明的是，由于Clang兼容GCC的大部分参数；</p>
+<p>因此，在GCC下面的那一套，在Clang下也可以玩，例如下面的命令：</p>
+<pre><code class="bash"># 直接生成可执行文件
+$ clang++ main.cpp -o main
+
+# 只生成预处理文件
+$ clang++ -E main.cpp -o main.i
+
+# 只生成汇编文件
+$ clang++ -S main.cpp -o main.s</code></pre>
+<p>只是把 <code>g++</code> 换成了 <code>clang++</code> 仍然是可以玩的；</p>
+<p>这里我们探讨的 Clang 的基本使用是使用 Clang 生成 LLVM IR 中间代码，然后使用 LLVM 来编译；</p>
+<br>
+
+<h4 id="使用Clang生成中间代码和可执行文件"><a href="#使用Clang生成中间代码和可执行文件" class="headerlink" title="使用Clang生成中间代码和可执行文件"></a><strong>使用Clang生成中间代码和可执行文件</strong></h4><p>我们可以使用 Clang 命令生成 LLVM IR 中间代码：</p>
+<pre><code class="bash">$ clang++ -O2 -emit-llvm main.cpp -S -o main.ll</code></pre>
+<p>也可以直接生成 LLVM 的中间表示 BitCode 文件：</p>
+<pre><code class="bash">$ clang++ -O2 -emit-llvm main.cpp -c -o main.bc
+
+# 查看文件类型
+$ file main.bc
+main.bc: LLVM bitcode, wrapper</code></pre>
+<blockquote>
+<p>  <strong>和上面命令的不同点在于，这里多了个<code>-emit-llvm</code>，表示生成和LLVM相关的代码；</strong></p>
+</blockquote>
+<p><font color="#f00"><strong>对于 LLVM 来说，我们是可以直接通过 <code>lli</code> 命令进行解释执行的（这一点就完全类似于 Java 的 JIT）！</strong></font></p>
+<p>例如：</p>
+<pre><code class="bash"># 解释执行 BitCode
+$ lli main.bc 
+hello                                                                                                                      
+
+# 解释执行中间代码
+$ lli main.ll
+hello</code></pre>
+<p><font color="#f00"><strong>可以看出来，LLVM在这一点上非常的强大！</strong></font></p>
+<br>
+
+<p>除此之外，我们可以通过 <code>llc</code> 命令将中间代码编译为 汇编或者 <code>.obj</code> 文件：</p>
+<pre><code class="bash"># 编译为汇编
+$ llc -filetype=asm main.bc -O0 -o main.s
+
+# 编译为obj文件
+$ llc -filetype=obj main.bc -O2 -o main.o</code></pre>
+<p>或者也可以直接通过 <code>clang</code> 命令实现：</p>
+<pre><code class="bash">$ clang++ -O2 -c main.bc -o main.bc.o
+
+$ file main.bc.o 
+main.bc.o: Mach-O 64-bit object arm64</code></pre>
+<p>对比两种方式：</p>
+<pre><code class="bash">$ md5 main.o main.bc.o 
+MD5 (main.o) = bb22786da7050949a4e20bd69fe6b2c3
+MD5 (main.bc.o) = bb22786da7050949a4e20bd69fe6b2c3</code></pre>
+<p><strong>可以发现：通过 BitCode 获取到的Obj代码和直接编译出来的Obj代码是一模一样的！</strong></p>
+<p><strong>因此只需要得到 BitCode 文件就可以编译出一样的目标文件！</strong></p>
+<blockquote>
+<p>  <strong>LLVM 中的 BitCode 的本质是什么？</strong></p>
+<p>  通过LLVM官方对 BitCode 的描述，可以知道 BitCode 是一种以位为单位存取的二进制文件，它可以存在于包装结构中，如上一节中看到<code>LLVM bitcode, wrapper x86_64</code>，也可以存在于<code>Object</code>文件中，例如<code>Mach-O</code>文件等；</p>
+<p>  <strong>对于<code>Mach-O</code>文件并且必定存在于名为<code>__LLVM</code>或者<code>__bitcode</code>的section中，因此我们可以根据这两个字段来判断生成的Mach-O文件是否包含BitCode；</strong></p>
+<p>  更多关于 BitCode：</p>
+<ul>
+<li><a href="https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/" target="_blank" rel="noopener">https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/</a></li>
+</ul>
+</blockquote>
+<p>最后，我们可以编译并生成二进制可执行文件：</p>
+<pre><code class="bash">$ clang++ -O2 main.o -o main
+
+$ ./main
+hello</code></pre>
+<br>
+
+<h3 id="Clang工具链编译完整步骤"><a href="#Clang工具链编译完整步骤" class="headerlink" title="Clang工具链编译完整步骤"></a><strong>Clang工具链编译完整步骤</strong></h3><p>上面展示了 Clang+LLVM 的基本用法，下面总结一下整个Clang工具链涉及到的整个编译过程：</p>
+<p>首先，通过 <code>-E</code> 查看 Clang 在预处理步骤做了什么：</p>
+<pre><code class="bash">$ clang++ -E main.cpp</code></pre>
+<blockquote>
+<p>  <strong>这个过程的处理包括宏的替换，头文件的导入，以及类似 <code>#if</code> 的处理；</strong></p>
+</blockquote>
+<p>在预处理完成后就会进行词法分析，这里会把代码切成一个个 Token，比如：大小括号，等于号还有字符串等：</p>
+<pre><code class="bash">$ clang++ -fmodules -fsyntax-only -Xclang -dump-tokens main.cpp</code></pre>
+<p>然后是语法分析，验证语法是否正确，然后将所有节点组成抽象语法树 AST：</p>
+<pre><code class="bash">$ clang++ -fmodules -fsyntax-only -Xclang -ast-dump main.cpp</code></pre>
+<p>完成这些步骤后，就可以开始 IR 中间代码的生成了！</p>
+<p>CodeGen 会负责将语法树自顶向下遍历逐步翻译成 LLVM IR，IR 是编译过程的前端的输出后端的输入：</p>
+<pre><code class="bash">$ clang++ -S -emit-llvm main.cpp -o main.ll</code></pre>
+<p><font color="#f00"><strong>这里 LLVM 会去做些优化工作，在编译设置里也可以设置优化级别 <code>-01</code>，<code>-03</code>，<code>-0s</code>，还可以写些自己的 Pass！</strong></font></p>
+<pre><code class="bash">$ clang++ -O3 -S -emit-llvm main.cpp -o main.ll</code></pre>
+<p>接下来，生成汇编：</p>
+<pre><code class="bash">$ clang++ -S main.cpp -o main.s</code></pre>
+<p>随后，生成目标文件：</p>
+<pre><code class="bash">$ clang++ -fmodules -c main.cpp -o main.o</code></pre>
+<p>最后，生成可执行文件：</p>
+<pre><code class="bash">$ clang++ main.o -o main</code></pre>
+<p>执行：</p>
+<pre><code class="bash">$ ./main
+hello</code></pre>
+<br>
+
+<h3 id="Clang常用命令"><a href="#Clang常用命令" class="headerlink" title="Clang常用命令"></a><strong>Clang常用命令</strong></h3><h4 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a><strong>基本命令</strong></h4><p>经过上面的一些例子，我们可以看到 Clang + LLVM 的基本用法，这里总结如下：</p>
+<pre><code class="bash"># 直接生成可执行文件
+$ clang++ main.cpp -o main
+
+# 只生成预处理文件
+$ clang++ -E main.cpp -o main.i
+
+# 只生成汇编文件
+$ clang++ -S main.cpp -o main.s
+
+# 生成LLVM IR中间代码 .ll 文件(可视化字节码文件)
+$ clang++ -O2 -emit-llvm main.cpp -S -o main.ll
+
+# 生成 LLVM 的中间表示 BitCode 文件
+$ clang++ -O2 -emit-llvm main.cpp -c -o main.bc
+
+# 解释执行 BitCode 文件
+$ lli main.bc 
+
+# 解释执行中间代码
+$ lli main.ll
+
+# 将 .ll 文件转化为 .bc 文件（汇编）
+$ llvm-as main.ll -o main.bc
+
+# 将 .bc 文件转化为 .ll 文件（反汇编）
+$ llvm-dis main.bc -o main.ll
+
+# 将LLVM字节码编译为汇编
+$ llc -filetype=asm main.bc -O2 -o main.s
+
+# 将LLVM字节码编译为obj文件
+$ llc -filetype=obj main.bc -O2 -o main.o
+
+# 使用Clang++ 将.bc或.ll文件转化为obj代码
+$ clang++ -O2 -c main.bc -o main.o
+
+# 将目标文件编译为二进制文件
+$ clang++ -O2 main.o -o main</code></pre>
+<br>
+
+<h4 id="其他常用命令"><a href="#其他常用命令" class="headerlink" title="其他常用命令"></a><strong>其他常用命令</strong></h4><p>除了上面非常常用的命令之外，Clang 还包括了一些其他命令；</p>
+<p>查看编译源文件需要的几个不同的阶段：</p>
+<pre><code class="bash">$ clang++ -ccc-print-phases main.cpp
++- 0: input, &quot;main.cpp&quot;, c++
++- 1: preprocessor, {0}, c++-cpp-output
++- 2: compiler, {1}, ir
++- 3: backend, {2}, assembler
++- 4: assembler, {3}, object
++- 5: linker, {4}, image
+6: bind-arch, &quot;arm64&quot;, {5}, image</code></pre>
+<p>查看操作内部命令：</p>
+<pre><code class="bash">$ clang -### main.cpp -o main 
+Apple clang version 13.1.6 (clang-1316.0.21.2.3)
+Target: arm64-apple-darwin21.4.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+ &quot;/Library/Developer/CommandLineTools/usr/bin/clang&quot; &quot;-cc1&quot; &quot;-triple&quot; &quot;arm64-apple-macosx12.0.0&quot; &quot;-Wundef-prefix=TARGET_OS_&quot; &quot;-Wdeprecated-objc-isa-usage&quot; &quot;-Werror=deprecated-objc-isa-usage&quot; &quot;-Werror=implicit-function-declaration&quot; &quot;-emit-obj&quot; &quot;-mrelax-all&quot; &quot;--mrelax-relocations&quot; &quot;-disable-free&quot; &quot;-disable-llvm-verifier&quot; &quot;-discard-value-names&quot; &quot;-main-file-name&quot; &quot;main.cpp&quot; &quot;-mrelocation-model&quot; &quot;pic&quot; &quot;-pic-level&quot; &quot;2&quot; &quot;-mframe-pointer=non-leaf&quot; &quot;-fno-strict-return&quot; &quot;-fno-rounding-math&quot; &quot;-munwind-tables&quot; &quot;-target-sdk-version=12.3&quot; &quot;-fvisibility-inlines-hidden-static-local-var&quot; &quot;-target-cpu&quot; &quot;apple-m1&quot; &quot;-target-feature&quot; &quot;+v8.5a&quot; &quot;-target-feature&quot; &quot;+fp-armv8&quot; &quot;-target-feature&quot; &quot;+neon&quot; &quot;-target-feature&quot; &quot;+crc&quot; &quot;-target-feature&quot; &quot;+crypto&quot; &quot;-target-feature&quot; &quot;+dotprod&quot; &quot;-target-feature&quot; &quot;+fp16fml&quot; &quot;-target-feature&quot; &quot;+ras&quot; &quot;-target-feature&quot; &quot;+lse&quot; &quot;-target-feature&quot; &quot;+rdm&quot; &quot;-target-feature&quot; &quot;+rcpc&quot; &quot;-target-feature&quot; &quot;+zcm&quot; &quot;-target-feature&quot; &quot;+zcz&quot; &quot;-target-feature&quot; &quot;+fullfp16&quot; &quot;-target-feature&quot; &quot;+sm4&quot; &quot;-target-feature&quot; &quot;+sha3&quot; &quot;-target-feature&quot; &quot;+sha2&quot; &quot;-target-feature&quot; &quot;+aes&quot; &quot;-target-abi&quot; &quot;darwinpcs&quot; &quot;-fallow-half-arguments-and-returns&quot; &quot;-debugger-tuning=lldb&quot; &quot;-target-linker-version&quot; &quot;762&quot; &quot;-resource-dir&quot; &quot;/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6&quot; &quot;-isysroot&quot; &quot;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk&quot; &quot;-I/usr/local/include&quot; &quot;-stdlib=libc++&quot; &quot;-internal-isystem&quot; &quot;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1&quot; &quot;-internal-isystem&quot; &quot;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include&quot; &quot;-internal-isystem&quot; &quot;/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/include&quot; &quot;-internal-externc-isystem&quot; &quot;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include&quot; &quot;-internal-externc-isystem&quot; &quot;/Library/Developer/CommandLineTools/usr/include&quot; &quot;-Wno-reorder-init-list&quot; &quot;-Wno-implicit-int-float-conversion&quot; &quot;-Wno-c99-designator&quot; &quot;-Wno-final-dtor-non-final-class&quot; &quot;-Wno-extra-semi-stmt&quot; &quot;-Wno-misleading-indentation&quot; &quot;-Wno-quoted-include-in-framework-header&quot; &quot;-Wno-implicit-fallthrough&quot; &quot;-Wno-enum-enum-conversion&quot; &quot;-Wno-enum-float-conversion&quot; &quot;-Wno-elaborated-enum-base&quot; &quot;-Wno-reserved-identifier&quot; &quot;-Wno-gnu-folding-constant&quot; &quot;-Wno-objc-load-method&quot; &quot;-fdeprecated-macro&quot; &quot;-fdebug-compilation-dir=/Users/kylinkzhang/self-workspace/test&quot; &quot;-ferror-limit&quot; &quot;19&quot; &quot;-stack-protector&quot; &quot;1&quot; &quot;-fstack-check&quot; &quot;-mdarwin-stkchk-strong-link&quot; &quot;-fblocks&quot; &quot;-fencode-extended-block-signature&quot; &quot;-fregister-global-dtors-with-atexit&quot; &quot;-fgnuc-version=4.2.1&quot; &quot;-fno-cxx-modules&quot; &quot;-fcxx-exceptions&quot; &quot;-fexceptions&quot; &quot;-fmax-type-align=16&quot; &quot;-fcommon&quot; &quot;-fcolor-diagnostics&quot; &quot;-clang-vendor-feature=+messageToSelfInClassMethodIdReturnType&quot; &quot;-clang-vendor-feature=+disableInferNewAvailabilityFromInit&quot; &quot;-clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation&quot; &quot;-fno-odr-hash-protocols&quot; &quot;-clang-vendor-feature=+enableAggressiveVLAFolding&quot; &quot;-clang-vendor-feature=+revert09abecef7bbf&quot; &quot;-clang-vendor-feature=+thisNoAlignAttr&quot; &quot;-clang-vendor-feature=+thisNoNullAttr&quot; &quot;-mllvm&quot; &quot;-disable-aligned-alloc-awareness=1&quot; &quot;-D__GCC_HAVE_DWARF2_CFI_ASM=1&quot; &quot;-o&quot; &quot;/var/folders/4y/s025lnc52lv68jjnzmt1pwgc0000gn/T/main-ee04e5.o&quot; &quot;-x&quot; &quot;c++&quot; &quot;main.cpp&quot;
+ &quot;/Library/Developer/CommandLineTools/usr/bin/ld&quot; &quot;-demangle&quot; &quot;-lto_library&quot; &quot;/Library/Developer/CommandLineTools/usr/lib/libLTO.dylib&quot; &quot;-no_deduplicate&quot; &quot;-dynamic&quot; &quot;-arch&quot; &quot;arm64&quot; &quot;-platform_version&quot; &quot;macos&quot; &quot;12.0.0&quot; &quot;12.3&quot; &quot;-syslibroot&quot; &quot;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk&quot; &quot;-o&quot; &quot;main&quot; &quot;-L/usr/local/lib&quot; &quot;/var/folders/4y/s025lnc52lv68jjnzmt1pwgc0000gn/T/main-ee04e5.o&quot; &quot;-lSystem&quot; &quot;/Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/lib/darwin/libclang_rt.osx.a&quot;</code></pre>
+<p>更多内容见官方文档：</p>
+<ul>
+<li><a href="https://clang.llvm.org/" target="_blank" rel="noopener">https://clang.llvm.org/</a></li>
+</ul>
+<br>
+
+<h2 id="尾声"><a href="#尾声" class="headerlink" title="尾声"></a><strong>尾声</strong></h2><p>本文走马观花的介绍了目前主流的一些编译器，以及其基本用法；</p>
+<p>希望对大家学习C++有所帮助！</p>
+<br>
+
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a><strong>附录</strong></h1><p>文章参考：</p>
+<ul>
+<li><a href="https://www.zhihu.com/question/445921363" target="_blank" rel="noopener">https://www.zhihu.com/question/445921363</a></li>
+<li><a href="https://www.zhihu.com/question/20940822" target="_blank" rel="noopener">https://www.zhihu.com/question/20940822</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/196785332" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/196785332</a></li>
+<li><a href="https://www.cnblogs.com/kid-kid/p/12616788.html" target="_blank" rel="noopener">https://www.cnblogs.com/kid-kid/p/12616788.html</a></li>
+<li><a href="https://www.cnblogs.com/webor2006/p/9946061.html" target="_blank" rel="noopener">https://www.cnblogs.com/webor2006/p/9946061.html</a></li>
+<li><a href="https://www.zhihu.com/question/20235742" target="_blank" rel="noopener">https://www.zhihu.com/question/20235742</a></li>
+<li><a href="https://llvm.liuxfe.com/post/2190" target="_blank" rel="noopener">https://llvm.liuxfe.com/post/2190</a></li>
+<li><a href="https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/" target="_blank" rel="noopener">https://joey520.github.io/2019/11/21/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Bitcode/</a></li>
+<li><a href="https://www.jianshu.com/p/42cb026ce541" target="_blank" rel="noopener">https://www.jianshu.com/p/42cb026ce541</a></li>
+<li><a href="https://www.jianshu.com/p/e4cbcd764783" target="_blank" rel="noopener">https://www.jianshu.com/p/e4cbcd764783</a></li>
+<li><a href="https://yupeng.fun/2020/01/11/clang-llvm/" target="_blank" rel="noopener">https://yupeng.fun/2020/01/11/clang-llvm/</a></li>
+</ul>
+<br>
+
+  </article>
+
+  <div id="like-container" style="text-align: center">
+    <div class="like-feed">
+      <p>觉得本文不错就点个<span>♥</span>再走吧~</p>
+      <div class="like-img">
+        <div class="like-heart" id="like" rel="like"></div>
+        <div class="like-count" id="like-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文章分享 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+  <div class="social-share" data-mode="prepend" data-disabled="tencent,diandian"></div>
+  <br>
+
+  
+  
+<div class="nexmoe-post-copyright">
+<i class="mdui-list-item-icon nexmoefont icon-info-circle"></i>
+<strong>本文作者：</strong>Jasonkay<br>
+<strong>本文链接：</strong><a href="https://jasonkayzk.github.io/2022/05/28/C++主流编译器总结/" title="https://jasonkayzk.github.io/2022/05/28/C++主流编译器总结/" target="_blank" rel="noopener">https://jasonkayzk.github.io/2022/05/28/C++主流编译器总结/</a><br>
+
+  <strong>版权声明：</strong>本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/deed.zh" target="_blank">CC BY-NC-SA 3.0 CN</a> 协议进行许可
+
+</div>
+
+
+  
+
+  <!-- 增加面试点击标题才显示答案等效果! -->
+  <!-- <script type="text/javascript">
+    $(".question").click(function () {
+      var a = $(".answer").eq($(".question").index(this));
+      a.is(".answer_shown") ? a.animate({ 'opacity': '1' }, 800).removeClass("answer_shown") : a.animate({ 'opacity': '0' }, 800).addClass("answer_shown");
+    });
+  </script> -->
+  <!-- <style>
+    .answer_shown {
+      opacity: 0;
+    }
+  </style> -->
+
+  <!-- 加载博客点赞功能 -->
+  <script>
+    function ajax(options) {
+      return new Promise(function (resolve, reject) {
+        $.ajax(options).done(resolve).fail(reject);
+      });
+    }
+
+    var docName = $('meta[property="og:title"]').attr('content');
+    
+    // 跳过localhost
+    if (location.hostname !== 'localhost') {
+      // 初始化
+      ajax({
+        url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+        type: 'post',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          "actionId": "get",
+          "docName": docName
+        })
+      }).then(
+        function fulfillHandler(data) {
+          $('#like-count').text(data.likeNum);
+        },
+        function rejectHandler(jqXHR, textStatus, errorThrown) {
+          $('#like-count').text(0);
+          console.log(jqXHR, textStatus, errorThrown);
+        }
+      ).catch(function errorHandler(error) {
+        $('#like-count').text(0);
+        console.log(error);
+      });
+
+      $(document).ready(function () {
+        $(".like-heart").on("click", function () {
+          var heart = $(this);
+          var likeCount = $("#like-count" + heart.attr("id").split("like")[1]);
+          var intCount = parseInt(likeCount.html());
+          var rel = heart.attr("rel");
+
+          if (rel === "like") {
+            likeCount.html(intCount + 1);
+            heart.addClass("like-heartAnimation").attr("rel", "unlike");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "add",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          } else {
+            likeCount.html(intCount - 1);
+            heart.removeClass("like-heartAnimation").attr("rel", "like");
+            heart.css("background-position", "left");
+            ajax({
+              url: "https://service-rvqf6dam-1257829547.gz.apigw.tencentcs.com/blog_like/",
+              type: 'post',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify({
+                "actionId": "subtract",
+                "docName": docName
+              })
+            }).catch(function errorHandler(error) {
+              console.log(error);
+            });
+          }
+        }).on("mouseleave", function () {
+          $(this).css("background-position", "");
+        });
+      });
+    }
+  </script>
+  <style>
+    #like-container {
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .like-img {
+      width: 200px;
+      height: 100px;
+      display: inline-block;
+    }
+
+    .like-heart {
+      float: left;
+      background: url(/images/web_heart_animation.png);
+      background-position: left;
+      background-repeat: no-repeat;
+      height: 50px;
+      width: 120px;
+      left: -14px;
+      background-size: 2900%;
+    }
+
+    .like-count {
+      float: left;
+      font-family: 'Georgia', Times, Times New Roman, serif;
+      font-size: 35px;
+      color: #999999;
+      text-align: left;
+      height: 50px;
+      width: 50px;
+      line-height: 44px;
+    }
+
+    .like-heart:hover,
+    .like-heart:focus {
+      background-position: right;
+    }
+
+    @-webkit-keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    @keyframes heartBlast {
+      0% {
+        background-position: left;
+      }
+
+      100% {
+        background-position: right;
+      }
+    }
+
+    .like-heartAnimation {
+      display: inline-block;
+      -webkit-animation-name: heartBlast;
+      animation-name: heartBlast;
+      -webkit-animation-duration: .8s;
+      animation-duration: .8s;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
+      -webkit-animation-timing-function: steps(28);
+      animation-timing-function: steps(28);
+      background-position: right;
+    }
+
+    .like-feed {
+      height: 90px;
+      margin-bottom: 20px;
+      text-align: center
+    }
+
+    .like-feed p {
+      font-family: 'microsoft yahei', 'Georgia';
+      font-size: 25px;
+    }
+
+    .like-feed span {
+      font-size: 30px;
+      color: #D33115;
+    }
+  </style>
+
+  <section class="nexmoe-comment">
+    <div class="utterances"></div>
+<style>
+    .v .vwrap {
+      border: 1px dashed #c4bfbf
+    }
+  
+    .v .vwrap .vheader .vinput {
+      border-bottom: 1px dashed #c4bfbf
+    }
+</style>
+<script src="https://utteranc.es/client.js" repo="JasonkayZK/JasonkayZK.github.io" issue-term="title" label="comment✨💬✨" theme="github-light" crossorigin="anonymous" async>
+</script>
+
+</section>
+</div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+ 
+    <script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/smoothscroll-for-websites@1.4.9/SmoothScroll.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/app.js?v=1770725319184"></script>
+<script src="https://cdn.jsdelivr.net/npm/lazysizes@5.1.0/lazysizes.min.js"></script>
+
+
+
+
+  
+    <!-- Google Analytics -->
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'G-1NWK4EEKDF', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+
+
+
+    <!-- baidu Analytics -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?5f5ec71a32c11ff54dff64d0341017b0";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+
+<!-- 页面点击小红心 -->
+<!-- 
+<script type="text/javascript">
+  !function (e, t, a) { function n() { c(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: fixed;}.heart:after{top: -5px;}.heart:before{left: -5px;}"), o(), r() } function r() { for (var e = 0; e < d.length; e++)d[e].alpha <= 0 ? (t.body.removeChild(d[e].el), d.splice(e, 1)) : (d[e].y--, d[e].scale += .004, d[e].alpha -= .013, d[e].el.style.cssText = "left:" + d[e].x + "px;top:" + d[e].y + "px;opacity:" + d[e].alpha + ";transform:scale(" + d[e].scale + "," + d[e].scale + ") rotate(45deg);background:" + d[e].color + ";z-index:99999"); requestAnimationFrame(r) } function o() { var t = "function" == typeof e.onclick && e.onclick; e.onclick = function (e) { t && t(), i(e) } } function i(e) { var a = t.createElement("div"); a.className = "heart", d.push({ el: a, x: e.clientX - 5, y: e.clientY - 5, scale: 1, alpha: 1, color: s() }), t.body.appendChild(a) } function c(e) { var a = t.createElement("style"); a.type = "text/css"; try { a.appendChild(t.createTextNode(e)) } catch (t) { a.styleSheet.cssText = e } t.getElementsByTagName("head")[0].appendChild(a) } function s() { return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")" } var d = []; e.requestAnimationFrame = function () { return e.requestAnimationFrame || e.webkitRequestAnimationFrame || e.mozRequestAnimationFrame || e.oRequestAnimationFrame || e.msRequestAnimationFrame || function (e) { setTimeout(e, 1e3 / 60) } }(), n() }(window, document);
+</script>
+ -->
+ 
+<script>
+  // 进度条加载: nprogress
+  NProgress.start()
+  NProgress.done()
+</script>
+
+<script type="text/javascript" defer>
+  $(document).ready(function () {
+    $.goup({
+      trigger: 100,
+      bottomOffset: 50,
+      locationOffset: 50,
+      title: '0%',
+      titleAsText: true
+    });
+    $(".goup-container").css("background", "#64dcf0 none repeat scroll 0% 0%").css("opacity", 0.9);
+    $(".goup-text").css("font-weight", 600).css("opacity", 0.9);
+  });
+
+  $(document).scroll(function () {
+    var d_h = $(document).height();
+    var c_h = $(window).height();
+    var c_t_h = $(window).scrollTop();
+    var schedule = c_t_h / (d_h - c_h - 0.5);
+    var str = Number(schedule * 100).toFixed();
+    str += "%";
+    $(".goup-text").text(str);
+  });
+</script>
+
+<!-- 站内通知 -->
+<script src="/js/notification.js"></script>
+<script>
+  'use strict';
+
+  (function () {
+    $(function () {
+      $('.position').click(function (event) {
+        var el = $(event.target);
+        $('.position').removeClass('selected');
+        el.addClass('selected');
+        position = el.attr('data-position');
+      });
+    });
+  });
+
+  var position = 2;
+  // 关闭百毫秒数
+  var closeTime = 50;
+  var notifyFunc = function () {
+    // Notification.create(
+    //   // Title
+    //   "Tencent内推中📧",
+    //   // Text
+    //   "简历投递处：<BR/><a href='/hiring/'>简历投递</a>",
+    //   // Illustration
+    //   "/images/avatar4.jpg",
+    //   // Effect
+    //   'fadeInRight',
+    //   // Position 1, 2, 3, 4
+    //   position,
+    //   closeTime
+    // );
+    // setTimeout(() => {
+    //   Notification.create(
+    //     "资源下载⚡",
+    //     "传送门：<BR/><a href='/sharing/'>文件分享</a>",
+    //     "/images/avatar4.jpg",
+    //     'fadeInRight',
+    //     position,
+    //     closeTime
+    //   )
+    // }, 350);
+    setTimeout(() => {
+      Notification.create(
+        "RSS订阅📢",
+        "传送门：<BR/><a href='/atom.xml'>RSS订阅</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 0);
+    setTimeout(() => {
+        Notification.create(
+        "在线群聊💭",
+        "传送门：<BR/><a href='/chat/'>畅所欲言</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 350);
+    setTimeout(() => {
+        Notification.create(
+        // "跑步健身🏃",
+        // "传送门：<BR/><a href='/running/'>跑步健身</a>",
+        "摄影分享📷",
+        "传送门：<BR/><a href='http://159.75.131.252:32352/'>摄影分享</a>",
+        "/images/avatar4.jpg",
+        'fadeInRight',
+        position,
+        closeTime
+      )
+    }, 700);
+  };
+
+  (function once() {
+    if (sessionStorage.getItem('load') == null) {
+      notifyFunc();
+      sessionStorage.setItem('load', false);
+    } else {
+      return;
+    }
+  })();
+</script>
+<script>
+  $(document).on("click", ".dismiss", function (e) {
+    Notification.hide(e.currentTarget.classList[1].split('-')[1]);
+  })
+</script>
+
+</html>
